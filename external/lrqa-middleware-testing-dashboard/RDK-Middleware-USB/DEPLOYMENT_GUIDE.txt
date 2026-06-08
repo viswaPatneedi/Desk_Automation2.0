@@ -1,0 +1,89 @@
+════════════════════════════════════════════════════════════════════════════
+            RDK-E MIDDLEWARE DOCKER DEPLOYMENT GUIDE
+════════════════════════════════════════════════════════════════════════════
+
+📦 WHAT'S IN THIS FOLDER:
+├── scripts/              - Start/stop/restart/status automation scripts
+├── docker-files/         - Dockerfile and docker-compose configuration  
+├── config/               - Application configuration files
+└── documentation/        - Full markdown documentation
+
+════════════════════════════════════════════════════════════════════════════
+                    🚀 QUICK DEPLOYMENT (3 STEPS)
+════════════════════════════════════════════════════════════════════════════
+
+STEP 1: Copy this folder to target machine
+  $ scp -r RDK-Middleware-USB/ pi-user@TARGET_IP:/home/pi/
+
+STEP 2: SSH into target machine
+  $ ssh pi-user@TARGET_IP
+  $ cd RDK-Middleware-USB
+
+STEP 3: Run startup script
+  $ ./scripts/start-rdk-app.sh
+  
+✅ Done! Access dashboard at: http://TARGET_IP:11078
+
+════════════════════════════════════════════════════════════════════════════
+                       📋 SCRIPT USAGE
+════════════════════════════════════════════════════════════════════════════
+
+Start application:
+  $ ./scripts/start-rdk-app.sh
+
+Stop application:
+  $ ./scripts/stop-rdk-app.sh
+
+Restart application:
+  $ ./scripts/restart-rdk-app.sh
+
+Check status:
+  $ ./scripts/status-rdk-app.sh
+
+View logs:
+  $ sudo docker logs rdk-middleware-dashboard -f
+
+════════════════════════════════════════════════════════════════════════════
+                    🔍 MANUAL DEPLOYMENT (ADVANCED)
+════════════════════════════════════════════════════════════════════════════
+
+1. Build Docker image:
+   $ cd docker-files
+   $ sudo docker build -f Dockerfile.production -t rdk-middleware:latest .
+
+2. Start with docker-compose:
+   $ sudo docker compose -f docker-compose.rpi.clean.yml up -d
+
+3. Verify running:
+   $ docker ps | grep rdk-middleware
+
+4. Access dashboard:
+   http://YOUR_IP:11078
+
+════════════════════════════════════════════════════════════════════════════
+                         🛠️ TROUBLESHOOTING
+════════════════════════════════════════════════════════════════════════════
+
+Issue: Docker daemon not running
+Solution: sudo systemctl start docker
+
+Issue: Permission denied
+Solution: sudo usermod -aG docker $USER && newgrp docker
+
+Issue: Port 11078 already in use
+Solution: sudo docker compose down && ./scripts/start-rdk-app.sh
+
+Issue: Image doesn't exist
+Solution: ./scripts/start-rdk-app.sh (will build automatically)
+
+════════════════════════════════════════════════════════════════════════════
+                         📚 DOCUMENTATION
+════════════════════════════════════════════════════════════════════════════
+
+For detailed information, see documentation/ folder containing:
+- Architecture guides
+- API references
+- Configuration details
+- Troubleshooting guides
+
+════════════════════════════════════════════════════════════════════════════

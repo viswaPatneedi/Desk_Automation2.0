@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rdk-config
+  namespace: rdk-testing
+  labels:
+    app: device-testing-dashboard
+data:
+  # Flask configuration
+  FLASK_APP: "app.py"
+  FLASK_ENV: "production"
+  
+  # SMTP configuration (non-sensitive defaults)
+  SMTP_SERVER: "smtp.gmail.com"
+  SMTP_PORT: "587"
+  
+  # Application settings
+  LOG_LEVEL: "info"
+  GUNICORN_WORKERS: "4"
+  GUNICORN_TIMEOUT: "300"

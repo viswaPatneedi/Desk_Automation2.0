@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL State Persistence Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1f2937;
+            color: #f3f4f6;
+        }
+        .test-container {
+            background: #2d3748;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #3b82f6;
+        }
+        .test-step {
+            background: #1f2937;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #3b82f6;
+            border-radius: 4px;
+        }
+        .step-number {
+            font-weight: bold;
+            color: #10b981;
+            margin-right: 10px;
+        }
+        .code-block {
+            background: #111827;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+        .pass {
+            color: #10b981;
+        }
+        .fail {
+            color: #ef4444;
+        }
+        .info {
+            color: #60a5fa;
+        }
+        a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 URL State Persistence Test Guide</h1>
+    
+    <div class="test-container">
+        <div class="test-title">Manual Test Steps</div>
+        
+        <div class="test-step">
+            <span class="step-number">Step 1:</span> Open Results Cards Page
+            <div class="code-block">
+                <a href="http://10.0.0.123:11078/results_cards" target="_blank">Open Results Cards Page</a>
+            </div>
+            <p><span class="info">Expected:</span> Page loads with today's date, no filters applied</p>
+        </div>
+        
+        <div class="test-step">
+            <span class="step-number">Step 2:</span> Select Filters
+            <p>Click on the dropdowns and select:</p>
+            <ul>
+                <li>Sequence: Select a sequence type (e.g., "Sequences" or "Single Methods")</li>
+                <li>Method: Select a method from the list</li>
+                <li>Device: Select a device from the list</li>
+                <li>Date: Click calendar and select a specific date</li>
+                <li>Click "Load" button to load results for that date</li>
+            </ul>
+            <p><span class="info">Expected:</span> Page shows filtered results for selected date with filters applied</p>
+        </div>
+        
+        <div class="test-step">
+            <span class="step-number">Step 3:</span> Check URL Parameters
+            <p>Look at the URL in the address bar</p>
+            <div class="code-block" id="url-display">
+                URL will be shown here after you select filters
+            </div>
+            <p><span class="info">Expected:</span> URL should include query parameters like:</p>
+            <div class="code-block">
+                ?sequence_type=value&method=value&device=value&date=YYYY-MM-DD
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <span class="step-number">Step 4:</span> <span class="pass">CRITICAL TEST - Refresh Page</span>
+            <p>Press F5 or Ctrl+R to refresh the page</p>
+            <p><span class="pass" style="font-weight: bold;">✓ PASS if:</span> Page displays the SAME filtered results as before refresh</p>
+            <p><span class="fail" style="font-weight: bold;">✗ FAIL if:</span> Page reverts to today's date or no filters applied</p>
+        </div>
+        
+        <div class="test-step">
+            <span class="step-number">Step 5:</span> Test Reset Filters
+            <p>Click "Reset Filters" button</p>
+            <p><span class="info">Expected:</span> Page returns to today's date with all filters cleared</p>
+            <p><span class="info">Expected:</span> URL no longer has query parameters</p>
+        </div>
+        
+        <div class="test-step">
+            <span class="step-number">Step 6:</span> Test Load More Pagination
+            <p>Select today's date and no filters, then click "Load More Results from Earlier Days"</p>
+            <p>Scroll to check URL - it should still show today's date without query params</p>
+            <p><span class="info">Expected:</span> Results from earlier days are added to the page</p>
+            <p><span class="info">Expected:</span> URL remains unchanged</p>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <div class="test-title">Automated Test Scenarios</div>
+        
+        <div class="test-step">
+            <span class="step-number">Test 1:</span> Filter State Preserved on Refresh
+            <div class="code-block">
+1. Navigate to Results Cards page
+2. Select: Sequence="Sequences", Method="CELLO_DEEPSLEEP_WAKEUP", Device="CELLO-SKY", Date="2026-04-10"
+3. Click "Load" button
+4. Verify URL contains: sequence_type=sequence&method=CELLO_DEEPSLEEP_WAKEUP&device=CELLO-SKY&date=2026-04-10
+5. Refresh page (F5)
+6. ✓ PASS: Same filters and results display
+7. ✓ PASS: URL parameters are maintained
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <span class="step-number">Test 2:</span> Changing Filters Updates URL
+            <div class="code-block">
+1. Start with filtered view (Test 1)
+2. Change device filter to different device
+3. Verify URL updates with new device value
+4. Change method filter
+5. Verify URL updates with new method value
+6. ✓ PASS: URL updates in real-time as filters change
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <span class="step-number">Test 3:</span> Reset Filters Clears URL
+            <div class="code-block">
+1. Start with filtered view (Test 1)
+2. Click "Reset Filters" button
+3. Verify URL becomes clean (no query parameters)
+4. ✓ PASS: Page shows today's date, no filters applied
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <span class="step-number">Test 4:</span> Load More Doesn't Affect Filter State
+            <div class="code-block">
+1. Navigate with no date selected (today by default)
+2. Click "Load More Results" button
+3. Verify URL remains without date parameter
+4. ✓ PASS: Previous/earlier results are added
+5. ✓ PASS: URL state unchanged
+            </div>
+        </div>
+        
+        <div class="test-step">
+            <span class="step-number">Test 5:</span> Bookmark Filtered Results
+            <div class="code-block">
+1. Create filtered view with specific criteria
+2. Copy URL from address bar: 
+   /results_cards?sequence_type=sequence&method=TEST&device=TEST-DEVICE&date=2026-04-10
+3. Bookmark this URL
+4. Close the browser
+5. Open the bookmark
+6. ✓ PASS: Same filtered view is restored
+7. ✓ PASS: UI shows previously selected filters
+            </div>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <div class="test-title">Expected URL Format Examples</div>
+        
+        <div class="code-block">
+Clean URL (default today):
+/results_cards
+
+With sequence type only:
+/results_cards?sequence_type=sequence
+
+With method filter:
+/results_cards?method=CELLO_DEEPSLEEP_WAKEUP
+
+With device filter:
+/results_cards?device=CELLO-SKY
+
+With specific date:
+/results_cards?date=2026-04-10
+
+Complete filter state:
+/results_cards?sequence_type=sequence&method=CELLO_DEEPSLEEP_WAKEUP&device=CELLO-SKY&date=2026-04-10
+        </div>
+    </div>
+    
+    <script>
+        // Show current URL when this test page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.location.search) {
+                document.getElementById('url-display').textContent = 'Current: ' + window.location.href;
+            }
+        });
+    </script>
+</body>
+</html>

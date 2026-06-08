@@ -1,0 +1,74 @@
+{
+  "LOG_PATTERNS": {
+    "HOME": {
+      "log_pattern": "Entering HOME",
+      "file_path": "/opt/logs/sky-messages.log",
+      "description": "HOME screen detected in device logs"
+    },
+    "Network_Error": {
+      "log_pattern": "No WIFI|Network Error|Connection Failed",
+      "file_path": "/opt/logs/core_log.txt",
+      "description": "Network connectivity issues detected"
+    },
+    "Process_Crash": {
+      "log_pattern": "process crashed|SIGSEGV|SIGABRT|fatal error|Segmentation fault",
+      "file_path": "/opt/logs/core_log.txt",
+      "description": "Process crash or fatal error detected"
+    },
+    "Realtek_Module": {
+      "log_pattern": "Realtek|rtl8192|rtl8821|rtl8822",
+      "file_path": "/opt/logs/core_log.txt",
+      "description": "Realtek WiFi module detected"
+    },
+    "WPEFramework_Crash": {
+      "log_pattern": "WPEFramework.*CRASH|WPEFramework.*ERROR",
+      "file_path": "/opt/logs/core_log.txt",
+      "description": "WPEFramework service crash or error"
+    },
+    "Memory_Warning": {
+      "log_pattern": "Out of Memory|OOM|memory exhausted",
+      "file_path": "/opt/logs/core_log.txt",
+      "description": "Memory warning or out-of-memory condition"
+    },
+    "Service_Restart": {
+      "log_pattern": "service restarted|systemctl restart|service start|service restart",
+      "file_path": "/opt/logs/core_log.txt",
+      "description": "Service restart detected"
+    },
+    "Authentication_Error": {
+      "log_pattern": "Authentication failed|auth error|permission denied",
+      "file_path": "/opt/logs/core_log.txt",
+      "description": "Authentication or permission error"
+    }
+  },
+  "SYSTEM_COMMAND_PATTERNS": {
+    "Teetz": {
+      "command": "teetz | tail -5",
+      "description": "Teetz status check"
+    },
+    "Disk_Usage": {
+      "command": "df -h /opt",
+      "description": "Check disk usage on /opt partition"
+    },
+    "Memory_Usage": {
+      "command": "free -h",
+      "description": "Check available memory"
+    },
+    "CPU_Usage": {
+      "command": "top -b -n 1 | head -15",
+      "description": "CPU and process usage"
+    },
+    "Dsmgr_Status": {
+      "command": "systemctl status dsmgr | head -10",
+      "description": "Check Dsmgr service status"
+    },
+    "Processes": {
+      "command": "ps aux | grep -E 'ermgr|wpeframework|dropbear' | grep -v grep",
+      "description": "Check critical process status"
+    },
+    "System_Uptime": {
+      "command": "uptime",
+      "description": "System uptime and load average"
+    }
+  }
+}

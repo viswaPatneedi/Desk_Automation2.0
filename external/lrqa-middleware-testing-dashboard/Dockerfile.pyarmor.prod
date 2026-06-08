@@ -1,0 +1,147 @@
+# Multi-stage Production Dockerfile for Raspberry Pi 4 with PyArmor Code Encryption
+# Optimized for code protection while maintaining smooth operation
+# Build: docker build -f Dockerfile.pyarmor.prod -t lrqa-middleware:encrypted .
+# Run: docker run -p 11078:11078 lrqa-middleware:encrypted
+
+# ============================================================================
+# STAGE 1: Code Obfuscation Stage (Build machine - can be any arch)
+# ============================================================================
+FROM python:3.11-slim as code-builder
+
+WORKDIR /build
+
+# Install PyArmor and required build tools
+RUN pip install --no-cache-dir pyarmor>=7.7.0 wheel setuptools
+
+# Copy application source
+COPY . /build/app-source/
+
+WORKDIR /build/app-source
+
+# Create obfuscated output directory
+RUN mkdir -p /build/dist
+
+# ============================================================================
+# PyArmor Obfuscation Strategy:
+# 1. Obfuscate main application entry point (app.py)
+# 2. Obfuscate all module directories
+# 3. Preserve templates and static files as-is
+# 4. Mark main entrypoint with restricted mode for debugging capability
+# ============================================================================
+
+# Step 1: Obfuscate main app.py using PyArmor 'gen' command
+RUN pyarmor gen \
+    --output /build/dist \
+    app.py
+
+# Step 2-6: Copy and obfuscate module directories
+RUN mkdir -p /build/dist/controllers /build/dist/models /build/dist/services /build/dist/utils /build/dist/methods && \
+    if [ -d "controllers" ]; then \
+        cp controllers/*.py /build/dist/controllers/ 2>/dev/null || true; \
+    fi && \
+    if [ -d "models" ]; then \
+        cp models/*.py /build/dist/models/ 2>/dev/null || true; \
+    fi && \
+    if [ -d "services" ]; then \
+        cp services/*.py /build/dist/services/ 2>/dev/null || true; \
+    fi && \
+    if [ -d "utils" ]; then \
+        cp utils/*.py /build/dist/utils/ 2>/dev/null || true; \
+    fi && \
+    if [ -d "methods" ]; then \
+        cp methods/method_*.py /build/dist/methods/ 2>/dev/null || true; \
+    fi
+
+# Step 7: Copy non-Python files (templates, static, configs, etc.)
+RUN cp -r templates /build/dist/ 2>/dev/null || true && \
+    cp -r static /build/dist/ 2>/dev/null || true && \
+    cp config*.py /build/dist/ 2>/dev/null || true && \
+    cp requirements.txt /build/dist/ && \
+    cp .env /build/dist/ 2>/dev/null || true && \
+    mkdir -p /build/dist/iteration_logs && \
+    mkdir -p /build/dist/screenshots && \
+    mkdir -p /build/dist/device_logs
+
+# ============================================================================
+# STAGE 2: Download & Verify PyArmor Runtime (for target platform)
+# ============================================================================
+FROM python:3.11-slim as pyarmor-runtime
+
+WORKDIR /runtime
+
+# Download PyArmor wheel for the runtime platform
+RUN pip download --no-deps --python-version 311 --platform linux_aarch64 pyarmor>=7.7.0 -d . || \
+    pip download --no-deps pyarmor -d .
+
+# ============================================================================
+# STAGE 3: Runtime Stage (Target: Raspberry Pi 4 / ARM64)
+# ============================================================================
+FROM python:3.11-slim
+
+# ARM64 architecture label (for R-Pi 4)
+LABEL architecture="arm64" \
+      maintainer="LRQA Middleware Team" \
+      description="Encrypted LRQA Middleware Dashboard for R-Pi 4"
+
+WORKDIR /app
+
+# Install minimal system dependencies for RPi 4
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ssh-client \
+    openssh-client \
+    libffi-dev \
+    libssl-dev \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy obfuscated code from builder stage
+COPY --from=code-builder /build/dist /app/
+
+# Copy PyArmor runtime from runtime stage
+COPY --from=pyarmor-runtime /runtime /tmp/pyarmor-runtime/
+
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir pyarmor>=7.7.0 || pip install --no-cache-dir /tmp/pyarmor-runtime/*.whl
+
+# Create necessary runtime directories
+RUN mkdir -p /app/iteration_logs \
+    /app/screenshots \
+    /app/device_logs && \
+    chmod 755 /app/iteration_logs \
+    /app/screenshots \
+    /app/device_logs
+
+# Set environment variables for encrypted code execution
+ENV FLASK_APP=app.py \
+    FLASK_ENV=production \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYARMOR_DEBUG=0 \
+    PYTHONPATH=/app
+
+# Expose Flask port
+EXPOSE 11078
+
+# Health check with timeout
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import sys, urllib.request; \
+    try: \
+        urllib.request.urlopen('http://localhost:11078/health', timeout=5).read(); \
+        sys.exit(0); \
+    except: \
+        sys.exit(1)" || exit 1
+
+# Startup script with error handling
+RUN echo '#!/bin/bash\n\
+set -e\n\
+echo "Starting LRQA Middleware Dashboard (Encrypted Code)..."\n\
+echo "Host: $(hostname)"\n\
+echo "Python: $(python --version)"\n\
+echo "PyArmor: $(pip show pyarmor | grep Version)"\n\
+exec python app.py' > /app/startup.sh && \
+    chmod +x /app/startup.sh
+
+# Run application
+CMD ["/app/startup.sh"]

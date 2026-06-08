@@ -1,0 +1,25 @@
+═══════════════════════════════════════════════════════════
+ QUICK START - Application with Email Notifications
+═══════════════════════════════════════════════════════════
+
+▶ START APPLICATION (with email enabled):
+  ./start_with_email.sh
+
+▶ CHECK STATUS:
+  ./check_app_status.sh
+
+▶ VIEW LOGS:
+  tail -f app.log
+
+▶ STOP APPLICATION:
+  pkill -f "python.*app.py"
+
+▶ ACCESS DASHBOARD:
+  http://10.0.0.32:8080
+
+═══════════════════════════════════════════════════════════
+EMAIL SERVICE: AUTOMATIC ✓
+  → Emails sent automatically after each test execution
+  → No manual configuration needed when using start script
+  → Check EMAIL_SERVICE_STATUS.md for full details
+═══════════════════════════════════════════════════════════

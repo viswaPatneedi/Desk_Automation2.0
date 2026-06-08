@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soft/Hard Boot Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        :root {
+            --primary-color: #6b7280;
+            --secondary-color: #4b5563;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #6b7280;
+            --dark-color: #1f2937;
+            --darker-color: #111827;
+            --light-grey: #9ca3af;
+            --medium-grey: #6b7280;
+            --dark-grey: #374151;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            --card-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+            font-family: 'Inter', sans-serif;
+            color: #1f2937;
+        }
+        
+        .dashboard-card {
+            background: #1f2937;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #374151;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-lg);
+        }
+        
+        .card-header-custom {
+            background: #4b5563;
+            color: #f3f4f6;
+            padding: 1.25rem 1.5rem;
+            border: none;
+            border-bottom: 1px solid #374151;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .card-header-custom h5 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .card-body-custom {
+            padding: 1.5rem;
+        }
+        
+        .table-modern {
+            margin-bottom: 0;
+        }
+        
+        .table-modern thead th {
+            background: #374151;
+            color: #f3f4f6;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            padding: 1rem;
+            border: none;
+        }
+        
+        .table-modern tbody td {
+            padding: 1rem;
+            border-bottom: 1px solid #374151;
+            vertical-align: middle;
+            color: #1f2937;
+        }
+        
+        .table-modern tbody tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .badge-hard {
+            background: #ef4444;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .badge-soft {
+            background: #3b82f6;
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .badge-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-view-log {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-view-log:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+            color: #f3f4f6;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .page-header h1 {
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .page-header p {
+            margin: 0.5rem 0 0;
+            opacity: 0.8;
+        }
+        
+        .milestone-logs-cell {
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: #1f2937;
+            background: #f9fafb;
+            padding: 0.75rem;
+            border-radius: 4px;
+            max-width: 350px;
+            max-height: 250px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: #1f2937; border-bottom: 1px solid #374151;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/" style="font-weight: 700;">
+                <i class="bi bi-lightning-fill"></i> Soft/Hard Boot Results
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="d-flex align-items-center gap-3 ms-auto">
+                <!-- Results Dropdown -->
+                <div class="btn-group" role="group">
+                    <a href="/results" class="btn btn-sm btn-outline-light" title="View Results">
+                        <i class="bi bi-table"></i> Results
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="View Options">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/results"><i class="bi bi-table"></i> Table View</a></li>
+                        <li><a class="dropdown-item" href="/results-cards"><i class="bi bi-grid-3x2"></i> Card View</a></li>
+                    </ul>
+                </div>
+                <!-- Services Dropdown -->
+                <div class="btn-group" role="group">
+                    <a href="/services/system-commands" class="btn btn-sm btn-outline-light" title="Services">
+                        <i class="bi bi-gear-fill"></i> Services
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="Service Options">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/services/system-commands"><i class="bi bi-terminal"></i> System Commands</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Results Pages</h6></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-results"><i class="bi bi-speedometer2"></i> Reboot Perf Results</a></li>
+                        <li><a class="dropdown-item" href="/deepsleep-results"><i class="bi bi-moon-fill"></i> DeepSleep Results</a></li>
+                        <li><a class="dropdown-item" href="/soft-hard-boot-results"><i class="bi bi-arrow-repeat"></i> Boot Results</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-compare"><i class="bi bi-columns-gap"></i> Compare Executions</a></li>
+                    </ul>
+                </div>
+                <a href="/log-patterns" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-file-earmark-lines"></i> Log Patterns
+                </a>
+                <span class="text-white" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-person-circle"></i> {{ current_user.name }}
+                </span>
+                <a href="/logout" class="btn btn-sm btn-danger">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+                <span class="badge bg-success badge-status">
+                    <i class="bi bi-check-circle-fill"></i> System Online
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="container-fluid">
+            <h1><i class="bi bi-arrow-repeat"></i> Soft/Hard Boot Performance Results</h1>
+            <p>Monitor and analyze soft boot and hard boot reboot performance metrics</p>
+        </div>
+    </div>
+
+    <!-- Results Container -->
+    <div class="container-fluid" style="padding: 2rem;">
+        <div id="resultsContainer" style="min-height: 400px;">
+            <div class="text-center" style="padding: 2rem; color: #9ca3af;">
+                <i class="bi bi-hourglass-split" style="font-size: 2rem;"></i>
+                <p style="margin-top: 1rem;">Loading results...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load and render results
+        function loadResults() {
+            fetch('/api/soft-hard-boot-results')
+                .then(response => response.json())
+                .then(data => {
+                    const resultsByDevice = data.results_by_device || {};
+                    renderResults(resultsByDevice);
+                })
+                .catch(error => {
+                    console.error('Error loading results:', error);
+                    document.getElementById('resultsContainer').innerHTML = 
+                        '<div class="alert alert-danger">Failed to load results</div>';
+                });
+        }
+
+        function renderResults(resultsByDevice) {
+            const container = document.getElementById('resultsContainer');
+            const deviceKeys = Object.keys(resultsByDevice);
+
+            if (!deviceKeys.length) {
+                container.innerHTML = '<div class="text-muted" style="padding: 2rem;">No Soft/Hard Boot results found.</div>';
+                return;
+            }
+
+            container.innerHTML = deviceKeys.map(deviceIp => {
+                const device = resultsByDevice[deviceIp];
+                const jobs = Object.values(device.jobs || {});
+                
+                // Sort jobs by start_time in descending order (latest first)
+                jobs.sort((a, b) => {
+                    const timeA = new Date(a.start_time || 0).getTime();
+                    const timeB = new Date(b.start_time || 0).getTime();
+                    return timeB - timeA;  // Descending order (latest first)
+                });
+
+                const jobBlocks = jobs.map(job => {
+                    const rows = (job.per_iteration || []).map(row => {
+                        const bootTypeBadge = row.boot_type === 'HARD' 
+                            ? '<span class="badge-hard">⚑ HARD</span>' 
+                            : '<span class="badge-soft">⚙ SOFT</span>';
+
+                        const crashBadge = row.crash_found 
+                            ? '<span class="badge badge-danger">YES</span>' 
+                            : '<span class="badge badge-success">NO</span>';
+
+                        const logsBadge = row.logs_collected 
+                            ? '<span class="badge badge-success">Collected</span>' 
+                            : '<span class="badge badge-secondary">Not Collected</span>';
+
+                        const milestoneLogs = row.rdk_milestones_log 
+                            ? (typeof row.rdk_milestones_log === 'string' 
+                                ? row.rdk_milestones_log 
+                                : JSON.stringify(row.rdk_milestones_log, null, 2))
+                            : '-';
+
+                        return `
+                            <tr>
+                                <td><strong>ITR-${row.iteration}</strong></td>
+                                <td>${bootTypeBadge}</td>
+                                <td><strong>${row.performance_seconds !== null ? row.performance_seconds.toFixed(2) : '-'}s</strong></td>
+                                <td>${crashBadge}</td>
+                                <td>${logsBadge}</td>
+                                <td>${row.crash_details.length > 0 ? row.crash_details.join(', ') : '-'}</td>
+                                <td><div class="milestone-logs-cell">${milestoneLogs}</div></td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    const validTimes = (job.per_iteration || [])
+                        .filter(row => row.performance_seconds !== null && row.performance_seconds !== undefined)
+                        .map(row => row.performance_seconds);
+                    
+                    const avgBootTime = validTimes.length > 0 
+                        ? (validTimes.reduce((a, b) => a + b, 0) / validTimes.length).toFixed(2)
+                        : '-';
+
+                    // Format execution time
+                    const executionTime = job.start_time 
+                        ? new Date(job.start_time).toLocaleString('en-US', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                          }).replace(',', '')
+                        : 'N/A';
+
+                    return `
+                        <div class="dashboard-card mb-3">
+                            <div class="card-header-custom" style="justify-content: space-between;">
+                                <div>
+                                    <strong style="color: #f3f4f6;">${job.image_name || 'Unknown Build'}</strong> 
+                                    <span style="color: #9ca3af;">@ ${executionTime}</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 0.85rem; color: #9ca3af;">Avg Boot Time</div>
+                                        <div style="font-size: 1.25rem; font-weight: 700; color: #10b981;">${avgBootTime}s</div>
+                                    </div>
+                                    <button class="btn btn-sm btn-success export-excel-btn" 
+                                        data-device-name="${job.device_name}"
+                                        data-device-ip="${job.device_ip}"
+                                        data-avg-boot-time="${avgBootTime}"
+                                        data-image-name="${job.image_name || 'Unknown Build'}"
+                                        data-execution-time="${executionTime}"
+                                        data-iterations='${JSON.stringify(job.per_iteration)}'>
+                                        <i class="bi bi-download"></i> Download Excel
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="card-body-custom" style="max-height: 600px; overflow-y: auto;">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-modern">
+                                        <thead>
+                                            <tr>
+                                                <th>Iteration No</th>
+                                                <th>Boot Type</th>
+                                                <th>Reboot Time</th>
+                                                <th>Crash Found</th>
+                                                <th>Logs Collected</th>
+                                                <th>Crash Details</th>
+                                                <th>RDK Milestone Logs</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${rows}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="dashboard-card mb-4">
+                        <div class="card-header-custom">
+                            <i class="bi bi-hdd-network"></i>
+                            <h5>${device.device_name} (${device.device_ip})</h5>
+                        </div>
+                        <div class="card-body-custom">
+                            ${jobBlocks}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeJsonForHtml(jsonString) {
+            try {
+                const json = JSON.stringify(jsonString);
+                return json.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            } catch (e) {
+                return jsonString.replace(/'/g, "\\'");
+            }
+        }
+
+        function exportJobToExcel(deviceName, deviceIp, avgBootTime, imageName, executionTime, iterations) {
+            try {
+                console.log('Starting export...');
+                
+                // Ensure iterations is an array
+                if (typeof iterations === 'string') {
+                    iterations = JSON.parse(iterations);
+                }
+                
+                if (!Array.isArray(iterations)) {
+                    throw new Error('Iterations is not an array: ' + typeof iterations);
+                }
+                
+                console.log('Processing', iterations.length, 'iterations');
+                
+                // Build CSV content
+                let csvContent = '';
+                
+                // Add header with device info and execution metadata
+                csvContent += `Device,"${deviceName} (${deviceIp})"\n`;
+                csvContent += `Image/Build,"${imageName}"\n`;
+                csvContent += `Execution Time,"${executionTime}"\n`;
+                csvContent += `Average Boot Time (s),"${avgBootTime}"\n\n`;
+                
+                // Add table headers
+                const headers = ['Iteration No', 'Boot Type', 'Reboot Time (s)', 'Crash Found', 'Logs Collected', 'Crash Details', 'RDK Milestone Logs'];
+                csvContent += headers.map(h => `"${h}"`).join(',') + '\n';
+                
+                // Add data rows
+                iterations.forEach((row, idx) => {
+                    try {
+                        const iteration = row.iteration || '-';
+                        const bootType = row.boot_type || '-';
+                        const rebootTime = row.performance_seconds !== null && row.performance_seconds !== undefined 
+                            ? row.performance_seconds.toFixed(2) 
+                            : '-';
+                        const crashFound = row.crash_found ? 'YES' : 'NO';
+                        const logsCollected = row.logs_collected ? 'YES' : 'NO';
+                        const crashDetails = (row.crash_details && Array.isArray(row.crash_details) && row.crash_details.length > 0) 
+                            ? row.crash_details.join('; ') 
+                            : '-';
+                        
+                        // Escape quotes in milestone logs for CSV
+                        let milestoneLogs = '-';
+                        if (row.rdk_milestones_log) {
+                            milestoneLogs = typeof row.rdk_milestones_log === 'string' 
+                                ? row.rdk_milestones_log 
+                                : JSON.stringify(row.rdk_milestones_log);
+                            
+                            // Escape special characters for CSV
+                            milestoneLogs = milestoneLogs
+                                .replace(/"/g, '""')      // Escape quotes
+                                .replace(/\n/g, ' | ')    // Replace newlines with pipe
+                                .replace(/\r/g, '');      // Remove carriage returns
+                        }
+                        
+                        // Build CSV row with proper quoting
+                        const row_csv = [
+                            `"${iteration}"`,
+                            `"${bootType}"`,
+                            `"${rebootTime}"`,
+                            `"${crashFound}"`,
+                            `"${logsCollected}"`,
+                            `"${crashDetails}"`,
+                            `"${milestoneLogs}"`
+                        ].join(',');
+                        
+                        csvContent += row_csv + '\n';
+                    } catch (rowError) {
+                        console.warn('Error processing row', idx, ':', rowError);
+                    }
+                });
+                
+                console.log('CSV content generated, length:', csvContent.length);
+                
+                // Create blob with explicit type
+                const BOM = '\uFEFF';  // UTF-8 BOM for Excel compatibility
+                const csvWithBom = BOM + csvContent;
+                const blob = new Blob([csvWithBom], { type: 'text/csv;charset=utf-8' });
+                
+                console.log('Blob created, size:', blob.size);
+                
+                // Create download link
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                const filename = `SoftHardBoot_${deviceName.replace(/ /g, '_')}_${new Date().getTime()}.csv`;
+                
+                link.href = url;
+                link.download = filename;
+                link.style.display = 'none';
+                
+                // Add to body and click
+                document.body.appendChild(link);
+                console.log('Triggering download for:', filename);
+                link.click();
+                
+                // Clean up
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    console.log('Download completed and cleaned up');
+                }, 100);
+                
+            } catch (error) {
+                console.error('Export error:', error);
+                console.error('Stack:', error.stack);
+                alert('Error exporting to Excel:\n' + error.message);
+            }
+        }
+
+        // Move event listener setup AFTER loadResults is called
+        // Use event delegation instead
+        document.addEventListener('click', function(e) {
+            if (e.target && e.target.closest('.export-excel-btn')) {
+                e.preventDefault();
+                const btn = e.target.closest('.export-excel-btn');
+                
+                try {
+                    const deviceName = btn.getAttribute('data-device-name');
+                    const deviceIp = btn.getAttribute('data-device-ip');
+                    const avgBootTime = btn.getAttribute('data-avg-boot-time');
+                    const imageName = btn.getAttribute('data-image-name');
+                    const executionTime = btn.getAttribute('data-execution-time');
+                    const iterationsJson = btn.getAttribute('data-iterations');
+                    
+                    console.log('Export button clicked');
+                    console.log('Device:', deviceName);
+                    console.log('Iterations data length:', iterationsJson ? iterationsJson.length : 0);
+                    
+                    if (!iterationsJson) {
+                        alert('No iterations data available');
+                        return;
+                    }
+                    
+                    const iterations = JSON.parse(iterationsJson);
+                    console.log('Parsed iterations:', iterations.length, 'records');
+                    
+                    exportJobToExcel(deviceName, deviceIp, avgBootTime, imageName, executionTime, iterations);
+                } catch (error) {
+                    console.error('Export button error:', error);
+                    alert('Error: ' + error.message);
+                }
+            }
+        }, true);  // Use capture phase for better reliability
+
+        function showMilestoneLog(logData) {
+            if (!logData) {
+                alert('No milestone log data available');
+                return;
+            }
+
+            const logText = typeof logData === 'string' ? logData : JSON.stringify(logData, null, 2);
+            const logLines = logText.split('\n');
+            
+            let htmlContent = '<div style="font-family: monospace; font-size: 0.9rem; max-height: 500px; overflow-y: auto; background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 4px;">';
+            
+            logLines.forEach(line => {
+                const escapedLine = document.createTextNode(line).data;
+                htmlContent += '<div style="line-height: 1.5;">' + escapedLine + '</div>';
+            });
+            
+            htmlContent += '</div>';
+
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = 'background: white; border-radius: 8px; max-width: 800px; width: 90%; max-height: 80vh; overflow: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3);';
+            
+            modalContent.innerHTML = `
+                <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;"> 
+                    <h5 style="margin: 0;"><i class="bi bi-file-earmark-text"></i> RDK Milestones Log</h5>
+                    <button onclick="this.closest('div').parentElement.parentElement.remove()" style="border: none; background: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                </div>
+                <div style="padding: 20px;">
+                    ${htmlContent}
+                </div>
+                <div style="padding: 15px; border-top: 1px solid #e5e7eb; text-align: right;">
+                    <button onclick="this.closest('div').parentElement.parentElement.remove()" class="btn btn-sm btn-secondary">Close</button>
+                </div>
+            `;
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+
+        // Load results on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadResults();
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

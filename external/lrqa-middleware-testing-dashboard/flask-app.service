@@ -1,0 +1,17 @@
+[Unit]
+Description=RDK Device Testing Flask Application
+After=network.target
+
+[Service]
+Type=simple
+User=lrqa
+WorkingDirectory=/home/lrqa/Desktop/viswa/Latest_Enhancement/Enhancement
+Environment="PATH=/home/lrqa/Desktop/viswa/Latest_Enhancement/Enhancement/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=/home/lrqa/Desktop/viswa/Latest_Enhancement/Enhancement/venv/bin/python app.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/lrqa/Desktop/viswa/Latest_Enhancement/Enhancement/logs/flask-service.log
+StandardError=append:/home/lrqa/Desktop/viswa/Latest_Enhancement/Enhancement/logs/flask-service.log
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,24 @@
+[Unit]
+Description=RDK E Middleware Testing Dashboard - Flask Application
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=viswa-pi4
+WorkingDirectory=/home/viswa-pi4/Desktop/LRQA-DASHBOARD/lrqa-middleware-testing-dashboard
+Environment="PATH=/home/viswa-pi4/Desktop/LRQA-DASHBOARD/lrqa-middleware-testing-dashboard/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PYTHONUNBUFFERED=1"
+Environment="SMTP_SERVER=smtp.gmail.com"
+Environment="SMTP_PORT=587"
+Environment="SENDER_EMAIL=cperdkemiddleware@gmail.com"
+Environment="SENDER_PASSWORD=tbbwaifvmtzovqcs"
+ExecStart=/home/viswa-pi4/Desktop/LRQA-DASHBOARD/lrqa-middleware-testing-dashboard/venv/bin/python3 app.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/viswa-pi4/Desktop/LRQA-DASHBOARD/lrqa-middleware-testing-dashboard/logs/flask-app.log
+StandardError=append:/home/viswa-pi4/Desktop/LRQA-DASHBOARD/lrqa-middleware-testing-dashboard/logs/flask-app.log
+SyslogIdentifier=rdk-flask
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,123 @@
+# =============================================================================
+# Production Dockerfile for RDK-E Middleware QA Testing Dashboard
+# =============================================================================
+# Target: Raspberry Pi 4/5 and x86 Linux systems
+# Architecture: ARM/ARM64/x86_64
+# Base: Python 3.11-slim
+# 
+# FEATURES:
+# ✅ Full application codebase  ✅ All dependencies included
+# ✅ Execution data stored in volumes (not in image)
+# ✅ Automatic startup via Gunicorn + Gevent
+# ✅ Production-optimized
+# ✅ Multi-platform support
+# =============================================================================
+
+FROM python:3.11-slim
+
+LABEL maintainer="VISWA" \
+      description="RDK-E Middleware QA Testing Dashboard" \
+      version="2.0.1" \
+      application="RDK Testing Platform"
+
+# ============================================================================
+# ENVIRONMENT SETUP
+# ============================================================================
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_APP=app.py \
+    FLASK_ENV=production \
+    PORT=11078 \
+    WORKERS=2 \
+    TZ=UTC \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
+# ============================================================================
+# INSTALL SYSTEM DEPENDENCIES
+# ============================================================================
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    git \
+    openssh-client \
+    curl \
+    wget \
+    net-tools \
+    telnet \
+    vim \
+    less \
+    && rm -rf /var/lib/apt/lists/*
+
+# ============================================================================
+# SET WORKING DIRECTORY
+# ============================================================================
+
+WORKDIR /app
+
+# ============================================================================
+# COPY APPLICATION CODE (Exclude execution data)
+# ============================================================================
+
+# Copy only application files, NOT execution data
+COPY requirements.txt .
+COPY app.py .
+COPY docker-entrypoint.sh .
+COPY config_*.py ./
+COPY controllers/ ./controllers/
+COPY models/ ./models/
+COPY services/ ./services/
+COPY templates/ ./templates/
+COPY static/ ./static/
+
+# Copy JSON configuration templates (not data)
+COPY Json/ ./Json/
+
+# ============================================================================
+# INSTALL PYTHON DEPENDENCIES
+# ============================================================================
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# ============================================================================
+# CREATE NECESSARY DIRECTORIES FOR RUNTIME DATA
+# ============================================================================
+
+RUN mkdir -p /app/iteration_logs \
+    && mkdir -p /app/screenshots \
+    && mkdir -p /app/data \
+    && mkdir -p /app/reference_screens \
+    && chmod -R 755 /app/iteration_logs \
+    && chmod -R 755 /app/screenshots
+
+# ============================================================================
+# MAKE ENTRYPOINT EXECUTABLE
+# ============================================================================
+
+RUN chmod +x /app/docker-entrypoint.sh
+
+# ============================================================================
+# EXPOSE PORT
+# ============================================================================
+
+EXPOSE 11078
+
+# ============================================================================
+# HEALTH CHECK
+# ============================================================================
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:11078/health || exit 1
+
+# ============================================================================
+# STARTUP COMMAND
+# ============================================================================
+
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
+CMD ["gunicorn", "-w", "2", "-k", "gevent", \
+     "-b", "0.0.0.0:11078", \
+     "--timeout", "300", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "app:app"]

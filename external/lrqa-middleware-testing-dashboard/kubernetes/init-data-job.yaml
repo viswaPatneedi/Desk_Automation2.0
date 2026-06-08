@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rdk-init-data
+  namespace: rdk-testing
+  labels:
+    app: device-testing-dashboard
+data:
+  devices.json: |
+    {
+      "devices": []
+    }
+  
+  jobs.json: |
+    {
+      "jobs": []
+    }
+  
+  device_job_queue.json: |
+    {
+      "queue": {}
+    }
+  
+  device_locks.json: |
+    {
+      "locks": {}
+    }
+  
+  saved_sequences.json: |
+    {
+      "sequences": []
+    }
+  
+  app_state.json: |
+    {
+      "users": {}
+    }
+  
+  reset_codes.json: |
+    {
+      "reset_codes": {}
+    }
+
+---
+# Init container job to populate initial data if files don't exist
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: rdk-init-data-job
+  namespace: rdk-testing
+  labels:
+    app: device-testing-dashboard
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+      - name: init-data
+        image: busybox:latest
+        command:
+        - sh
+        - -c
+        - |
+          echo "Initializing data files if they don't exist..."
+          for file in devices.json jobs.json device_job_queue.json device_locks.json saved_sequences.json app_state.json reset_codes.json; do
+            if [ ! -f /data/$file ]; then
+              echo "Creating $file"
+              cp /init-data/$file /data/$file
+            else
+              echo "$file already exists, skipping"
+            fi
+          done
+          echo "Initialization complete"
+        volumeMounts:
+        - name: init-data
+          mountPath: /init-data
+        - name: data-volume
+          mountPath: /data
+      volumes:
+      - name: init-data
+        configMap:
+          name: rdk-init-data
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: rdk-data-pvc

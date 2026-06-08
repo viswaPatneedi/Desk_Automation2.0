@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rdk-testing
+  labels:
+    name: rdk-testing
+    app: device-testing-dashboard

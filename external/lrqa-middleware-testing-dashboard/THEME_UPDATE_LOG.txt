@@ -1,0 +1,38 @@
+THEME UPDATE - PURITY UI INSPIRED
+===================================
+
+✓ Backup created: backups/index_backup_20251217_115955.html
+✓ Backup created: backups/results_backup_20251217_115955.html
+
+To restore if needed:
+  ./restore_backup.sh 20251217_115955
+
+LAYOUT CHANGES PLANNED:
+========================
+
+1. Left Static Panel (Fixed, ~280px width):
+   - Available Methods (draggable cards)
+   - Saved Sequences (with count badge)
+   - Add New Device form
+
+2. Center Panel (Main content area):
+   - Smaller status cards (4 cards in a row, compact design)
+   - Device selection grid (multi-select, fixed height, auto-scroll)
+   - Compact iteration count input
+   - Execution queue/table
+   - Action buttons
+
+3. Color Scheme (Purity UI inspired):
+   - Primary: Soft purple/blue gradients
+   - Background: Clean white/light gray
+   - Cards: White with subtle shadows
+   - Accent: Green for success, Blue for info
+
+4. Typography:
+   - Clean, modern fonts
+   - Proper hierarchy
+   - Softer colors
+
+IMPLEMENTATION STATUS:
+======================
+Creating new themed index.html...

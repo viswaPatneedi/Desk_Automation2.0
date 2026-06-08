@@ -1,0 +1,82 @@
+# Multi-stage Dockerfile for Raspberry Pi 4 with PyArmor Code Encryption
+# Stage 1: Build stage - Obfuscate code with PyArmor
+FROM python:3.11-slim as builder
+
+WORKDIR /app
+
+# Install PyArmor and dependencies
+RUN pip install --no-cache-dir pyarmor
+
+# Copy all application files
+COPY . .
+
+# Create directory for obfuscated code
+RUN mkdir -p /app/dist
+
+# Obfuscate Python code with PyArmor
+# This encrypts .py files while maintaining imports and module structure
+RUN pyarmor obfuscate \
+    --output /app/dist \
+    --restrict off \
+    --no-wrap \
+    --bootstrap=3 \
+    app.py
+
+# Copy non-Python source files to dist (images, configs, templates, etc.)
+RUN cp -r templates /app/dist/ && \
+    cp -r static /app/dist/ && \
+    cp -r models /app/dist/ && \
+    cp -r controllers /app/dist/ && \
+    cp -r services /app/dist/ && \
+    cp -r utils /app/dist/ && \
+    cp -r methods /app/dist/ && \
+    cp -r screenshots /app/dist/ && \
+    cp -r iteration_logs /app/dist/ && \
+    cp config*.py /app/dist/ && \
+    cp requirements.txt /app/dist/ && \
+    cp .env /app/dist/ 2>/dev/null || true
+
+# ---
+
+# Stage 2: Runtime stage - Deploy obfuscated code to RPi 4
+FROM python:3.11-slim
+
+# Install system dependencies for Raspberry Pi 4
+RUN apt-get update && apt-get install -y \
+    ssh-client \
+    openssh-client \
+    libffi-dev \
+    libssl-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy obfuscated code from builder stage
+COPY --from=builder /app/dist /app
+
+# Install Python dependencies from obfuscated app directory
+RUN pip install --no-cache-dir \
+    -r requirements.txt \
+    pyarmor
+
+# Create necessary directories
+RUN mkdir -p /app/iteration_logs \
+    /app/screenshots \
+    /app/device_logs
+
+# Set environment variables
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=production
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Expose Flask port
+EXPOSE 11078
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:11078/api/health').read()"
+
+# Run the Flask application
+CMD ["python", "app.py"]

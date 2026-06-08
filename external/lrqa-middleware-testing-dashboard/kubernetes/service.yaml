@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rdk-testing-service
+  namespace: rdk-testing
+  labels:
+    app: device-testing-dashboard
+spec:
+  type: ClusterIP  # Change to LoadBalancer or NodePort for external access
+  selector:
+    app: device-testing-dashboard
+  ports:
+  - name: http
+    port: 5000
+    targetPort: 5000
+    protocol: TCP
+  sessionAffinity: ClientIP  # Sticky sessions for stateful operations
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800  # 3 hours
+
+---
+# Alternative: LoadBalancer service for cloud providers
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: rdk-testing-loadbalancer
+#   namespace: rdk-testing
+#   labels:
+#     app: device-testing-dashboard
+# spec:
+#   type: LoadBalancer
+#   selector:
+#     app: device-testing-dashboard
+#   ports:
+#   - name: http
+#     port: 80
+#     targetPort: 5000
+#     protocol: TCP
+#   sessionAffinity: ClientIP
+
+---
+# Alternative: NodePort service for bare-metal/on-premises
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: rdk-testing-nodeport
+#   namespace: rdk-testing
+#   labels:
+#     app: device-testing-dashboard
+# spec:
+#   type: NodePort
+#   selector:
+#     app: device-testing-dashboard
+#   ports:
+#   - name: http
+#     port: 5000
+#     targetPort: 5000
+#     nodePort: 30500  # External port (30000-32767)
+#     protocol: TCP
+#   sessionAffinity: ClientIP

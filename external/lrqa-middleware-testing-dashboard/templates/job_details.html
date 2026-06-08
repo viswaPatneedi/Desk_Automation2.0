@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Details - {{ job.job_id }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    <style>
+        .status-badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+        .log-container {
+            background: #000000;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            padding: 1rem;
+            border-radius: 5px;
+            max-height: 665px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .job-info-card {
+            border-left: 4px solid #0d6efd;
+        }
+        .queue-item {
+            background: #f8f9fa;
+            border-left: 3px solid #6c757d;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        .queue-item.current {
+            border-left-color: #198754;
+            background: #d1e7dd;
+            box-shadow: 0 2px 8px rgba(25, 135, 84, 0.3);
+        }
+        .queue-item.completed {
+            border-left-color: #20c997;
+            background: #e8f5f1;
+            opacity: 0.7;
+        }
+        .auto-refresh-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #28a745;
+            animation: pulse 2s infinite;
+            margin-right: 5px;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        #screen-viewer-container {
+            position: relative;
+            width: 100%;
+            height: 600px;
+            background: #000;
+        }
+        #screen-viewer-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        #screen-viewer-container.fullscreen {
+            height: 100vh !important;
+        }
+        @media (max-width: 768px) {
+            #screen-viewer-container {
+                height: 400px;
+            }
+        }
+        #countdown-timer {
+            display: none;
+            animation: slideInDown 0.3s ease-out;
+        }
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .job-details-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr;
+            gap: 2rem;
+            min-height: calc(100vh - 300px);
+        }
+        @media (max-width: 1200px) {
+            .job-details-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .right-column {
+            display: flex;
+            flex-direction: column;
+        }
+        .job-info-card {
+            border-left: 4px solid #0d6efd;
+            flex-shrink: 0;
+        }
+        .execution-queue-card {
+            flex-shrink: 0;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .logs-card {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            height: 100%;
+        }
+        .logs-card .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .logs-card .log-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid" style="background: #1f2937; padding: 1rem 2rem;">
+            <div class="d-flex flex-column">
+                <span class="navbar-brand mb-0 h1" style="color: #d1d5db; font-weight: 700;">
+                    <i class="bi bi-clipboard-check"></i> Job Details
+                </span>
+                <span style="font-size: 0.75rem; color: #9ca3af; margin-left: 2rem;">
+                    <i class="bi bi-code-slash"></i> Designed & Developed by <strong>VISWA</strong>
+                </span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Results Dropdown -->
+                <div class="btn-group" role="group">
+                    <a href="/results" class="btn btn-sm btn-outline-light" title="View Results">
+                        <i class="bi bi-table"></i> Results
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="View Options">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/results"><i class="bi bi-table"></i> Table View</a></li>
+                        <li><a class="dropdown-item" href="/results-cards"><i class="bi bi-grid-3x2"></i> Card View</a></li>
+                    </ul>
+                </div>
+                <!-- Services Dropdown -->
+                <div class="btn-group" role="group">
+                    <a href="/services/system-commands" class="btn btn-sm btn-outline-light" title="Services">
+                        <i class="bi bi-gear-fill"></i> Services
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="Service Options">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/services/system-commands"><i class="bi bi-terminal"></i> System Commands</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Results Pages</h6></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-results"><i class="bi bi-speedometer2"></i> Reboot Perf Results</a></li>
+                        <li><a class="dropdown-item" href="/deepsleep-results"><i class="bi bi-moon-fill"></i> DeepSleep Results</a></li>
+                        <li><a class="dropdown-item" href="/soft-hard-boot-results"><i class="bi bi-arrow-repeat"></i> Boot Results</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-compare"><i class="bi bi-columns-gap"></i> Compare Executions</a></li>
+                    </ul>
+                </div>
+                <a href="/dashboard" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-house"></i> Dashboard
+                </a>
+                <span class="text-white">
+                    <i class="bi bi-person-circle"></i> {{ current_user.name }}
+                </span>
+                <a href="/logout" class="btn btn-sm btn-danger">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+        {% set ns_sys = namespace(has_system_command=false) %}
+        {% if job.execution_queue %}
+            {% for item in job.execution_queue %}
+                {% if item.method == 'system_command' %}
+                    {% set ns_sys.has_system_command = true %}
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        {% if ns_sys.has_system_command %}
+        <div class="container mt-3">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-spreadsheet"></i> System Command Consolidation</h5>
+                    <button class="btn btn-sm btn-primary" onclick="downloadSystemCommandExcel()">
+                        <i class="bi bi-download"></i> Download Excel
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="checkbox" id="selectAllSystemCommandLogs" onchange="toggleAllSystemCommandLogs()">
+                        <label class="form-check-label" for="selectAllSystemCommandLogs">Select All</label>
+                    </div>
+                    <div id="systemCommandLogsList" class="small text-muted">Loading logs...</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    <div class="container-fluid mt-4" style="padding: 0 2rem;">
+        <!-- Two-Column Layout: Left (Job Info + Queue) | Right (Logs) -->
+        <div class="job-details-layout">
+            <!-- LEFT COLUMN -->
+            <div class="left-column">
+                <!-- Job Information Card -->
+        <div class="card job-info-card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle"></i> Job Information
+                </h5>
+                <div>
+                    <span class="status-badge badge 
+                        {% if job.status == 'running' %}bg-primary
+                        {% elif job.status == 'completed' %}bg-success
+                        {% elif job.status == 'failed' %}bg-danger
+                        {% elif job.status == 'cancelled' %}bg-warning
+                        {% else %}bg-secondary
+                        {% endif %}">
+                        {{ job.status|upper }}
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Job ID:</strong> <code>{{ job.job_id }}</code></p>
+                        <p><strong>Device:</strong> {{ job.device_name }} ({{ job.device_ip }})</p>
+                        <p><strong>User:</strong> {{ job.user_id }}</p>
+                        {% if job.sequence_name %}
+                        <p><strong>Sequence:</strong> {{ job.sequence_name }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Iterations:</strong> {{ job.iterations }}</p>
+                        <p><strong>Started:</strong> {{ job.start_time or 'Not started' }}</p>
+                        {% if job.end_time %}
+                        <p><strong>Ended:</strong> {{ job.end_time }}</p>
+                        {% endif %}
+                        <p><strong>Created:</strong> {{ job.created_at }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% set ns = namespace(has_reboot_perf=false) %}
+        {% if job.methods %}
+            {% if 'reboot_perf_v2_optimized' in job.methods %}
+                {% set ns.has_reboot_perf = true %}
+            {% endif %}
+        {% endif %}
+        {% if job.execution_queue %}
+            {% for item in job.execution_queue %}
+                {% if item.method == 'reboot_perf_v2_optimized' %}
+                    {% set ns.has_reboot_perf = true %}
+                {% endif %}
+                {% if item.method == 'navigate_inputs_xumo' %}
+                    {% set ns.has_tiles_results = true %}
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        {% if ns.has_reboot_perf %}
+        <!-- Reboot Performance V2 Optimized Summary -->
+        <div class="alert alert-info mb-4" role="alert">
+            <i class="bi bi-speedometer2"></i>
+            Reboot Performance V2 Optimized results are now available on the dedicated page.
+            <a class="btn btn-sm btn-primary ms-2" href="/reboot-perf-results?job_ids={{ job.job_id }}">
+                View Reboot Performance Results
+            </a>
+        </div>
+        {% endif %}
+
+        {% if ns.has_tiles_results %}
+        <!-- Tiles Detection Results Summary -->
+        <div class="alert alert-info mb-4" role="alert">
+            <i class="bi bi-grid-3x3-gap"></i>
+            Tiles Detection Results are now available on the dedicated page.
+            <a class="btn btn-sm btn-primary ms-2" href="/tiles-results?job_ids={{ job.job_id }}">
+                View Tiles Detection Results
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Live Device Screen Viewer - DISABLED FOR NOW -->
+        {% if false %}
+        <!-- Original condition: {% if job.device_ip and (job.status == 'running' or job.status == 'pending') %} -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-tv"></i> Live Device Screen
+                    <small class="text-muted">(Proxied via Flask)</small>
+                </h5>
+                <div>
+                    <button class="btn btn-sm btn-primary" onclick="openVNCWindow()">
+                        <i class="bi bi-tv"></i> Open VNC Viewer
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="toggleScreenSection()">
+                        <i class="bi bi-eye-slash" id="toggle-icon"></i> <span id="toggle-text">Hide</span>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-2" id="screen-section">
+                <div class="alert alert-info mb-0" role="alert">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Live Device Screen:</strong> Click "Open VNC Viewer" to view the device screen in a new window.
+                    <br>
+                    <small class="text-muted">
+                        Device: <code>{{ job.device_ip }}</code> - Screenshot-based live viewer (works via VPN)
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <script>
+            function openVNCWindow() {
+                const deviceIp = '{{ job.device_ip }}';
+                const viewerUrl = `/device_viewer/${deviceIp}`;
+                const viewerWindow = window.open(viewerUrl, 'DeviceViewer_{{ job.device_ip }}', 'width=1280,height=720,resizable=yes,scrollbars=yes');
+                if (!viewerWindow) {
+                    alert('Pop-up blocked! Please allow pop-ups for this site and try again.');
+                }
+            }
+            
+            function toggleScreenSection() {
+                const section = document.getElementById('screen-section');
+                const icon = document.getElementById('toggle-icon');
+                const text = document.getElementById('toggle-text');
+                
+                if (section.style.display === 'none') {
+                    section.style.display = 'block';
+                    icon.className = 'bi bi-eye-slash';
+                    text.textContent = 'Hide';
+                } else {
+                    section.style.display = 'none';
+                    icon.className = 'bi bi-eye';
+                    text.textContent = 'Show';
+                }
+            }
+        </script>
+        {% endif %}
+
+        <!-- Execution Queue -->
+        <div class="card execution-queue-card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-check"></i> Execution Queue
+                    {% if job.status == 'running' %}
+                    <small class="text-muted">(Step {{ current_step + 1 }}/{{ job.execution_queue|length }} - Iteration {{ current_iteration }}/{{ job.iterations }})</small>
+                    {% endif %}
+                </h5>
+            </div>
+            <div class="card-body" id="execution-queue-container" style="max-height: 400px; overflow-y: auto;">
+                {% if job.execution_queue %}
+                    {% for item in job.execution_queue %}
+                    <div class="queue-item {% if loop.index0 == current_step %}current{% elif loop.index0 < current_step %}completed{% endif %}" id="step-{{ loop.index0 }}" data-step="{{ loop.index0 }}">
+                        <strong>
+                            {% if loop.index0 < current_step %}
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            {% elif loop.index0 == current_step %}
+                            <i class="bi bi-arrow-right-circle-fill text-success"></i>
+                            {% else %}
+                            <i class="bi bi-circle text-muted"></i>
+                            {% endif %}
+                            {{ loop.index }}. {{ item.method }}
+                        </strong>
+                        {% if item.ir_keys or item.voice_text or item.remote_keys or item.expected_screen or item.screen_name or item.wait_seconds or item.command or item.expected_output or item.home_screen_timeout or item.optional_checks or item.wait_after_reboot or item.system_command_name or item.system_command_label or item.duration_seconds or item.interval_seconds or item.log_search_patterns or item.auto_collect_logs or item.image_name or item.command_text or item.section or item.tile_to_navigate or item.archive_name or item.boot_type or item.remote_type or item.sleep_duration_minutes or item.execute_deepsleep_wakeup %}
+                        <div class="mt-2">
+                            <small class="text-muted">Parameters:</small>
+                            <ul class="mb-0 mt-1">
+                                {% if item.ir_keys %}
+                                <li><code>IR Keys</code>: {{ item.ir_keys | join(', ') }}</li>
+                                {% endif %}
+                                {% if item.voice_text %}
+                                <li><code>Voice Text</code>: {{ item.voice_text }}</li>
+                                {% endif %}
+                                {% if item.remote_keys %}
+                                <li><code>Remote Keys</code>: {{ item.remote_keys }}</li>
+                                {% endif %}
+                                {% if item.expected_screen %}
+                                <li><code>Expected Screen</code>: {{ item.expected_screen }}</li>
+                                {% endif %}
+                                {% if item.image_name %}
+                                <li><i class="bi bi-camera-fill"></i> <code>Image Name</code>: <span style="color: #10b981;">{{ item.image_name }}</span></li>
+                                {% endif %}
+                                {% if item.screen_name %}
+                                <li><code>Screen Name</code>: {{ item.screen_name }}</li>
+                                {% endif %}
+                                {% if item.wait_seconds %}
+                                <li><code>Wait Duration</code>: {{ item.wait_seconds }}s</li>
+                                {% endif %}
+                                {% if item.command %}
+                                <li><code>Command</code>: <span style="color: #06b6d4;">{{ item.command }}</span></li>
+                                {% endif %}
+                                {% if item.command_text %}
+                                <li><code>System Command</code>: <span style="color: #f59e0b;">{{ item.command_text }}</span></li>
+                                {% endif %}
+                                {% if item.system_command_name %}
+                                <li><code>System Command</code>: <span style="color: #06b6d4;">{{ item.system_command_name }}</span></li>
+                                {% endif %}
+                                {% if item.system_command_label %}
+                                <li><code>Section Label</code>: <span style="color: #10b981;">{{ item.system_command_label }}</span></li>
+                                {% endif %}
+                                {% if item.duration_seconds %}
+                                <li><code>Duration</code>: {{ item.duration_seconds }}s</li>
+                                {% endif %}
+                                {% if item.interval_seconds %}
+                                <li><code>Interval</code>: {{ item.interval_seconds }}s</li>
+                                {% endif %}
+                                {% if item.expected_output %}
+                                <li><code>Expected Output</code>: <span style="color: #10b981;">{{ item.expected_output }}</span></li>
+                                {% endif %}
+                                {% if item.validation_type %}
+                                <li><code>Validation Type</code>: {{ item.validation_type }}</li>
+                                {% endif %}
+                                {% if item.section %}
+                                <li><code>Section</code>: <span style="color: #06b6d4;">{{ item.section }}</span></li>
+                                {% endif %}
+                                {% if item.tile_to_navigate %}
+                                <li><code>Tile to Navigate</code>: <span style="color: #10b981;">{{ item.tile_to_navigate }}</span></li>
+                                {% endif %}
+                                {% if item.archive_name %}
+                                <li><code>Archive Name</code>: <span style="color: #8b5cf6;">{{ item.archive_name }}</span></li>
+                                {% endif %}
+                                {% if item.method == 'reboot_performance_v2' or item.method == 'reboot_perf_v2_optimized' %}
+                                    {% if item.wait_after_reboot %}
+                                    <li><code>Wait after reboot</code>: <span style="color: #fbbf24;">{{ item.wait_after_reboot }}s</span></li>
+                                    {% endif %}
+                                    {% if item.home_screen_timeout %}
+                                    <li><code>HOME timeout</code>: <span style="color: #10b981;">{{ item.home_screen_timeout }}s</span></li>
+                                    {% endif %}
+                                    {% if item.optional_checks %}
+                                        {% if item.optional_checks.skip_all %}
+                                        <li><code>Optional checks</code>: <span style="color: #ef4444;">SKIPPED (-NA-)</span></li>
+                                        {% elif item.optional_checks.custom_commands and item.optional_checks.custom_commands|length > 0 %}
+                                        <li><code>Optional checks</code>: <span style="color: #8b5cf6;">{{ item.optional_checks.custom_commands|length }} selected</span>
+                                            <ul style="margin-top: 0.25rem; margin-bottom: 0;">
+                                                {% for check in item.optional_checks.custom_commands %}
+                                                <li style="font-size: 0.85rem; color: #a78bfa;">
+                                                    {{ check.description or check.check_key }}
+                                                    {% if check.terminate_on_match %}
+                                                    <span style="color: #ef4444; font-weight: bold;"> 🛑 TERMINATION TRIGGER</span>
+                                                    {% endif %}
+                                                </li>
+                                                {% endfor %}
+                                            </ul>
+                                        </li>
+                                        {% else %}
+                                        <li><code>Optional checks</code>: <span style="color: #8b5cf6;">None selected</span></li>
+                                        {% endif %}
+                                    {% endif %}
+                                    {% if item.log_search_patterns %}
+                                    <li><code>Log Search Patterns</code>: <span style="color: #06b6d4;">{{ item.log_search_patterns | join(', ') }}</span></li>
+                                    {% endif %}
+                                    {% if item.auto_collect_logs is not none %}
+                                    <li><code>Auto Collect Logs</code>: <span style="color: #10b981;">{{ 'Enabled' if item.auto_collect_logs else 'Disabled' }}</span></li>
+                                    {% endif %}
+                                {% endif %}
+                                {% if item.method == 'soft_hard_boot' %}
+                                    <li><code>Boot Type</code>: 
+                                        {% set boot_type = item.boot_type or 'HARD' %}
+                                        {% if boot_type == 'HARD' %}
+                                        <span style="color: #ef4444; font-weight: bold;">⚑ HARD</span>
+                                        {% elif boot_type == 'SOFT' %}
+                                        <span style="color: #3b82f6; font-weight: bold;">⚙ SOFT</span>
+                                        {% else %}
+                                        <span style="color: #9ca3af;">{{ boot_type }}</span>
+                                        {% endif %}
+                                    </li>
+                                    {% if item.home_screen_timeout %}
+                                    <li><code>HOME Timeout</code>: <span style="color: #10b981;">{{ item.home_screen_timeout }}s</span></li>
+                                    {% else %}
+                                    <li><code>HOME Timeout</code>: <span style="color: #10b981;">180s</span> <span style="color: #9ca3af;">(default)</span></li>
+                                    {% endif %}
+                                    <li><code>Captures</code>: <span style="color: #8b5cf6;">✓ rdk_milestones.log</span></li>
+                                    <li><code>Captures</code>: <span style="color: #8b5cf6;">✓ Optional Checks</span></li>
+                                {% endif %}
+                                {% if item.method == 'deepsleep' %}
+                                    {% if item.remote_type %}
+                                    <li><code>📡 Remote Type</code>: 
+                                        {% if item.remote_type == 'XUMO' %}
+                                        <span style="color: #3b82f6; font-weight: bold;">XUMO_PR3</span>
+                                        {% elif item.remote_type == 'SKY' %}
+                                        <span style="color: #8b5cf6; font-weight: bold;">SKY_LC103</span>
+                                        {% elif item.remote_type == 'auto' or item.remote_type == 'Auto-detect' %}
+                                        <span style="color: #10b981; font-weight: bold;">Auto-detect</span>
+                                        {% else %}
+                                        <span style="color: #10b981;">{{ item.remote_type }}</span>
+                                        {% endif %}
+                                    </li>
+                                    {% endif %}
+                                    {% if item.sleep_duration_minutes %}
+                                    <li><code>⏱️ Sleep Duration</code>: <span style="color: #f59e0b; font-weight: bold;">{{ item.sleep_duration_minutes }} minutes</span></li>
+                                    {% endif %}
+                                    {% if item.perform_reboot is not none %}
+                                    <li><code>↻ Perform Reboot</code>: 
+                                        {% if item.perform_reboot %}
+                                        <span style="color: #10b981; font-weight: bold;">✓ YES</span>
+                                        {% else %}
+                                        <span style="color: #ef4444; font-weight: bold;">✗ NO</span>
+                                        {% endif %}
+                                    </li>
+                                    {% endif %}
+                                {% endif %}
+                                {% if item.method == 'maintenance_deepsleep_wakeup' %}
+                                    {% if item.remote_type %}
+                                    <li><code>📡 Remote Type</code>: 
+                                        {% if item.remote_type == 'XUMO' %}
+                                        <span style="color: #3b82f6; font-weight: bold;">XUMO_PR3</span>
+                                        {% elif item.remote_type == 'SKY' %}
+                                        <span style="color: #8b5cf6; font-weight: bold;">SKY_LC103</span>
+                                        {% elif item.remote_type == 'COMCAST' %}
+                                        <span style="color: #ec4899; font-weight: bold;">COMCAST</span>
+                                        {% elif item.remote_type == 'ALTICE' %}
+                                        <span style="color: #f97316; font-weight: bold;">ALTICE</span>
+                                        {% elif item.remote_type == 'DISCOVERY' %}
+                                        <span style="color: #6366f1; font-weight: bold;">DISCOVERY</span>
+                                        {% elif item.remote_type == 'auto-detect' or item.remote_type == '' %}
+                                        <span style="color: #10b981; font-weight: bold;">Auto-detect</span>
+                                        {% else %}
+                                        <span style="color: #10b981;">{{ item.remote_type }}</span>
+                                        {% endif %}
+                                    </li>
+                                    {% endif %}
+                                    {% if item.sleep_duration_minutes %}
+                                    <li><code>⏱️ DeepSleep Wait Duration</code>: <span style="color: #f59e0b; font-weight: bold;">{{ item.sleep_duration_minutes }} minutes</span></li>
+                                    {% endif %}
+                                    {% if item.execute_deepsleep_wakeup is not none %}
+                                    <li><code>🔄 Phases</code>: 
+                                        {% if item.execute_deepsleep_wakeup %}
+                                        <span style="color: #10b981; font-weight: bold;">✓ Full (Steps 1-12)</span>
+                                        <br><small style="color: #9ca3af;">Maintenance + DeepSleep + Wakeup (~60-95 min)</small>
+                                        {% else %}
+                                        <span style="color: #f59e0b; font-weight: bold;">→ Maintenance Only (Steps 1-7)</span>
+                                        <br><small style="color: #9ca3af;">Maintenance cycle only (~40-50 min)</small>
+                                        {% endif %}
+                                    </li>
+                                    {% endif %}
+                                {% endif %}
+                                {% if item.method == 'standby_deep_sleep_ir_control' %}
+                                    {% if item.remote_type %}
+                                    <li><code>📡 Remote Type</code>: 
+                                        {% if item.remote_type == 'XUMO_PR3' or item.remote_type == 'XUMO' %}
+                                        <span style="color: #3b82f6; font-weight: bold;">🎮 XUMO_PR3</span>
+                                        {% elif item.remote_type == 'SKY_LC103' or item.remote_type == 'SKY' %}
+                                        <span style="color: #8b5cf6; font-weight: bold;">🎮 SKY_LC103</span>
+                                        {% else %}
+                                        <span style="color: #10b981;">{{ item.remote_type }}</span>
+                                        {% endif %}
+                                    </li>
+                                    {% endif %}
+                                {% endif %}
+                                {% if item.method == 'maintenance_CURL_deepsleep_wakeup' %}
+                                    {% if item.remote_type %}
+                                    <li><code>📡 Remote Type</code>: 
+                                        {% if item.remote_type == 'XUMO' %}
+                                        <span style="color: #3b82f6; font-weight: bold;">XUMO_PR3</span>
+                                        {% elif item.remote_type == 'SKY' %}
+                                        <span style="color: #8b5cf6; font-weight: bold;">SKY_LC103</span>
+                                        {% elif item.remote_type == 'COMCAST' %}
+                                        <span style="color: #ec4899; font-weight: bold;">COMCAST</span>
+                                        {% elif item.remote_type == 'ALTICE' %}
+                                        <span style="color: #f97316; font-weight: bold;">ALTICE</span>
+                                        {% elif item.remote_type == 'DISCOVERY' %}
+                                        <span style="color: #6366f1; font-weight: bold;">DISCOVERY</span>
+                                        {% elif item.remote_type == 'auto-detect' or item.remote_type == '' %}
+                                        <span style="color: #10b981; font-weight: bold;">Auto-detect</span>
+                                        {% else %}
+                                        <span style="color: #10b981;">{{ item.remote_type }}</span>
+                                        {% endif %}
+                                    </li>
+                                    {% endif %}
+                                    {% if item.sleep_duration_minutes %}
+                                    <li><code>⏱️ Sleep Duration</code>: <span style="color: #f59e0b; font-weight: bold;">{{ item.sleep_duration_minutes }} minutes</span></li>
+                                    {% endif %}
+                                    {% if item.execute_deepsleep_wakeup is not none %}
+                                    <li><code>⚡ CURL-Based Phases</code>: 
+                                        {% if item.execute_deepsleep_wakeup %}
+                                        <span style="color: #10b981; font-weight: bold;">✓ Full (DeepSleep + Wakeup)</span>
+                                        <br><small style="color: #9ca3af;">CURL-based immediate DeepSleep + Wakeup (~60-95 min)</small>
+                                        {% else %}
+                                        <span style="color: #f59e0b; font-weight: bold;">→ DeepSleep Only</span>
+                                        <br><small style="color: #9ca3af;">CURL-based immediate DeepSleep only (~30-50 min)</small>
+                                        {% endif %}
+                                    </li>
+                                    {% endif %}
+                                {% endif %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted mb-0">No execution queue data available</p>
+                {% endif %}
+            </div>
+        </div>
+
+            </div>
+            <!-- END LEFT COLUMN -->
+
+            <!-- RIGHT COLUMN -->
+            <div class="right-column">
+                <!-- Real-time Logs -->
+        <div class="card logs-card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <span class="auto-refresh-indicator"></span>
+                    <i class="bi bi-terminal"></i> Real-time Logs
+                </h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary me-2" onclick="refreshLogs()">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                    <button class="btn btn-sm btn-success" onclick="downloadLogs()">
+                        <i class="bi bi-download"></i> Download
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div id="logContainer" class="log-container">
+                    <span class="text-muted">Loading logs...</span>
+                </div>
+            </div>
+        </div>
+            </div>
+            <!-- END RIGHT COLUMN -->
+        </div>
+        <!-- END JOB DETAILS LAYOUT -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <script>
+        const jobId = '{{ job.job_id }}';
+        let autoRefreshInterval;
+        let lastKnownStatus = '{{ job.status }}';
+        let lastKnownStep = {{ current_step }};
+        let waitStartTime = null;
+        let waitDurationSeconds = null;
+        let countdownInterval = null;
+
+        // Convert UTC ISO timestamp to local time string
+        function convertUTCToLocalTime(isoString) {
+            if (!isoString || isoString === 'Not started') {
+                return isoString;
+            }
+            try {
+                const utcDate = new Date(isoString);
+                // Convert to local time and format as readable string
+                return utcDate.toLocaleString();
+            } catch (e) {
+                console.error('Error parsing date:', isoString, e);
+                return isoString;
+            }
+        }
+
+        // Convert all UTC times on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find and convert "Started:" time
+            const paragraphs = document.querySelectorAll('p');
+            paragraphs.forEach(p => {
+                const text = p.textContent;
+                if (text.includes('Started:')) {
+                    // The raw UTC ISO string is in the innerHTML
+                    const match = p.innerHTML.match(/<strong>Started:<\/strong>\s*(.+?)(?:<|$)/);
+                    if (match) {
+                        const utcTime = match[1].trim();
+                        const localTime = convertUTCToLocalTime(utcTime);
+                        p.innerHTML = p.innerHTML.replace(utcTime, localTime);
+                    }
+                } else if (text.includes('Ended:')) {
+                    // Convert "Ended:" time
+                    const match = p.innerHTML.match(/<strong>Ended:<\/strong>\s*(.+?)(?:<|$)/);
+                    if (match) {
+                        const utcTime = match[1].trim();
+                        const localTime = convertUTCToLocalTime(utcTime);
+                        p.innerHTML = p.innerHTML.replace(utcTime, localTime);
+                    }
+                }
+            });
+        });
+
+        // Extract wait duration from log and start countdown
+        function parseWaitDuration(logText) {
+            // Look for "Waiting X seconds" pattern
+            const waitPattern = /Waiting (\d+) seconds?\b/i;
+            const match = logText.match(waitPattern);
+            
+            if (match && !waitStartTime) {
+                const seconds = parseInt(match[1]);
+                // Try to find the timestamp of this log line
+                const lines = logText.split('\n');
+                const waitLineIndex = lines.findIndex(line => line.match(waitPattern));
+                if (waitLineIndex >= 0) {
+                    const timestampMatch = lines[waitLineIndex].match(/\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) UTC\]/);
+                    if (timestampMatch) {
+                        const logTime = new Date(timestampMatch[1] + ' UTC');
+                        waitStartTime = logTime.getTime();
+                        waitDurationSeconds = seconds;
+                        startCountdown();
+                    }
+                }
+            }
+        }
+
+        // Start countdown timer
+        function startCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+
+        // Update countdown display
+        function updateCountdown() {
+            if (!waitStartTime || !waitDurationSeconds) return;
+            
+            const now = Date.now();
+            const elapsedMs = now - waitStartTime;
+            const elapsedSeconds = Math.floor(elapsedMs / 1000);
+            const remainingSeconds = Math.max(0, waitDurationSeconds - elapsedSeconds);
+            
+            let countdownDisplay = document.getElementById('countdown-timer');
+            if (!countdownDisplay) {
+                // Create countdown display element if it doesn't exist
+                const logHeader = document.querySelector('.card-header h5');
+                if (logHeader) {
+                    countdownDisplay = document.createElement('div');
+                    countdownDisplay.id = 'countdown-timer';
+                    countdownDisplay.style.cssText = `
+                        position: fixed;
+                        top: 60px;
+                        right: 20px;
+                        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+                        color: white;
+                        padding: 15px 25px;
+                        border-radius: 8px;
+                        font-weight: bold;
+                        font-size: 18px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                        z-index: 1000;
+                        border: 2px solid #60a5fa;
+                    `;
+                    document.body.appendChild(countdownDisplay);
+                }
+            }
+            
+            if (countdownDisplay) {
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+                const timeStr = `${minutes}m ${seconds.toString().padStart(2, '0')}s`;
+                
+                if (remainingSeconds > 0) {
+                    countdownDisplay.innerHTML = `
+                        <i class="bi bi-hourglass-split" style="margin-right: 8px;"></i>
+                        Wait Remaining: <span style="color: #fbbf24; font-size: 20px; margin-left: 8px;">${timeStr}</span>
+                    `;
+                    countdownDisplay.style.display = 'block';
+                } else {
+                    countdownDisplay.innerHTML = `<i class="bi bi-check-circle-fill" style="margin-right: 8px;"></i> Wait Complete!`;
+                    countdownDisplay.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                    countdownDisplay.style.borderColor = '#34d399';
+                }
+            }
+        }
+
+        // Refresh logs and update execution queue highlighting
+        async function refreshLogs() {
+            try {
+                const response = await fetch(`/api/jobs/${jobId}/logs`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const logContainer = document.getElementById('logContainer');
+                    if (data.logs) {
+                        logContainer.textContent = data.logs;
+                        // Parse wait duration from logs
+                        parseWaitDuration(data.logs);
+                        // Auto-scroll to bottom
+                        logContainer.scrollTop = logContainer.scrollHeight;
+                    } else {
+                        logContainer.innerHTML = '<span class="text-muted">No logs available yet...</span>';
+                    }
+                }
+                
+                // Check job status and current step
+                const statusResponse = await fetch(`/api/jobs/${jobId}`);
+                const statusData = await statusResponse.json();
+                if (statusData.success && statusData.job) {
+                    const currentStatus = statusData.job.status;
+                    const currentStep = statusData.job.current_step || 0;
+                    const currentIteration = statusData.job.current_iteration || 1;
+                    
+                    // Update step highlighting if changed
+                    if (currentStep !== lastKnownStep) {
+                        lastKnownStep = currentStep;
+                        updateStepHighlighting(currentStep, currentIteration, statusData.job.iterations);
+                    }
+                    
+                    if (currentStatus !== lastKnownStatus) {
+                        lastKnownStatus = currentStatus;
+                        // Reload page to update status badge and other UI elements
+                        if (currentStatus === 'completed' || currentStatus === 'failed' || currentStatus === 'cancelled') {
+                            clearInterval(autoRefreshInterval);
+                            if (countdownInterval) clearInterval(countdownInterval);
+                            // Do one final refresh
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 2000);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error refreshing logs:', error);
+            }
+        }
+
+        // Update step highlighting dynamically
+        function updateStepHighlighting(currentStep, currentIteration, totalIterations) {
+            // Update all queue items based on current step
+            document.querySelectorAll('.queue-item').forEach(item => {
+                const stepIndex = parseInt(item.dataset.step);
+                
+                // Remove all state classes
+                item.classList.remove('current', 'completed');
+                
+                // Update icon and classes
+                const icon = item.querySelector('i');
+                if (stepIndex < currentStep) {
+                    // Completed step
+                    item.classList.add('completed');
+                    if (icon) {
+                        icon.className = 'bi bi-check-circle-fill text-success';
+                    }
+                } else if (stepIndex === currentStep) {
+                    // Current step
+                    item.classList.add('current');
+                    if (icon) {
+                        icon.className = 'bi bi-arrow-right-circle-fill text-success';
+                    }
+                } else {
+                    // Pending step
+                    if (icon) {
+                        icon.className = 'bi bi-circle text-muted';
+                    }
+                }
+            });
+            
+            // Auto-scroll to current step
+            const currentStepElement = document.getElementById(`step-${currentStep}`);
+            if (currentStepElement) {
+                const container = document.getElementById('execution-queue-container');
+                if (container) {
+                    const elementTop = currentStepElement.offsetTop;
+                    const elementHeight = currentStepElement.offsetHeight;
+                    const containerHeight = container.clientHeight;
+                    const scrollPosition = elementTop - (containerHeight / 2) + (elementHeight / 2);
+                    
+                    container.scrollTo({
+                        top: scrollPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+            
+            // Update header with current progress
+            const header = document.querySelector('#execution-queue-container').previousElementSibling.querySelector('h5');
+            if (header && lastKnownStatus === 'running') {
+                const totalSteps = document.querySelectorAll('.queue-item').length;
+                const progressText = `<small class="text-muted">(Step ${currentStep + 1}/${totalSteps} - Iteration ${currentIteration}/${totalIterations})</small>`;
+                header.innerHTML = `<i class="bi bi-list-check"></i> Execution Queue ${progressText}`;
+            }
+        }
+
+        // Download logs
+        function downloadLogs() {
+            window.location.href = `/api/jobs/${jobId}/download`;
+        }
+
+        async function loadSystemCommandLogs() {
+            const container = document.getElementById('systemCommandLogsList');
+            if (!container) return;
+            try {
+                const response = await fetch(`/api/system-command-logs/${jobId}`);
+                const data = await response.json();
+                if (!data.success || !data.files) {
+                    container.innerHTML = '<span class="text-muted">No system command logs available.</span>';
+                    return;
+                }
+                if (data.files.length === 0) {
+                    container.innerHTML = '<span class="text-muted">No system command logs available.</span>';
+                    return;
+                }
+
+                container.innerHTML = data.files.map(file => {
+                    const id = `syslog-${file.iteration}`;
+                    return `
+                        <div class="form-check">
+                            <input class="form-check-input system-command-log" type="checkbox" id="${id}" value="${file.path}">
+                            <label class="form-check-label" for="${id}">Iteration ${file.iteration} — ${file.filename}</label>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                container.innerHTML = '<span class="text-danger">Failed to load logs.</span>';
+                console.error(error);
+            }
+        }
+
+        function toggleAllSystemCommandLogs() {
+            const master = document.getElementById('selectAllSystemCommandLogs');
+            document.querySelectorAll('.system-command-log').forEach(cb => {
+                cb.checked = master.checked;
+            });
+        }
+
+        async function downloadSystemCommandExcel() {
+            const selected = Array.from(document.querySelectorAll('.system-command-log:checked')).map(cb => cb.value);
+            if (selected.length === 0) {
+                alert('Select at least one log file');
+                return;
+            }
+
+            const response = await fetch(`/api/system-command-logs/${jobId}/consolidate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ files: selected })
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                alert(data.error || 'Failed to generate Excel');
+                return;
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `system_command_consolidated_${jobId}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Auto-refresh logs every 2 seconds for running/pending jobs
+        function startAutoRefresh() {
+            const status = '{{ job.status }}';
+            if (status === 'running' || status === 'pending') {
+                refreshLogs(); // Initial load
+                autoRefreshInterval = setInterval(refreshLogs, 2000);
+            } else {
+                refreshLogs(); // Load once for completed jobs
+            }
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+        });
+
+        // Start auto-refresh when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            startAutoRefresh();
+            loadSystemCommandLogs();
+        });
+        
+        // Device Screen Viewer Functions
+        function handleScreenLoad() {
+            const loading = document.getElementById('screen-loading');
+            const error = document.getElementById('screen-error');
+            const iframe = document.getElementById('device-screen-iframe');
+            
+            if (loading) loading.style.display = 'none';
+            if (error) error.style.display = 'none';
+            if (iframe) iframe.style.display = 'block';
+        }
+        
+        function handleScreenError() {
+            const loading = document.getElementById('screen-loading');
+            const error = document.getElementById('screen-error');
+            const iframe = document.getElementById('device-screen-iframe');
+            
+            if (loading) loading.style.display = 'none';
+            if (error) error.style.display = 'block';
+            if (iframe) iframe.style.display = 'none';
+        }
+        
+        function refreshScreen() {
+            const iframe = document.getElementById('device-screen-iframe');
+            const loading = document.getElementById('screen-loading');
+            const error = document.getElementById('screen-error');
+            
+            if (iframe && loading) {
+                // Show loading state
+                loading.style.display = 'block';
+                if (error) error.style.display = 'none';
+                
+                // Reload iframe
+                iframe.src = iframe.src;
+            }
+        }
+        
+        function toggleFullscreen() {
+            const container = document.getElementById('screen-viewer-container');
+            if (!document.fullscreenElement) {
+                container.requestFullscreen().catch(err => {
+                    console.error('Error attempting to enable fullscreen:', err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        // Initialize screen viewer on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const loading = document.getElementById('screen-loading');
+            if (loading) {
+                loading.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

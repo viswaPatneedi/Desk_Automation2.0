@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Results | RDK-E Middleware QA Dashboard</title>
+    
+    <!-- Bootstrap 5.3.8 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #6b7280;
+            --secondary-color: #4b5563;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #6b7280;
+            --dark-color: #1f2937;
+            --darker-color: #111827;
+            --light-grey: #9ca3af;
+            --medium-grey: #6b7280;
+            --dark-grey: #374151;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            --card-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .navbar-custom {
+            background: #1f2937;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            padding: 1rem 0;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #d1d5db !important;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .navbar-brand i {
+            font-size: 1.8rem;
+        }
+        
+        .container-fluid.main-content {
+            padding: 2rem;
+            max-width: 98%;
+            margin: 0 auto;
+        }
+        
+        .dashboard-card {
+            background: #1f2937;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #374151;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-lg);
+        }
+        
+        .card-header-custom {
+            background: #4b5563;
+            color: #f3f4f6;
+            padding: 1.25rem 1.5rem;
+            border: none;
+            border-bottom: 1px solid #374151;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .card-header-custom h5 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .card-header-custom i {
+            font-size: 1.3rem;
+        }
+        
+        .card-body-custom {
+            padding: 1.5rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: #1f2937;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            border-left: 4px solid var(--medium-grey);
+            border: 1px solid #374151;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: rgba(75, 85, 99, 0.3);
+            border-radius: 50%;
+            transform: translate(30%, -30%);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--card-shadow-lg);
+        }
+        
+        .stat-card.success { border-left-color: var(--success-color); }
+        .stat-card.danger { border-left-color: var(--danger-color); }
+        .stat-card.warning { border-left-color: var(--warning-color); }
+        .stat-card.info { border-left-color: var(--info-color); }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .stat-icon.success { background: var(--success-color); color: white; }
+        .stat-icon.danger { background: var(--danger-color); color: white; }
+        .stat-icon.warning { background: var(--warning-color); color: white; }
+        .stat-icon.info { background: var(--info-color); color: white; }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f3f4f6;
+            margin-bottom: 0.25rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: #9ca3af;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .filter-section {
+            background: #1f2937;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #374151;
+        }
+        
+        .filter-section .form-label {
+            font-weight: 600;
+            color: #d1d5db;
+            margin-bottom: 0.5rem;
+        }
+        
+        .filter-section .form-select,
+        .filter-section .form-control {
+            border-radius: 8px;
+            background: #374151;
+            border: 1px solid #4b5563;
+            color: #f3f4f6;
+            padding: 0.625rem 1rem;
+            transition: all 0.2s;
+            height: auto;
+        }
+        
+        .filter-section .form-select:focus,
+        .filter-section .form-control:focus {
+            border-color: #6b7280;
+            background: #4b5563;
+            color: #f3f4f6;
+            box-shadow: 0 0 0 0.2rem rgba(107, 114, 128, 0.25);
+        }
+        
+        .device-multiselect {
+            width: 100%;
+            position: relative;
+        }
+        
+        .device-multiselect-button {
+            width: 100%;
+            padding: 0.625rem 1rem;
+            border-radius: 8px;
+            background: #374151;
+            border: 1px solid #4b5563;
+            color: #f3f4f6;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        
+        .device-multiselect-button:hover {
+            background: #4b5563;
+            border-color: #6b7280;
+        }
+        
+        .device-multiselect-button:focus {
+            outline: none;
+            border-color: #6b7280;
+            box-shadow: 0 0 0 0.2rem rgba(107, 114, 128, 0.25);
+        }
+        
+        .device-multiselect-button i {
+            margin-left: 0.5rem;
+            transition: transform 0.2s;
+        }
+        
+        .device-multiselect-button.open i {
+            transform: rotate(180deg);
+        }
+        
+        .device-multiselect-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .device-multiselect-dropdown.open {
+            display: block;
+        }
+        
+        .device-multiselect-dropdown .dropdown-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #4b5563;
+            background: #374151;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+            color: #f3f4f6;
+        }
+        
+        .device-multiselect-dropdown .dropdown-header label {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .device-multiselect-dropdown .dropdown-header input {
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .device-multiselect-dropdown .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: #d1d5db;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #4b5563;
+            transition: background 0.2s;
+        }
+        
+        .device-multiselect-dropdown .dropdown-item:hover {
+            background: #4b5563;
+        }
+        
+        .device-multiselect-dropdown .dropdown-item input {
+            margin-right: 0.75rem;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+        
+        .device-multiselect-dropdown .dropdown-item label {
+            margin: 0;
+            flex: 1;
+            cursor: pointer;
+        }
+        
+        .device-multiselect select {
+            display: none;
+        }
+        
+        .btn-filter {
+            background: #4b5563;
+            border: none;
+            padding: 0.625rem 1.5rem;
+            border-radius: 8px;
+            color: #f3f4f6;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-filter:hover {
+            background: #6b7280;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(75, 85, 99, 0.4);
+        }
+        
+        .timeline {
+            position: relative;
+            padding: 0;
+            list-style: none;
+            max-height: 600px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 1rem;
+        }
+        
+        .timeline::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .timeline::-webkit-scrollbar-track {
+            background: #1f2937;
+            border-radius: 4px;
+        }
+        
+        .timeline::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+        
+        .timeline::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 3rem;
+            padding-bottom: 2rem;
+            border-left: 2px solid #374151;
+        }
+        
+        .timeline-item:last-child {
+            border-left: 2px solid transparent;
+            padding-bottom: 0;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            left: -9px;
+            top: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #1f2937;
+            border: 3px solid var(--medium-grey);
+        }
+        
+        .timeline-marker.success { border-color: var(--success-color); }
+        .timeline-marker.danger { border-color: var(--danger-color); }
+        .timeline-marker.warning { border-color: var(--warning-color); }
+        
+        .timeline-content {
+            background: #374151;
+            border-radius: 10px;
+            padding: 1.25rem;
+            position: relative;
+        }
+        
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .timeline-title {
+            font-weight: 600;
+            color: #f3f4f6;
+            font-size: 1.05rem;
+        }
+        
+        .badge-custom {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .badge-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .badge-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+        
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .screenshot-card {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .screenshot-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .screenshot-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .screenshot-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 0.75rem;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .details-text {
+            color: #d1d5db;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-top: 0.5rem;
+        }
+        
+        .table-modern {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .table-modern thead th {
+            background: #4b5563;
+            color: #f3f4f6;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            padding: 1rem;
+            border: none;
+        }
+        
+        .table-modern thead th:first-child {
+            border-radius: 10px 0 0 0;
+        }
+        
+        .table-modern thead th:last-child {
+            border-radius: 0 10px 0 0;
+        }
+        
+        .table-modern tbody td {
+            padding: 1rem;
+            border-bottom: 1px solid #374151;
+            vertical-align: middle;
+            color: #d1d5db;
+        }
+        
+        .table-modern tbody tr:hover {
+            background: #374151;
+        }
+        
+        .table-modern tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .table-modern tbody td strong {
+            color: #f3f4f6;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 1rem;
+        }
+        
+        .back-btn {
+            background: #4b5563;
+            color: #f3f4f6;
+            border: 2px solid #6b7280;
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .back-btn:hover {
+            background: #6b7280;
+            color: #f3f4f6;
+            border-color: #9ca3af;
+            transform: translateX(-5px);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #9ca3af;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #4b5563;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state h4 {
+            color: #d1d5db;
+            margin-bottom: 0.5rem;
+        }
+        
+        .modal-custom .modal-content {
+            border-radius: 15px;
+            border: none;
+        }
+        
+        .modal-custom .modal-header {
+            background: #4b5563;
+            color: #f3f4f6;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .modal-custom .modal-body img {
+            width: 100%;
+            border-radius: 8px;
+        }
+        
+        .text-muted {
+            color: #9ca3af !important;
+        }
+        
+        strong {
+            color: #f3f4f6;
+        }
+        
+        .timeline-content strong {
+            color: #f3f4f6;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .screenshot-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-custom">
+        <div class="container-fluid" style="max-width: 1400px; margin: 0 auto;">
+            <div class="d-flex flex-column">
+                <a class="navbar-brand mb-0" href="#">
+                    <i class="bi bi-cpu-fill"></i>
+                    RDK-E Middleware QA Dashboard
+                </a>
+                <span class="developer-credit" style="font-size: 0.75rem; color: #9ca3af; margin-left: 2rem;">
+                    <i class="bi bi-code-slash"></i> Designed & Developed by <strong>VISWA</strong>
+                </span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <a href="/" class="back-btn">
+                    <i class="bi bi-arrow-left"></i>
+                    Back to Testing
+                </a>
+                <span class="text-white">
+                    <i class="bi bi-person-circle"></i> {{ current_user.name if current_user else 'Guest' }}
+                </span>
+                <a href="/logout" class="btn btn-sm btn-danger" style="padding: 0.375rem 0.75rem;">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid main-content">
+        <!-- ...existing code... -->
+        
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card success">
+                <div class="stat-icon success">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="stat-value" id="total-passed">0</div>
+                <div class="stat-label">Tests Passed</div>
+            </div>
+            
+            <div class="stat-card danger">
+                <div class="stat-icon danger">
+                    <i class="bi bi-x-circle-fill"></i>
+                </div>
+                <div class="stat-value" id="total-failed">0</div>
+                <div class="stat-label">Tests Failed</div>
+            </div>
+            
+            <div class="stat-card warning">
+                <div class="stat-icon warning">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <div class="stat-value" id="total-warnings">0</div>
+                <div class="stat-label">Warnings</div>
+            </div>
+            
+            <div class="stat-card info">
+                <div class="stat-icon info">
+                    <i class="bi bi-layers-fill"></i>
+                </div>
+                <div class="stat-value" id="total-iterations">{{ total_iterations }}</div>
+                <div class="stat-label">Total Iterations</div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">
+                        <i class="bi bi-calendar3"></i> Filter by Date
+                    </label>
+                    <input type="date" class="form-control" id="filterDate">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">
+                        <i class="bi bi-hdd-network"></i> Device (Multi-Select)
+                    </label>
+                    <div class="device-multiselect">
+                        <button type="button" class="device-multiselect-button" id="deviceFilterButton" onclick="toggleDeviceDropdown()">
+                            <span id="deviceFilterDisplay">All</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="device-multiselect-dropdown" id="deviceFilterDropdown">
+                            <div class="dropdown-header">
+                                <label>
+                                    <input type="checkbox" id="selectAllDevices" onchange="toggleAllDevices()">
+                                    <span>All</span>
+                                </label>
+                            </div>
+                            <div id="deviceCheckboxList">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                        <select id="filterDeviceCheckboxes" multiple style="display: none;">
+                            <!-- Hidden, for compatibility -->
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">
+                        <i class="bi bi-gear"></i> Method
+                    </label>
+                    <select class="form-select" id="filterMethod">
+                        <option value="">All Methods</option>
+                        <option value="reboot">Reboot</option>
+                        <option value="deepsleep">Deep Sleep</option>
+                        <option value="power_key">Power Key</option>
+                        <option value="send_remote_keys">Send Remote Keys</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-filter w-100" onclick="applyFilters()">
+                        <i class="bi bi-funnel-fill"></i> Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {% if results|length == 0 %}
+        <!-- Empty State -->
+        <div class="dashboard-card">
+            <div class="card-body-custom">
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h4>No Test Results Yet</h4>
+                    <p>Run a test to see results here. All test executions will be tracked and displayed for the last 3 days.</p>
+                    <a href="/" class="btn btn-filter mt-3">
+                        <i class="bi bi-play-fill"></i> Start Testing
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        
+        <!-- Test Results Timeline -->
+        <div class="dashboard-card" style="display: none;">
+            <div class="card-header-custom">
+                <i class="bi bi-clock-history"></i>
+                <h5>Test Execution History</h5>
+            </div>
+            <div class="card-body-custom">
+                <ul class="timeline" id="resultsTimeline">
+                    {% for r in results %}
+                    {% set status_class = 'success' if r.status == 'PASSED' else ('warning' if r.status == 'WARNING' else 'danger') %}
+                    <li class="timeline-item" data-date="{{ r.date }}" data-device="{{ r.device_ip }}" data-method="{{ r.method }}">
+                        <div class="timeline-marker {{ status_class }}"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <div>
+                                    <div class="timeline-title">
+                                        <i class="bi bi-{{ 'arrow-repeat' if r.phase == 'After Reboot' else 'moon-stars' if 'DeepSleep' in r.phase else 'power' }}"></i>
+                                        {% if r.method %}<span class="badge bg-primary me-2">{{ r.method|upper }}</span>{% endif %}
+                                        Iteration {{ r.iteration }} - {{ r.phase }}
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar3"></i> {{ r.display_datetime if r.display_datetime else (r.date if r.date else generated) }}
+                                        {% if r.device_ip %}
+                                        <i class="bi bi-hdd-network ms-3"></i> {{ r.device_ip }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <span class="badge-custom badge-{{ status_class }}">
+                                    <i class="bi bi-{{ 'check-circle' if r.status == 'PASSED' else ('exclamation-triangle' if r.status == 'WARNING' else 'x-circle') }}"></i>
+                                    {{ r.status }}
+                                </span>
+                            </div>
+                            
+                            <div class="details-text">
+                                <strong>Details:</strong> {{ r.details }}
+                            </div>
+                            
+                            {% if r.screenshots %}
+                            <div class="mt-3">
+                                <strong><i class="bi bi-camera-fill"></i> Screenshots:</strong>
+                                <div class="screenshot-grid">
+                                    {% for screenshot in r.screenshots.split(', ') %}
+                                    {% if screenshot.strip() %}
+                                    <div class="screenshot-card" onclick="viewScreenshot('/screenshots/{{ screenshot.strip() }}', '{{ screenshot.strip() }}')">
+                                        <img src="/screenshots/{{ screenshot.strip() }}" alt="{{ screenshot.strip() }}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'150\'%3E%3Crect fill=\'%23374151\' width=\'200\' height=\'150\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%239ca3af\' font-size=\'14\'%3ENo Image%3C/text%3E%3C/svg%3E'">
+                                        <div class="screenshot-overlay">{{ screenshot.strip() }}</div>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if r.logs %}
+                            <div class="mt-3">
+                                <strong><i class="bi bi-file-earmark-text-fill"></i> Log Files:</strong>
+                                <div class="mt-2">
+                                    {% for log in r.logs.split(', ') %}
+                                    {% if log.strip() %}
+                                    <span class="badge bg-secondary me-2 mb-2">{{ log.strip() }}</span>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Detailed Table View -->
+        <div class="dashboard-card mt-4">
+            <div class="card-header-custom">
+                <i class="bi bi-table"></i>
+                <h5>Detailed Results Table</h5>
+            </div>
+            <div class="card-body-custom" style="max-height: 600px; overflow-x: auto; overflow-y: auto;">
+                <table class="table-modern">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Device IP</th>
+                            <th>Methods-Triggered</th>
+                            <th>Iteration</th>
+                            <th>Phase</th>
+                            <th>Status</th>
+                            <th>Details</th>
+                            <th>Screenshots</th>
+                            <th>Logs</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                        {% for execution in grouped_results %}
+                        {% for phase in execution.phases %}
+                        {% set status_class = 'success' if phase.status == 'PASSED' else ('warning' if phase.status == 'WARNING' else 'danger') %}
+                        <tr data-date="{{ execution.date }}" data-device="{{ execution.device_ip }}" data-method="{{ execution.methods }}">
+                            {% if loop.first %}
+                            <td rowspan="{{ execution.phases|length }}">{{ execution.display_datetime if execution.display_datetime else execution.date }}</td>
+                            <td rowspan="{{ execution.phases|length }}">{{ execution.device_ip }}</td>
+                            <td rowspan="{{ execution.phases|length }}">
+                                <span class="badge bg-info">{{ execution.methods }}</span>
+                            </td>
+                            <td rowspan="{{ execution.phases|length }}"><strong>ITR-{{ execution.iteration }}</strong></td>
+                            {% endif %}
+                            <td>{{ phase.phase }}</td>
+                            <td>
+                                <span class="badge-custom badge-{{ status_class }}">
+                                    {{ phase.status }}
+                                </span>
+                            </td>
+                            <td style="max-width: 300px;">{{ phase.details }}</td>
+                            <td>
+                                {% if phase.screenshots %}
+                                    {% for screenshot in phase.screenshots.split(', ') %}
+                                        {% if screenshot.strip() %}
+                                            {% set full_path = screenshot.strip() %}
+                                            {% set rel_path = full_path.split('Enhancement_output/')[-1] if 'Enhancement_output/' in full_path else full_path.split('/')[-1] %}
+                                            <a href="#" class="screenshot-link" data-src="/screenshots/{{ rel_path }}" style="color: #10b981; text-decoration: none; cursor: pointer;">
+                                                <i class="bi bi-image"></i> {{ full_path.split('/')[-1] }}
+                                            </a><br>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if phase.logs %}
+                                <small>{{ phase.logs.split(', ')|length }} file(s)</small>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Screenshot Modal -->
+    <div class="modal fade modal-custom" id="screenshotModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="screenshotTitle">Screenshot</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <img id="screenshotImage" src="" alt="Screenshot">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Calculate statistics
+        function calculateStats() {
+            const rows = document.querySelectorAll('#resultsTableBody tr');
+            let passed = 0, failed = 0, warnings = 0;
+            rows.forEach(row => {
+                const statusBadge = row.querySelector('.badge-custom');
+                if (statusBadge) {
+                    const status = statusBadge.textContent.trim();
+                    if (status === 'PASSED') passed++;
+                    else if (status === 'FAILED') failed++;
+                    else if (status === 'WARNING') warnings++;
+                }
+            });
+            document.getElementById('total-passed').textContent = passed;
+            document.getElementById('total-failed').textContent = failed;
+            document.getElementById('total-warnings').textContent = warnings;
+            return { passed, failed, warnings };
+        }
+
+        // Handle screenshot link clicks
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.screenshot-link')) {
+                e.preventDefault();
+                const link = e.target.closest('.screenshot-link');
+                const imageSrc = link.dataset.src;
+                
+                // Set image source and show modal
+                document.getElementById('screenshotImage').src = imageSrc;
+                const modal = new bootstrap.Modal(document.getElementById('screenshotModal'));
+                modal.show();
+            }
+        });        // Prompt for remote keys when 'Send Remote Keys' is selected
+        document.addEventListener('DOMContentLoaded', function() {
+            var methodSelect = document.getElementById('filterMethod');
+            if (methodSelect) {
+                methodSelect.addEventListener('change', function() {
+                    if (this.value === 'send_remote_keys') {
+                        let keys = prompt('Enter remote keys (comma-separated, e.g. RIGHT,RIGHT,DOWN):');
+                        if (keys !== null && keys.trim() !== '') {
+                            // Store keys for later use (could be sent to backend here)
+                            methodSelect.dataset.remoteKeys = keys.trim();
+                        } else {
+                            // If cancelled or empty, reset selection
+                            methodSelect.value = '';
+                            methodSelect.dataset.remoteKeys = '';
+                        }
+                    } else {
+                        methodSelect.dataset.remoteKeys = '';
+                    }
+                });
+            }
+        });
+
+        // Filter functionality
+        function applyFilters() {
+            const dateFilter = document.getElementById('filterDate').value;
+            const selectedDevices = Array.from(document.querySelectorAll('#deviceCheckboxList input[type="checkbox"]:checked'))
+                .map(cb => cb.dataset.ip);
+            const methodFilter = document.getElementById('filterMethod').value;
+            
+            const tableRows = document.querySelectorAll('#resultsTableBody tr');
+            const timelineItems = document.querySelectorAll('.timeline-item');
+            
+            [tableRows, timelineItems].forEach(items => {
+                items.forEach(item => {
+                    const itemDate = item.dataset.date || '';
+                    const itemDevice = item.dataset.device || '';
+                    const itemMethod = item.dataset.method || '';
+                    
+                    const dateMatch = !dateFilter || itemDate.includes(dateFilter);
+                    const deviceMatch = selectedDevices.length === 0 || selectedDevices.includes(itemDevice);
+                    const methodMatch = !methodFilter || itemMethod.includes(methodFilter);
+                    
+                    if (dateMatch && deviceMatch && methodMatch) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // View screenshot in modal
+        function viewScreenshot(path, title) {
+            document.getElementById('screenshotImage').src = path;
+            document.getElementById('screenshotTitle').textContent = title;
+            new bootstrap.Modal(document.getElementById('screenshotModal')).show();
+        }
+
+        // Toggle device filter dropdown
+        function toggleDeviceDropdown() {
+            const button = document.getElementById('deviceFilterButton');
+            const dropdown = document.getElementById('deviceFilterDropdown');
+            dropdown.classList.toggle('open');
+            button.classList.toggle('open');
+            
+            // Close dropdown if clicking elsewhere
+            if (dropdown.classList.contains('open')) {
+                document.addEventListener('click', closeDeviceDropdownOnClickOutside);
+            } else {
+                document.removeEventListener('click', closeDeviceDropdownOnClickOutside);
+            }
+        }
+
+        function closeDeviceDropdownOnClickOutside(event) {
+            const dropdown = document.getElementById('deviceFilterDropdown');
+            const button = document.getElementById('deviceFilterButton');
+            if (!dropdown.contains(event.target) && event.target !== button) {
+                dropdown.classList.remove('open');
+                button.classList.remove('open');
+                document.removeEventListener('click', closeDeviceDropdownOnClickOutside);
+            }
+        }
+
+        function updateDeviceFilterDisplay() {
+            const checked = Array.from(document.querySelectorAll('#deviceCheckboxList input[type="checkbox"]:checked'));
+            const selectAll = document.getElementById('selectAllDevices');
+            const displaySpan = document.getElementById('deviceFilterDisplay');
+            const allCheckboxes = Array.from(document.querySelectorAll('#deviceCheckboxList input[type="checkbox"]'));
+            
+            if (checked.length === 0) {
+                displaySpan.textContent = 'All';
+                selectAll.checked = false;
+            } else if (checked.length === allCheckboxes.length) {
+                displaySpan.textContent = 'All';
+                selectAll.checked = true;
+            } else {
+                displaySpan.textContent = `Selected (${checked.length})`;
+                selectAll.checked = false;
+            }
+        }
+
+        function toggleAllDevices() {
+            const selectAll = document.getElementById('selectAllDevices');
+            const checkboxes = document.querySelectorAll('#deviceCheckboxList input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateDeviceFilterDisplay();
+        }
+
+        // Populate device filter with checkbox dropdown
+        function populateDeviceFilter() {
+            fetch('/api/devices')
+                .then(response => {
+                    const contentType = (response.headers.get('content-type') || '').toLowerCase();
+                    if (!contentType.includes('application/json')) {
+                        return { devices: [] };
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const devices = (data && (data.devices || data)) || [];
+                    const checkboxList = document.getElementById('deviceCheckboxList');
+                    
+                    if (!checkboxList) return;
+                    checkboxList.innerHTML = '';
+
+                    if (!Array.isArray(devices) || devices.length === 0) {
+                        const item = document.createElement('div');
+                        item.className = 'dropdown-item';
+                        item.textContent = 'No devices available';
+                        item.style.pointerEvents = 'none';
+                        checkboxList.appendChild(item);
+                        return;
+                    }
+
+                    devices.forEach(device => {
+                        const item = document.createElement('div');
+                        item.className = 'dropdown-item';
+                        
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.dataset.ip = device.ip;
+                        checkbox.onchange = () => {
+                            updateDeviceFilterDisplay();
+                        };
+                        
+                        const label = document.createElement('label');
+                        label.style.margin = '0';
+                        label.style.flex = '1';
+                        label.style.cursor = 'pointer';
+                        label.textContent = `${device.name} (${device.ip})`;
+                        if (device.locked) label.textContent += ' [Busy]';
+                        
+                        item.appendChild(checkbox);
+                        item.appendChild(label);
+                        checkboxList.appendChild(item);
+                    });
+                })
+                .catch(err => {
+                    console.error('Failed to load devices:', err);
+                });
+        }
+
+        // Helper to get selected method and keys
+        function getSelectedMethodPayload() {
+            var methodSelect = document.getElementById('filterMethod');
+            var method = methodSelect.value;
+            var payload = { method: method };
+            if (method === 'send_remote_keys') {
+                var keys = methodSelect.dataset.remoteKeys || '';
+                payload.remote_keys = keys;
+            }
+            return payload;
+        }
+
+        // Example: Hook for test execution (replace with actual API call logic)
+        function executeTest() {
+            var selectedDevices = Array.from(document.querySelectorAll('#deviceCheckboxList input[type="checkbox"]:checked'))
+                .map(cb => cb.dataset.ip);
+            var methodPayload = getSelectedMethodPayload();
+            if (selectedDevices.length === 0) {
+                alert('Please select at least one device.');
+                return;
+            }
+            selectedDevices.forEach(function(device_ip) {
+                var data = {
+                    device_ip: device_ip,
+                    execution_queue: [methodPayload],
+                    iterations: 1
+                };
+                fetch('/api/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.error) {
+                        alert('Device ' + device_ip + ': ' + result.error);
+                    } else {
+                        alert('Device ' + device_ip + ': Test started! Job ID: ' + result.job_id + '\nETA: ' + result.eta_formatted);
+                    }
+                })
+                .catch(err => {
+                    alert('Device ' + device_ip + ': Failed to start test: ' + err);
+                });
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateStats();
+            populateDeviceFilter();
+            // fetchQueuedJobs(); // Removed - not needed on results page
+            // Example: Add a button for demo purposes
+            var filterSection = document.querySelector('.filter-section');
+            if (filterSection) {
+                var execBtn = document.createElement('button');
+                execBtn.className = 'btn btn-success mt-3';
+                execBtn.textContent = 'Run Selected Test';
+                execBtn.onclick = executeTest;
+                filterSection.appendChild(execBtn);
+            }
+        });
+    </script>
+</body>
+</html>

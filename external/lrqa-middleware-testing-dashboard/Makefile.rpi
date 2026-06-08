@@ -1,0 +1,180 @@
+# Makefile for RDK-E Middleware Testing Dashboard Docker (Raspberry Pi)
+# Usage: make [target]
+# Example: make build, make up, make logs, make clean
+
+.PHONY: help build build-no-cache up down logs stop restart shell clean health push pull install-docker
+
+DOCKER_COMPOSE = docker compose -f docker-compose.rpi.yml
+IMAGE_NAME = rdk-middleware:pi
+CONTAINER_NAME = rdk-middleware
+RPI_OS ?= bullseye
+
+help:
+	@echo "RDK-E Middleware Testing Dashboard - Docker (Raspberry Pi)"
+	@echo "==========================================================="
+	@echo "Available targets:"
+	@echo "  make install-docker    - Install Docker and Docker Compose on Pi"
+	@echo "  make env               - Create .env file from .env.example"
+	@echo "  make build             - Build Docker image"
+	@echo "  make build-no-cache    - Rebuild Docker image from scratch"
+	@echo "  make up                - Start container"
+	@echo "  make down              - Stop container"
+	@echo "  make logs              - View container logs (live)"
+	@echo "  make stop              - Stop container gracefully"
+	@echo "  make restart           - Restart container"
+	@echo "  make shell             - Open shell in container"
+	@echo "  make health            - Check container health"
+	@echo "  make ps                - Show running containers"
+	@echo "  make stats             - Show container resource usage"
+	@echo "  make clean             - Remove container and image"
+	@echo "  make backup            - Backup all data"
+	@echo "  make restore           - Restore from backup"
+	@echo "  make prune             - Clean up unused Docker resources"
+	@echo "  make push              - Push image to registry (if configured)"
+	@echo "  make pull              - Pull image from registry"
+
+install-docker:
+	@echo "Installing Docker on Raspberry Pi..."
+	@if [ ! -x $$(command -v docker) ]; then \
+		curl -fsSL https://get.docker.com -o get-docker.sh && \
+		sudo sh get-docker.sh && \
+		sudo usermod -aG docker $${USER} && \
+		echo "Docker installed successfully!"; \
+	else \
+		echo "Docker is already installed"; \
+	fi
+	@if [ ! -x $$(command -v docker-compose) ]; then \
+		sudo apt-get install -y docker-compose-plugin && \
+		echo "Docker Compose installed successfully!"; \
+	else \
+		echo "Docker Compose is already installed"; \
+	fi
+
+env:
+	@if [ ! -f .env ]; then \
+		cp .env.example .env && \
+		echo "✓ Created .env file from .env.example"; \
+		echo "  Please edit .env with your configuration"; \
+	else \
+		echo "⚠ .env file already exists"; \
+	fi
+
+build:
+	@echo "Building Docker image: $(IMAGE_NAME)"
+	$(DOCKER_COMPOSE) build
+	@echo "✓ Build complete"
+
+build-no-cache:
+	@echo "Building Docker image from scratch (no cache): $(IMAGE_NAME)"
+	$(DOCKER_COMPOSE) build --no-cache --pull
+	@echo "✓ Build complete"
+
+up: health-check
+	@echo "Starting container..."
+	$(DOCKER_COMPOSE) up -d
+	@echo "✓ Container started"
+	@echo "  Access at: http://localhost:11078"
+	@sleep 5
+	@make health
+
+down:
+	@echo "Stopping container..."
+	$(DOCKER_COMPOSE) down
+	@echo "✓ Container stopped"
+
+logs:
+	$(DOCKER_COMPOSE) logs -f --tail=50
+
+stop:
+	@echo "Stopping container gracefully..."
+	$(DOCKER_COMPOSE) stop
+	@echo "✓ Container stopped"
+
+restart:
+	@echo "Restarting container..."
+	$(DOCKER_COMPOSE) restart
+	@echo "✓ Container restarted"
+
+shell:
+	@echo "Opening shell in container..."
+	docker exec -it $(CONTAINER_NAME) /bin/bash
+
+health: health-check
+	@echo "Checking container health..."
+	@curl -f http://localhost:11078/health > /dev/null 2>&1 && \
+		echo "✓ Container is healthy" || \
+		echo "✗ Container health check failed"
+
+health-check:
+	@if [ ! -x $$(command -v curl) ]; then \
+		echo "Installing curl..."; \
+		sudo apt-get update && sudo apt-get install -y curl; \
+	fi
+
+ps:
+	docker ps --filter "name=$(CONTAINER_NAME)" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+
+stats:
+	docker stats $(CONTAINER_NAME)
+
+clean: down
+	@echo "Removing Docker image and volumes..."
+	docker rmi $(IMAGE_NAME)
+	@echo "✓ Image removed"
+	@echo "⚠ Data files (JSON, logs, screenshots) are preserved"
+
+backup:
+	@echo "Backing up data..."
+	@mkdir -p backup
+	@cp -v devices.json devices.json.* backup/ 2>/dev/null || true
+	@cp -v jobs.json jobs.json.* backup/ 2>/dev/null || true
+	@cp -v *.json backup/ 2>/dev/null || true
+	@cp -rv iteration_logs backup/ 2>/dev/null || true
+	@cp -rv screenshots backup/ 2>/dev/null || true
+	@tar -czf backup-$$(date +%Y%m%d-%H%M%S).tar.gz backup/
+	@echo "✓ Backup created: backup-$$(date +%Y%m%d-%H%M%S).tar.gz"
+
+restore:
+	@echo "Select backup file to restore from:"
+	@ls -la backup-*.tar.gz | head -10
+	@read -p "Enter backup filename: " backup_file && \
+		tar -xzf $$backup_file && \
+		echo "✓ Backup restored"
+
+prune:
+	@echo "Cleaning up unused Docker resources..."
+	docker system prune -a --volumes
+	@echo "✓ Cleanup complete"
+
+push:
+	@echo "Pushing image to registry..."
+	@echo "Note: Ensure you have REGISTRY configured"
+	docker push $(IMAGE_NAME)
+
+pull:
+	@echo "Pulling image from registry..."
+	@echo "Note: Ensure you have REGISTRY configured"
+	docker pull $(IMAGE_NAME)
+
+# Development/Testing targets
+
+test:
+	@echo "Running health check..."
+	@curl -f http://localhost:11078/health || exit 1
+	@echo "✓ API is responding"
+
+bench:
+	@echo "Running benchmark..."
+	bench_time=$$(date +%s); \
+	for i in {1..10}; do \
+		curl -s http://localhost:11078/api/devices > /dev/null; \
+	done; \
+	end_time=$$(date +%s); \
+	echo "✓ 10 requests completed in $$((end_time - bench_time)) seconds"
+
+monitor:
+	@echo "Starting Docker stats monitor (Ctrl+C to stop)..."
+	watch -n 2 'docker stats $(CONTAINER_NAME) --no-stream'
+
+# .PHONY declaration ensures these targets run even if files with same names exist
+.PHONY: all $(MAKECMDGOALS)

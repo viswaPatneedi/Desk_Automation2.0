@@ -1,0 +1,88 @@
+# Docker Compose Configuration for Encrypted LRQA Middleware on R-Pi 4
+# Build: docker compose -f docker-compose.pyarmor.yml build --no-cache
+# Deploy: docker compose -f docker-compose.pyarmor.yml up -d
+# Logs: docker compose -f docker-compose.pyarmor.yml logs -f
+# Stop: docker compose -f docker-compose.pyarmor.yml down
+
+version: '3.8'
+
+services:
+  lrqa-middleware-encrypted:
+    container_name: lrqa-middleware-encrypted
+    build:
+      context: .
+      dockerfile: Dockerfile.pyarmor.prod
+      args:
+        - BUILDKIT_INLINE_CACHE=1
+    image: lrqa-middleware:encrypted-latest
+    platform: linux/arm64  # R-Pi 4 ARM64
+    
+    # Port mappings
+    ports:
+      - "${FLASK_PORT:-11078}:11078"
+    
+    # Environment variables
+    environment:
+      - FLASK_ENV=production
+      - FLASK_APP=app.py
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYARMOR_DEBUG=0
+      
+      # Email configuration (from .env or override)
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SENDER_EMAIL=${SENDER_EMAIL:-cperdkemiddleware@gmail.com}
+      - SENDER_PASSWORD=${SENDER_PASSWORD:-}
+      
+      # Optional: Enable for debugging (increases startup time)
+      # - PYARMOR_DEBUG=1
+    
+    # Volume mounts for logs and data persistence
+    volumes:
+      # JSON data files (ir_keycodes, devices, jobs, etc.)
+      - ./Json:/app/Json:rw
+      
+      # Logs directory
+      - ./iteration_logs:/app/iteration_logs:rw
+      - ./screenshots:/app/screenshots:rw
+      - ./device_logs:/app/device_logs:rw
+      
+      # Configuration (if needed to override)
+      # - ./.env:/app/.env:ro
+    
+    # Resource limits for R-Pi 4
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1G
+        reservations:
+          cpus: '1'
+          memory: 512M
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:11078/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    
+    # Network
+    networks:
+      - middleware-network
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  middleware-network:
+    driver: bridge

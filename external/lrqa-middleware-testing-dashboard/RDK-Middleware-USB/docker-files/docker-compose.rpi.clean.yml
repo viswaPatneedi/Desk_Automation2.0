@@ -1,0 +1,153 @@
+version: '3.8'
+
+# ============================================================================
+# Docker Compose - RDK-E Middleware QA Dashboard on Raspberry Pi
+# ============================================================================
+# Optimized for Raspberry Pi 4 (4GB+ RAM)
+# 
+# Usage:
+#   docker-compose -f docker-compose.rpi.clean.yml up -d
+#   docker-compose -f docker-compose.rpi.clean.yml logs -f
+#   docker-compose -f docker-compose.rpi.clean.yml down
+# ============================================================================
+
+services:
+  
+  # ========================================================================
+  # Main Application Service
+  # ========================================================================
+  rdk-middleware-dashboard:
+    
+    # Build configuration (builds locally on RPi)
+    build:
+      context: .
+      dockerfile: Dockerfile.rpi.clean
+    
+    # Container name
+    container_name: rdk-middleware-dashboard
+    
+    # Image name for future use
+    image: rdk-middleware-dashboard:rpi4-clean
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # ====================================================================
+    # PORT MAPPINGS
+    # ====================================================================
+    ports:
+      # Web UI: http://raspberrypi:11078
+      - "11078:11078"
+    
+    # ====================================================================
+    # VOLUME MOUNTS (Persistent Data)
+    # ====================================================================
+    volumes:
+      # Application data storage (screenshots, logs, sessions)
+      - app_data:/app/data
+      
+      # Reference screens for screen validation
+      - reference_screens:/app/reference_screens
+      
+      # JSON data files (ir_keycodes, devices, jobs, etc.)
+      - ./Json:/app/Json
+      
+      # Configuration files (can be updated without rebuild)
+      - ./log_patterns.json:/app/log_patterns.json
+      - ./config_commands.py:/app/config_commands.py
+      - ./config_ir_blaster.py:/app/config_ir_blaster.py
+      - ./config_log_patterns.py:/app/config_log_patterns.py
+      
+    # ====================================================================
+    # ENVIRONMENT VARIABLES
+    # ====================================================================
+    environment:
+      # Flask Configuration
+      FLASK_APP: app.py
+      FLASK_ENV: production
+      FLASK_DEBUG: "0"
+      
+      # Application Configuration
+      APP_HOST: 0.0.0.0
+      APP_PORT: 11078
+      LOG_LEVEL: INFO
+      
+      # SSH Configuration (adjust as needed)
+      SSH_PORT: "10022"
+      SSH_USERNAME: "root"
+      SSH_TIMEOUT: "30"
+      
+      # Email Configuration (optional - set credentials to enable)
+      SMTP_HOST: "smtp.gmail.com"
+      SMTP_PORT: "587"
+      # SMTP_USER: "your-email@gmail.com"
+      # SMTP_PASSWORD: "your-app-password"
+      # SMTP_FROM_EMAIL: "your-email@gmail.com"
+      
+      # Security
+      SECRET_KEY: "change-this-in-production-use-random-32char-string"
+      SESSION_TIMEOUT: "86400"  # 24 hours
+      
+      # Data paths
+      DATA_PATH: "/app/data"
+    
+    # ====================================================================
+    # RESOURCE LIMITS (Raspberry Pi optimization)
+    # ====================================================================
+    deploy:
+      resources:
+        limits:
+          cpus: '1'           # Use 1 CPU core max (adjust based on RPi model)
+          memory: 512M        # Use 512MB RAM max (adjust for 4GB RPi)
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    
+    # ====================================================================
+    # LOGGING CONFIGURATION
+    # ====================================================================
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # ====================================================================
+    # HEALTH CHECK
+    # ====================================================================
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11078/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # ====================================================================
+    # NETWORKING
+    # ====================================================================
+    networks:
+      - rdk-network
+    
+    # ====================================================================
+    # STDIN & TTY (for debugging)
+    # ====================================================================
+    stdin_open: true
+    tty: true
+
+# ============================================================================
+# PERSISTENT VOLUMES
+# ============================================================================
+
+volumes:
+  app_data:
+    driver: local
+  reference_screens:
+    driver: local
+
+# ============================================================================
+# NETWORKS
+# ============================================================================
+
+networks:
+  rdk-network:
+    driver: bridge

@@ -1,0 +1,100 @@
+ 5162 root      20   0       0      0      0 Z   0.0   0.0   0:00.00 SkyMwConf+
+ 5198 root      20   0   26468   1964   1500 S   0.0   0.1   0:00.01 thunderHa+
+ 5230 root      20   0       0      0      0 Z   0.0   0.0   0:00.00 SkyMwConf+
+ 5232 root      20   0       0      0      0 Z   0.0   0.0   0:00.00 SkyMwConf+
+ 5253 non-root  20   0   29256   5816   4968 S   0.0   0.3   0:00.09 audiocapt+
+ 5255 root      20   0  141748  21368  14260 S   0.0   1.1   0:02.61 NWMgrPlug+
+ 5268 root      20   0 1586224   9356   4228 S   0.0   0.5   0:00.22 asproxy
+ 5303 root      20   0   83436  15648  12648 S   0.0   0.8   0:00.14 TextToSpe+
+ 5576 root      20   0    1976     96      0 S   0.0   0.0   0:00.00 dropbear
+ 5581 root      20   0   24452   4340   3872 S   0.0   0.2   0:00.03 PluginAct+
+ 5582 root      20   0   24452   4360   3892 S   0.0   0.2   0:00.02 PluginAct+
+ 5592 root      20   0   24452   4352   3884 S   0.0   0.2   0:00.02 PluginAct+
+ 5595 root      20   0   24452   4360   3892 S   0.0   0.2   0:00.03 PluginAct+
+ 5605 root      20   0  121196  32240  24080 S   0.0   1.7   0:02.44 MediaRite
+ 5610 root      20   0   24452   4340   3872 S   0.0   0.2   0:00.02 PluginAct+
+ 5613 root      20   0       0      0      0 I   0.0   0.0   0:00.48 kworker/0+
+ 5614 root      20   0  198184  10248   8668 S   0.0   0.5   0:04.68 dsMgrMain
+ 5638 root      20   0  113852   8492   7140 S   0.0   0.4   0:00.22 sysTimeMgr
+ 5641 root      20   0   24452   4340   3872 S   0.0   0.2   0:00.03 PluginAct+
+ 5688 root      20   0   60364   7804   6612 S   0.0   0.4   0:00.25 fogcli
+ 5727 root      20   0   24452   4292   3832 S   0.0   0.2   0:00.02 PluginAct+
+ 5728 root      20   0   24452   4364   3896 S   0.0   0.2   0:00.03 PluginAct+
+ 5729 root      20   0   24452   4364   3896 S   0.0   0.2   0:00.02 PluginAct+
+ 5933 root      20   0   58788  15220  12372 S   0.0   0.8   0:00.11 SystemAud+
+ 5943 root      20   0   91988  17720  15212 S   0.0   0.9   0:00.63 CloudStore
+ 5954 root      20   0   24452   4364   3896 S   0.0   0.2   0:00.02 PluginAct+
+ 5956 root      20   0   24452   4368   3900 S   0.0   0.2   0:00.02 PluginAct+
+ 5958 root      20   0   24452   4368   3900 S   0.0   0.2   0:00.03 PluginAct+
+ 5959 root      20   0   24452   4368   3900 S   0.0   0.2   0:00.02 PluginAct+
+ 5962 root      20   0   24452   4368   3900 S   0.0   0.2   0:00.03 PluginAct+
+ 5963 root      20   0   24452   4368   3900 S   0.0   0.2   0:00.02 PluginAct+
+ 5966 root      20   0   24452   4368   3900 S   0.0   0.2   0:00.02 PluginAct+
+ 5967 root      20   0   24452   4368   3900 S   0.0   0.2   0:00.02 PluginAct+
+ 5969 root      20   0   24452   4368   3900 S   0.0   0.2   0:00.02 PluginAct+
+ 5977 root      20   0  128156  13052  11164 S   0.0   0.7   0:00.81 controlMgr
+ 6038 root      20   0    2152    688    616 S   0.0   0.0   0:00.00 sleep
+ 6124 root      20   0   56700  14196  12116 S   0.0   0.7   0:00.09 Xcast
+ 6196 systemd+  20   0   11720   1568   1408 S   0.0   0.1   0:00.03 systemd-t+
+ 6296 root      20   0  114124  18032   8624 S   0.0   0.9   0:00.70 btMgrBus
+ 6316 root      20   0    2064   1604   1420 S   0.0   0.1   0:00.26 dropbear
+ 6322 root      20   0   50084   9068   6608 S   0.0   0.5   0:00.61 rfcMgr
+ 6345 non-root  20   0   49812   5712   4292 S   0.0   0.3   0:00.06 telemetry+
+ 6795 root      20   0   24452   4420   3952 S   0.0   0.2   0:00.02 PluginAct+
+ 6797 root      20   0   24452   4440   3968 S   0.0   0.2   0:00.02 PluginAct+
+ 6875 root      20   0   24452   4556   4088 S   0.0   0.2   0:00.02 PluginAct+
+ 7309 root      20   0    1980     96      0 S   0.0   0.0   0:00.00 dropbear
+ 8352 root      20   0    2152    688    616 S   0.0   0.0   0:00.00 sleep
+ 9150 root      20   0   45128  12764  10912 S   0.0   0.7   0:00.08 WifiMetri+
+ 9167 root      20   0  398080  11680   3620 S   0.0   0.6   0:00.00 WorkerPoo+
+ 9168 root      20   0    2252   1776   1576 S   0.0   0.1   0:00.02 core_shel+
+Filesystem           1K-blocks      Used Available Use% Mounted on
+none                    564276         0    564276   0% /dev
+/dev/dm-0               214400    214400         0 100% /
+tmpfs                   952832        36    952796   0% /dev/shm
+tmpfs                   952832      6804    946028   1% /run
+tmpfs                   952832         0    952832   0% /sys/fs/cgroup
+tmpfs                   952832      6804    946028   1% /etc/machine-id
+tmpfs                   952832       680    952152   0% /tmp
+tmpfs                   952832       680    952152   0% /etc/systemd/timesyncd.conf
+/dev/mmcblk0p3          996780    474880    453088  51% /opt
+/dev/mmcblk0p4          235431     15369    202859   7% /mnt/critical
+/dev/mmcblk0p4          235431     15369    202859   7% /opt/persistent
+/dev/mmcblk0p4          235431     15369    202859   7% /opt/www
+/dev/mmcblk0p4          235431     15369    202859   7% /opt/drm
+/dev/mmcblk0p4          235431     15369    202859   7% /opt/gp
+tmpfs                     5120         0      5120   0% /opt/oem
+tmpfs                   131072         0    131072   0% /mnt/memory
+/dev/mmcblk0p3          996780    474880    453088  51% /nvram
+/dev/mmcblk0p4          235431     15369    202859   7% /etc/timezone
+/dev/mmcblk0p3          996780    474880    453088  51% /var/lib
+/dev/mmcblk0p1            7012      6336       536  92% /lib/teetz
+tmpfs                   952832        40    952792   0% /var/volatile
+tmpfs                   952832        40    952792   0% /etc/asound.conf
+tmpfs                   952832        40    952792   0% /etc/hosts
+tmpfs                   952832        40    952792   0% /etc/resolv.conf
+tmpfs                   952832        40    952792   0% /etc/xupnp
+tmpfs                   952832        40    952792   0% /www
+tmpfs                   952832        40    952792   0% /var/spool/cron
+tmpfs                   952832        40    952792   0% /etc/hostname
+tmpfs                   952832       680    952152   0% /etc/ssl/openssl.cnf
+/opt/secure             996780    474880    453088  51% /opt/secure
+/opt/secure             996780    474880    453088  51% /nvram/secure
+/opt/secure             996780    474880    453088  51% /var/lib/secure
+/opt/drm                235431     15369    202859   7% /opt/drm
+/opt/drm                235431     15369    202859   7% /mnt/critical/drm
+/dev/mmcblk0p2         4046560    433824   3386640  11% /media/apps
+/dev/mmcblk0p2         4046560    433824   3386640  11% /tmp/data
+/dev/mmcblk0p2         4046560    433824   3386640  11% /opt/CDL
+/dev/mmcblk0p2         4046560    433824   3386640  11% /nvram/CDL
+/dev/mmcblk0p2         4046560    433824   3386640  11% /var/lib/CDL
+2026-02-01T03:17:02.392Z process crashed = WorkerPool::Thr
+2026-02-01T03:17:02.408Z signal causing dump = 6
+2026-02-01T03:17:02.426Z time of dump = 1769915822
+2026-02-01T03:17:02.438Z Process ID = 4693
+2026-02-01T03:17:02.448Z Thread ID within process = 4822
+2026-02-01T03:17:02.465Z WorkerPool::Thr crash and uploading the cores
+2026-02-01T03:17:02.476Z corename = 1769915822_core.prog_WorkerPool::Thr.signal_6.gz
+2026-02-01T03:17:02.488Z processing_corename = 1769915822_core_prog_WorkerPool::Thr.signal_6.gz.tmp
+2026-02-01T03:17:02.498Z core-shell core started pid : 9168
+2026-02-01T03:17:11.808Z core-shell core created pid : 9168

@@ -1,0 +1,97 @@
+version: '3.8'
+
+# Cross-platform docker-compose configuration optimized for Windows, Mac, and Linux
+# This configuration provides better compatibility and performance across platforms
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # Platform specification for multi-platform builds
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    
+    container_name: rdk-testing-dashboard
+    
+    # Platform-specific settings handled automatically by Docker
+    # Windows/Mac will use native virtualization
+    
+    ports:
+      - "5000:5000"
+    
+    # Volumes: Using absolute paths pattern for better cross-platform compatibility
+    volumes:
+      # JSON data files (all in Json directory)
+      - ./Json:/app/Json:delegated
+      
+      # Logs and screenshots - using named volume for better performance on Mac/Windows
+      - iteration_logs_volume:/app/iteration_logs:delegated
+      - screenshots_volume:/app/screenshots:delegated
+      
+      # Static assets (optional, for development mode)
+      - ./static:/app/static:delegated
+      - ./templates:/app/templates:delegated
+    
+    environment:
+      # Flask configuration
+      - FLASK_APP=app.py
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      
+      # Email configuration (set via .env file or environment variables)
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SENDER_EMAIL=${SENDER_EMAIL:-cperdkemiddleware@gmail.com}
+      - SENDER_PASSWORD=${SENDER_PASSWORD:-}
+      
+      # Application configuration
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      
+      # Performance optimization for Mac/Windows
+      - WERKZEUG_RUN_MAIN=true
+    
+    restart: unless-stopped
+    
+    networks:
+      - rdk-network
+    
+    # Resource limits - adjust based on your system
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+    
+    # Health check - ensures container is ready before considering it up
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+
+networks:
+  rdk-network:
+    driver: bridge
+    # Configure network for cross-platform compatibility
+    driver_opts:
+      com.docker.driver.mtu: 1500
+
+# Named volumes for better performance on Mac/Windows
+volumes:
+  iteration_logs_volume:
+    driver: local
+  screenshots_volume:
+    driver: local

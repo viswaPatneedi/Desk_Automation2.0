@@ -1,0 +1,61 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rdk-testing-ingress
+  namespace: rdk-testing
+  labels:
+    app: device-testing-dashboard
+  annotations:
+    # nginx ingress annotations
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    # Increase timeout for long-running operations
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    # WebSocket support for SSE log streaming
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    # Session affinity
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "rdk-session"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "10800"
+    nginx.ingress.kubernetes.io/session-cookie-max-age: "10800"
+    
+    # Optional: cert-manager for TLS
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx  # Change based on your ingress controller
+  rules:
+  - host: lrqa-testing-tool.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rdk-testing-service
+            port:
+              number: 5000
+  
+  # Optional: TLS configuration
+  # tls:
+  # - hosts:
+  #   - rdk-testing.example.com
+  #   secretName: rdk-testing-tls
+
+---
+# Alternative: Traefik Ingress
+# apiVersion: traefik.containo.us/v1alpha1
+# kind: IngressRoute
+# metadata:
+#   name: rdk-testing-ingressroute
+#   namespace: rdk-testing
+# spec:
+#   entryPoints:
+#     - web
+#   routes:
+#   - match: Host(`rdk-testing.example.com`)
+#     kind: Rule
+#     services:
+#     - name: rdk-testing-service
+#       port: 5000

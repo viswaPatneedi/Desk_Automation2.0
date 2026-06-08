@@ -1,0 +1,65 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# Flask
+instance/
+.webassets-cache
+
+# Application specific
+screenshots/
+iteration_logs/
+base_images/
+Enhancement_output/
+realtime_logs.txt
+
+# Backup files
+*.backup
+*.backup_*
+*.corrupt*
+
+# Temporary files
+*.log
+*.tmp
+*.swp
+*.swo
+*~
+.DS_Store
+nohup.out
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# OS
+Thumbs.db
+.directory
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.csr
+
+# Environment variables
+.env
+.env.local
+
+# Exclude specific folders
+SAM-CD-2GB/
+updated_code/
+
+# Exclude unused image folders
+Unused_Images/
+Unused_Images_DO_NOT_MERGE/
+*.tar

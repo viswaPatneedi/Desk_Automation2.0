@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results | RDK-E Middleware QA Testing Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .dashboard-card {
+            background: #1f2937;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #374151;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-lg);
+        }
+        
+        .card-header-custom {
+            background: #4b5563;
+            color: #f3f4f6;
+            padding: 1.25rem 1.5rem;
+            border: none;
+            border-bottom: 1px solid #374151;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .card-header-custom h5 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .card-header-custom i {
+            font-size: 1.3rem;
+        }
+        
+        .card-body-custom {
+            padding: 1.5rem;
+        }
+        
+        .filter-section {
+            background: #1f2937;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid #374151;
+        }
+        
+        .filter-section .form-label {
+            font-weight: 600;
+            color: #d1d5db;
+            margin-bottom: 0.5rem;
+        }
+        
+        .filter-section .form-select,
+        .filter-section .form-control {
+            border-radius: 8px;
+            background: #374151;
+            border: 1px solid #4b5563;
+            color: #f3f4f6;
+            padding: 0.625rem 1rem;
+            transition: all 0.2s;
+            height: auto;
+        }
+        
+        .filter-section .form-select:focus,
+        .filter-section .form-control:focus {
+            border-color: #6b7280;
+            background: #4b5563;
+            color: #f3f4f6;
+            box-shadow: 0 0 0 0.2rem rgba(107, 114, 128, 0.25);
+        }
+        
+        .device-multiselect {
+            width: 100%;
+            position: relative;
+        }
+        
+        .device-multiselect-button {
+            width: 100%;
+            padding: 0.625rem 1rem;
+            border-radius: 8px;
+            background: #374151;
+            border: 1px solid #4b5563;
+            color: #f3f4f6;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        
+        .device-multiselect-button:hover {
+            background: #4b5563;
+            border-color: #6b7280;
+        }
+        
+        .device-multiselect-button:focus {
+            outline: none;
+            border-color: #6b7280;
+            box-shadow: 0 0 0 0.2rem rgba(107, 114, 128, 0.25);
+        }
+        
+        .device-multiselect-button i {
+            margin-left: 0.5rem;
+            transition: transform 0.2s;
+        }
+        
+        .device-multiselect-button.open i {
+            transform: rotate(180deg);
+        }
+        
+        .device-multiselect-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .device-multiselect-dropdown.open {
+            display: block;
+        }
+        
+        .device-multiselect-dropdown .dropdown-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #4b5563;
+            background: #374151;
+            position: sticky;
+            top: 0;
+            font-weight: 600;
+            color: #f3f4f6;
+        }
+        
+        .device-multiselect-dropdown .dropdown-header label {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .device-multiselect-dropdown .dropdown-header input {
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+        
+        .device-multiselect-dropdown .dropdown-item {
+            padding: 0.75rem 1rem;
+            color: #d1d5db;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #4b5563;
+            transition: background 0.2s;
+        }
+        
+        .device-multiselect-dropdown .dropdown-item:hover {
+            background: #4b5563;
+        }
+        
+        .device-multiselect-dropdown .dropdown-item input {
+            margin-right: 0.75rem;
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+        
+        .device-multiselect-dropdown .dropdown-item label {
+            margin: 0;
+            flex: 1;
+            cursor: pointer;
+        }
+        
+        .device-multiselect select {
+            display: none;
+        }
+        
+        .btn-filter {
+            background: #4b5563;
+            border: none;
+            padding: 0.625rem 1.5rem;
+            border-radius: 8px;
+            color: #f3f4f6;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-filter:hover {
+            background: #6b7280;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(75, 85, 99, 0.4);
+        }
+        
+        .timeline {
+            position: relative;
+            padding: 0;
+            list-style: none;
+            max-height: 600px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 1rem;
+        }
+        
+        .timeline::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .timeline::-webkit-scrollbar-track {
+            background: #1f2937;
+            border-radius: 4px;
+        }
+        
+        .timeline::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 4px;
+        }
+        
+        .timeline::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 3rem;
+            padding-bottom: 2rem;
+            border-left: 2px solid #374151;
+        }
+        
+        .timeline-item:last-child {
+            border-left: 2px solid transparent;
+            padding-bottom: 0;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            left: -9px;
+            top: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #1f2937;
+            border: 3px solid var(--medium-grey);
+        }
+        
+        .timeline-marker.success { border-color: var(--success-color); }
+        .timeline-marker.danger { border-color: var(--danger-color); }
+        .timeline-marker.warning { border-color: var(--warning-color); }
+        
+        .timeline-content {
+            background: #374151;
+            border-radius: 10px;
+            padding: 1.25rem;
+            position: relative;
+        }
+        
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .timeline-title {
+            font-weight: 600;
+            color: #f3f4f6;
+            font-size: 1.05rem;
+        }
+        
+        .badge-custom {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge-success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .badge-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .badge-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+        
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .screenshot-card {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .screenshot-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .screenshot-card img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .screenshot-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            padding: 1rem;
+            border: none;
+        }
+        
+        .table-modern thead th {
+            background: #374151;
+            color: #f3f4f6;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            padding: 1rem;
+            border: none;
+        }
+        
+        .table-modern thead th:first-child {
+            border-radius: 10px 0 0 0;
+        }
+        
+        .table-modern thead th:last-child {
+            border-radius: 0 10px 0 0;
+        }
+        
+        .table-modern tbody td {
+            padding: 1rem;
+            border-bottom: 1px solid #374151;
+            vertical-align: middle;
+            color: #d1d5db;
+        }
+        
+        .table-modern tbody tr:hover {
+            background: #374151;
+        }
+        
+        .table-modern tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .table-modern tbody td strong {
+            color: #f3f4f6;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 1rem;
+        }
+        
+        .back-btn {
+            background: #4b5563;
+            color: #f3f4f6;
+            border: 2px solid #6b7280;
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .back-btn:hover {
+            background: #6b7280;
+            color: #f3f4f6;
+            border-color: #9ca3af;
+            transform: translateX(-5px);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #9ca3af;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #4b5563;
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state h4 {
+            color: #d1d5db;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* CRITICAL: Override Bootstrap fade and modal classes for screenshotModal */
+        #screenshotModal {
+            display: none !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 1040 !important;
+            width: 100% !important;
+            height: 100% !important;
+            overflow: hidden !important;
+            outline: 0 !important;
+            background-color: rgba(0, 0, 0, 0) !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            transition: none !important;
+        }
+        
+        /* CRITICAL: Show modal when it has show class */
+        #screenshotModal[style*="display: block"],
+        #screenshotModal.show {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            justify-content: center !important;
+            align-items: center !important;
+            background-color: rgba(0, 0, 0, 0.5) !important;
+            overflow-y: auto !important;
+            transition: none !important;
+        }
+        
+        #screenshotModal.show .modal-dialog {
+            position: relative !important;
+            width: auto !important;
+            margin: auto !important;
+            max-width: 90vw !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        
+        #screenshotModal.show .modal-content {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            pointer-events: auto !important;
+            background-color: #1f2937 !important;
+            background-clip: padding-box !important;
+            border: 1px solid #1f2937 !important;
+            border-radius: 15px !important;
+            outline: 0 !important;
+            max-height: 85vh !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+        }
+        
+        #screenshotModal.show .modal-header {
+            display: flex !important;
+            flex-shrink: 0 !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 1rem !important;
+            background: #4b5563 !important;
+            border-bottom: 1px solid #4b5563 !important;
+            border-radius: 15px 15px 0 0 !important;
+            margin: 0 !important;
+        }
+        
+        #screenshotModal.show .modal-title {
+            color: #f3f4f6 !important;
+            font-weight: 600 !important;
+        }
+        
+        #screenshotModal.show .btn-close {
+            padding: 0.5rem !important;
+            background-color: transparent !important;
+            border: 0 !important;
+            cursor: pointer !important;
+        }
+        
+        #screenshotModal.show .modal-body {
+            position: relative !important;
+            flex: 1 1 auto !important;
+            padding: 1.5rem !important;
+            overflow-y: auto !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            min-height: 400px !important;
+            background: #1f2937 !important;
+            margin: 0 !important;
+            width: 100% !important;
+        }
+        
+        #screenshotModal.show .modal-body img {
+            width: auto !important;
+            height: auto !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
+            object-fit: contain !important;
+            border-radius: 8px !important;
+            display: block !important;
+            margin: 0 auto !important;
+        }
+        
+        /* Remove Bootstrap fade effect */
+        #screenshotModal.fade {
+            opacity: 0 !important;
+            transition: none !important;
+        }
+        
+        #screenshotModal.show.fade {
+            opacity: 1 !important;
+        }
+        
+        /* Hide backdrop */
+        .modal-backdrop {
+            display: none !important;
+        }
+        
+        .modal-open {
+            overflow: auto !important;
+        }
+        
+        .text-muted {
+            color: #9ca3af !important;
+        }
+        
+        strong {
+            color: #f3f4f6;
+        }
+        
+        .timeline-content strong {
+            color: #f3f4f6;
+        }
+        
+        /* Card View Styles */
+        .result-card {
+            background: #374151;
+            border-radius: 12px;
+            border: 1px solid #4b5563;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .result-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            border-color: #6b7280;
+        }
+        
+        .result-card-header {
+            background: #4b5563;
+            padding: 0.9rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .result-card-info-group {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .result-card-info-item {
+            color: #d1d5db;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        
+        .result-card-info-item i {
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+        
+        .result-card-info-item strong {
+            color: #f3f4f6;
+            margin-right: 0.3rem;
+        }
+        
+        .result-card-date {
+            color: #d1d5db;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .result-card-date i {
+            margin-right: 0.5rem;
+            color: #9ca3af;
+        }
+        
+        .result-card-iteration {
+            background: #6b7280;
+            color: #fff;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+        }
+        
+        .result-card-content {
+            padding: 0;
+        }
+        
+        .methods-and-screenshots {
+            display: flex;
+            min-height: auto;
+            max-height: 400px;
+        }
+        
+        .methods-section {
+            flex: 0 0 35%;
+            padding: 1rem;
+            background: #2d3748;
+            border-right: 1px solid #374151;
+            overflow-y: auto;
+        }
+        
+        .methods-header {
+            color: #f3f4f6;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .methods-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .method-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            align-items: center;
+            padding: 0.7rem;
+            background: #374151;
+            border-radius: 4px;
+            border-left: 4px solid;
+            transition: all 0.2s;
+        }
+        
+        .method-item:hover {
+            background: #4b5563;
+        }
+        
+        .method-item.method-success {
+            border-left-color: var(--success-color);
+        }
+        
+        .method-item.method-danger {
+            border-left-color: var(--danger-color);
+        }
+        
+        .method-item.method-warning {
+            border-left-color: var(--warning-color);
+        }
+        
+        .method-name {
+            color: #e5e7eb;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .method-status {
+            padding: 0.3rem 0.7rem;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .method-status.status-success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .method-status.status-danger {
+            background: var(--danger-color);
+            color: white;
+        }
+        
+        .method-status.status-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+        
+        .screenshots-section {
+            flex: 1;
+            padding: 1rem;
+            background: #1f2937;
+            overflow-y: auto;
+        }
+        
+        .screenshots-header {
+            color: #f3f4f6;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .screenshots-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+            max-height: 350px;
+            overflow-y: auto;
+        }
+        
+        .screenshot-item {
+            position: relative;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .screenshot-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        
+        .screenshot-item img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .screenshot-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            color: white;
+            padding: 0.6rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .result-card-body {
+            padding: 1.25rem;
+            flex: 1;
+        }
+        
+        .result-card-device {
+            color: #d1d5db;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: #1f2937;
+            border-radius: 6px;
+            border-left: 3px solid #6b7280;
+        }
+        
+        .result-card-device i {
+            color: #9ca3af;
+            margin-right: 0.5rem;
+        }
+        
+        .result-card-device strong {
+            color: #f3f4f6;
+            margin-right: 0.5rem;
+        }
+        
+        .result-card-methods {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: #1f2937;
+            border-radius: 6px;
+        }
+        
+        .result-card-methods strong {
+            display: block;
+            color: #f3f4f6;
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .result-card-methods .badge {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.8rem;
+            font-weight: 600;
+        }
+        
+        .result-card-status-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: #1f2937;
+            border-radius: 6px;
+            border-left: 3px solid;
+            transition: all 0.2s;
+        }
+        
+        .status-item:hover {
+            background: #2d3748;
+        }
+        
+        .status-item.status-success {
+            border-left-color: var(--success-color);
+        }
+        
+        .status-item.status-danger {
+            border-left-color: var(--danger-color);
+        }
+        
+        .status-item.status-warning {
+            border-left-color: var(--warning-color);
+        }
+        
+        .status-label {
+            color: #d1d5db;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .status-badge {
+            padding: 0.35rem 0.8rem;
+            border-radius: 16px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .result-card-screenshots {
+            background: #2d3748;
+            padding: 1rem;
+            border-top: 1px solid #4b5563;
+        }
+        
+        .screenshots-label {
+            color: #f3f4f6;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .screenshots-preview {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+        
+        .screenshot-thumb {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+        
+        .screenshot-thumb:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        
+        .screenshot-thumb img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            display: block;
+        }
+        
+        .screenshot-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            color: white;
+            padding: 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Card View Container Scrollbar */
+        #resultsCardGrid::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        #resultsCardGrid::-webkit-scrollbar-track {
+            background: #1f2937;
+            border-radius: 5px;
+        }
+        
+        #resultsCardGrid::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 5px;
+        }
+        
+        #resultsCardGrid::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+        
+        .card-body-custom::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        .card-body-custom::-webkit-scrollbar-track {
+            background: #1f2937;
+            border-radius: 5px;
+        }
+        
+        .card-body-custom::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 5px;
+        }
+        
+        .card-body-custom::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+        
+        @media (max-width: 768px) {
+            .screenshot-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .screenshots-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-card-header {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+            
+            .result-card-info-group {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .methods-and-screenshots {
+                flex-direction: column;
+            }
+            
+            .methods-section {
+                border-right: none;
+                border-bottom: 1px solid #374151;
+            }
+            
+            .screenshots-preview {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-custom">
+        <div class="container-fluid" style="max-width: 100%; margin: 0 auto;">
+            <div class="d-flex flex-column">
+                <a class="navbar-brand mb-0" href="/dashboard">
+                    <i class="bi bi-cpu-fill"></i>
+                    RDK-E Middleware QA Testing Tool
+                </a>
+                <span class="developer-credit" style="font-size: 0.75rem; color: #9ca3af; margin-left: 2rem;">
+                    <i class="bi bi-code-slash"></i> Designed & Developed by <strong>VISWA</strong>
+                </span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Results Dropdown -->
+                <div class="btn-group" role="group">
+                    <a href="/results" class="btn btn-sm btn-outline-light" title="View Results">
+                        <i class="bi bi-table"></i> Results
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="View Options">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/results"><i class="bi bi-table"></i> Table View</a></li>
+                        <li><a class="dropdown-item" href="/results-cards"><i class="bi bi-grid-3x2"></i> Card View</a></li>
+                    </ul>
+                </div>
+                <!-- Services Dropdown -->
+                <div class="btn-group" role="group">
+                    <a href="/services/system-commands" class="btn btn-sm btn-outline-light" title="Services">
+                        <i class="bi bi-gear-fill"></i> Services
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="Service Options">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/services/system-commands"><i class="bi bi-terminal"></i> System Commands</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Results Pages</h6></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-results"><i class="bi bi-speedometer2"></i> Reboot Perf Results</a></li>
+                        <li><a class="dropdown-item" href="/deepsleep-results"><i class="bi bi-moon-fill"></i> DeepSleep Results</a></li>
+                        <li><a class="dropdown-item" href="/soft-hard-boot-results"><i class="bi bi-arrow-repeat"></i> Boot Results</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-compare"><i class="bi bi-columns-gap"></i> Compare Executions</a></li>
+                    </ul>
+                </div>
+                <!-- User Info with Team Name -->
+                <span class="text-white d-flex align-items-center gap-2">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="bi bi-person-circle"></i>
+                            <div>
+                                <div>{{ current_user.name if current_user else 'Guest' }}</div>
+                                {% if current_user and current_user.team_name %}
+                                <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 2px;">{{ current_user.team_name }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </span>
+                <a href="/logout" class="btn btn-sm btn-danger">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-fluid main-content">
+        <!-- ...existing code... -->
+        
+        <!-- Filters -->
+        <div class="filter-section">
+            <div class="row g-3 align-items-end mb-3">
+                <div class="col-md-2">
+                    <label class="form-label">
+                        <i class="bi bi-calendar3"></i> Filter by Date
+                    </label>
+                    <input type="date" class="form-control" id="filterDate">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">
+                        <i class="bi bi-hdd-network"></i> Device (Multi-Select)
+                    </label>
+                    <div class="device-multiselect">
+                        <button type="button" class="device-multiselect-button" id="deviceFilterButton" onclick="toggleDeviceDropdown()">
+                            <span id="deviceFilterDisplay">All</span>
+                            <i class="bi bi-chevron-down"></i>
+                        </button>
+                        <div class="device-multiselect-dropdown" id="deviceFilterDropdown">
+                            <div class="dropdown-header">
+                                <label>
+                                    <input type="checkbox" id="selectAllDevices" onchange="toggleAllDevices()">
+                                    <span>All</span>
+                                </label>
+                            </div>
+                            <div id="deviceCheckboxList">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                        <select id="filterDeviceCheckboxes" multiple style="display: none;">
+                            <!-- Hidden, for compatibility -->
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">
+                        <i class="bi bi-gear"></i> Method
+                    </label>
+                    <select class="form-select" id="filterMethod">
+                        <option value="">All Methods</option>
+                        <option value="reboot">Reboot</option>
+                        <option value="deepsleep">Deep Sleep</option>
+                        <option value="power_key">Power Key</option>
+                        <option value="send_remote_keys">Send Remote Keys</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">
+                        <i class="bi bi-router"></i> Device IP
+                    </label>
+                    <input type="text" class="form-control" id="filterIP" placeholder="e.g., 10.0.0.143">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">
+                        <i class="bi bi-ethernet"></i> MAC Address
+                    </label>
+                    <input type="text" class="form-control" id="filterMAC" placeholder="e.g., D4:52:EE">
+                </div>
+                <div class="col-md-1">
+                    <button class="btn btn-filter w-100" onclick="applyFilters()">
+                        <i class="bi bi-funnel-fill"></i> Filter
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {% if results|length == 0 %}
+        <!-- Empty State -->
+        <div class="dashboard-card">
+            <div class="card-body-custom">
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <h4>No Test Results Yet</h4>
+                    <p>Run a test to see results here. All test executions will be tracked and displayed for the last 3 days.</p>
+                    <a href="/" class="btn btn-filter mt-3">
+                        <i class="bi bi-play-fill"></i> Start Testing
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+
+        <!-- Reboot Performance V2 Optimized summary section removed -->
+
+        <!-- Detailed Table View -->
+        <div class="dashboard-card mt-4">
+            <div class="card-header-custom">
+                <i class="bi bi-table"></i>
+                <h5>Detailed Results Table</h5>
+            </div>
+            <div class="card-body-custom" style="max-height: 600px; overflow-x: auto; overflow-y: auto;">
+                <table class="table-modern">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Device IP</th>
+                            <th>Methods-Triggered</th>
+                            <th>Iteration</th>
+                            <th>Phase</th>
+                            <th>Status</th>
+                            <th>Reboot Time (s)</th>
+                            <th>Boot Type</th>
+                            <th>RDK Milestones Log</th>
+                            <th>Details</th>
+                            <th>Screenshots</th>
+                            <th>Logs</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                        {% for execution in grouped_results %}
+                        {% if execution and execution.phases %}
+                        {% for phase in execution.phases %}
+                        {% if phase %}
+                        {% set status_class = 'success' if (phase and phase.status == 'PASSED') else ('warning' if (phase and phase.status == 'WARNING') else 'danger') %}
+                        {% set methods_display = execution.methods if execution.methods is string else (execution.methods|join(' → ') if execution.methods is iterable else 'N/A') %}
+                        <tr data-date="{{ execution.date }}" data-device="{{ execution.device_ip }}" data-method="{{ methods_display }}">
+                            {% if loop.first %}
+                            <td rowspan="{{ execution.phases|length }}">{{ execution.display_datetime if execution.display_datetime else execution.date }}</td>
+                            <td rowspan="{{ execution.phases|length }}">{{ execution.device_ip }}</td>
+                            <td rowspan="{{ execution.phases|length }}">
+                                <span class="badge bg-info">{{ methods_display }}</span>
+                            </td>
+                            <td rowspan="{{ execution.phases|length }}"><strong>ITR-{{ execution.iteration }}</strong></td>
+                            {% endif %}
+                            <td>{{ phase.phase if phase and phase.phase else 'N/A' }}</td>
+                            <td>
+                                <span class="badge-custom badge-{{ status_class }}">
+                                    {{ phase.status if phase and phase.status else 'UNKNOWN' }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if phase and phase.performance_seconds %}
+                                    <strong>{{ "%.2f" % phase.performance_seconds }}</strong>
+                                {% elif phase and phase.details and 'performance' in phase.details.lower() %}
+                                    <span style="color: #9ca3af;">{{ phase.details[:20] }}</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if phase and phase.boot_type %}
+                                    {% if phase.boot_type == 'HARD' %}
+                                        <span class="badge bg-danger">⚑ HARD</span>
+                                    {% elif phase.boot_type == 'SOFT' %}
+                                        <span class="badge bg-info">⚙ SOFT</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ phase.boot_type }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if phase and phase.rdk_milestones_log %}
+                                    <button class="btn btn-sm btn-outline-info" data-rdk-log='{{ phase.rdk_milestones_log|tojson }}' onclick="showMilestoneLog(this.dataset.rdkLog)">
+                                        <i class="bi bi-file-earmark-text"></i> View Log
+                                    </button>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td style="max-width: 300px;">{{ phase.details if phase and phase.details else 'No details' }}</td>
+                            <td>
+                                {% if phase and phase.screenshots %}
+                                    {% if phase.screenshots is string %}
+                                        {% set screenshot_list = phase.screenshots.split(', ') %}
+                                    {% else %}
+                                        {% set screenshot_list = phase.screenshots %}
+                                    {% endif %}
+                                    {% for screenshot in screenshot_list %}
+                                        {% if screenshot.strip() %}
+                                            {% set full_path = screenshot.strip() %}
+                                            {% if '/Lexar/Enhancement_output/' in full_path %}
+                                                {% set rel_path = full_path.split('/Lexar/Enhancement_output/')[-1] %}
+                                            {% elif 'Enhancement_output/' in full_path %}
+                                                {% set rel_path = full_path.split('Enhancement_output/')[-1] %}
+                                            {% elif 'Enhancement-output/' in full_path %}
+                                                {% set rel_path = full_path.split('Enhancement-output/')[-1] %}
+                                            {% elif 'reference_screens/' in full_path %}
+                                                {% set rel_path = full_path.split('reference_screens/')[-1] %}
+                                            {% elif full_path.startswith('screenshots/') %}
+                                                {% set rel_path = full_path %}
+                                            {% elif full_path.startswith('/') %}
+                                                {% set rel_path = full_path.split('/')[-1] %}
+                                            {% else %}
+                                                {% set rel_path = full_path %}
+                                            {% endif %}
+                                            <img src="/screenshots/{{ rel_path }}" alt="Screenshot" style="width: 200px; height: 150px; object-fit: cover; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 4px; display: block;" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'150\'%3E%3Crect fill=\'%23374151\' width=\'200\' height=\'150\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%239ca3af\' font-size=\'12\'%3ENo Image%3C/text%3E%3C/svg%3E'">
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if phase and phase.logs %}
+                                <small>{{ (phase.logs.split(', ') if phase.logs is string else phase.logs)|length }} file(s)</small>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                        </tr>
+                            {% endif %}
+                        {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Test Results Timeline -->
+        <div class="dashboard-card" style="display: none;">
+            <div class="card-header-custom">
+                <i class="bi bi-clock-history"></i>
+                <h5>Test Execution History</h5>
+            </div>
+            <div class="card-body-custom">
+                <ul class="timeline" id="resultsTimeline">
+                    {% for r in results %}
+                    {% set status_class = 'success' if r.status == 'PASSED' else ('warning' if r.status == 'WARNING' else 'danger') %}
+                    <li class="timeline-item" data-date="{{ r.date }}" data-device="{{ r.device_ip }}" data-method="{{ r.method }}">
+                        <div class="timeline-marker {{ status_class }}"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-header">
+                                <div>
+                                    <div class="timeline-title">
+                                        <i class="bi bi-{{ 'arrow-repeat' if r.phase == 'After Reboot' else 'moon-stars' if 'DeepSleep' in r.phase else 'power' }}"></i>
+                                        {% if r.method %}<span class="badge bg-primary me-2">{{ r.method|upper }}</span>{% endif %}
+                                        Iteration {{ r.iteration }} - {{ r.phase }}
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar3"></i> {{ r.display_datetime if r.display_datetime else (r.date if r.date else generated) }}
+                                        {% if r.device_ip %}
+                                        <i class="bi bi-hdd-network ms-3"></i> {{ r.device_ip }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <span class="badge-custom badge-{{ status_class }}">
+                                    <i class="bi bi-{{ 'check-circle' if r.status == 'PASSED' else ('exclamation-triangle' if r.status == 'WARNING' else 'x-circle') }}"></i>
+                                    {{ r.status }}
+                                </span>
+                            </div>
+                            
+                            <div class="details-text">
+                                <strong>Details:</strong> {{ r.details }}
+                            </div>
+                            
+                            {% if r.screenshots %}
+                            <div class="mt-3">
+                                <strong><i class="bi bi-camera-fill"></i> Screenshots:</strong>
+                                <div class="screenshot-grid">
+                                    {% set screenshots_list = (r.screenshots.split(', ') if r.screenshots is string else r.screenshots) %}
+                                    {% for screenshot in screenshots_list %}
+                                    {% set screenshot_val = (screenshot.strip() if screenshot is string else screenshot) %}
+                                    {% if screenshot_val %}
+                                    {% set full_path = screenshot_val %}
+                                    {% if '/Lexar/Enhancement_output/' in full_path %}
+                                                {% set rel_path = full_path.split('/Lexar/Enhancement_output/')[-1] %}
+                                            {% elif 'Enhancement_output/' in full_path %}
+                                                {% set rel_path = full_path.split('Enhancement_output/')[-1] %}
+                                    {% elif 'Enhancement-output/' in full_path %}
+                                        {% set rel_path = full_path.split('Enhancement-output/')[-1] %}
+                                    {% elif 'reference_screens/' in full_path %}
+                                        {% set rel_path = full_path.split('reference_screens/')[-1] %}
+                                    {% elif full_path.startswith('screenshots/') %}
+                                        {% set rel_path = full_path %}
+                                    {% elif full_path.startswith('/') %}
+                                        {% set rel_path = full_path.split('/')[-1] %}
+                                    {% else %}
+                                        {% set rel_path = full_path %}
+                                    {% endif %}
+                                    <div class="screenshot-card" onclick="viewScreenshot('/screenshots/{{ rel_path }}', '{{ full_path.split('/')[-1] }}')">
+                                        <img src="/screenshots/{{ rel_path }}" alt="{{ full_path.split('/')[-1] }}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'150\'%3E%3Crect fill=\'%23374151\' width=\'200\' height=\'150\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%239ca3af\' font-size=\'14\'%3ENo Image%3C/text%3E%3C/svg%3E'">
+                                        <div class="screenshot-overlay">{{ full_path.split('/')[-1] }}</div>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            {% if r.logs %}
+                            <div class="mt-3">
+                                <strong><i class="bi bi-file-earmark-text-fill"></i> Log Files:</strong>
+                                <div class="mt-2">
+                                    {% set logs_list = (r.logs.split(', ') if r.logs is string else r.logs) %}
+                                    {% for log in logs_list %}
+                                    {% set log_val = (log.strip() if log is string else log) %}
+                                    {% if log_val %}
+                                    <span class="badge bg-secondary me-2 mb-2">{{ log_val }}</span>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- Card View Section -->
+        <div class="dashboard-card mt-4" style="display: none;">
+            <div class="card-header-custom">
+                <i class="bi bi-grid-3x3-gap-fill"></i>
+                <h5>Results Card View</h5>
+            </div>
+            <div class="card-body-custom" style="max-height: 800px; overflow-y: auto; overflow-x: hidden;">
+                <div id="resultsCardGrid" class="row g-3">
+                    {% for execution in grouped_results %}
+                    {% set methods_display = execution.methods if execution.methods is string else (execution.methods|join(' → ') if execution.methods is iterable else 'N/A') %}
+                    <div class="col-md-6 col-lg-6" data-date="{{ execution.date }}" data-device="{{ execution.device_ip }}" data-mac="{{ execution.mac_address }}" data-method="{{ methods_display }}">
+                        <div class="result-card">
+                            <div class="result-card-header">
+                                <div class="result-card-info-group">
+                                    <div class="result-card-info-item">
+                                        <i class="bi bi-calendar3"></i> {{ execution.display_datetime if execution.display_datetime else execution.date }}
+                                    </div>
+                                    <div class="result-card-info-item">
+                                        <i class="bi bi-hdd-network"></i> <strong>DEVICE IP:</strong> {{ execution.device_ip }}
+                                    </div>
+                                    {% if execution.device_name %}
+                                    <div class="result-card-info-item">
+                                        <i class="bi bi-tv"></i> <strong>NAME:</strong> {{ execution.device_name }}
+                                    </div>
+                                    {% endif %}
+                                    {% if execution.mac_address %}
+                                    <div class="result-card-info-item">
+                                        <i class="bi bi-ethernet"></i> <strong>MAC:</strong> {{ execution.mac_address }}
+                                    </div>
+                                    {% endif %}
+                                    {% if execution.is_sequence %}
+                                    <div class="result-card-info-item">
+                                        <i class="bi bi-diagram-3"></i> <strong>SEQUENCE:</strong> {{ execution.sequence_name }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="result-card-iteration">ITR-{{ execution.iteration }}</div>
+                            </div>
+                            <div class="result-card-content">
+                                <div class="methods-and-screenshots">
+                                    <div class="methods-section">
+                                        {% if execution.is_sequence %}
+                                        <div class="methods-header">📊 SEQUENCE METHODS</div>
+                                        {% else %}
+                                        <div class="methods-header">METHODS-TRIGGERED</div>
+                                        {% endif %}
+                                        <div class="methods-list">
+                                            {% set method_dict = {} %}
+                                            {% for phase in execution.phases %}
+                                                {% if phase %}
+                                                {% set method_name = (phase.method if phase.method else phase.phase) if phase else 'unknown' %}
+                                                {% set clean_method = method_name.replace('_', ' ').title() %}
+                                                {% if method_name not in method_dict %}
+                                                    {% set _ = method_dict.__setitem__(method_name, {'status': (phase.status if phase.status else 'UNKNOWN'), 'phase': clean_method, 'details': (phase.details if phase.details else ''), 'screenshots': (phase.screenshots if phase.screenshots else '')}) %}
+                                                {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% for method_name, method_data in method_dict.items() %}
+                                            {% set status_class = 'success' if method_data.status == 'PASSED' else ('warning' if method_data.status == 'WARNING' else 'danger') %}
+                                            <div class="method-item method-{{ status_class }}">
+                                                <div class="method-name">{{ method_data.phase }}</div>
+                                                <div class="method-status status-{{ status_class }}">{{ method_data.status }}</div>
+                                                {% if method_data.details %}
+                                                <div class="method-details" style="font-size: 0.85rem; color: #6b7280; margin-top: 4px; line-height: 1.4; white-space: pre-wrap; word-break: break-word;">
+                                                    {# Display full details including Found/Missing lists #}
+                                                    <strong style="color: #10b981; display: block; margin-bottom: 4px;">{{ method_data.details }}</strong>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% set ns = namespace(has_screenshots=false) %}
+                                    {% for phase in execution.phases %}
+                                        {% if phase %}
+                                        {% if phase.screenshots %}
+                                            {% set ns.has_screenshots = true %}
+                                        {% endif %}
+                                        {# Always show screenshots section for reboot methods, even if empty #}
+                                        {% if (phase.method and 'reboot' in phase.method.lower()) or (phase.phase and 'reboot' in phase.phase.lower()) %}
+                                            {% set ns.has_screenshots = true %}
+                                        {% endif %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if ns.has_screenshots %}
+                                    <div class="screenshots-section">
+                                        {% if execution.is_sequence %}
+                                        <div class="screenshots-header">📸 SEQUENCE SCREENSHOTS (by Method)</div>
+                                        {% else %}
+                                        <div class="screenshots-header">SCREENSHOTS:</div>
+                                        {% endif %}
+                                        <div class="screenshots-grid">
+                                            {% set screenshot_methods = {} %}
+                                            {% for phase in execution.phases %}
+                                                {% if phase and phase.screenshots %}
+                                                    {% set method_key = (phase.method if phase.method else phase.phase) if phase else 'unknown' %}
+                                                    {% if method_key not in screenshot_methods %}
+                                                        {% set _ = screenshot_methods.__setitem__(method_key, []) %}
+                                                    {% endif %}
+                                                    {% if phase.screenshots is string %}
+                                                        {% set screenshot_list = phase.screenshots.split(', ') %}
+                                                    {% else %}
+                                                        {% set screenshot_list = phase.screenshots %}
+                                                    {% endif %}
+                                                    {% for screenshot in screenshot_list %}
+                                                        {% if screenshot.strip() %}
+                                                            {% set _ = screenshot_methods[method_key].append(screenshot.strip()) %}
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            {% for method_key, screenshots in screenshot_methods.items() %}
+                                                {% if execution.is_sequence and method_key %}
+                                                <div style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb;">
+                                                    <div style="font-size: 0.75rem; font-weight: 600; color: #4b5563; margin-bottom: 6px; text-transform: uppercase;">{{ method_key.replace('_', ' ').title() }}</div>
+                                                {% endif %}
+                                                {% for screenshot in screenshots %}
+                                                    {% if screenshot %}
+                                                        {% if 'Enhancement_output/' in screenshot %}
+                                                            {% set rel_path = screenshot.split('Enhancement_output/')[-1] %}
+                                                        {% elif 'Enhancement-output/' in screenshot %}
+                                                            {% set rel_path = screenshot.split('Enhancement-output/')[-1] %}
+                                                        {% elif 'reference_screens/' in screenshot %}
+                                                            {% set rel_path = screenshot.split('reference_screens/')[-1] %}
+                                                        {% elif screenshot.startswith('screenshots/') %}
+                                                            {% set rel_path = screenshot %}
+                                                        {% elif screenshot.startswith('/') %}
+                                                            {% set rel_path = screenshot.split('/')[-1] %}
+                                                        {% else %}
+                                                            {% set rel_path = screenshot %}
+                                                        {% endif %}
+                                                        <div class="screenshot-item">
+                                                            <img src="/screenshots/{{ rel_path }}" alt="Screenshot" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'140\'%3E%3Crect fill=\'%23374151\' width=\'200\' height=\'140\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' fill=\'%239ca3af\' font-size=\'14\'%3ENo Image%3C/text%3E%3C/svg%3E'" onclick="viewScreenshot('/screenshots/{{ rel_path }}', '{{ screenshot.split('/')[-1] }}')">
+                                                            <div class="screenshot-overlay">{{ 'BEFORE' if loop.index == 1 else 'AFTER' }}</div>
+                                                        </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                {% if execution.is_sequence and method_key %}
+                                                </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                            
+                                            {# Show "Not Captured" message for reboot methods with no screenshots #}
+                                            {% set has_reboot = false %}
+                                            {% for phase in execution.phases %}
+                                                {% if phase and (('reboot' in phase.method.lower() if phase.method else false) or ('reboot' in phase.phase.lower() if phase.phase else false)) %}
+                                                    {% set has_reboot = true %}
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if has_reboot and not screenshot_methods %}
+                                            <div style="grid-column: 1/-1; padding: 1.5rem; text-align: center; color: #9ca3af; background: #1f2937; border-radius: 6px; border: 1px dashed #4b5563;">
+                                                <i class="bi bi-camera-slash" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
+                                                <div style="font-size: 0.9rem;">Screenshots not captured</div>
+                                                <div style="font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem;">Execution was successful, but screenshot capture failed</div>
+                                            </div>
+                                            {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Table View -->
+        <div class="dashboard-card mt-4" style="display: none;">
+            <div class="card-header-custom">
+                <i class="bi bi-table"></i>
+                <h5>Detailed Results Table</h5>
+            </div>
+            <div class="card-body-custom" style="max-height: 600px; overflow-x: auto; overflow-y: auto;">
+                <table class="table-modern">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Device IP</th>
+                            <th>Methods-Triggered</th>
+                            <th>Iteration</th>
+                            <th>Phase</th>
+                            <th>Status</th>
+                            <th>Reboot Time (s)</th>
+                            <th>Boot Type</th>
+                            <th>RDK Milestones Log</th>
+                            <th>Details</th>
+                            <th>Screenshots</th>
+                            <th>Logs</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                        {% for execution in grouped_results %}
+                        {% for phase in execution.phases %}
+                        {% set status_class = 'success' if phase.status == 'PASSED' else ('warning' if phase.status == 'WARNING' else 'danger') %}
+                        {% set methods_display = execution.methods if execution.methods is string else (execution.methods|join(' → ') if execution.methods is iterable else 'N/A') %}
+                        <tr data-date="{{ execution.date }}" data-device="{{ execution.device_ip }}" data-method="{{ methods_display }}">
+                            {% if loop.first %}
+                            <td rowspan="{{ execution.phases|length }}">{{ execution.display_datetime if execution.display_datetime else execution.date }}</td>
+                            <td rowspan="{{ execution.phases|length }}">{{ execution.device_ip }}</td>
+                            <td rowspan="{{ execution.phases|length }}">
+                                <span class="badge bg-info">{{ methods_display }}</span>
+                            </td>
+                            <td rowspan="{{ execution.phases|length }}"><strong>ITR-{{ execution.iteration }}</strong></td>
+                            {% endif %}
+                            <td>{{ phase.phase if phase and phase.phase else 'N/A' }}</td>
+                            <td>
+                                <span class="badge-custom badge-{{ status_class }}">
+                                    {{ phase.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if phase and phase.performance_seconds %}
+                                    <strong>{{ "%.2f" % phase.performance_seconds }}</strong>
+                                {% elif phase and phase.details and 'performance' in phase.details.lower() %}
+                                    <span style="color: #9ca3af;">{{ phase.details[:20] }}</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if phase and phase.boot_type %}
+                                    {% if phase.boot_type == 'HARD' %}
+                                        <span class="badge bg-danger">⚑ HARD</span>
+                                    {% elif phase.boot_type == 'SOFT' %}
+                                        <span class="badge bg-info">⚙ SOFT</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ phase.boot_type }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if phase and phase.rdk_milestones_log %}
+                                    <button class="btn btn-sm btn-outline-info" data-rdk-log='{{ phase.rdk_milestones_log|tojson }}' onclick="showMilestoneLog(this.dataset.rdkLog)">
+                                        <i class="bi bi-file-earmark-text"></i> View Log
+                                    </button>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td style="max-width: 300px;">{{ phase.details }}</td>
+                            <td>
+                                {% if phase.screenshots %}
+                                    {% if phase.screenshots is string %}
+                                        {% set screenshot_list = phase.screenshots.split(', ') %}
+                                    {% else %}
+                                        {% set screenshot_list = phase.screenshots %}
+                                    {% endif %}
+                                    {% for screenshot in screenshot_list %}
+                                        {% if screenshot.strip() %}
+                                            {% set full_path = screenshot.strip() %}
+                                            {% if '/Lexar/Enhancement_output/' in full_path %}
+                                                {% set rel_path = full_path.split('/Lexar/Enhancement_output/')[-1] %}
+                                            {% elif 'Enhancement_output/' in full_path %}
+                                                {% set rel_path = full_path.split('Enhancement_output/')[-1] %}
+                                            {% elif 'Enhancement-output/' in full_path %}
+                                                {% set rel_path = full_path.split('Enhancement-output/')[-1] %}
+                                            {% elif 'reference_screens/' in full_path %}
+                                                {% set rel_path = full_path.split('reference_screens/')[-1] %}
+                                            {% elif full_path.startswith('screenshots/') %}
+                                                {% set rel_path = full_path %}
+                                            {% elif full_path.startswith('/') %}
+                                                {% set rel_path = full_path.split('/')[-1] %}
+                                            {% else %}
+                                                {% set rel_path = full_path %}
+                                            {% endif %}
+                                            {% if 'Before' in full_path %}
+                                                {% set link_text = '🖼️ Before' %}
+                                            {% elif 'After' in full_path %}
+                                                {% set link_text = '🖼️ After' %}
+                                            {% else %}
+                                                {% set link_text = full_path.split('/')[-1] %}
+                                            {% endif %}
+                                            <a href="/screenshots/{{ rel_path }}" class="screenshot-link" data-src="/screenshots/{{ rel_path }}" style="color: #10b981; text-decoration: none; cursor: pointer;" target="_blank" rel="noopener">
+                                                <i class="bi bi-image"></i> {{ link_text }}
+                                            </a><br>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if phase.logs %}
+                                <small>{{ (phase.logs.split(', ') if phase.logs is string else phase.logs)|length }} file(s)</small>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Screenshot Modal removed: screenshots now shown inline in the table -->
+
+    <!-- Bootstrap JS (local fallback) -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    
+    <script>
+        // Test if script is loading
+        console.log('=== Results page script loaded ===');
+        // Modal logic removed; screenshots are now inline
+        // Stats tiles removed - no longer needed
+
+        function setScreenshotImage(src, title) {
+            console.log('setScreenshotImage called with src:', src, 'title:', title);
+            const imageEl = document.getElementById('screenshotImage');
+            const titleEl = document.getElementById('screenshotTitle');
+            const encodedSrc = encodeURI(src);
+            console.log('Image element:', imageEl, 'Title element:', titleEl);
+            if (titleEl && title) titleEl.textContent = title;
+            if (!imageEl) {
+                console.error('Screenshot image element not found!');
+                return;
+            }
+            imageEl.onerror = function() {
+                console.error('Image failed to load:', encodedSrc);
+                if (titleEl) titleEl.textContent = 'Screenshot failed to load';
+            };
+            imageEl.onload = function() {
+                console.log('Image loaded successfully:', encodedSrc);
+            };
+            imageEl.src = encodedSrc;
+            console.log('Image src set to:', encodedSrc);
+        }
+
+        // Handle screenshot link clicks
+        document.addEventListener('click', function(e) {
+            console.log('Click event on:', e.target);
+            const link = e.target.closest('.screenshot-link');
+            if (link) {
+                console.log('Screenshot link clicked:', link);
+                e.preventDefault();
+                const imageSrc = link.dataset.src || link.getAttribute('href');
+                const title = link.textContent ? link.textContent.trim() : 'Screenshot';
+                console.log('Opening modal with image:', imageSrc, 'title:', title);
+                setScreenshotImage(imageSrc, title);
+                const modalEl = document.getElementById('screenshotModal');
+                console.log('Modal element:', modalEl);
+                if (modalEl && typeof bootstrap !== 'undefined') {
+                    const modal = new bootstrap.Modal(modalEl);
+                    console.log('Bootstrap modal created:', modal);
+                    modal.show();
+                } else {
+                    console.error('Modal element or Bootstrap not found!', 'modalEl:', modalEl, 'bootstrap:', typeof bootstrap);
+                }
+            }
+        });        // Prompt for remote keys when 'Send Remote Keys' is selected
+        document.addEventListener('DOMContentLoaded', function() {
+            var methodSelect = document.getElementById('filterMethod');
+            if (methodSelect) {
+                methodSelect.addEventListener('change', function() {
+                    if (this.value === 'send_remote_keys') {
+                        let keys = prompt('Enter remote keys (comma-separated, e.g. RIGHT,RIGHT,DOWN):');
+                        if (keys !== null && keys.trim() !== '') {
+                            // Store keys for later use (could be sent to backend here)
+                            methodSelect.dataset.remoteKeys = keys.trim();
+                        } else {
+                            // If cancelled or empty, reset selection
+                            methodSelect.value = '';
+                            methodSelect.dataset.remoteKeys = '';
+                        }
+                    } else {
+                        methodSelect.dataset.remoteKeys = '';
+                    }
+                });
+            }
+        });
+
+        // Filter functionality
+        function applyFilters() {
+            const dateFilter = document.getElementById('filterDate').value;
+            const selectedDevices = Array.from(document.querySelectorAll('#deviceCheckboxList input[type="checkbox"]:checked'))
+                .map(cb => cb.dataset.ip);
+            const methodFilter = document.getElementById('filterMethod').value;
+            const ipFilter = document.getElementById('filterIP').value.toLowerCase();
+            const macFilter = document.getElementById('filterMAC').value.toLowerCase();
+            
+            const tableRows = document.querySelectorAll('#resultsTableBody tr');
+            const timelineItems = document.querySelectorAll('.timeline-item');
+            const cardItems = document.querySelectorAll('#resultsCardGrid > div');
+            
+            [tableRows, timelineItems, cardItems].forEach(items => {
+                items.forEach(item => {
+                    const itemDate = item.dataset.date || '';
+                    const itemDevice = item.dataset.device || '';
+                    const itemMethod = item.dataset.method || '';
+                    const itemMAC = (item.dataset.mac || '').toLowerCase();
+                    
+                    const dateMatch = !dateFilter || itemDate.includes(dateFilter);
+                    const deviceMatch = selectedDevices.length === 0 || selectedDevices.includes(itemDevice);
+                    const methodMatch = !methodFilter || itemMethod.includes(methodFilter);
+                    const ipMatch = !ipFilter || itemDevice.toLowerCase().includes(ipFilter);
+                    const macMatch = !macFilter || itemMAC.includes(macFilter);
+                    
+                    if (dateMatch && deviceMatch && methodMatch && ipMatch && macMatch) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // View screenshot in modal
+        function viewScreenshot(path, title) {
+            console.log('viewScreenshot called with path:', path, 'title:', title);
+            setScreenshotImage(path, title);
+            const modalEl = document.getElementById('screenshotModal');
+            if (!modalEl) {
+                console.error('Modal element not found!');
+                return;
+            }
+            
+            // Remove previous show class if exists
+            modalEl.classList.remove('show');
+            
+            // Force reflow to ensure CSS transitions work
+            void modalEl.offsetWidth;
+            
+            // Add show class to display modal with flexbox
+            modalEl.classList.add('show');
+            console.log('Modal show class added, modal visible now');
+        }
+        
+        // Close modal when clicking backdrop
+        document.addEventListener('click', function(e) {
+            const modalEl = document.getElementById('screenshotModal');
+            if (e.target === modalEl) {
+                modalEl.classList.remove('show');
+                console.log('Modal closed by backdrop click');
+            }
+        });
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modalEl = document.getElementById('screenshotModal');
+                modalEl.classList.remove('show');
+                console.log('Modal closed by Escape key');
+            }
+        });
+
+        // Toggle device filter dropdown
+        function toggleDeviceDropdown() {
+            const button = document.getElementById('deviceFilterButton');
+            const dropdown = document.getElementById('deviceFilterDropdown');
+            dropdown.classList.toggle('open');
+            button.classList.toggle('open');
+            
+            // Close dropdown if clicking elsewhere
+            if (dropdown.classList.contains('open')) {
+                document.addEventListener('click', closeDeviceDropdownOnClickOutside);
+            } else {
+                document.removeEventListener('click', closeDeviceDropdownOnClickOutside);
+            }
+        }
+
+        function closeDeviceDropdownOnClickOutside(event) {
+            const dropdown = document.getElementById('deviceFilterDropdown');
+            const button = document.getElementById('deviceFilterButton');
+            if (!dropdown.contains(event.target) && event.target !== button) {
+                dropdown.classList.remove('open');
+                button.classList.remove('open');
+                document.removeEventListener('click', closeDeviceDropdownOnClickOutside);
+            }
+        }
+
+        function updateDeviceFilterDisplay() {
+            const checked = Array.from(document.querySelectorAll('#deviceCheckboxList input[type="checkbox"]:checked'));
+            const selectAll = document.getElementById('selectAllDevices');
+            const displaySpan = document.getElementById('deviceFilterDisplay');
+            const allCheckboxes = Array.from(document.querySelectorAll('#deviceCheckboxList input[type="checkbox"]'));
+            
+            if (checked.length === 0) {
+                displaySpan.textContent = 'All';
+                selectAll.checked = false;
+            } else if (checked.length === allCheckboxes.length) {
+                displaySpan.textContent = 'All';
+                selectAll.checked = true;
+            } else {
+                displaySpan.textContent = `Selected (${checked.length})`;
+                selectAll.checked = false;
+            }
+        }
+
+        function toggleAllDevices() {
+            const selectAll = document.getElementById('selectAllDevices');
+            const checkboxes = document.querySelectorAll('#deviceCheckboxList input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            updateDeviceFilterDisplay();
+        }
+
+        // Populate device filter with checkbox dropdown
+        function populateDeviceFilter() {
+            fetch('/api/devices')
+                .then(response => {
+                    const contentType = (response.headers.get('content-type') || '').toLowerCase();
+                    if (!contentType.includes('application/json')) {
+                        return { devices: [] };
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const devices = (data && (data.devices || data)) || [];
+                    const checkboxList = document.getElementById('deviceCheckboxList');
+                    
+                    if (!checkboxList) return;
+                    checkboxList.innerHTML = '';
+
+                    if (!Array.isArray(devices) || devices.length === 0) {
+                        const item = document.createElement('div');
+                        item.className = 'dropdown-item';
+                        item.textContent = 'No devices available';
+                        item.style.pointerEvents = 'none';
+                        checkboxList.appendChild(item);
+                        return;
+                    }
+
+                    devices.forEach(device => {
+                        const item = document.createElement('div');
+                        item.className = 'dropdown-item';
+                        
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.dataset.ip = device.ip;
+                        checkbox.onchange = () => {
+                            updateDeviceFilterDisplay();
+                        };
+                        
+                        const label = document.createElement('label');
+                        label.style.margin = '0';
+                        label.style.flex = '1';
+                        label.style.cursor = 'pointer';
+                        label.textContent = `${device.name} (${device.ip})`;
+                        if (device.locked) label.textContent += ' [Busy]';
+                        
+                        item.appendChild(checkbox);
+                        item.appendChild(label);
+                        checkboxList.appendChild(item);
+                    });
+                })
+                .catch(err => {
+                    console.error('Failed to load devices:', err);
+                });
+        }
+
+        // Helper to get selected method and keys
+        function getSelectedMethodPayload() {
+            var methodSelect = document.getElementById('filterMethod');
+            var method = methodSelect.value;
+            var payload = { method: method };
+            if (method === 'send_remote_keys') {
+                var keys = methodSelect.dataset.remoteKeys || '';
+                payload.remote_keys = keys;
+            }
+            return payload;
+        }
+
+        // Example: Hook for test execution (replace with actual API call logic)
+        function executeTest() {
+            var selectedDevices = Array.from(document.querySelectorAll('#deviceCheckboxList input[type="checkbox"]:checked'))
+                .map(cb => cb.dataset.ip);
+            var methodPayload = getSelectedMethodPayload();
+            if (selectedDevices.length === 0) {
+                alert('Please select at least one device.');
+                return;
+            }
+            selectedDevices.forEach(function(device_ip) {
+                var data = {
+                    device_ip: device_ip,
+                    execution_queue: [methodPayload],
+                    iterations: 1
+                };
+                fetch('/api/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.error) {
+                        alert('Device ' + device_ip + ': ' + result.error);
+                    } else {
+                        loadCurrentExecutions();  // Refresh executions list
+                    }
+                })
+                .catch(err => {
+                    alert('Device ' + device_ip + ': Failed to start test: ' + err);
+                });
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            populateDeviceFilter();
+            // fetchQueuedJobs(); // Removed - not needed on results page
+        });
+
+        // Display RDK Milestones Log in a modal
+        function showMilestoneLog(logData) {
+            if (!logData) {
+                alert('No milestone log data available');
+                return;
+            }
+
+            // Parse JSON if it's a string
+            let logText;
+            try {
+                if (typeof logData === 'string' && logData.startsWith('{')) {
+                    const parsed = JSON.parse(logData);
+                    logText = typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2);
+                } else if (typeof logData === 'string' && logData.startsWith('[')) {
+                    const parsed = JSON.parse(logData);
+                    logText = typeof parsed === 'string' ? parsed : JSON.stringify(parsed, null, 2);
+                } else {
+                    logText = typeof logData === 'string' ? logData : JSON.stringify(logData, null, 2);
+                }
+            } catch (e) {
+                logText = typeof logData === 'string' ? logData : JSON.stringify(logData, null, 2);
+            }
+            const logLines = logText.split('\n');
+            
+            let htmlContent = '<div style="font-family: monospace; font-size: 0.9rem; max-height: 500px; overflow-y: auto; background: #1e1e1e; color: #d4d4d4; padding: 15px; border-radius: 4px;">';
+            
+            logLines.forEach(line => {
+                // Escape HTML and add line breaks
+                const escapedLine = document.createTextNode(line).data;
+                htmlContent += '<div style="line-height: 1.5;">' + escapedLine + '</div>';
+            });
+            
+            htmlContent += '</div>';
+
+            // Create and show modal
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = 'background: white; border-radius: 8px; max-width: 800px; width: 90%; max-height: 80vh; overflow: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3);';
+            
+            modalContent.innerHTML = `
+                <div style="padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center;">
+                    <h5 style="margin: 0;"><i class="bi bi-file-earmark-text"></i> RDK Milestones Log</h5>
+                    <button onclick="this.closest('div').parentElement.parentElement.remove()" style="border: none; background: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
+                </div>
+                <div style="padding: 20px;">
+                    ${htmlContent}
+                </div>
+                <div style="padding: 15px; border-top: 1px solid #e5e7eb; text-align: right;">
+                    <button onclick="this.closest('div').parentElement.parentElement.remove()" class="btn btn-sm btn-secondary">Close</button>
+                </div>
+            `;
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // Close modal on background click
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

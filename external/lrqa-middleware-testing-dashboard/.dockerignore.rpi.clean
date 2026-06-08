@@ -1,0 +1,179 @@
+# ============================================================================
+# Docker Build Ignore File - Clean Build
+# ============================================================================
+# This file specifies what NOT to include in Docker image
+# Optimized for RPi 4 - excludes all execution/runtime data
+# ============================================================================
+
+# ============================================================================
+# PYTHON CACHE & ARTIFACTS
+# ============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ============================================================================
+# VIRTUAL ENVIRONMENTS (rebuilt from requirements.txt)
+# ============================================================================
+venv/
+env/
+ENV/
+.venv
+.env.local
+
+# ============================================================================
+# IDE & EDITOR FILES
+# ============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# ============================================================================
+# GIT FILES (not needed in image)
+# ============================================================================
+.git/
+.gitignore
+.gitattributes
+.github/
+
+# ============================================================================
+# EXECUTION DATA (all runtime files - these will be created by container)
+# ============================================================================
+
+# Logs from previous runs
+iteration_logs/
+*.log
+app.log
+flask.log
+error.log
+access.log
+
+# Screenshots and captured images
+screenshots/
+reference_screens/
+
+# Device logs collected during execution
+device_logs/
+
+# Execution session files
+logs/
+session_utils/
+
+# Job state files (will be recreated if needed)
+*.json.backup*
+*.json.corrupt*
+*.json.bak
+jobs.json.backup*
+device_locks.json.backup*
+app_state.json.backup*
+saved_sequences.json.backup*
+
+# Temporary files
+*.tmp
+*.temp
+*.pid
+nohup.out
+
+# ============================================================================
+# BACKUP & ARCHIVE FILES
+# ============================================================================
+*.zip
+*.tar.gz
+*.tar
+*.rar
+*.bak
+*.backup*
+*.old
+backup_to_usb.sh
+restore_backup.sh
+updated_code/
+
+# ============================================================================
+# DOCUMENTATION (repo docs - not needed in image)
+# ============================================================================
+*.md
+!README.md
+!DOCKER_README.md
+Documentation for*
+*.txt
+*.csv
+
+# ============================================================================
+# SYSTEM & OS FILES
+# ============================================================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ============================================================================
+# DOCKER FILES (don't include in image context)
+# ============================================================================
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+docker-*.sh
+
+# ============================================================================
+# CI/CD & BUILD ARTIFACTS
+# ============================================================================
+.gitlab-ci.yml
+.travis.yml
+*.github/workflows/
+Makefile
+Makefile.*
+*.make
+
+# ============================================================================
+# OLD IMPLEMENTATIONS & TEST FILES
+# ============================================================================
+app_old.py
+*_old.py
+*_backup.py
+*_test.py
+test_*.py
+*_disabled.py
+
+# ============================================================================
+# DEPLOYMENT SCRIPTS (not needed in image)
+# ============================================================================
+*.sh
+!docker-entrypoint.sh
+deploy/
+kubernetes/
+nginx/
+ssl/
+
+# ============================================================================
+# DEVELOPMENT ARTIFACTS
+# ============================================================================
+notebooks/
+jupyter/
+research/
+experiments/
+temp/
+tmp/
+
+# ============================================================================
+# LARGE FILES/DIRECTORIES (not needed in image)
+# ============================================================================
+SAM-CD-2GB/
+Enhancement_output/
+Json/
+backups/
+PYARMOR_FILES_MANIFEST.txt

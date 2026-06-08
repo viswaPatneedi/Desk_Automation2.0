@@ -1,0 +1,100 @@
+2026-01-30T19:10:05.232Z [CRASH_UPLOAD] [PID:4294]: RFC_EncryptCloudUpload_Enable:
+2026-01-30T19:10:05.251Z [CRASH_UPLOAD] [PID:4294]: mediaclient/SKXI11ADS MTLS Crashdump upload
+2026-01-30T19:10:05.297Z [CRASH_UPLOAD] [PID:4294]: Overriding the S3 Amazon SIgning URL: https://ssr.xdp.eu-1.xcal.tv/cgi-bin/sky-upload_dump.cgi
+2026-01-30T19:10:05.317Z [CRASH_UPLOAD] [PID:4294]: Using Xpki cert for CrashdumpUpload
+2026-01-30T19:10:05.345Z [CRASH_UPLOAD] [PID:4294]: Device operational cert2 not supported for SKXI11ADS
+2026-01-30T19:10:05.419Z [CRASH_UPLOAD] [PID:4294]: CURL_CMD: /usr/bin/curl --cert-type P12 --cert /opt/certs/devicecert_1.pk12<hidden key> -s --tlsv1.2 -o /tmp/signed_url_4294 -w "%{http_code} %{remote_ip}" --data-urlencode filename="macD452EED948E4_dat2026-01-30-19-10-04_boxXiOne_modSKXI11ADS_1769799352_core.prog_epg_ui.signal_6.gz.core.tgz"                --data-urlencode firmwareVersion=SKXI11ADS_MIDDLEWARE_DEV_support_8.4.4.0_20260128163202                --data-urlencode env=dev                --data-urlencode model=SKXI11ADS                --data-urlencode type=coredump                                 https://ssr.xdp.eu-1.xcal.tv/cgi-bin/sky-upload_dump.cgi
+2026-01-30T19:10:06.240Z [CRASH_UPLOAD] [PID:4290]: Curl Connected to ssr.xdp.eu-1.xcal.tv (184.120.23.248) port 
+2026-01-30T19:10:06.460Z [CRASH_UPLOAD] [PID:4290]: [/lib/rdk/uploadDumps.sh]: Curl return code : 0, HTTP SIGN URL Response: 200
+2026-01-30T19:10:06.707Z [CRASH_UPLOAD] [PID:4290]: Safe params: macD452EED948E4_dat2026-01-30-19-10-03_boxXiOne_modSKXI11ADS_WPEFramework_b3259661-2ef7-4ce9-b0a43db1-d2235400.dmp.tgz --  -- 
+2026-01-30T19:10:07.331Z [CRASH_UPLOAD] [PID:4294]: Curl Connected to ssr.xdp.eu-1.xcal.tv (184.120.27.207) port 
+2026-01-30T19:10:07.354Z [CRASH_UPLOAD] [PID:4290]: Attempting TLS1.2 connection to Amazon S3
+2026-01-30T19:10:07.363Z [CRASH_UPLOAD] [PID:4294]: [/lib/rdk/uploadDumps.sh]: Curl return code : 0, HTTP SIGN URL Response: 200
+2026-01-30T19:10:07.411Z [CRASH_UPLOAD] [PID:4290]: Device operational cert2 not supported for SKXI11ADS
+2026-01-30T19:10:07.507Z [CRASH_UPLOAD] [PID:4294]: Safe params: macD452EED948E4_dat2026-01-30-19-10-04_boxXiOne_modSKXI11ADS_1769799352_core.prog_epg_ui.signal_6.gz.core.tgz --  -- 
+2026-01-30T19:10:07.545Z [CRASH_UPLOAD] [PID:4294]: Attempting TLS1.2 connection to Amazon S3
+2026-01-30T19:10:07.568Z [CRASH_UPLOAD] [PID:4290]: CURL_CMD: /usr/bin/curl --cert-type P12 --cert /opt/certs/devicecert_1.pk12<hidden key> -v -fgL --tlsv1.2 -T "macD452EED948E4_dat2026-01-30-19-10-03_boxXiOne_modSKXI11ADS_WPEFramework_b3259661-2ef7-4ce9-b0a43db1-d2235400.dmp.tgz" -w "%{http_code} %{remote_ip}" "https://eu-ccp-stbcrashes.s3.dualstack.eu-west-1.amazonaws.com/minidump/2026/1/30/19/SKXI11ADS/SKXI11ADS_MIDDLEWARE_DEV_support_8.4.4.0_20260128163202/dev/macD452EED948E4_dat2026-01-30-19-10-03_boxXiOne_modSKXI11ADS_WPEFramework_b3259661-2ef7-4ce9-b0a43db1-d2235400.dmp.tgz?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAZUIKWRPZFXPVQJLS%2F20260130%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260130T191006Z&X-Amz-Expires=600&X-Amz-SignedHeaders=host&X-Amz-Signature=ffdb4a1b4c4004119833db7100d16307f50f8165508acda767d58664231bc553"
+2026-01-30T19:10:07.594Z [CRASH_UPLOAD] [PID:4294]: Device operational cert2 not supported for SKXI11ADS
+2026-01-30T19:10:07.674Z [CRASH_UPLOAD] [PID:4294]: CURL_CMD: /usr/bin/curl --cert-type P12 --cert /opt/certs/devicecert_1.pk12<hidden key> -v -fgL --tlsv1.2 -T "macD452EED948E4_dat2026-01-30-19-10-04_boxXiOne_modSKXI11ADS_1769799352_core.prog_epg_ui.signal_6.gz.core.tgz" -w "%{http_code} %{remote_ip}" "https://eu-ccp-stbcrashes.s3.dualstack.eu-west-1.amazonaws.com/coredump/2026/1/30/19/SKXI11ADS/SKXI11ADS_MIDDLEWARE_DEV_support_8.4.4.0_20260128163202/dev/macD452EED948E4_dat2026-01-30-19-10-04_boxXiOne_modSKXI11ADS_1769799352_core.prog_epg_ui.signal_6.gz.core.tgz?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAZUIKWRPZFXPVQJLS%2F20260130%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260130T191007Z&X-Amz-Expires=600&X-Amz-SignedHeaders=host&X-Amz-Signature=e4bc85d1f1ef90ad96bba4306dd34a583115a2f7cbef4728ae7efc9f1a9e19e6"
+2026-01-30T19:10:09.288Z [CRASH_UPLOAD] [PID:4290]: Curl Connected to eu-ccp-stbcrashes.s3.dualstack.eu-west-1.amazonaws.com (2a05:d030:8000:80::305:40cd) port 
+2026-01-30T19:10:09.311Z [CRASH_UPLOAD] [PID:4290]: Curl return code: 0 HTTP Response code: 200
+2026-01-30T19:10:09.340Z [CRASH_UPLOAD] [PID:4290]: S3 minidump Upload is successful with TLS1.2
+2026-01-30T19:10:09.364Z [CRASH_UPLOAD] [PID:4290]: Removing uploaded minidump file macD452EED948E4_dat2026-01-30-19-10-03_boxXiOne_modSKXI11ADS_WPEFramework_b3259661-2ef7-4ce9-b0a43db1-d2235400.dmp.tgz
+2026-01-30T19:10:09.406Z [CRASH_UPLOAD] [PID:4290]: [/lib/rdk/uploadDumps.sh]: minidump uploadToS3 SUCESS: status: 0
+2026-01-30T19:10:09.448Z [CRASH_UPLOAD] [PID:4290]: Removing file macD452EED948E4_dat2026-01-30-19-10-03_boxXiOne_modSKXI11ADS_WPEFramework_b3259661-2ef7-4ce9-b0a43db1-d2235400.dmp.tgz
+2026-01-30T19:10:09.520Z [CRASH_UPLOAD] [PID:4290]: [INFO] : getPrivacyControlMode : Entering
+2026-01-30T19:10:09.552Z [CRASH_UPLOAD] [PID:4290]: [WARN] : getPrivacyControlMode : WPEFrameworkSecurityUtility failed to get token; status = 127
+2026-01-30T19:10:09.571Z [CRASH_UPLOAD] [PID:4290]: [WARN] : getPrivacyControlMode : WPEFrameworkSecurityUtility Token is empty
+2026-01-30T19:10:09.606Z [CRASH_UPLOAD] [PID:4290]: [INFO] : getPrivacyControlMode : END : 2.0
+2026-01-30T19:10:09.633Z [CRASH_UPLOAD] [PID:4290]: [/lib/rdk/uploadDumps.sh]: 1: minidump S3 Upload 
+2026-01-30T19:10:09.744Z [CRASH_UPLOAD] [PID:4290]: DEBUG Original File Name : macD452EED948E4_dat2026-01-30-19-09-21_boxXiOne_modSKXI11ADS_WPEFramework_3aa4fc77-4fd3-4e22-c23a969e-a3b604dc.dmp.tgz
+2026-01-30T19:10:09.764Z [CRASH_UPLOAD] [PID:4290]: DEBUG Value Required for Check : mac
+2026-01-30T19:10:09.786Z [CRASH_UPLOAD] [PID:4290]: uploadToS3 macD452EED948E4_dat2026-01-30-19-09-21_boxXiOne_modSKXI11ADS_WPEFramework_3aa4fc77-4fd3-4e22-c23a969e-a3b604dc.dmp.tgz and partnerId=
+2026-01-30T19:10:09.815Z [CRASH_UPLOAD] [PID:4290]: DEBUG minidump file timestamp (2,4) received to uploadToS3: 2026-01-30-19-09-21
+2026-01-30T19:10:09.846Z [CRASH_UPLOAD] [PID:4290]: minidump file timestamp before upload: 2026-01-30-19-10-09
+2026-01-30T19:10:09.878Z [CRASH_UPLOAD] [PID:4294]: Curl Connected to eu-ccp-stbcrashes.s3.dualstack.eu-west-1.amazonaws.com (2a05:d030:8000:80::305:40cd) port 
+2026-01-30T19:10:09.884Z [CRASH_UPLOAD] [PID:4290]: DEBUG minidump file to be uploaded: macD452EED948E4_dat2026-01-30-19-10-09_boxXiOne_modSKXI11ADS_WPEFramework_3aa4fc77-4fd3-4e22-c23a969e-a3b604dc.dmp.tgz
+2026-01-30T19:10:09.900Z [CRASH_UPLOAD] [PID:4294]: Curl return code: 0 HTTP Response code: 200
+2026-01-30T19:10:09.909Z [CRASH_UPLOAD] [PID:4290]: DEBUG Renaming the minidump file under /opt/secure/minidumps
+2026-01-30T19:10:09.929Z [CRASH_UPLOAD] [PID:4294]: S3 coredump Upload is successful with TLS1.2
+2026-01-30T19:10:09.932Z [CRASH_UPLOAD] [PID:4290]: DEBUG mv /opt/secure/minidumps/macD452EED948E4_dat2026-01-30-19-09-21_boxXiOne_modSKXI11ADS_WPEFramework_3aa4fc77-4fd3-4e22-c23a969e-a3b604dc.dmp.tgz /opt/secure/minidumps/macD452EED948E4_dat2026-01-30-19-10-09_boxXiOne_modSKXI11ADS_WPEFramework_3aa4fc77-4fd3-4e22-c23a969e-a3b604dc.dmp.tgz
+2026-01-30T19:10:09.956Z [CRASH_UPLOAD] [PID:4294]: Removing uploaded coredump file macD452EED948E4_dat2026-01-30-19-10-04_boxXiOne_modSKXI11ADS_1769799352_core.prog_epg_ui.signal_6.gz.core.tgz
+2026-01-30T19:10:09.962Z [CRASH_UPLOAD] [PID:4290]: DEBUG S3 File Name : macD452EED948E4_dat2026-01-30-19-10-09_boxXiOne_modSKXI11ADS_WPEFramework_3aa4fc77-4fd3-4e22-c23a969e-a3b604dc.dmp.tgz
+2026-01-30T19:10:09.994Z [CRASH_UPLOAD] [PID:4294]: [/lib/rdk/uploadDumps.sh]: coredump uploadToS3 SUCESS: status: 0
+2026-01-30T19:10:10.013Z [CRASH_UPLOAD] [PID:4294]: Removing file macD452EED948E4_dat2026-01-30-19-10-04_boxXiOne_modSKXI11ADS_1769799352_core.prog_epg_ui.signal_6.gz.core.tgz
+2026-01-30T19:10:10.023Z [CRASH_UPLOAD] [PID:4290]: [/lib/rdk/uploadDumps.sh]: S3 Amazon Signing URL: https://ssr.ccp.xcal.tv/cgi-bin/upload_dump.cgi
+2026-01-30T19:10:10.048Z [CRASH_UPLOAD] [PID:4294]: Cleanup coredump directory /opt/secure/corefiles
+2026-01-30T19:10:10.083Z [CRASH_UPLOAD] [PID:4290]: RFC_EncryptCloudUpload_Enable:
+2026-01-30T19:10:10.091Z [CRASH_UPLOAD] [PID:4294]: WORKING_DIR is empty!!!
+2026-01-30T19:10:10.104Z [CRASH_UPLOAD] [PID:4290]: mediaclient/SKXI11ADS MTLS Crashdump upload
+2026-01-30T19:10:10.145Z [CRASH_UPLOAD] [PID:4290]: Overriding the S3 Amazon SIgning URL: https://ssr.xdp.eu-1.xcal.tv/cgi-bin/sky-upload_dump.cgi
+2026-01-30T19:10:10.163Z [CRASH_UPLOAD] [PID:4290]: Using Xpki cert for CrashdumpUpload
+2026-01-30T19:10:10.188Z [CRASH_UPLOAD] [PID:4290]: Device operational cert2 not supported for SKXI11ADS
+2026-01-30T19:10:10.263Z [CRASH_UPLOAD] [PID:4290]: CURL_CMD: /usr/bin/curl --cert-type P12 --cert /opt/certs/devicecert_1.pk12<hidden key> -s --tlsv1.2 -o /tmp/signed_url_4290 -w "%{http_code} %{remote_ip}" --data-urlencode filename="macD452EED948E4_dat2026-01-30-19-10-09_boxXiOne_modSKXI11ADS_WPEFramework_3aa4fc77-4fd3-4e22-c23a969e-a3b604dc.dmp.tgz"                --data-urlencode firmwareVersion=SKXI11ADS_MIDDLEWARE_DEV_support_8.4.4.0_20260128163202                --data-urlencode env=dev                --data-urlencode model=SKXI11ADS                --data-urlencode type=minidump                                 https://ssr.xdp.eu-1.xcal.tv/cgi-bin/sky-upload_dump.cgi
+2026-01-30T19:10:11.741Z [CRASH_UPLOAD] [PID:4290]: Curl Connected to ssr.xdp.eu-1.xcal.tv (2a0c:93c0:8000:2d02:534c:487a:a149:b785) port 
+2026-01-30T19:10:12.586Z [CRASH_UPLOAD] [PID:4290]: [/lib/rdk/uploadDumps.sh]: Curl return code : 0, HTTP SIGN URL Response: 200
+2026-01-30T19:10:12.695Z [CRASH_UPLOAD] [PID:4290]: Safe params: macD452EED948E4_dat2026-01-30-19-10-09_boxXiOne_modSKXI11ADS_WPEFramework_3aa4fc77-4fd3-4e22-c23a969e-a3b604dc.dmp.tgz --  -- 
+2026-01-30T19:10:12.713Z [CRASH_UPLOAD] [PID:4290]: Attempting TLS1.2 connection to Amazon S3
+2026-01-30T19:10:12.744Z [CRASH_UPLOAD] [PID:4290]: Device operational cert2 not supported for SKXI11ADS
+2026-01-30T19:10:12.824Z [CRASH_UPLOAD] [PID:4290]: CURL_CMD: /usr/bin/curl --cert-type P12 --cert /opt/certs/devicecert_1.pk12<hidden key> -v -fgL --tlsv1.2 -T "macD452EED948E4_dat2026-01-30-19-10-09_boxXiOne_modSKXI11ADS_WPEFramework_3aa4fc77-4fd3-4e22-c23a969e-a3b604dc.dmp.tgz" -w "%{http_code} %{remote_ip}" "https://eu-ccp-stbcrashes.s3.dualstack.eu-west-1.amazonaws.com/minidump/2026/1/30/19/SKXI11ADS/SKXI11ADS_MIDDLEWARE_DEV_support_8.4.4.0_20260128163202/dev/macD452EED948E4_dat2026-01-30-19-10-09_boxXiOne_modSKXI11ADS_WPEFramework_3aa4fc77-4fd3-4e22-c23a969e-a3b604dc.dmp.tgz?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAZUIKWRPZFXPVQJLS%2F20260130%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260130T191011Z&X-Amz-Expires=600&X-Amz-SignedHeaders=host&X-Amz-Signature=39c7992f859e3f3798a5600090391a9f555814bc3fb6579fe281231b282dbce9"
+2026-01-30T19:10:14.553Z [CRASH_UPLOAD] [PID:4290]: Curl Connected to eu-ccp-stbcrashes.s3.dualstack.eu-west-1.amazonaws.com (2a05:d030:8000:40::305:43d2) port 
+2026-01-30T19:10:14.582Z [CRASH_UPLOAD] [PID:4290]: Curl return code: 0 HTTP Response code: 200
+2026-01-30T19:10:14.618Z [CRASH_UPLOAD] [PID:4290]: S3 minidump Upload is successful with TLS1.2
+2026-01-30T19:10:14.647Z [CRASH_UPLOAD] [PID:4290]: Removing uploaded minidump file macD452EED948E4_dat2026-01-30-19-10-09_boxXiOne_modSKXI11ADS_WPEFramework_3aa4fc77-4fd3-4e22-c23a969e-a3b604dc.dmp.tgz
+2026-01-30T19:10:14.681Z [CRASH_UPLOAD] [PID:4290]: [/lib/rdk/uploadDumps.sh]: minidump uploadToS3 SUCESS: status: 0
+2026-01-30T19:10:14.705Z [CRASH_UPLOAD] [PID:4290]: Removing file macD452EED948E4_dat2026-01-30-19-10-09_boxXiOne_modSKXI11ADS_WPEFramework_3aa4fc77-4fd3-4e22-c23a969e-a3b604dc.dmp.tgz
+2026-01-30T19:10:14.759Z [CRASH_UPLOAD] [PID:4290]: [INFO] : getPrivacyControlMode : Entering
+2026-01-30T19:10:14.793Z [CRASH_UPLOAD] [PID:4290]: [WARN] : getPrivacyControlMode : WPEFrameworkSecurityUtility failed to get token; status = 127
+2026-01-30T19:10:14.816Z [CRASH_UPLOAD] [PID:4290]: [WARN] : getPrivacyControlMode : WPEFrameworkSecurityUtility Token is empty
+2026-01-30T19:10:14.860Z [CRASH_UPLOAD] [PID:4290]: [INFO] : getPrivacyControlMode : END : 2.0
+2026-01-30T19:10:14.899Z [CRASH_UPLOAD] [PID:4290]: [/lib/rdk/uploadDumps.sh]: 1: minidump S3 Upload 
+2026-01-30T19:10:15.043Z [CRASH_UPLOAD] [PID:4290]: DEBUG Original File Name : macD452EED948E4_dat2025-12-03-08-39-02_boxXiOne_modSKXI11ADS_com.bskyb.epgui_initializing_2026-01.dmp.tgz
+2026-01-30T19:10:15.066Z [CRASH_UPLOAD] [PID:4290]: DEBUG Value Required for Check : mac
+2026-01-30T19:10:15.091Z [CRASH_UPLOAD] [PID:4290]: uploadToS3 macD452EED948E4_dat2025-12-03-08-39-02_boxXiOne_modSKXI11ADS_com.bskyb.epgui_initializing_2026-01.dmp.tgz and partnerId=
+2026-01-30T19:10:15.123Z [CRASH_UPLOAD] [PID:4290]: DEBUG minidump file timestamp (2,4) received to uploadToS3: 2025-12-03-08-39-02
+2026-01-30T19:10:15.149Z [CRASH_UPLOAD] [PID:4290]: minidump file timestamp before upload: 2026-01-30-19-10-15
+2026-01-30T19:10:15.181Z [CRASH_UPLOAD] [PID:4290]: DEBUG minidump file to be uploaded: macD452EED948E4_dat2026-01-30-19-10-15_boxXiOne_modSKXI11ADS_com.bskyb.epgui_initializing_2026-01.dmp.tgz
+2026-01-30T19:10:15.199Z [CRASH_UPLOAD] [PID:4290]: DEBUG Renaming the minidump file under /opt/secure/minidumps
+2026-01-30T19:10:15.217Z [CRASH_UPLOAD] [PID:4290]: DEBUG mv /opt/secure/minidumps/macD452EED948E4_dat2025-12-03-08-39-02_boxXiOne_modSKXI11ADS_com.bskyb.epgui_initializing_2026-01.dmp.tgz /opt/secure/minidumps/macD452EED948E4_dat2026-01-30-19-10-15_boxXiOne_modSKXI11ADS_com.bskyb.epgui_initializing_2026-01.dmp.tgz
+2026-01-30T19:10:15.240Z [CRASH_UPLOAD] [PID:4290]: DEBUG S3 File Name : macD452EED948E4_dat2026-01-30-19-10-15_boxXiOne_modSKXI11ADS_com.bskyb.epgui_initializing_2026-01.dmp.tgz
+2026-01-30T19:10:15.289Z [CRASH_UPLOAD] [PID:4290]: [/lib/rdk/uploadDumps.sh]: S3 Amazon Signing URL: https://ssr.ccp.xcal.tv/cgi-bin/upload_dump.cgi
+2026-01-30T19:10:15.323Z [CRASH_UPLOAD] [PID:4290]: RFC_EncryptCloudUpload_Enable:
+2026-01-30T19:10:15.341Z [CRASH_UPLOAD] [PID:4290]: mediaclient/SKXI11ADS MTLS Crashdump upload
+2026-01-30T19:10:15.384Z [CRASH_UPLOAD] [PID:4290]: Overriding the S3 Amazon SIgning URL: https://ssr.xdp.eu-1.xcal.tv/cgi-bin/sky-upload_dump.cgi
+2026-01-30T19:10:15.402Z [CRASH_UPLOAD] [PID:4290]: Using Xpki cert for CrashdumpUpload
+2026-01-30T19:10:15.429Z [CRASH_UPLOAD] [PID:4290]: Device operational cert2 not supported for SKXI11ADS
+2026-01-30T19:10:15.510Z [CRASH_UPLOAD] [PID:4290]: CURL_CMD: /usr/bin/curl --cert-type P12 --cert /opt/certs/devicecert_1.pk12<hidden key> -s --tlsv1.2 -o /tmp/signed_url_4290 -w "%{http_code} %{remote_ip}" --data-urlencode filename="macD452EED948E4_dat2026-01-30-19-10-15_boxXiOne_modSKXI11ADS_com.bskyb.epgui_initializing_2026-01.dmp.tgz"                --data-urlencode firmwareVersion=SKXI11ADS_MIDDLEWARE_DEV_support_8.4.4.0_20260128163202                --data-urlencode env=dev                --data-urlencode model=SKXI11ADS                --data-urlencode type=minidump                                 https://ssr.xdp.eu-1.xcal.tv/cgi-bin/sky-upload_dump.cgi
+2026-01-30T19:10:17.181Z [CRASH_UPLOAD] [PID:4290]: Curl Connected to ssr.xdp.eu-1.xcal.tv (184.120.23.248) port 
+2026-01-30T19:10:17.210Z [CRASH_UPLOAD] [PID:4290]: [/lib/rdk/uploadDumps.sh]: Curl return code : 0, HTTP SIGN URL Response: 200
+2026-01-30T19:10:47.154Z [CRASH_UPLOAD] [PID:4290]: Safe params: macD452EED948E4_dat2026-01-30-19-10-15_boxXiOne_modSKXI11ADS_com.bskyb.epgui_initializing_2026-01.dmp.tgz --  -- 
+2026-01-30T19:10:47.191Z [CRASH_UPLOAD] [PID:4290]: Attempting TLS1.2 connection to Amazon S3
+2026-01-30T19:10:47.238Z [CRASH_UPLOAD] [PID:4290]: Device operational cert2 not supported for SKXI11ADS
+2026-01-30T19:10:47.364Z [CRASH_UPLOAD] [PID:4290]: CURL_CMD: /usr/bin/curl --cert-type P12 --cert /opt/certs/devicecert_1.pk12<hidden key> -v -fgL --tlsv1.2 -T "macD452EED948E4_dat2026-01-30-19-10-15_boxXiOne_modSKXI11ADS_com.bskyb.epgui_initializing_2026-01.dmp.tgz" -w "%{http_code} %{remote_ip}" "https://eu-ccp-stbcrashes.s3.dualstack.eu-west-1.amazonaws.com/minidump/2026/1/30/19/SKXI11ADS/SKXI11ADS_MIDDLEWARE_DEV_support_8.4.4.0_20260128163202/dev/macD452EED948E4_dat2026-01-30-19-10-15_boxXiOne_modSKXI11ADS_com.bskyb.epgui_initializing_2026-01.dmp.tgz?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAZUIKWRPZFXPVQJLS%2F20260130%2Feu-west-1%2Fs3%2Faws4_request&X-Amz-Date=20260130T191016Z&X-Amz-Expires=600&X-Amz-SignedHeaders=host&X-Amz-Signature=c47dae57c15bceaaeb8a4ea21210c4571ce565316bbc4e6c0ac53e5dc4177aff"
+2026-01-30T19:10:49.173Z [CRASH_UPLOAD] [PID:4290]: Curl Connected to eu-ccp-stbcrashes.s3.dualstack.eu-west-1.amazonaws.com (52.92.4.82) port 
+2026-01-30T19:10:49.217Z [CRASH_UPLOAD] [PID:4290]: Curl return code: 0 HTTP Response code: 200
+2026-01-30T19:10:49.295Z [CRASH_UPLOAD] [PID:4290]: S3 minidump Upload is successful with TLS1.2
+2026-01-30T19:10:49.360Z [CRASH_UPLOAD] [PID:4290]: Removing uploaded minidump file macD452EED948E4_dat2026-01-30-19-10-15_boxXiOne_modSKXI11ADS_com.bskyb.epgui_initializing_2026-01.dmp.tgz
+2026-01-30T19:10:49.397Z [CRASH_UPLOAD] [PID:4290]: [/lib/rdk/uploadDumps.sh]: minidump uploadToS3 SUCESS: status: 0
+2026-01-30T19:10:49.442Z [CRASH_UPLOAD] [PID:4290]: Removing file macD452EED948E4_dat2026-01-30-19-10-15_boxXiOne_modSKXI11ADS_com.bskyb.epgui_initializing_2026-01.dmp.tgz
+2026-01-30T19:10:49.489Z [CRASH_UPLOAD] [PID:4290]: WORKING_DIR is empty!!!
+2026-01-30T19:10:49.518Z [CRASH_UPLOAD] [PID:4290]: WORKING_DIR is empty!!!

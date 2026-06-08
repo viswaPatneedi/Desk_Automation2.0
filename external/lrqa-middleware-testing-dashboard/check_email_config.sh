@@ -1,0 +1,22 @@
+#!/bin/bash
+# Quick Email Configuration Test
+
+echo "=========================================="
+echo "Email Configuration Summary"
+echo "=========================================="
+echo ""
+echo "Current SMTP Configuration:"
+echo "  SMTP Server: ${SMTP_SERVER:-'Not configured'}"
+echo "  SMTP Port: ${SMTP_PORT:-'Not configured'}"
+echo "  Sender Email: ${SENDER_EMAIL:-'Not configured'}"
+echo "  Password: ${SENDER_PASSWORD:+'***Configured***'}"
+echo ""
+echo "To configure Gmail SMTP, run:"
+echo "  ./configure_gmail_smtp.sh"
+echo ""
+echo "Or manually export:"
+echo "  export SMTP_SERVER='smtp.gmail.com'"
+echo "  export SMTP_PORT='587'"
+echo "  export SENDER_EMAIL='cperdkemiddleware@gmail.com'"
+echo "  export SENDER_PASSWORD='your-app-password'"
+echo ""

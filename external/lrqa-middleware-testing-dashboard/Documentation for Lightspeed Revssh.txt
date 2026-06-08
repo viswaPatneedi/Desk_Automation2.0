@@ -1,0 +1,197 @@
+Documentation for Lightspeed Revssh
+
+
+Some heads-up content before diving into lightspeed Revstbssh endpoint
+Option 1 (endpoint - /revstbssh)
+1.	ttls – timeout
+2.	region – One of three options – NA, EU, APAC 
+3.	commands – the terminal commands you want to run on the devices
+4.	mac_array – the list of macs you want to run the commands on
+5.	mac_file – a csv/txt file instead of list of macs that contains all the macs
+6.	justification – Reasoning behind why this job needs to be ran
+7.	slack – a slack channel to post the final results in (defaulted to #automated-deploy-ops if not specified)
+8.	max_macs – Limit to the number of devices that would actually be ssh’ed into
+9.	criteria - _NW_ defaulted but it specifies what do you wanna capture as part of end results
+10.	cronjob – you can specify a cron syntax for the ssh job to run periodically (e.g. 0 9 * * *)
+11.	time_zone only when using cron to specify which time zone does this cron need to follow. Currently only supports US (east )
+Additionally with the above options
+Option 2 (endpoint - /shell_file)
+1.	upload_file – a file you want to upload to devices (for eg a binary that install an app)
+2.	shell_file_params – the uploaded shell file can be ran with additional parameters during runtime
+3.	upload_file_copy_location – the location the shell file will be uploaded onto in the device
+4.	save_file_location – download a file/folder from the device onto sharepoint
+Dynamic flows
+Additional option uses ELK to dynamicall pull devices using a query
+1.	mac_count – number of macs to pull from ELK
+2.	user_query – ELK query to pull devices with a specific marker
+3.	loopback- lookback time for the query to pull devices within the last x mins (e.g. last 1 hr)
+4.	profile – one of three options RDKB, RDKV, RDKC
+5.	host – one of two options on ELK – Telemetry or XDP
+6.	interval_control – interval of retries on devices until success (e.g. 2 – retries every 2 mins until success)
+
+
+
+
+
+
+Revssh Option 1 – Run commands  
+
+
+ep = "https://axiom-lightspeed.rdkops.comcast.net/revstbssh"
+
+def send_lightspeed_request(ep, method, token, headers=None, payload=None):
+    headers = headers or {}
+    headers["Authorization"] = f"Bearer {token}"
+    # headers["Content-Type"] = "multipart/form-data"
+    headers["Accept"] = "application/json"
+
+
+    response = requests.request(method, ep, headers=headers, data=payload,timeout=60)
+
+    if response.status_code >= 400:
+        raise Exception(f"{response.status_code}: {response.text}")
+
+    return response
+
+form1 = {
+            "ttls": "20",
+            "region": "NA",
+            "commands": "systemctl status service",
+            "mac_array": mac_list_1,
+	#"mac_file": 
+            "justification": "CPERM-XXXXX Check service status
+            #"slack": "lightspeed-testing",
+            "max_macs": 10,
+            "criteria": "_NW_"
+        }
+
+send_lightspeed_request(ep, "POST", access_token_ssh, payload=form1)
+
+This request spits out a trace ID than can be used to access the results.
+
+1.	Additionally sending a mac_file instead of a mac_list
+
+files = {
+    'mac_array': (None, ''),
+    'ttls': (None,'20'),
+    'region': (None,'NA'),
+    'commands': (None,"systemctl status service"),
+    'mac_file': ('input.csv', open('input123.csv', 'rb'), 'text/csv'),
+    'slack': (None, lightspeed-testing),
+    'cronjob': (None, ''),
+    'time_zone': (None, ''),
+    'justification': (None, 'test'),
+    'max_macs': (None, ''),
+    "criteria": (None, "_NW_")
+}
+
+response = requests.post('https://axiom-lightspeed.rdkops.comcast.net/revstbssh', headers=headers, files=files)
+
+
+Revssh Option 2 – Run commands from a shell script
+
+
+files = {
+    'mac_array': (None, ''),
+    'ttls': (None,'20'),
+    'region': (None,'NA'),
+    'shell_file': ('fix.sh',open('fix.sh', 'rb'), 'text/csv'),
+    'shell_file_params': (None, 'Testing'),
+    'mac_file': ('input.csv', open('input123.csv', 'rb'), 'text/csv'),
+    'slack': (None, 'gears-test-rahul'),
+    'cronjob': (None, ''),
+    'time_zone': (None, ''),
+    'justification': (None, 'test'),
+    'max_macs': (None, ''),
+    "criteria": (None, "_NW_")
+}
+
+response = requests.post('https://axiom-lightspeed.rdkops.comcast.net/shell_file, headers=headers, files=files)
+
+additionally you can give command line arguments to the shell file you want to run commands through 'shell_file_params'
+
+This request spits out a trace ID than can be used to access the results.
+
+Revssh Option 3 - SCP to Device
+
+
+files = {
+    'mac_array': (None, ''),
+    'ttls': (None,'20'),
+    'region': (None,'NA'),
+    'shell_file': ('fix.sh',open('fix.sh', 'rb'), 'text/csv'),
+    'upload_file': ('testy',open('testy', 'rb'), 'text/csv'),
+    'shell_file_params': (None, 'Testing'),
+    'mac_file': ('input.csv', open('input123.csv', 'rb'), 'text/csv'),
+    'upload_file_copy_location': (None, '/media'),
+    'slack': (None, 'Lightspeed-testing'),
+    'cronjob': (None, ''),
+    'time_zone': (None, ''),
+    'justification': (None, 'test'),
+    'max_macs': (None, ''),
+    "criteria": (None, "_NW_")
+}
+
+response = requests.post('https://axiom-lightspeed.rdkops.comcast.net/shell_file', headers=headers, files=files)
+print(response.status_code, response.text)
+
+Additionally, you can send command line arguments to the shell file you want to run commands through 'shell_file_params' with the location of the file on the device it needs to be uploaded to ‘upload_file_copy_location'.
+
+This request spits out a trace ID than can be used to access the results.
+
+
+Revssh Option 3 - SCP from Device
+
+
+files = {
+    'mac_array': (None, ''),
+    'ttls': (None,'20'),
+    'region': (None,'NA'),
+    'mac_file': ('input.csv', open('input123.csv', 'rb'), 'text/csv'),
+    'slack': (None, 'gears-test-rahul'),
+    'save_file_location': (None, '/tmp/top.txt'),
+    'justification': (None, 'test'),
+    'max_macs': (None, ''),
+    "criteria": (None, "_NW_")
+}
+
+response = requests.post('https://axiom-lightspeed.rdkops.comcast.net/scpFrom, headers=headers, files=files)
+print(response.status_code, response.text)
+
+Revssh Dynamic 
+All the above options come with a choice of dynamic where instead of a static mac list you could use an ELK query to pull devices on the go
+
+files = {
+    'user_query': (None, 'device.model: *'),
+    'loopback': (None,'2h'),
+    'region': (None,'NA'),
+    'shell_file': ('fix.sh',open('fix.sh', 'rb'), 'text/csv'),
+    'upload_file': ('testy',open('testy', 'rb'), 'text/csv'),
+    'shell_file_params': (None, 'Testing'),
+    'profile': (None, 'RDKB'),
+    'host': (None, 'TELEMETRY'),
+    'slack': (None, 'gears-test-rahul'),
+    'cronjob': (None, '0 9 * * *'),
+    'time_zone': (None, 'US/Eastern'),
+    'justification': (None, 'test'),
+    'max_macs': (None, ''),
+    "criteria": (None, "_NW_")
+}
+
+response = requests.post('https://axiom-lightspeed.rdkops.comcast.net/revstbsshDynamic', headers=headers, files=files)
+print(response.status_code, response.text)’
+
+OR
+
+response = requests.post('https://axiom-lightspeed.rdkops.comcast.net/shell_file_dynamic', headers=headers, files=files)
+print(response.status_code, response.text)
+
+
+OR
+
+response = requests.post('https://axiom-lightspeed.rdkops.comcast.net/scpFromDynamic, headers=headers, files=files)
+print(response.status_code, response.text)
+
+
+
+Slack support channel - #axiom-lightspeed-support

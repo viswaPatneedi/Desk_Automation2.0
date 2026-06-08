@@ -1,0 +1,165 @@
+# ============================================================================
+# Dockerfile for Raspberry Pi 4 - RDK-E Middleware Testing Dashboard
+# ============================================================================
+# Optimized for ARM/ARM64 architecture (Raspberry Pi 4, Pi 5)
+# Clean build - excludes all execution data and logs
+#
+# BASE IMAGE: Python 3.11 slim on ARM
+# COMPATIBLE WITH: RPi 4 (4GB+), RPi 5 (8GB+)
+#
+# FEATURES:
+# ✅ All latest code changes included
+# ✅ Automatic dependency resolution
+# ✅ No execution data or logs included
+# ✅ Optimized for ARM/ARM64 architecture
+# ✅ Automatic service startup
+# ✅ Email notifications configured
+# ✅ Multi-device SSH support built-in
+#
+# ============================================================================
+
+FROM python:3.11-slim
+
+LABEL maintainer="VISWA" \
+      description="RDK-E Middleware QA Testing Dashboard for Raspberry Pi 4" \
+      version="2.0" \
+      platform="ARM/ARM64"
+
+# ============================================================================
+# ENVIRONMENT VARIABLES
+# ============================================================================
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_APP=app.py \
+    FLASK_ENV=production \
+    VIRTUAL_ENV=/app/venv \
+    PATH="/app/venv/bin:$PATH" \
+    PYTHONPATH="/app:$PYTHONPATH" \
+    TZ=UTC \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
+# ============================================================================
+# WORKING DIRECTORY
+# ============================================================================
+
+WORKDIR /app
+
+# ============================================================================
+# SYSTEM DEPENDENCIES (Minimal for ARM)
+# ============================================================================
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # Build essentials
+    build-essential \
+    gcc \
+    g++ \
+    # Python development
+    python3-dev \
+    python3-venv \
+    # Required for SSH connections
+    openssh-client \
+    # Required for image processing
+    libffi-dev \
+    libssl-dev \
+    # OCR support (optional, can be disabled)
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    # System utilities
+    git \
+    curl \
+    wget \
+    nano \
+    # Cleanup
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
+
+# ============================================================================
+# PYTHON VIRTUAL ENVIRONMENT
+# ============================================================================
+
+RUN python -m venv /app/venv && \
+    /app/venv/bin/pip install --upgrade pip setuptools wheel
+
+# ============================================================================
+# USE SPECIFIC DOCKERIGNORE FOR CLEAN BUILD
+# ============================================================================
+
+# Note: Using .dockerignore.rpi.clean which excludes execution data
+# This ensures a clean build without logs, screenshots, etc.
+
+# ============================================================================
+# COPY APPLICATION FILES
+# ============================================================================
+
+# Copy requirements first for better Docker layer caching
+COPY requirements.txt .
+
+# ============================================================================
+# INSTALL PYTHON DEPENDENCIES
+# ============================================================================
+
+RUN /app/venv/bin/pip install --no-cache-dir -r requirements.txt
+
+# ============================================================================
+# COPY APPLICATION CODE
+# ============================================================================
+
+COPY . .
+
+# ============================================================================
+# CREATE REQUIRED DIRECTORIES (Volumes)
+# ============================================================================
+
+RUN mkdir -p /app/data \
+    /app/data/screenshots \
+    /app/data/iteration_logs \
+    /app/data/execution_logs \
+    /app/data/device_logs \
+    /app/data/app_logs \
+    /app/data/sessions \
+    /app/data/uploads \
+    /app/reference_screens \
+    && chown -R nobody:nogroup /app/data \
+    && chmod -R 755 /app/data
+
+# ============================================================================
+# VERIFY CRITICAL FILES
+# ============================================================================
+
+RUN ls -la /app/*.py | head -5 && \
+    echo "✅ Application files verified"
+
+# ============================================================================
+# COPY ENTRYPOINT SCRIPT
+# ============================================================================
+
+COPY docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
+# ============================================================================
+# HEALTHCHECK
+# ============================================================================
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:11078/ || exit 1
+
+# ============================================================================
+# PORT EXPOSURE
+# ============================================================================
+
+EXPOSE 11078
+
+# ============================================================================
+# RUNTIME USER
+# ============================================================================
+
+USER nobody
+
+# ============================================================================
+# ENTRYPOINT
+# ============================================================================
+
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
+CMD ["gunicorn", "--bind", "0.0.0.0:11078", "--workers", "2", "--worker-class", "gevent", "--timeout", "120", "--access-logfile", "-", "--error-logfile", "-", "app:app"]
