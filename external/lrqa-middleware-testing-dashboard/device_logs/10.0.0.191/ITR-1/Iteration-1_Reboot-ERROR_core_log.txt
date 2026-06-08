@@ -1,0 +1,100 @@
+2026-04-28T16:31:47.259811 [INFO ] log path = /opt/logs
+2026-04-28T16:31:47.259836 [INFO ] log path = /opt/logs
+2026-04-28T16:31:47.259957 [INFO ] Box type = XiOne-SCB
+2026-04-28T16:31:47.260009 [INFO ] Build type = dev
+2026-04-28T16:31:47.260058 [INFO ] device type = mediaclient
+2026-04-28T16:31:47.260075 [INFO ] device type=3
+2026-04-28T16:31:47.260094 [INFO ] core log=/opt/logs/core_log.txt
+2026-04-28T16:31:47.260110 [INFO ] Secure is not enable
+2026-04-28T16:31:47.260127 [INFO ] starting coredump processing
+2026-04-28T16:31:47.260162 [INFO ] core_log file=/opt/logs/core_log.txt
+2026-04-28T16:31:47.260219 [INFO ] GetEstbMac: read_from_hwinterface is set to true
+2026-04-28T16:31:47.260235 [INFO ] GetEstbMac: Reading from hw interface
+[INFO ] [COMMONUTILITIES] [2879] GetHwMacAddress: MAC address: f0:46:3b:5c:00:fe and ret=17
+2026-04-28T16:31:47.260419 [INFO ] GetEstbMac: Hardware address=f0:46:3b:5c:00:fe=
+2026-04-28T16:31:47.260438 [INFO ] Mac address is F0463B5C00FE
+2026-04-28T16:31:47.260542 [INFO ] Model Num=SCXI11BEI
+2026-04-28T16:31:47.261247 [INFO ] SIGTERM handler install success
+[INFO ] [COMMONUTILITIES] [2894] LOG_PATH=/opt/logs
+2026-04-28T16:31:47.261769 [INFO ] log path = /opt/logs
+2026-04-28T16:31:47.261796 [INFO ] log path = /opt/logs
+2026-04-28T16:31:47.261915 [INFO ] Box type = XiOne-SCB
+2026-04-28T16:31:47.261962 [INFO ] Build type = dev
+2026-04-28T16:31:47.262013 [INFO ] device type = mediaclient
+2026-04-28T16:31:47.262030 [INFO ] device type=3
+2026-04-28T16:31:47.262049 [INFO ] core log=/opt/logs/core_log.txt
+2026-04-28T16:31:47.262065 [INFO ] Secure is not enable
+2026-04-28T16:31:47.262082 [INFO ] starting minidump processing
+2026-04-28T16:31:47.262118 [INFO ] core_log file=/opt/logs/core_log.txt
+2026-04-28T16:31:47.270787 [INFO ] file sha=3c5c9af639fabee13be29149b9bb05723effe408
+2026-04-28T16:31:47.270897 [INFO ] Working dir=/var/lib/systemd/coredump
+2026-04-28T16:31:47.270923 [INFO ] System initialization successful
+2026-04-28T16:31:47.271198 [INFO ] GetEstbMac: read_from_hwinterface is set to true
+2026-04-28T16:31:47.271300 [INFO ] GetEstbMac: Reading from hw interface
+[INFO ] [COMMONUTILITIES] [2894] GetHwMacAddress: MAC address: f0:46:3b:5c:00:fe and ret=17
+2026-04-28T16:31:47.271668 [INFO ] GetEstbMac: Hardware address=f0:46:3b:5c:00:fe=
+2026-04-28T16:31:47.271714 [INFO ] Mac address is F0463B5C00FE
+2026-04-28T16:31:47.271847 [INFO ] Model Num=SCXI11BEI
+2026-04-28T16:31:47.275934 [INFO ] Lock (/tmp/.uploadCoredumps) acquired successfully. Proceeding with dump processing.
+2026-04-28T16:31:47.276052 [INFO ] Inside prerequisites_wait: device type=3
+2026-04-28T16:31:47.276627 [INFO ] file sha=3c5c9af639fabee13be29149b9bb05723effe408
+2026-04-28T16:31:47.276731 [INFO ] Working dir=/opt/minidumps
+2026-04-28T16:31:47.276748 [INFO ] System initialization successful
+2026-04-28T16:31:47.278798 [INFO ] Lock (/tmp/.uploadMinidumps) acquired successfully. Proceeding with dump processing.
+2026-04-28T16:31:47.278904 [INFO ] Inside prerequisites_wait: device type=3
+2026-04-28T16:31:47.281267 [INFO ] dump file or core file not found. Exiting
+2026-04-28T16:31:47.281364 [INFO ] Prerequisites check failed
+2026-04-28T16:31:47.281443 [INFO ] WORKING_DIR is empty or missing
+2026-04-28T16:31:47.281460 [INFO ] Releasing lock and removing lock file: /tmp/.uploadMinidumps
+CRASHUPLOAD: RDK Logger cleaned up
+2026-04-28T16:31:47.284440 [INFO ] dump file or core file not found. Exiting
+2026-04-28T16:31:47.284502 [INFO ] Prerequisites check failed
+2026-04-28T16:31:47.284777 [INFO ] WORKING_DIR is empty or missing
+2026-04-28T16:31:47.284831 [INFO ] Releasing lock and removing lock file: /tmp/.uploadCoredumps
+CRASHUPLOAD: RDK Logger cleaned up
+2026-04-28T16:31:47.324Z [uploadDumps.sh] [PID:2859]: crashupload completed successfully.
+2026-04-28T16:31:47.319Z [uploadDumps.sh] [PID:2853]: crashupload completed successfully.
+2026-04-28T16:32:02.240Z [uploadDumps.sh] [PID:4230]: Delegating to crashupload binary: /usr/bin/crashupload  0 secure
+2026-04-28T16:32:02.319Z [uploadDumps.sh] [PID:4246]: Delegating to crashupload binary: /usr/bin/crashupload  1 secure
+2026-04-28T16:32:02.359256 [INFO ] SIGTERM handler install success
+[INFO ] [COMMONUTILITIES] [4256] LOG_PATH=/opt/logs
+2026-04-28T16:32:02.359780 [INFO ] log path = /opt/logs
+2026-04-28T16:32:02.359804 [INFO ] log path = /opt/logs
+2026-04-28T16:32:02.359910 [INFO ] Box type = XiOne-SCB
+2026-04-28T16:32:02.359953 [INFO ] Build type = dev
+2026-04-28T16:32:02.360003 [INFO ] device type = mediaclient
+2026-04-28T16:32:02.360021 [INFO ] device type=3
+2026-04-28T16:32:02.360040 [INFO ] core log=/opt/logs/core_log.txt
+2026-04-28T16:32:02.360056 [INFO ] Secure is enable
+2026-04-28T16:32:02.360075 [INFO ] starting minidump processing
+2026-04-28T16:32:02.360108 [INFO ] core_log file=/opt/logs/core_log.txt
+2026-04-28T16:32:02.360185 [INFO ] GetEstbMac: After reading ESTB_MAC_FILE value=F0:46:3B:5C:00:FE
+2026-04-28T16:32:02.360203 [INFO ] Mac address is F0463B5C00FE
+2026-04-28T16:32:02.360279 [INFO ] Model Num=SCXI11BEI
+2026-04-28T16:32:02.371149 [INFO ] file sha=3c5c9af639fabee13be29149b9bb05723effe408
+2026-04-28T16:32:02.371272 [INFO ] Working dir=/opt/secure/minidumps
+2026-04-28T16:32:02.371297 [INFO ] System initialization successful
+2026-04-28T16:32:02.375398 [INFO ] Lock (/tmp/.uploadMinidumps) acquired successfully. Proceeding with dump processing.
+2026-04-28T16:32:02.375532 [INFO ] Inside prerequisites_wait: device type=3
+2026-04-28T16:32:02.376042 [INFO ] Deferring Upload for 458 seconds
+2026-04-28T16:32:02.412477 [INFO ] SIGTERM handler install success
+[INFO ] [COMMONUTILITIES] [4290] LOG_PATH=/opt/logs
+2026-04-28T16:32:02.413269 [INFO ] log path = /opt/logs
+2026-04-28T16:32:02.413296 [INFO ] log path = /opt/logs
+2026-04-28T16:32:02.413442 [INFO ] Box type = XiOne-SCB
+2026-04-28T16:32:02.413496 [INFO ] Build type = dev
+2026-04-28T16:32:02.413551 [INFO ] device type = mediaclient
+2026-04-28T16:32:02.413570 [INFO ] device type=3
+2026-04-28T16:32:02.413657 [INFO ] core log=/opt/logs/core_log.txt
+2026-04-28T16:32:02.413684 [INFO ] Secure is enable
+2026-04-28T16:32:02.413703 [INFO ] starting coredump processing
+2026-04-28T16:32:02.413751 [INFO ] core_log file=/opt/logs/core_log.txt
+2026-04-28T16:32:02.413856 [INFO ] GetEstbMac: After reading ESTB_MAC_FILE value=F0:46:3B:5C:00:FE
+2026-04-28T16:32:02.413878 [INFO ] Mac address is F0463B5C00FE
+2026-04-28T16:32:02.413973 [INFO ] Model Num=SCXI11BEI
+2026-04-28T16:32:02.431465 [INFO ] file sha=3c5c9af639fabee13be29149b9bb05723effe408
+2026-04-28T16:32:02.431702 [INFO ] Working dir=/opt/secure/corefiles
+2026-04-28T16:32:02.431753 [INFO ] System initialization successful
+2026-04-28T16:32:02.432113 [INFO ] Lock (/tmp/.uploadCoredumps) acquired successfully. Proceeding with dump processing.
+2026-04-28T16:32:02.432198 [INFO ] Inside prerequisites_wait: device type=3
+2026-04-28T16:32:02.432498 [INFO ] Deferring Upload for 458 seconds

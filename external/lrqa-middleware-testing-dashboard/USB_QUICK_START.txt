@@ -1,0 +1,202 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║           🔌 USB DEPLOYMENT - QUICK START INSTRUCTIONS 🔌                   ║
+║                                                                              ║
+║               For Deploying to New Raspberry Pi 4                           ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+📦 USB CONTENTS:
+================================================================================
+
+SanDisk USB (28.6G):
+  ✓ Complete Enhancement directory with all application code
+  ✓ Docker configuration files (Dockerfile, docker-compose)
+  ✓ Automated deployment script (rpi4-setup-complete.sh)
+  ✓ Verification tools and documentation
+  ✓ All configuration files and dependencies
+
+Lexar USB (231.1G):
+  ✓ For execution data/logging on this RPi (keep connected)
+
+
+🚀 3-STEP DEPLOYMENT:
+================================================================================
+
+STEP 1: Insert SanDisk USB into NEW Raspberry Pi 4
+────────────────────────────────────────────────────
+
+  a) Insert SanDisk USB into RPi USB port
+  b) Boot RPi with Raspberry Pi OS installed
+  c) Connect to network (WiFi or Ethernet)
+
+
+STEP 2: Connect via SSH and Mount USB
+─────────────────────────────────────────
+
+  On your laptop/PC:
+  $ ssh pi@<new-rpi-ip>
+
+  On the RPi:
+  $ lsblk                    # Find USB (usually /dev/sda1)
+  $ cd /mnt                  # or any mount location
+  $ sudo mount /dev/sda1 /mnt/usb-deployment
+  $ cd /mnt/usb-deployment/Enhancement
+
+
+STEP 3: Run One-Command Deployment
+──────────────────────────────────
+
+  $ chmod +x rpi4-setup-complete.sh
+  $ ./rpi4-setup-complete.sh
+
+  ⏱️  This takes 10-15 minutes first time
+  ✅ Automatically handles everything:
+     - System requirements check
+     - Docker installation
+     - Image building
+     - Container startup
+     - Health verification
+
+
+✨ DEPLOYMENT COMPLETE!
+================================================================================
+
+Access Dashboard:
+  http://<new-rpi-ip>:11078
+
+Check Logs:
+  sudo docker logs -f rdk-middleware-dashboard
+
+Container Status:
+  sudo docker ps
+
+
+🔧 OPTIONAL: Copy to Home Directory First
+================================================================================
+
+For better performance, copy to home directory instead of running from USB:
+
+  $ cp -r /mnt/usb-deployment/Enhancement ~/Enhancement-deploy
+  $ cd ~/Enhancement-deploy
+  $ chmod +x rpi4-setup-complete.sh
+  $ ./rpi4-setup-complete.sh
+
+(Requires ~20GB free space on RPi)
+
+
+📚 MORE INFORMATION:
+================================================================================
+
+  Full Guide:           USB_DEPLOYMENT_GUIDE.md
+  Docker Reference:     DOCKER_QUICK_REFERENCE.txt
+  Setup Guide:          DOCKER_SETUP_GUIDE_RPi4.md
+  Architecture:         DOCKER_COMPLETE_SETUP.md
+
+  Verify Setup Before Deploying:
+  $ chmod +x docker-verify-setup.sh
+  $ ./docker-verify-setup.sh
+
+
+❓ TROUBLESHOOTING:
+================================================================================
+
+Issue: "Cannot find USB"
+  → $ lsblk                      # Check device name
+  → $ sudo mount /dev/sda1 /mnt  # Manually mount if needed
+
+Issue: "Not enough space"
+  → Check: $ df -h
+  → Use Option C (selective copy) from USB_DEPLOYMENT_GUIDE.md
+
+Issue: "Docker not found"
+  → The setup script will auto-install Docker
+  → Or manually: curl -fsSL https://get.docker.com | sh
+
+Issue: "Container won't start"
+  → Check logs: docker logs -f rdk-middleware-dashboard
+  → Run verification: ./docker-verify-setup.sh
+
+Issue: "Slow performance"
+  → Copy Enhancement to home directory (see section above)
+  → Check disk space: df -h
+  → Monitor resources: docker stats
+
+
+🎯 QUICK REFERENCE:
+================================================================================
+
+View logs:
+  docker logs -f rdk-middleware-dashboard
+
+Check status:
+  docker ps
+
+Monitor resources:
+  docker stats rdk-middleware-dashboard
+
+Restart:
+  docker-compose -f docker-compose.rpi.clean.yml restart
+
+Stop:
+  docker-compose -f docker-compose.rpi.clean.yml stop
+
+SSH into container:
+  docker exec -it rdk-middleware-dashboard bash
+
+Update code:
+  # Edit files
+  docker build -f Dockerfile.rpi.clean -t rdk-middleware-dashboard:rpi4-clean .
+  docker-compose -f docker-compose.rpi.clean.yml restart
+
+
+📞 GETTING HELP:
+================================================================================
+
+1. Run verification script:
+   $ chmod +x docker-verify-setup.sh
+   $ ./docker-verify-setup.sh
+
+2. Check application logs:
+   $ docker logs -f rdk-middleware-dashboard | tail -100
+
+3. Review documentation:
+   $ cat USB_DEPLOYMENT_GUIDE.md
+
+4. Check Docker status:
+   $ docker ps -a
+   $ docker inspect rdk-middleware-dashboard
+
+
+✅ SYSTEM REQUIREMENTS MET:
+================================================================================
+
+  ✓ Raspberry Pi 4 (2GB minimum, 4GB+ recommended)
+  ✓ 32GB+ storage (64GB+ recommended)
+  ✓ Network connectivity (WiFi or Ethernet)
+  ✓ Raspberry Pi OS installed
+  ✓ SSH enabled
+
+
+📊 EXPECTED RESULTS:
+================================================================================
+
+Docker Image Size:      ~800MB-1GB (optimized)
+Build Time (first):     5-10 minutes
+Build Time (updates):   2-3 minutes
+Memory Usage:           512MB (adjustable)
+Startup Time:           30-40 seconds
+Dashboard Port:         11078 (configurable)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🎉 Your deployment package is ready! Connect SanDisk USB to new RPi and run:
+
+    ./rpi4-setup-complete.sh
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Version: 2.0 (USB Deployment)
+Status: Production Ready
+Last Updated: 2026-04-17

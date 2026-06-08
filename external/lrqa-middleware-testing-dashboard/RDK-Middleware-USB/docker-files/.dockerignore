@@ -1,0 +1,148 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments (rebuilt from requirements.txt)
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation (optional - remove if you want docs in image)
+*.md
+!README.md
+
+# Backup files and old code
+*.bak
+*.backup*
+*.corrupt*
+*.old
+backup_to_usb.sh
+restore_backup.sh
+updated_code/
+app_old.py
+
+# ==================== EXECUTION DATA (NEVER in image) ====================
+# These directories should be volumes, not in the Docker image
+iteration_logs/
+screenshots/
+data/
+reference_screens/
+
+# ==================== JSON DATA FILES ====================
+# App uses volumes for persistent data
+devices.json
+jobs.json
+users.json
+device_locks.json
+app_state.json
+saved_sequences.json
+checkpoint.pkl
+
+# ==================== DOCKER & DEPLOYMENT ====================
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+docker-*.sh
+*.tar
+*.tar.gz
+*.zip
+
+# ==================== DOCUMENTATION ====================
+MarkDown_Files/
+
+# ==================== MISC STATE ====================
+app.pid
+.env
+.env.local
+node_modules/
+
+# Shell scripts (keep only what's needed)
+build-and-run.sh
+docker-mac-setup.sh
+docker-rpi-quickstart.sh
+docker-rpi-validate.sh
+
+# EXCLUDE: Large data directories (moved to USB volumes)
+# Execution output - stored on external USB
+logs/
+iteration_logs/
+screenshots/
+captured_images/
+base_images/
+Enhancement_output/
+device_logs/
+app_logs/
+sessions/
+
+# External data (not part of application)
+SAM-CD-2GB/
+Viswa\ Backup-live\ code/
+old/
+
+# Test and state files
+test_results_history.json
+app_state.json*
+device_job_queue.json
+device_locks.json
+saved_sequences.json
+!run_production.sh
+!QUICK_START.sh
+
+# Log files (will be mounted as volumes)
+*.log
+realtime_logs.txt
+
+# Temporary files
+*.tmp
+temp/
+
+# USB and deployment specific  
+BACKUP_SUMMARY.txt
+GIT_GUIDE.txt
+
+# Service files (managed separately)
+*.service
+*.pid
+
+# Development files
+test_*.py
+*_test.py
+
+# Docker files (handled separately)
+app.pid
+
+
+# Service files (systemd)
+*.service
+
+# Development and testing
+app_old.py
+test_*.py
+*_test.py

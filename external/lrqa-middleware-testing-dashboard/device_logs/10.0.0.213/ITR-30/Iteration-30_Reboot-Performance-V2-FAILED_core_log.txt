@@ -1,0 +1,4 @@
+2025-12-24T18:10:46.232Z [CRASH_UPLOAD] [PID:4744]: starting minidump processing
+2025-12-24T18:10:46.235Z [CRASH_UPLOAD] [PID:4733]: starting coredump processing
+2025-12-24T18:10:46.291Z [CRASH_UPLOAD] [PID:4733]: Deferring reboot for 454 seconds
+2026-01-15T00:35:32.019Z [CRASH_UPLOAD] [PID:4744]: Deferring reboot for 449 seconds

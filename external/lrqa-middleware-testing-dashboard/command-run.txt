@@ -1,0 +1,6 @@
+docker run --name=gcdispatcher-1 --volume /opt/ms/irms:/irms --volume /opt/ms/irms/redrat/REDRAT_KEYMANAGER.xml:/irms/redrat/REDRAT_KEYMANAGER.xml --env=GCDISPATCHER_ENV=rack --privileged -p 9711:9710 --restart=always --log-opt max-file=10 --log-opt max-size=50m hub.comcast.net/cats/gcdispatcher-ms:24.10.1
+
+docker: Error response from daemon: Conflict. The container name "/gcdispatcher-1" is already in use by container "f7ce1c91435548120008b4a1ffedcb41b6230861026b9e028a871cc5eb40c4b7". You have to remove (or rename) that container to be able to reuse that name.
+
+Run 'docker run --help' for more information
+

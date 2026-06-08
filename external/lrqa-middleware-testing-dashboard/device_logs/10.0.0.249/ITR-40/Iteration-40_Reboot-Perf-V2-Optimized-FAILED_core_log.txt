@@ -1,0 +1,100 @@
+2026-02-01T21:02:48.734Z [CRASH_UPLOAD] [PID:4683]: buildID is 304c41fa78be8b2c870481ecef709be202e1d9d0
+2026-02-01T21:02:48.743Z [CRASH_UPLOAD] [PID:4697]: Compression with nice
+2026-02-01T21:02:48.760Z [PID:4683]: [utils.sh] flushLogger is called
+2026-02-01T21:02:48.787Z [CRASH_UPLOAD] [PID:4683]: Processing the crash telemetry info
+2026-02-01T21:02:48.845Z [CRASH_UPLOAD] [PID:4683]: Process crashed = WPEFramework
+2026-02-01T21:02:48.902Z [CRASH_UPLOAD] [PID:4683]: Crashed process log file(s): wpeframework.log
+2026-02-01T21:02:48.947Z [CRASH_UPLOAD] [PID:4683]: Appname, Process_Crashed = a4e7dc82, WPEFramework
+2026-02-01T21:02:49.165Z [CRASH_UPLOAD] [PID:4683]: Size of the file: -rw-------    1 root     root        449304 Feb  1 16:01 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_a4e7dc82-afe7-4797-e9800a86-73f04bac.dmp
+2026-02-01T21:02:49.271Z [CRASH_UPLOAD] [PID:4697]: mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769979504_core.prog_MonitorIResou.signal_6.gz
+2026-02-01T21:02:49.290Z [CRASH_UPLOAD] [PID:4683]: Adding File: 304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-41_boxES1_modCOESST11AEI_wpeframework.log to minidump tarball
+2026-02-01T21:02:49.291Z [CRASH_UPLOAD] [PID:4697]: version.txt
+2026-02-01T21:02:49.312Z [CRASH_UPLOAD] [PID:4697]: tar: removing leading '/' from member names
+2026-02-01T21:02:49.331Z [CRASH_UPLOAD] [PID:4697]: opt/logs/core_log.txt
+2026-02-01T21:02:49.354Z [CRASH_UPLOAD] [PID:4697]: Success Compressing the files, mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769979504_core.prog_MonitorIResou.signal_6.gz.core.tgz mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769979504_core.prog_MonitorIResou.signal_6.gz  
+2026-02-01T21:02:49.366Z [CRASH_UPLOAD] [PID:4683]: mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_a4e7dc82-afe7-4797-e9800a86-73f04bac.dmp
+2026-02-01T21:02:49.393Z [CRASH_UPLOAD] [PID:4683]: version.txt
+2026-02-01T21:02:49.390Z [CRASH_UPLOAD] [PID:4697]: Size of the compressed file: -rw-r--r--    1 root     root       1931593 Feb  1 16:02 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769979504_core.prog_MonitorIResou.signal_6.gz.core.tgz
+2026-02-01T21:02:49.423Z [CRASH_UPLOAD] [PID:4683]: tar: removing leading '/' from member names
+2026-02-01T21:02:49.447Z [CRASH_UPLOAD] [PID:4683]: opt/logs/core_log.txt
+2026-02-01T21:02:49.466Z [CRASH_UPLOAD] [PID:4683]: 304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-41_boxES1_modCOESST11AEI_wpeframework.log
+2026-02-01T21:02:49.481Z [CRASH_UPLOAD] [PID:4697]: Size of the file: -rw-r--r--    1 root     root       2759849 Feb  1 15:56 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769979394_core.prog_WorkerPoolThr.signal_6.gz
+2026-02-01T21:02:49.484Z [CRASH_UPLOAD] [PID:4683]: Success Compressing the files, mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_a4e7dc82-afe7-4797-e9800a86-73f04bac.dmp.tgz mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_a4e7dc82-afe7-4797-e9800a86-73f04bac.dmp version.txt /opt/logs/core_log.txt 304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-41_boxES1_modCOESST11AEI_wpeframework.log 
+2026-02-01T21:02:49.505Z [CRASH_UPLOAD] [PID:4697]: Compression with nice
+2026-02-01T21:02:49.505Z [CRASH_UPLOAD] [PID:4683]: Size of the compressed file: -rw-r--r--    1 root     root        118599 Feb  1 16:02 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_a4e7dc82-afe7-4797-e9800a86-73f04bac.dmp.tgz
+2026-02-01T21:02:49.543Z [CRASH_UPLOAD] [PID:4683]: Removing /opt/secure/minidumps/304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-41_boxES1_modCOESST11AEI_wpeframework.log
+/opt/secure/minidumps/version.txt
+2026-02-01T21:02:49.565Z [CRASH_UPLOAD] [PID:4683]: Processing the crash telemetry info
+2026-02-01T21:02:49.600Z [CRASH_UPLOAD] [PID:4683]: Process crashed = WPEFramework
+2026-02-01T21:02:49.658Z [CRASH_UPLOAD] [PID:4683]: Crashed process log file(s): wpeframework.log
+2026-02-01T21:02:49.689Z [CRASH_UPLOAD] [PID:4683]: Appname, Process_Crashed = 944beb68, WPEFramework
+2026-02-01T21:02:49.786Z [CRASH_UPLOAD] [PID:4683]: Size of the file: -rw-------    1 root     root        517384 Feb  1 15:56 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_944beb68-607d-49eb-bb12ca9e-8f97717d.dmp
+2026-02-01T21:02:49.870Z [CRASH_UPLOAD] [PID:4683]: Adding File: 304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-41_boxES1_modCOESST11AEI_wpeframework.log to minidump tarball
+2026-02-01T21:02:50.118Z [CRASH_UPLOAD] [PID:4683]: mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_944beb68-607d-49eb-bb12ca9e-8f97717d.dmp
+2026-02-01T21:02:50.138Z [CRASH_UPLOAD] [PID:4683]: version.txt
+2026-02-01T21:02:50.166Z [CRASH_UPLOAD] [PID:4683]: tar: removing leading '/' from member names
+2026-02-01T21:02:50.194Z [CRASH_UPLOAD] [PID:4697]: mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769979394_core.prog_WorkerPoolThr.signal_6.gz
+2026-02-01T21:02:50.210Z [CRASH_UPLOAD] [PID:4683]: opt/logs/core_log.txt
+2026-02-01T21:02:50.216Z [CRASH_UPLOAD] [PID:4697]: version.txt
+2026-02-01T21:02:50.228Z [CRASH_UPLOAD] [PID:4683]: 304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-41_boxES1_modCOESST11AEI_wpeframework.log
+2026-02-01T21:02:50.244Z [CRASH_UPLOAD] [PID:4697]: tar: removing leading '/' from member names
+2026-02-01T21:02:50.259Z [CRASH_UPLOAD] [PID:4683]: Success Compressing the files, mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_944beb68-607d-49eb-bb12ca9e-8f97717d.dmp.tgz mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_944beb68-607d-49eb-bb12ca9e-8f97717d.dmp version.txt /opt/logs/core_log.txt 304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-41_boxES1_modCOESST11AEI_wpeframework.log 
+2026-02-01T21:02:50.267Z [CRASH_UPLOAD] [PID:4697]: opt/logs/core_log.txt
+2026-02-01T21:02:50.279Z [CRASH_UPLOAD] [PID:4683]: Size of the compressed file: -rw-r--r--    1 root     root        133487 Feb  1 16:02 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_944beb68-607d-49eb-bb12ca9e-8f97717d.dmp.tgz
+2026-02-01T21:02:50.284Z [CRASH_UPLOAD] [PID:4697]: Success Compressing the files, mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769979394_core.prog_WorkerPoolThr.signal_6.gz.core.tgz mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769979394_core.prog_WorkerPoolThr.signal_6.gz  
+2026-02-01T21:02:50.306Z [CRASH_UPLOAD] [PID:4697]: Size of the compressed file: -rw-r--r--    1 root     root       2459492 Feb  1 16:02 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769979394_core.prog_WorkerPoolThr.signal_6.gz.core.tgz
+2026-02-01T21:02:50.308Z [CRASH_UPLOAD] [PID:4683]: Removing /opt/secure/minidumps/304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-41_boxES1_modCOESST11AEI_wpeframework.log
+/opt/secure/minidumps/version.txt
+2026-02-01T21:02:50.332Z [CRASH_UPLOAD] [PID:4683]: Processing the crash telemetry info
+2026-02-01T21:02:50.362Z [CRASH_UPLOAD] [PID:4683]: Process crashed = tr69hostif
+2026-02-01T21:02:50.389Z [CRASH_UPLOAD] [PID:4697]: Size of the file: -rw-r--r--    1 root     root        838275 Feb  1 15:29 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769977772_core.prog_tr69hostif.signal_11.gz
+2026-02-01T21:02:50.410Z [CRASH_UPLOAD] [PID:4697]: Compression with nice
+2026-02-01T21:02:50.422Z [CRASH_UPLOAD] [PID:4683]: Crashed process log file(s): tr69hostif.log
+2026-02-01T21:02:50.450Z [CRASH_UPLOAD] [PID:4683]: Appname, Process_Crashed = 6a9699a2, tr69hostif
+2026-02-01T21:02:50.567Z [CRASH_UPLOAD] [PID:4683]: Size of the file: -rw-------    1 root     root        144576 Feb  1 15:29 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_tr69hostif_6a9699a2-cfe4-4705-477e16a8-ff5c5298.dmp
+2026-02-01T21:02:50.606Z [CRASH_UPLOAD] [PID:4697]: mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769977772_core.prog_tr69hostif.signal_11.gz
+2026-02-01T21:02:50.633Z [CRASH_UPLOAD] [PID:4697]: version.txt
+2026-02-01T21:02:50.646Z [CRASH_UPLOAD] [PID:4683]: Adding File: 304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-48_boxES1_modCOESST11AEI_tr69hostif.log to minidump tarball
+2026-02-01T21:02:50.650Z [CRASH_UPLOAD] [PID:4697]: tar: removing leading '/' from member names
+2026-02-01T21:02:50.669Z [CRASH_UPLOAD] [PID:4697]: opt/logs/core_log.txt
+2026-02-01T21:02:50.690Z [CRASH_UPLOAD] [PID:4697]: Success Compressing the files, mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769977772_core.prog_tr69hostif.signal_11.gz.core.tgz mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769977772_core.prog_tr69hostif.signal_11.gz  
+2026-02-01T21:02:50.691Z [CRASH_UPLOAD] [PID:4683]: mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_tr69hostif_6a9699a2-cfe4-4705-477e16a8-ff5c5298.dmp
+2026-02-01T21:02:50.717Z [CRASH_UPLOAD] [PID:4697]: Size of the compressed file: -rw-r--r--    1 root     root        739437 Feb  1 16:02 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769977772_core.prog_tr69hostif.signal_11.gz.core.tgz
+2026-02-01T21:02:50.726Z [CRASH_UPLOAD] [PID:4683]: version.txt
+2026-02-01T21:02:50.747Z [CRASH_UPLOAD] [PID:4683]: tar: removing leading '/' from member names
+2026-02-01T21:02:50.771Z [CRASH_UPLOAD] [PID:4683]: opt/logs/core_log.txt
+2026-02-01T21:02:50.793Z [CRASH_UPLOAD] [PID:4683]: 304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-48_boxES1_modCOESST11AEI_tr69hostif.log
+2026-02-01T21:02:50.807Z [CRASH_UPLOAD] [PID:4697]: Size of the file: -rw-r--r--    1 root     root       2464677 Feb  1 16:02 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769979718_core.prog_WorkerPoolThr.signal_6.gz
+2026-02-01T21:02:50.810Z [CRASH_UPLOAD] [PID:4683]: Success Compressing the files, mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_tr69hostif_6a9699a2-cfe4-4705-477e16a8-ff5c5298.dmp.tgz mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_tr69hostif_6a9699a2-cfe4-4705-477e16a8-ff5c5298.dmp version.txt /opt/logs/core_log.txt 304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-48_boxES1_modCOESST11AEI_tr69hostif.log 
+2026-02-01T21:02:50.821Z [CRASH_UPLOAD] [PID:4697]: Compression with nice
+2026-02-01T21:02:50.834Z [CRASH_UPLOAD] [PID:4683]: Size of the compressed file: -rw-r--r--    1 root     root         51010 Feb  1 16:02 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_tr69hostif_6a9699a2-cfe4-4705-477e16a8-ff5c5298.dmp.tgz
+2026-02-01T21:02:50.867Z [CRASH_UPLOAD] [PID:4683]: Removing /opt/secure/minidumps/304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-48_boxES1_modCOESST11AEI_tr69hostif.log
+/opt/secure/minidumps/version.txt
+2026-02-01T21:02:50.903Z [CRASH_UPLOAD] [PID:4683]: Processing the crash telemetry info
+2026-02-01T21:02:50.946Z [CRASH_UPLOAD] [PID:4683]: Process crashed = WPEFramework
+2026-02-01T21:02:50.990Z [CRASH_UPLOAD] [PID:4683]: Crashed process log file(s): wpeframework.log
+2026-02-01T21:02:51.037Z [CRASH_UPLOAD] [PID:4683]: Appname, Process_Crashed = e271402e, WPEFramework
+2026-02-01T21:02:51.142Z [CRASH_UPLOAD] [PID:4683]: Size of the file: -rw-------    1 root     root        440712 Feb  1 15:58 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_e271402e-edda-4ae5-3a348cba-858c6eb4.dmp
+2026-02-01T21:02:51.226Z [CRASH_UPLOAD] [PID:4683]: Adding File: 304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-51_boxES1_modCOESST11AEI_wpeframework.log to minidump tarball
+2026-02-01T21:02:51.335Z [CRASH_UPLOAD] [PID:4683]: mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_e271402e-edda-4ae5-3a348cba-858c6eb4.dmp
+2026-02-01T21:02:51.345Z [CRASH_UPLOAD] [PID:4697]: mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769979718_core.prog_WorkerPoolThr.signal_6.gz
+2026-02-01T21:02:51.363Z [CRASH_UPLOAD] [PID:4697]: version.txt
+2026-02-01T21:02:51.380Z [CRASH_UPLOAD] [PID:4697]: tar: removing leading '/' from member names
+2026-02-01T21:02:51.391Z [CRASH_UPLOAD] [PID:4683]: version.txt
+2026-02-01T21:02:51.397Z [CRASH_UPLOAD] [PID:4697]: opt/logs/core_log.txt
+2026-02-01T21:02:51.405Z [CRASH_UPLOAD] [PID:4683]: tar: removing leading '/' from member names
+2026-02-01T21:02:51.410Z [CRASH_UPLOAD] [PID:4697]: Success Compressing the files, mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769979718_core.prog_WorkerPoolThr.signal_6.gz.core.tgz mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769979718_core.prog_WorkerPoolThr.signal_6.gz  
+2026-02-01T21:02:51.419Z [CRASH_UPLOAD] [PID:4683]: opt/logs/core_log.txt
+2026-02-01T21:02:51.432Z [CRASH_UPLOAD] [PID:4697]: Size of the compressed file: -rw-r--r--    1 root     root       2224171 Feb  1 16:02 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769979718_core.prog_WorkerPoolThr.signal_6.gz.core.tgz
+2026-02-01T21:02:51.435Z [CRASH_UPLOAD] [PID:4683]: 304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-51_boxES1_modCOESST11AEI_wpeframework.log
+2026-02-01T21:02:51.450Z [CRASH_UPLOAD] [PID:4683]: Success Compressing the files, mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_e271402e-edda-4ae5-3a348cba-858c6eb4.dmp.tgz mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_e271402e-edda-4ae5-3a348cba-858c6eb4.dmp version.txt /opt/logs/core_log.txt 304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-51_boxES1_modCOESST11AEI_wpeframework.log 
+2026-02-01T21:02:51.463Z [CRASH_UPLOAD] [PID:4697]: Coredump File ./mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_1769977772_core.prog_tr69hostif.signal_11.gz.core.tgz
+2026-02-01T21:02:51.470Z [CRASH_UPLOAD] [PID:4683]: Size of the compressed file: -rw-r--r--    1 root     root        121158 Feb  1 16:02 mac74063506DE1A_dat2026-01-27-18-19-01_boxES1_modCOESST11AEI_WPEFramework_e271402e-edda-4ae5-3a348cba-858c6eb4.dmp.tgz
+2026-02-01T21:02:51.483Z [CRASH_UPLOAD] [PID:4697]: [INFO] : getPrivacyControlMode : Entering
+2026-02-01T21:02:51.497Z [CRASH_UPLOAD] [PID:4683]: Removing /opt/secure/minidumps/304c41fa78be8b2c870481ecef709be202e1d9d0_mac74063506DE1A_dat2026-02-01-16-02-51_boxES1_modCOESST11AEI_wpeframework.log
+/opt/secure/minidumps/version.txt
+2026-02-01T21:02:51.507Z [CRASH_UPLOAD] [PID:4697]: [WARN] : getPrivacyControlMode : WPEFrameworkSecurityUtility failed to get token; status = 127
+2026-02-01T21:02:51.521Z [CRASH_UPLOAD] [PID:4697]: [WARN] : getPrivacyControlMode : WPEFrameworkSecurityUtility Token is empty
+2026-02-01T21:02:51.529Z [CRASH_UPLOAD] [PID:4683]: [INFO] : getPrivacyControlMode : Entering
+2026-02-01T21:02:51.547Z [CRASH_UPLOAD] [PID:4683]: [WARN] : getPrivacyControlMode : WPEFrameworkSecurityUtility failed to get token; status = 127
+2026-02-01T21:02:51.560Z [CRASH_UPLOAD] [PID:4683]: [WARN] : getPrivacyControlMode : WPEFrameworkSecurityUtility Token is empty

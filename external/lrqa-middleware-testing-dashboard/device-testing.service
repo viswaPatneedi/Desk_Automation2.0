@@ -1,0 +1,16 @@
+[Unit]
+Description=RDK Device Testing Flask Application
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/Desktop/viswa-desktop/Latest_Enhancement/Enhancement
+Environment="PATH=/home/pi/Desktop/viswa-desktop/Latest_Enhancement/Enhancement/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PORT=8080"
+ExecStart=/home/pi/Desktop/viswa-desktop/Latest_Enhancement/Enhancement/venv/bin/gunicorn --workers 8 --worker-class gevent --worker-connections 2000 --bind 0.0.0.0:8080 --timeout 300 --access-logfile - --error-logfile - app:app
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

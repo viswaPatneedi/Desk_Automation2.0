@@ -1,0 +1,214 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║             RDK-E Middleware QA Dashboard - Docker Quick Reference           ║
+║                    Raspberry Pi 4 Deployment Card                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ONE-COMMAND SETUP                                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  chmod +x rpi4-setup-complete.sh
+  ./rpi4-setup-complete.sh
+
+  → This script handles EVERYTHING automatically!
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ MANUAL SETUP (Step by Step)                                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  1. Build Image:
+     docker build -f Dockerfile.rpi.clean \
+       -t rdk-middleware-dashboard:rpi4-clean .
+
+  2. Start Application:
+     docker-compose -f docker-compose.rpi.clean.yml up -d
+
+  3. Access Dashboard:
+     http://<rpi-ip-address>:11078
+
+  4. View Logs:
+     docker-compose -f docker-compose.rpi.clean.yml logs -f
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ESSENTIAL DOCKER COMMANDS                                                    │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  CONTAINER MANAGEMENT:
+  ├─ docker ps                              # List running containers
+  ├─ docker ps -a                           # List all containers
+  ├─ docker stop rdk-middleware-dashboard   # Stop container
+  ├─ docker start rdk-middleware-dashboard  # Start container
+  ├─ docker restart rdk-middleware-dashboard # Restart container
+  └─ docker rm rdk-middleware-dashboard     # Remove container
+
+  LOGS & DEBUGGING:
+  ├─ docker logs rdk-middleware-dashboard        # Show all logs
+  ├─ docker logs -f rdk-middleware-dashboard     # Follow logs (live)
+  ├─ docker logs --tail=50 rdk-middleware-dashboard # Last 50 lines
+  ├─ docker logs -t rdk-middleware-dashboard     # With timestamps
+  └─ docker exec -it rdk-middleware-dashboard bash # Shell access
+
+  DOCKER COMPOSE:
+  ├─ docker-compose -f docker-compose.rpi.clean.yml up -d      # Start
+  ├─ docker-compose -f docker-compose.rpi.clean.yml stop       # Stop
+  ├─ docker-compose -f docker-compose.rpi.clean.yml restart    # Restart
+  ├─ docker-compose -f docker-compose.rpi.clean.yml logs -f    # Logs
+  ├─ docker-compose -f docker-compose.rpi.clean.yml ps         # Status
+  └─ docker-compose -f docker-compose.rpi.clean.yml down       # Stop & Remove
+
+  MONITORING:
+  ├─ docker stats                          # Real-time resource usage
+  ├─ docker stats --no-stream              # One-time snapshot
+  ├─ docker inspect rdk-middleware-dashboard # Detailed container info
+  └─ docker volume ls                      # List volumes
+
+  IMAGE MANAGEMENT:
+  ├─ docker images                         # List images
+  ├─ docker image ls                       # List images (verbose)
+  ├─ docker rmi rdk-middleware-dashboard:rpi4-clean # Remove image
+  └─ docker history rdk-middleware-dashboard:rpi4-clean # Show layers
+
+  CLEANUP:
+  ├─ docker system prune                  # Remove unused artifacts
+  ├─ docker volume prune                  # Remove unused volumes
+  └─ docker image prune                   # Remove unused images
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ CONFIGURATION CUSTOMIZATION                                                  │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Edit docker-compose.rpi.clean.yml:
+
+  • Change Port:
+    ports:
+      - "8080:11078"  # Access at :8080 instead of :11078
+
+  • Add Email Configuration:
+    environment:
+      SMTP_USER: "your-email@gmail.com"
+      SMTP_PASSWORD: "your-app-password"
+
+  • Increase Resource Limits (for 8GB RPi):
+    deploy:
+      resources:
+        limits:
+          cpus: '2'           # Use 2 cores
+          memory: 1024M       # Use 1GB
+
+  • Restart Application After Changes:
+    docker-compose -f docker-compose.rpi.clean.yml down
+    docker-compose -f docker-compose.rpi.clean.yml up -d
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ DATA & PERSISTENCE                                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Docker Volumes (persistent data):
+  ├─ app_data           → Screenshots, logs, sessions, device logs
+  └─ reference_screens  → Screen validation images
+
+  View Volume Contents:
+  docker exec rdk-middleware-dashboard ls -la /app/data/
+
+  Backup Volume:
+  docker run --rm -v app_data:/data -v $(pwd):/backup \
+    alpine tar czf /backup/backup.tar.gz /data
+
+  ※ Data persists even if container is removed!
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ TROUBLESHOOTING                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Container won't start?
+  → docker logs rdk-middleware-dashboard
+  → Check if port 11078 is in use: netstat -tulpn | grep 11078
+
+  Web UI not responsive?
+  → curl http://localhost:11078 (from RPi)
+  → Check container status: docker ps
+  → Check resources: docker stats
+
+  High memory usage?
+  → Reduce memory limit in docker-compose.rpi.clean.yml
+  → docker-compose -f docker-compose.rpi.clean.yml restart
+
+  Volume permission issues?
+  → docker exec rdk-middleware-dashboard ls -la /app/data/
+  → Check user: docker inspect rdk-middleware-dashboard | grep User
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ KEY FILES                                                                    │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Dockerfile.rpi.clean              ARM/ARM64 optimized build file
+  docker-compose.rpi.clean.yml      Service orchestration
+  docker-entrypoint.sh              Container startup script
+  docker-verify-setup.sh            Verify setup correctness
+  rpi4-setup-complete.sh            Automated setup script
+  .dockerignore.rpi.clean           Exclude execution data from build
+  DOCKER_SETUP_GUIDE_RPI4.md        Comprehensive documentation
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ SYSTEM REQUIREMENTS                                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  MINIMUM:
+  • Raspberry Pi 4 (2GB+ RAM)
+  • 32GB microSD card
+  • 2 CPU cores
+
+  RECOMMENDED:
+  • Raspberry Pi 4 (4GB+ RAM) or Pi 5
+  • 64GB+ microSD card
+  • Gigabit Ethernet connection
+
+  OPTIMAL:
+  • Raspberry Pi 4 (8GB RAM) or Pi 5 (8GB)
+  • 128GB+ NVMe SSD
+  • Dedicated power supply
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ FINDING YOUR RASPBERRY PI                                                    │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Get IP Address (from RPi):
+  hostname -I
+
+  Example output:
+  192.168.1.100 10.0.0.123
+
+  → Use on another computer at:
+     http://192.168.1.100:11078
+     http://10.0.0.123:11078
+
+  Find RPi on network (from another computer):
+  # Linux/Mac
+  arp-scan --localnet | grep -i raspberry
+
+  # Windows (in PowerShell)
+  nbtstat -r | Select-String "raspberry"
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ GETTING HELP                                                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Read Documentation:
+  cat DOCKER_SETUP_GUIDE_RPI4.md
+
+  Run Verification:
+  chmod +x docker-verify-setup.sh
+  ./docker-verify-setup.sh
+
+  Check Logs:
+  docker-compose -f docker-compose.rpi.clean.yml logs | tail -100
+
+  Verify Setup:
+  docker ps
+  docker stats
+  curl http://localhost:11078
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                        Quick Reference Card - Print This!                    ║
+║                      Last Updated: 2026-04-17 | Version: 2.0                ║
+╚══════════════════════════════════════════════════════════════════════════════╝

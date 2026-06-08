@@ -1,0 +1,134 @@
+# Dockerfile for Raspberry Pi - RDK-E Middleware Testing Dashboard
+# Optimized for ARM/ARM64 architecture (Raspberry Pi 3, 4, 5)
+# Base: Python 3.11 slim for ARM compatibility
+#
+# LATEST FEATURES INCLUDED:
+# ✅ Device Lock Architecture Fixes (7 critical improvements)
+#    - Dynamic lock duration calculation
+#    - Lock refresh at iteration boundaries
+#    - Real-time lock validation during deepsleep waits
+#    - SSH connectivity pre-validation
+#    - Real-time lock status API endpoint
+# 
+# ✅ DeepSleep Results UI Enhancements
+#    - Date-based filtering
+#    - Execution block layout (SEQUENCE vs METHOD grouping)
+#    - Responsive result cards
+#    - Full-width display
+#    - Device status reorganization
+#
+# ✅ Utility Modules
+#    - utils/device_lock_manager.py - Centralized lock management
+#    - utils/ssh_connectivity_test.py - SSH pre-validation
+#    - static/js/lock-status-monitor.js - Real-time monitoring
+#    - templates/components/lock-status-indicator.html - UI indicator
+#
+# RECOMMENDED FOR:
+# - Raspberry Pi 4 (2GB+) or Pi 5 (4GB+)
+# - Optimal performance: 8GB RPi 4/5
+# - Can run on Pi 3 (2-4GB) with reduced concurrency
+#
+# RESOURCE REQUIREMENTS:
+# - Memory: 8GB (optimal), 4GB (minimum)
+# - Storage: 64GB+ recommended for logs/screenshots
+# - Network: Gigabit Ethernet recommended for device SSH
+
+
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    FLASK_APP=app.py \
+    FLASK_ENV=production \
+    VIRTUAL_ENV=/app/venv \
+    PATH="/app/venv/bin:$PATH" \
+    PYTHONPATH="/app:$PYTHONPATH"
+
+# Install system dependencies optimized for Raspberry Pi
+# This includes:
+# - tesseract-ocr: For AI vision/OCR functionality
+# - libsm6, libxext6, libxrender-dev: OpenCV dependencies
+# - libblas-dev, liblapack-dev: Math libraries (ARM-compatible alternatives)
+# - libjpeg-turbo-progs: For JPEG image processing (replaces jasper)
+# - libharfbuzz0b: For text rendering
+# - build-essential: For compiling Python packages from source if needed
+# NOTE: Using ARM-compatible alternatives for RPi image
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    libleptonica-dev \
+    libtesseract-dev \
+    gcc \
+    g++ \
+    python3-venv \
+    python3-dev \
+    build-essential \
+    libblas-dev \
+    libharfbuzz0b \
+    libjpeg-turbo-progs \
+    liblapack-dev \
+    libopenblas-dev \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create virtual environment
+RUN python -m venv /app/venv
+
+# Upgrade pip and install wheel/setuptools (important for compiling packages)
+RUN /app/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install Python dependencies
+# Using --no-cache-dir to save space on Pi
+# Pre-built wheels will be used where available
+RUN /app/venv/bin/pip install --no-cache-dir \
+    -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Create necessary directories for logs, data, and screenshots
+RUN mkdir -p iteration_logs screenshots captured_images
+RUN mkdir -p logs utils
+
+# Set permissions for app directories
+RUN chmod -R 755 /app/iteration_logs /app/screenshots /app/captured_images /app/logs
+
+# Verify required modules are present (Device Lock Fixes - NEW)
+RUN test -f /app/utils/device_lock_manager.py || echo "⚠️  device_lock_manager.py not found" && \
+    test -f /app/utils/ssh_connectivity_test.py || echo "⚠️  ssh_connectivity_test.py not found"
+
+# Email service environment variables (can be overridden at runtime)
+# Default: Gmail SMTP (requires app password)
+ENV SMTP_HOST=smtp.gmail.com \
+    SMTP_PORT=587 \
+    SENDER_EMAIL=cperdkemiddleware@gmail.com \
+    SENDER_PASSWORD="" \
+    SECRET_KEY=rdk-middleware-testing-pi
+
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:11078/health || exit 1
+
+# Expose port 11078 for Flask application (matching app.py configuration)
+EXPOSE 11078
+
+# Run the application with gunicorn for production
+# Using 2 workers (suitable for Pi with limited CPU cores)
+# Adjust workers based on your Pi model: Pi 3 = 2, Pi 4 = 4, Pi 5 = 4-8
+CMD ["gunicorn", \
+     "--workers=2", \
+     "--worker-class=gevent", \
+     "--worker-connections=100", \
+     "--bind=0.0.0.0:11078", \
+     "--timeout=300", \
+     "--access-logfile=-", \
+     "--error-logfile=-", \
+     "app:app"]

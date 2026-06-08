@@ -1,0 +1,84 @@
+version: '3.8'
+
+# Docker Compose for Raspberry Pi Deployment (Optimized for USB Storage)
+# Usage: docker-compose -f docker-compose.rpi.yml up -d
+#
+# Prerequisites:
+# 1. USB drive connected to R-PI
+# 2. USB mounted at /mnt/usb_storage
+# 3. Docker & docker-compose installed
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    
+    container_name: rdk-testing-dashboard
+    hostname: rdk-middleware
+    
+    # Use host network for SSH device access
+    network_mode: host
+    
+    restart: unless-stopped
+    
+    volumes:
+      # JSON data files (all in Json directory)
+      - ./Json:/app/Json:rw
+      
+      # Application code
+      - ./static:/app/static:ro
+      - ./templates:/app/templates:ro
+      
+      # Execution data on external USB (mounted by system)
+      - /mnt/usb_storage:/app/data:rw
+    
+    environment:
+      # Flask configuration
+      - FLASK_APP=app.py
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+      
+      # Server
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      
+      # Email (Gmail SMTP)
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SENDER_EMAIL=${SENDER_EMAIL:-cperdkemiddleware@gmail.com}
+      - SENDER_PASSWORD=${SENDER_PASSWORD:-}
+      
+      # Security
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      
+      # Storage
+      - DATA_ROOT=/app/data
+      - STORAGE_MANAGER_ENABLED=true
+      
+      # Gunicorn for Pi
+      - WORKERS=2
+      - TIMEOUT=300
+    
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "/app/venv/bin/python", "-c", "import requests; requests.get('http://localhost:5000/health', timeout=5)"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+

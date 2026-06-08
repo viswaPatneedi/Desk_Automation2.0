@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rdk-data-pvc
+  namespace: rdk-testing
+  labels:
+    app: device-testing-dashboard
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  # storageClassName: standard  # Uncomment and set your storage class
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rdk-logs-pvc
+  namespace: rdk-testing
+  labels:
+    app: device-testing-dashboard
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  # storageClassName: standard  # Uncomment and set your storage class
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: rdk-screenshots-pvc
+  namespace: rdk-testing
+  labels:
+    app: device-testing-dashboard
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+  # storageClassName: standard  # Uncomment and set your storage class

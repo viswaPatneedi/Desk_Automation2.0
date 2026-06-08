@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>RDK-E Middleware QA Dashboard</title>
+    
+    <!-- Preconnect to CDNs for faster loading -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    
+    <!-- Bootstrap 5.3.8 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-custom navbar-expand-lg sticky-top">
+        <div class="container-fluid px-4">
+            <div class="d-flex flex-column">
+                <a class="navbar-brand mb-0" href="#">
+                    <i class="bi bi-cpu-fill"></i>
+                    RDK-E Middleware QA Dashboard
+                </a>
+                <span class="developer-credit" style="font-size: 0.75rem; color: #9ca3af; margin-left: 2rem;">
+                    <i class="bi bi-code-slash"></i> Designed & Developed by <strong>VISWA</strong>
+                </span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <a href="/results" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-bar-chart-fill"></i> View Results
+                </a>
+                <a href="/jobs" class="btn btn-sm btn-outline-warning">
+                    <i class="bi bi-clock-history"></i> JOBS Queue
+                </a>
+                <span class="text-white">
+                    <i class="bi bi-person-circle"></i> {{ current_user.name }}
+                </span>
+                <a href="/logout" class="btn btn-sm btn-danger">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+                <span class="badge bg-success badge-status">
+                    <i class="bi bi-check-circle-fill"></i> System Online
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container pb-5">
+        <!-- Stats Row -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-icon primary">
+                        <i class="bi bi-hdd-network-fill"></i>
+                    </div>
+                    <div class="stats-value" id="device-count">{{ devices|length }}</div>
+                    <div class="stats-label">Registered Devices</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-icon success">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="stats-value" id="tests-passed">0</div>
+                    <div class="stats-label">Tests Passed</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-icon warning">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <div class="stats-value" id="tests-running">0</div>
+                    <div class="stats-label">Tests Running</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stats-card">
+                    <div class="stats-icon info">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                    </div>
+                    <div class="stats-value" id="log-files-count">0</div>
+                    <div class="stats-label">Log Files</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Cards Row with Fixed Left Sidebar -->
+        <div class="row g-4 mb-4">
+            <!-- Available Methods & Device Management Section - Fixed Left Sidebar -->
+            <div class="col-lg-4">
+                <div class="sidebar-fixed">
+                    <div class="custom-card">
+                        <div class="card-header-custom">
+                            <i class="bi bi-collection-fill"></i>
+                            <h5>Available Test Methods</h5>
+                        </div>
+                        <div class="card-body-custom">
+                            <div class="form-text mb-3">
+                                <i class="bi bi-hand-index-thumb"></i> Drag methods to the execution table
+                            </div>
+                            
+                            <div id="available-methods">
+                            <div class="method-card" draggable="true" data-method="reboot">
+                                <div class="method-icon reboot">
+                                    <i class="bi bi-arrow-clockwise"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Reboot Device</h6>
+                                    <p>System reboot test</p>
+                                </div>
+                            </div>
+
+                            <div class="method-card" draggable="true" data-method="deepsleep">
+                                <div class="method-icon deepsleep">
+                                    <i class="bi bi-moon-stars-fill"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Deep Sleep</h6>
+                                    <p>Power state transition</p>
+                                </div>
+                            </div>
+
+                            <div class="method-card" draggable="true" data-method="power_key">
+                                <div class="method-icon power">
+                                    <i class="bi bi-power"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Power Key</h6>
+                                    <p>Power button simulation</p>
+                                </div>
+                            </div>
+
+                            <div class="method-card" draggable="true" data-method="status">
+                                <div class="method-icon status">
+                                    <i class="bi bi-speedometer2"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Query Power State</h6>
+                                    <p>Check device status</p>
+                                </div>
+                            </div>
+
+                            <div class="method-card" draggable="true" data-method="ir_test">
+                                <div class="method-icon ir-test">
+                                    <i class="bi bi-broadcast"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>IR Command Test</h6>
+                                    <p>Send IR & verify logs</p>
+                                </div>
+                            </div>
+
+                            <div class="method-card" draggable="true" data-method="voice_command">
+                                <div class="method-icon voice-command">
+                                    <i class="bi bi-mic-fill"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Send Voice Command</h6>
+                                    <p>Execute voice via text</p>
+                                </div>
+                            </div>
+
+                            <div class="method-card" draggable="true" data-method="send_remote_keys">
+                                <div class="method-icon remote-keys">
+                                    <i class="bi bi-controller"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Send Remote Keys</h6>
+                                    <p>Simulate remote control</p>
+                                </div>
+                            </div>
+
+                            <div class="method-card" draggable="true" data-method="screen_validation">
+                                <div class="method-icon screen-validation">
+                                    <i class="bi bi-display"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Screen Validation</h6>
+                                    <p>Validate device screen</p>
+                                </div>
+                            </div>
+
+                            <div class="method-card" draggable="true" data-method="xumo_activation">
+                                <div class="method-icon xumo-activation">
+                                    <i class="bi bi-key-fill"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>XUMO Activation</h6>
+                                    <p>Auto-activate XUMO device</p>
+                                </div>
+                            </div>
+
+                            <div class="method-card" draggable="true" data-method="capture_base_image">
+                                <div class="method-icon capture-base-image">
+                                    <i class="bi bi-camera-fill"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Base Image Capture</h6>
+                                    <p>Capture reference screen</p>
+                                </div>
+                            </div>
+
+                            <div class="method-card" draggable="true" data-method="wait">
+                                <div class="method-icon wait">
+                                    <i class="bi bi-hourglass-split"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Wait</h6>
+                                    <p>Pause for duration</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Saved Sequences Section -->
+                <div class="custom-card mt-4">
+                    <div class="card-header-custom">
+                        <i class="bi bi-bookmark-star-fill"></i>
+                        <h5 class="d-inline">Saved Sequences</h5>
+                        <span class="badge bg-light text-dark ms-2" id="saved-sequences-count">0</span>
+                    </div>
+                    <div class="card-body-custom">
+                        <div id="saved-sequences-list" class="saved-sequences-container">
+                            <div class="empty-state">
+                                <i class="bi bi-inbox"></i>
+                                <p>No saved sequences yet. Add methods to queue and click "Save Current Queue"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Device Management Section -->
+                <div class="custom-card mt-4">
+                    <div class="card-header-custom">
+                        <i class="bi bi-hdd-rack-fill"></i>
+                        <h5>Device Management</h5>
+                    </div>
+                    <div class="card-body-custom">
+                        <h6 class="mb-3 section-heading">
+                            <i class="bi bi-list-check"></i> Registered Devices
+                        </h6>
+                        
+                        <div class="device-list mb-4" id="device-list">
+                            {% if devices %}
+                                {% for device in devices %}
+                                <div class="device-item" data-ip="{{ device.ip }}">
+                                    <div class="device-info">
+                                        <div class="device-icon">
+                                            <i class="bi bi-router-fill"></i>
+                                        </div>
+                                        <div class="device-details">
+                                            <h6>{{ device.name }}</h6>
+                                            <small><i class="bi bi-geo-alt-fill"></i> {{ device.ip }}</small>
+                                            {% set queue_len = device.queue_len if device.queue_len is defined else 0 %}
+                                            {% if queue_len > 0 %}
+                                            <span class="badge bg-warning text-dark ms-2">Queued: {{ queue_len }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if device.locked %}
+                                    <button class="btn btn-primary-custom btn-sm" onclick="addToDeviceQueue('{{ device.ip }}')">
+                                        <i class="bi bi-plus-circle"></i> Add to Queue
+                                    </button>
+                                    {% endif %}
+                                    <button class="btn btn-danger-custom btn-sm" onclick="removeDevice('{{ device.ip }}')">
+                                        <i class="bi bi-trash-fill"></i> Remove
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="empty-state">
+                                    <i class="bi bi-inbox"></i>
+                                    <p>No devices registered yet</p>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="border-top pt-4">
+                            <h6 class="mb-3 section-heading">
+                                <i class="bi bi-plus-circle-fill"></i> Add New Device
+                            </h6>
+                            
+                            <div class="mb-3">
+                                <label for="device-name" class="form-label">Device Name</label>
+                                <input type="text" class="form-control" id="device-name" placeholder="e.g., Living Room TV">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="device-ip" class="form-label">IP Address</label>
+                                <input type="text" class="form-control" id="device-ip" placeholder="e.g., 10.0.0.20">
+                            </div>
+
+                            <div class="d-grid">
+                                <button id="add-device-btn" class="btn btn-success-custom btn-custom">
+                                    <i class="bi bi-plus-lg"></i> Add Device
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <!-- Execution Table Section - Scrollable -->
+            <div class="col-lg-8">
+                <div class="scrollable-content">
+                <div class="custom-card">
+                    <div class="card-header-custom">
+                        <i class="bi bi-play-circle-fill"></i>
+                        <h5>Test Execution Queue</h5>
+                    </div>
+                    <div class="card-body-custom">
+                        <div class="mb-3">
+                            <label for="iterations" class="form-label">
+                                <i class="bi bi-arrow-repeat"></i> Iteration Count
+                            </label>
+                            <input type="number" class="form-control" id="iterations" min="1" value="1" placeholder="Enter iteration count">
+                        </div>
+
+                        <div class="mb-3 hidden" id="ir-key-selection">
+                            <label class="form-label">
+                                <i class="bi bi-broadcast"></i> Select IR Key Code(s) to Test
+                            </label>
+                            <div id="ir-key-checkboxes" class="border rounded p-3 bg-light">
+                                <div class="form-check">
+                                    <input class="form-check-input ir-key-checkbox" type="checkbox" value="HOME" id="ir-key-home" checked>
+                                    <label class="form-check-label" for="ir-key-home">
+                                        <strong>HOME</strong> - Navigate to home screen
+                                    </label>
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input ir-key-checkbox" type="checkbox" value="POWER" id="ir-key-power" checked>
+                                    <label class="form-check-label" for="ir-key-power">
+                                        <strong>POWER</strong> - Toggle power/standby mode
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-text mt-2">
+                                <i class="bi bi-info-circle"></i> Select at least one IR key code to test
+                            </div>
+                            <div id="ir-key-error" class="text-danger mt-2 hidden">
+                                <i class="bi bi-exclamation-triangle"></i> Please select at least one IR key code
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-hdd-network"></i> Select Device(s)
+                            </label>
+                            <div id="device-list-container">
+                                <!-- Device checkboxes will be populated by JavaScript -->
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Select available devices (busy devices are greyed out)
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">
+                                <i class="bi bi-list-ol"></i> Execution Order
+                            </label>
+                            <div class="execution-table" id="execution-table">
+                                <div class="execution-table-header">
+                                    <h6><i class="bi bi-box-arrow-in-down"></i> Drop methods here</h6>
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-success-custom btn-sm" onclick="saveCurrentSequence()" id="save-sequence-btn" disabled>
+                                            <i class="bi bi-save-fill"></i> Save Queue
+                                        </button>
+                                        <button class="btn btn-danger-custom btn-sm btn-clear-queue" id="clear-dragdrop-queue" onclick="clearDragDropQueue()">
+                                            <i class="bi bi-trash"></i> Clear Queue
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="execution-table-body" id="execution-queue">
+                                    <div class="empty-execution">
+                                        <i class="bi bi-inbox"></i>
+                                        <p>Drag and drop test methods here to build your execution queue</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3 hidden" id="voice-command-input-section">
+                            <label for="voice-command-text" class="form-label">
+                                <i class="bi bi-mic-fill"></i> Voice Command Text
+                            </label>
+                            <input type="text" class="form-control" id="voice-command-text" placeholder="e.g., Turn on Netflix, Volume up, Open YouTube">
+                            <small class="text-muted">This text will be remembered for future executions on this device</small>
+                        </div>
+
+                        <div class="d-flex gap-2 justify-content-between">
+                            <button id="test-connection-btn" class="btn btn-sm btn-info-custom flex-fill" title="Test SSH connection to selected device(s)">
+                                <i class="bi bi-broadcast"></i> Test SSH
+                            </button>
+                            <button id="add-to-queue-btn" class="btn btn-sm btn-warning-custom flex-fill" title="Add the methods in Execution Order to the job queue for selected device(s)">
+                                <i class="bi bi-clock-history"></i> Add to Execution Queue
+                            </button>
+                            <button id="execute-btn" class="btn btn-sm btn-primary-custom flex-fill" title="Execute the methods in Execution Order immediately on selected device(s)">
+                                <i class="bi bi-rocket-takeoff-fill"></i> Execute NOW
+                            </button>
+                        </div>
+                        <div class="alert alert-info mt-3 mb-0" style="font-size: 0.9rem;">
+                            <i class="bi bi-info-circle-fill"></i> <strong>Tip:</strong> Build your test sequence in <strong>Execution Order</strong> below, then click <strong>Execute NOW</strong>. 
+                            If a device is busy, your job will wait until it becomes available.
+                        </div>
+                    </div>
+                </div>
+
+        </div>
+        
+        </div>
+        
+        <!-- Execution Queue Section -->
+        <div class="execution-queue-section mt-4" id="execution-queue-section" style="display: none;">
+            <h5>
+                <i class="bi bi-clock-history"></i> Execution Queue (Pending Jobs)
+            </h5>
+            <div id="execution-queue-list">
+                <!-- Pending jobs will be populated by JavaScript -->
+            </div>
+            <div class="form-text mt-2">
+                <i class="bi bi-info-circle"></i> Jobs in this queue will run automatically when the device becomes available.
+            </div>
+        </div>
+
+        <!-- Running Jobs Section -->
+        <div class="running-jobs-section mt-4" id="running-jobs-section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">
+                    <span class="pulse-animation"></span>
+                    <i class="bi bi-play-circle-fill"></i> Current Running Jobs & Recent Executions
+                </h5>
+                <div class="d-flex gap-2 align-items-center">
+                    <label for="job-date-filter" class="form-label mb-0 me-2">
+                        <i class="bi bi-calendar3"></i> Filter by Date:
+                    </label>
+                    <input type="date" id="job-date-filter" class="form-control form-control-sm" 
+                           style="width: 160px;" onchange="applyJobFilter()">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="clearDateFilter()">
+                        <i class="bi bi-x-circle"></i> Today
+                    </button>
+                    <input type="text" id="job-search-filter" class="form-control form-control-sm" 
+                           placeholder="Search..." 
+                           style="width: 200px;" onkeyup="applyJobFilter()">
+                    <button class="btn btn-sm btn-outline-secondary" onclick="clearJobFilter()">
+                        <i class="bi bi-x-circle"></i> Clear
+                    </button>
+                    <a href="/results" class="btn btn-sm btn-primary">
+                        <i class="bi bi-table"></i> View All Executions
+                    </a>
+                </div>
+            </div>
+            <div id="running-jobs-list">
+                <!-- Running jobs will be populated by JavaScript -->
+            </div>
+        </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5.3.8 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
+    <!-- Main Application Script v2.0 -->
+    <script type="text/javascript">
+        // Initial devices from server-side render as fallback
+        const initialDevices = {{ devices | tojson }};
+        console.log('[PAGE LOAD] initialDevices from server:', initialDevices);
+                // Send Remote Keys logic
+                async function sendRemoteKeys() {
+                    const input = document.getElementById('remote-keys-input');
+                    const resultDiv = document.getElementById('remote-keys-result');
+                    const keySequence = input.value.trim();
+                    if (!keySequence) {
+                        resultDiv.innerHTML = '<span class="text-danger">Please enter a key sequence.</span>';
+                        return;
+                    }
+                    resultDiv.innerHTML = '<span class="text-info">Sending keys...</span>';
+                    try {
+                        // You may want to allow device selection, for now use first available device
+                        const deviceIp = allDevices.length > 0 ? allDevices[0].ip : null;
+                        if (!deviceIp) {
+                            resultDiv.innerHTML = '<span class="text-danger">No device available.</span>';
+                            return;
+                        }
+                        const response = await fetch('/api/send_remote_keys', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                device_ip: deviceIp,
+                                key_sequence: keySequence
+                            })
+                        });
+                        const data = await response.json();
+                        if (response.ok && data.success) {
+                            resultDiv.innerHTML = `<span class="text-success">${data.message}</span>`;
+                        } else {
+                            resultDiv.innerHTML = `<span class="text-danger">${data.message || 'Failed to send keys.'}</span>`;
+                        }
+                    } catch (err) {
+                        resultDiv.innerHTML = `<span class="text-danger">Error: ${err.message}</span>`;
+                    }
+                }
+        // Device Management JavaScript - v2.0 - Cache busted
+        // Current user data
+        const currentUser = {
+            user_id: "{{ current_user.user_id }}",
+            is_admin: "{{ 'true' if current_user.is_admin else 'false' }}"
+        };
+        
+        // Global variables
+        function getPersistedSelectedDevices() {
+            try {
+                const raw = localStorage.getItem('selectedDevices');
+                if (!raw) return new Set();
+                const arr = JSON.parse(raw);
+                if (!Array.isArray(arr)) return new Set();
+                return new Set(arr.map(ip => String(ip)));
+            } catch (e) {
+                console.error('[DEBUG] Error parsing selectedDevices from localStorage:', e);
+                return new Set();
+            }
+        }
+        let allDevices = [];
+        let allRecentJobs = [];
+        let executionQueue = [];
+        let draggedElement = null;
+        let loadedSequenceId = null; // Track currently loaded sequence for updating
+
+        // Load devices with lock status
+        async function loadDevicesWithStatus() {
+            console.log('[DEBUG] loadDevicesWithStatus called');
+            try {
+                console.log('[DEBUG] Fetching /api/devices...');
+                const response = await fetch('/api/devices', {
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                console.log('[DEBUG] Response status:', response.status);
+                console.log('[DEBUG] Response headers:', response.headers.get('content-type'));
+                
+                // Check if response is actually JSON
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    console.error('Expected JSON response but got:', contentType);
+                    console.error('Response status:', response.status);
+                    // Use initialDevices fallback if API fails
+                    if (Array.isArray(initialDevices) && initialDevices.length > 0) {
+                        console.warn('[DEBUG] Using initialDevices fallback due to non-JSON response');
+                        const devices = initialDevices;
+                        allDevices = devices;
+                        renderDevices(devices);
+                        return;
+                    }
+                    if (response.status === 302 || response.redirected) {
+                        console.error('Session expired or not authenticated');
+                        window.location.reload();
+                    }
+                    return;
+                }
+                
+                const data = await response.json();
+                // Support both array and object response
+                const devices = Array.isArray(data) ? data : (data.devices || []);
+                console.log('[DEBUG] Devices loaded:', devices);
+                if (!Array.isArray(devices)) {
+                    console.error('[DEBUG] Devices response is not an array:', devices);
+                }
+                allDevices = devices;
+                renderDevices(devices);
+            } catch (error) {
+                console.error('Error loading devices:', error);
+                // Use initialDevices fallback on error
+                if (Array.isArray(initialDevices) && initialDevices.length > 0) {
+                    console.warn('[DEBUG] Using initialDevices fallback due to fetch error');
+                    allDevices = initialDevices;
+                    renderDevices(initialDevices);
+                }
+            }
+        }
+        
+        // Helper function to render devices
+        function renderDevices(devices) {
+            const container = document.getElementById('device-list-container');
+            if (!container) {
+                console.error('[DEBUG] Device list container not found!');
+                return;
+            }
+            console.log('[DEBUG] Rendering', devices.length, 'devices...');
+            container.innerHTML = '';
+
+            const persisted = getPersistedSelectedDevices();
+            devices.forEach((device, idx) => {
+                const deviceIpStr = String(device.ip);
+                const card = document.createElement('div');
+                card.className = `device-card ${device.locked ? 'locked' : ''}`;
+                card.dataset.deviceIp = device.ip;
+
+                const deviceLine = document.createElement('div');
+                deviceLine.className = 'device-info-inline';
+                deviceLine.style.display = 'flex';
+                deviceLine.style.alignItems = 'center';
+                deviceLine.style.gap = '10px';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'device-checkbox';
+                checkbox.value = deviceIpStr;
+                checkbox.checked = Array.from(persisted).includes(deviceIpStr);
+                checkbox.disabled = device.locked; // Disable checkbox if device is busy
+                checkbox.onclick = function(e) {
+                    console.log('[DEBUG] Checkbox clicked for device:', deviceIpStr, 'checked:', checkbox.checked);
+                    pauseRefresh = true;
+                    let updated = getPersistedSelectedDevices();
+                    if (checkbox.checked) {
+                        updated.add(deviceIpStr);
+                    } else {
+                        updated.delete(deviceIpStr);
+                    }
+                    localStorage.setItem('selectedDevices', JSON.stringify(Array.from(updated)));
+                    console.log('[DEBUG] Updated localStorage.selectedDevices:', localStorage.getItem('selectedDevices'));
+                    setTimeout(() => { pauseRefresh = false; }, 10000);
+                };
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'device-name';
+                nameSpan.textContent = device.name;
+
+                const ipSpan = document.createElement('span');
+                ipSpan.className = 'device-ip';
+                ipSpan.textContent = device.ip;
+
+                deviceLine.appendChild(checkbox);
+                deviceLine.appendChild(nameSpan);
+                deviceLine.appendChild(ipSpan);
+                
+                const statusBadge = document.createElement('span');
+                statusBadge.className = device.locked ? 'device-status busy' : 'device-status available';
+                statusBadge.style.marginLeft = 'auto';
+                statusBadge.innerHTML = device.locked
+                    ? '<i class="bi bi-lock-fill"></i> Busy'
+                    : '<i class="bi bi-check-circle-fill"></i> Available';
+                deviceLine.appendChild(statusBadge);
+
+                card.appendChild(deviceLine);
+
+                // Add eta and locked info without using innerHTML to preserve event listeners
+                if (device.locked && device.eta) {
+                    const etaDiv = document.createElement('div');
+                    etaDiv.className = 'device-eta';
+                    etaDiv.innerHTML = `<i class="bi bi-clock"></i> ETA: ${device.eta}`;
+                    card.appendChild(etaDiv);
+                }
+                if (device.locked) {
+                    const lockedByDiv = document.createElement('div');
+                    lockedByDiv.className = 'device-locked-by';
+                    lockedByDiv.innerHTML = `<i class="bi bi-person-fill"></i> ${device.locked_by}`;
+                    card.appendChild(lockedByDiv);
+                }
+
+                container.appendChild(card);
+            });
+        }
+
+        // Load pending jobs in execution queue
+        async function loadPendingJobs() {
+            try {
+                const response = await fetch('/api/jobs/pending');
+                const data = await response.json();
+                
+                if (data.success && data.pending_jobs && data.pending_jobs.length > 0) {
+                    const section = document.getElementById('execution-queue-section');
+                    const list = document.getElementById('execution-queue-list');
+                    section.style.display = 'block';
+                    
+                    list.innerHTML = data.pending_jobs.map(job => {
+                        // Check if user can cancel this job (owns it or is admin)
+                        const canCancel = currentUser.is_admin || job.user_id === currentUser.user_id;
+                        
+                        return `
+                            <div class="running-job-item pending">
+                                <div class="running-job-header">
+                                    <div class="running-job-device">
+                                        <i class="bi bi-hdd-network"></i> ${job.device_name}
+                                    </div>
+                                    <span class="badge bg-warning"><i class="bi bi-clock-history"></i> PENDING</span>
+                                </div>
+                                <div class="running-job-details">
+                                    ${job.sequence_name ? 
+                                        `<i class="bi bi-collection"></i> Sequence: ${job.sequence_name}` : 
+                                        `<i class="bi bi-list-check"></i> ${job.methods ? job.methods.join(' → ') : 'N/A'}`
+                                    }
+                                </div>
+                                <div class="running-job-details">
+                                    <i class="bi bi-person"></i> Triggered by: ${job.user_id} | 
+                                    <i class="bi bi-calendar"></i> Created: ${job.created_at_formatted} |
+                                    <i class="bi bi-hourglass"></i> Pending for: ${job.pending_duration}
+                                </div>
+                                <div class="running-job-actions">
+                                    ${canCancel ? `
+                                        <button class="btn btn-sm btn-danger" onclick="cancelJob('${job.job_id}')">
+                                            <i class="bi bi-x-circle"></i> Cancel
+                                        </button>
+                                        <button class="btn btn-sm btn-primary" onclick="restartJob('${job.job_id}')">
+                                            <i class="bi bi-arrow-clockwise"></i> Restart
+                                        </button>
+                                    ` : ''}
+                                    <a href="/jobs/${job.job_id}" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i> View
+                                    </a>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    document.getElementById('execution-queue-section').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading pending jobs:', error);
+            }
+        }
+
+        // Cancel a job
+        async function cancelJob(jobId) {
+            if (!confirm('Are you sure you want to cancel this job?')) return;
+            
+            try {
+                const response = await fetch(`/api/jobs/${jobId}/cancel`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('Job cancelled successfully');
+                    loadRunningJobs();
+                    loadPendingJobs();
+                } else {
+                    alert('Failed to cancel job: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error cancelling job:', error);
+                alert('Error cancelling job');
+            }
+        }
+
+        // Apply job filter based on search input
+
+        function applyJobFilter() {
+            const filterInput = document.getElementById('job-search-filter');
+            const dateFilter = document.getElementById('job-date-filter');
+            const filterValue = filterInput ? filterInput.value.toLowerCase().trim() : '';
+            const selectedDate = dateFilter ? dateFilter.value : '';
+            
+            let filteredJobs = allRecentJobs;
+            
+            // Apply date filter first (if selected)
+            if (selectedDate) {
+                filteredJobs = filteredJobs.filter(job => {
+                    try {
+                        // Parse job start_time (ISO 8601 format from backend)
+                        const jobStartTime = job.start_time || '';
+                        // Extract date part (YYYY-MM-DD) from ISO timestamp
+                        const jobDateStr = jobStartTime.split('T')[0];
+                        
+                        console.log('[DEBUG] Comparing job date:', jobDateStr, 'with filter date:', selectedDate);
+                        
+                        // Direct string comparison of YYYY-MM-DD format
+                        return jobDateStr === selectedDate;
+                    } catch (e) {
+                        console.warn('[DEBUG] Error parsing job date:', job.start_time, e);
+                        return false;
+                    }
+                });
+            } else {
+                // Default: show only today's jobs
+                const today = new Date();
+                const todayStr = today.getFullYear() + '-' + 
+                                 String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+                                 String(today.getDate()).padStart(2, '0');
+                
+                filteredJobs = filteredJobs.filter(job => {
+                    try {
+                        const jobStartTime = job.start_time || '';
+                        const jobDateStr = jobStartTime.split('T')[0];
+                        return jobDateStr === todayStr;
+                    } catch (e) {
+                        console.warn('[DEBUG] Error parsing job date:', job.start_time, e);
+                        return false;
+                    }
+                });
+            }
+            
+            // Apply search filter
+            if (filterValue) {
+                filteredJobs = filteredJobs.filter(job => {
+                    const searchText = [
+                        job.user_id || '',
+                        job.device_name || '',
+                        job.device_ip || '',
+                        (job.methods || []).join(' '),
+                        job.sequence_name || '',
+                        job.status || ''
+                    ].join(' ').toLowerCase();
+                    
+                    return searchText.includes(filterValue);
+                });
+            }
+            
+            // Take only the 20 most recent
+            const displayJobs = filteredJobs.slice(0, 20);
+            
+            console.log('[DEBUG] applyJobFilter - allRecentJobs:', allRecentJobs.length, 'filteredJobs:', filteredJobs.length, 'displayJobs:', displayJobs.length, 'selectedDate:', selectedDate || 'TODAY');
+            
+            if (displayJobs.length > 0) {
+                const section = document.getElementById('running-jobs-section');
+                const list = document.getElementById('running-jobs-list');
+                section.style.display = 'block';
+                console.log('[DEBUG] Showing running jobs section with', displayJobs.length, 'jobs');
+                
+                list.innerHTML = displayJobs.map(job => {
+                    let statusBadge = '';
+                    let statusClass = '';
+                    
+                    if (job.status === 'running') {
+                        statusBadge = '<span class="running-job-status"><span class="pulse-animation"></span>RUNNING</span>';
+                        statusClass = 'running';
+                    } else if (job.status === 'completed') {
+                        statusBadge = '<span class="badge bg-success">✓ COMPLETED</span>';
+                        statusClass = 'completed';
+                    } else if (job.status === 'failed') {
+                        statusBadge = '<span class="badge bg-danger">✗ FAILED</span>';
+                        statusClass = 'failed';
+                    } else if (job.status === 'pending') {
+                        statusBadge = '<span class="badge bg-warning">⏳ PENDING</span>';
+                        statusClass = 'pending';
+                    } else if (job.status === 'cancelled') {
+                        statusBadge = '<span class="badge bg-secondary">⊘ CANCELLED</span>';
+                        statusClass = 'cancelled';
+                    }
+                    
+                    // Check if user can cancel this job (owns it or is admin)
+                    const canCancel = (currentUser.is_admin || job.user_id === currentUser.user_id) && 
+                                     (job.status === 'running' || job.status === 'pending');
+                    
+                    return `
+                        <div class="running-job-item ${statusClass}" data-job-search="${[
+                            job.user_id,
+                            job.device_name,
+                            job.device_ip,
+                            (job.methods || []).join(' '),
+                            job.sequence_name
+                        ].join(' ').toLowerCase()}">
+                            <div class="running-job-header">
+                                <div class="running-job-device">
+                                    <i class="bi bi-hdd-network"></i> ${job.device_name} <small class="text-muted">(${job.device_ip})</small>
+                                </div>
+                                ${statusBadge}
+                            </div>
+                            <div class="running-job-details">
+                                ${job.sequence_name ? 
+                                    `<i class="bi bi-collection"></i> Sequence: ${job.sequence_name}` : 
+                                    `<i class="bi bi-list-check"></i> ${job.methods ? job.methods.join(' → ') : 'N/A'}`
+                                }
+                            </div>
+                            <div class="running-job-details">
+                                <i class="bi bi-person"></i> ${job.user_id} | 
+                                <i class="bi bi-clock"></i> ${new Date(job.start_time).toLocaleString()}
+                            </div>
+                            <div class="running-job-actions">
+                                ${canCancel ? `
+                                    <button class="btn btn-sm btn-danger" onclick="cancelJob('${job.job_id}')">
+                                        <i class="bi bi-x-circle"></i> Cancel
+                                    </button>
+                                ` : ''}
+                                <a href="/jobs/${job.job_id}" class="btn btn-sm btn-primary">
+                                    <i class="bi bi-eye"></i> View Details
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Show result count and date info
+                const dateFilter = document.getElementById('job-date-filter');
+                const selectedDate = dateFilter ? dateFilter.value : '';
+                // Use the selected date directly without timezone conversion
+                const dateDisplay = selectedDate ? selectedDate.replace(/-/g, '/') : 'Today';
+                
+                let infoMessage = `<div class="alert alert-info mb-2">
+                    <i class="bi bi-calendar-check"></i> Showing ${displayJobs.length} job(s) for <strong>${dateDisplay}</strong>`;
+                
+                if (filteredJobs.length > displayJobs.length) {
+                    infoMessage += ` (limited to ${displayJobs.length} most recent)`;
+                }
+                
+                if (filterValue) {
+                    infoMessage += ` matching search: "${filterValue}"`;
+                }
+                
+                infoMessage += `</div>`;
+                list.innerHTML = infoMessage + list.innerHTML;
+            } else {
+                const section = document.getElementById('running-jobs-section');
+                const list = document.getElementById('running-jobs-list');
+                const dateFilter = document.getElementById('job-date-filter');
+                const selectedDate = dateFilter ? dateFilter.value : '';
+                // Use the selected date directly without timezone conversion
+                const dateDisplay = selectedDate ? selectedDate.replace(/-/g, '/') : 'today';
+                
+                section.style.display = 'block';
+                
+                if (filterValue) {
+                    list.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="bi bi-search"></i> No jobs match your search: "${filterValue}"
+                        </div>
+                    `;
+                } else {
+                    list.innerHTML = `
+                        <div class="alert alert-info">
+                            <i class="bi bi-calendar-x"></i> No jobs found for ${dateDisplay}
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Clear job search filter
+        function clearJobFilter() {
+            const filterInput = document.getElementById('job-search-filter');
+            if (filterInput) {
+                filterInput.value = '';
+                applyJobFilter();
+            }
+        }
+
+        // Clear date filter (reset to today)
+        function clearDateFilter() {
+            const dateFilter = document.getElementById('job-date-filter');
+            if (dateFilter) {
+                dateFilter.value = '';
+                applyJobFilter();
+            }
+        }
+
+        // Initialize date picker to today on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateFilter = document.getElementById('job-date-filter');
+            if (dateFilter) {
+                // Set max date to today
+                const today = new Date().toISOString().split('T')[0];
+                dateFilter.max = today;
+                // Don't set a default value - will default to showing today's jobs
+            }
+        });
+
+        // Debounced auto-refresh: pause when user is interacting with device list
+        let pauseRefresh = false;
+        
+        // Load running/recent jobs
+        async function loadRunningJobs() {
+            try {
+                console.log('[DEBUG] loadRunningJobs() called - fetching /api/jobs');
+                // Fetch all jobs (running, pending, and completed) to show complete history
+                const response = await fetch('/api/jobs');
+                console.log('[DEBUG] Response status:', response.status, response.statusText);
+                const data = await response.json();
+                
+                console.log('[DEBUG] Loaded jobs - success:', data.success, 'count:', data.jobs ? data.jobs.length : 0);
+                console.log('[DEBUG] Full response data:', data);
+                
+                if (data.success && data.jobs) {
+                    allRecentJobs = data.jobs;
+                    console.log('[DEBUG] allRecentJobs now has:', allRecentJobs.length, 'jobs');
+                    console.log('[DEBUG] First job sample:', allRecentJobs[0]);
+                    applyJobFilter(); // Apply filter and render jobs
+                } else {
+                    console.warn('[DEBUG] No jobs returned from API or error:', data);
+                    allRecentJobs = [];
+                }
+            } catch (error) {
+                console.error('Error loading jobs:', error);
+                allRecentJobs = [];
+            }
+        }
+        
+        function startAutoRefresh() {
+            loadDevicesWithStatus();
+            loadPendingJobs();
+            loadRunningJobs();
+            setInterval(() => {
+                if (!pauseRefresh && !isArrangingExecutionOrder()) {
+                    loadDevicesWithStatus();
+                    loadPendingJobs();
+                    loadRunningJobs();
+                } else {
+                    console.log('[DEBUG] Auto-refresh paused while interacting with device list or arranging execution order');
+                }
+            }, 5000);
+        }
+
+        function isArrangingExecutionOrder() {
+            // Returns true if user is dragging methods or interacting with execution queue
+            return document.body.classList.contains('arranging-execution');
+        }
+
+        // Pause auto-refresh when mouse is over device list
+        document.addEventListener('DOMContentLoaded', function() {
+            const deviceListContainer = document.getElementById('device-list-container');
+            if (deviceListContainer) {
+                deviceListContainer.addEventListener('mouseenter', function() {
+                    pauseRefresh = true;
+                    console.log('[DEBUG] Mouse entered device list, pausing auto-refresh');
+                });
+                deviceListContainer.addEventListener('mouseleave', function() {
+                    pauseRefresh = false;
+                    console.log('[DEBUG] Mouse left device list, resuming auto-refresh');
+                });
+            }
+            // Add listeners for drag events to prevent refresh while arranging execution order
+            const executionTable = document.getElementById('execution-table');
+            if (executionTable) {
+                executionTable.addEventListener('dragenter', function() {
+                    document.body.classList.add('arranging-execution');
+                    pauseRefresh = true;
+                    console.log('[DEBUG] Arranging execution order, pausing auto-refresh');
+                });
+                executionTable.addEventListener('dragleave', function() {
+                    document.body.classList.remove('arranging-execution');
+                    pauseRefresh = false;
+                    console.log('[DEBUG] Finished arranging execution order, resuming auto-refresh');
+                });
+                executionTable.addEventListener('drop', function() {
+                    document.body.classList.remove('arranging-execution');
+                    pauseRefresh = false;
+                    console.log('[DEBUG] Dropped method, resuming auto-refresh');
+                });
+            }
+        });
+
+        // Network Utility: Fetch with automatic retry for handling network errors
+        async function fetchWithRetry(url, options = {}, retries = 3, backoff = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+                    
+                    const response = await fetch(url, {
+                        ...options,
+                        signal: controller.signal
+                    });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok && response.status >= 500) {
+                        throw new Error(`Server error: ${response.status}`);
+                    }
+                    
+                    return response;
+                } catch (error) {
+                    const isLastAttempt = i === retries - 1;
+                    
+                    if (isLastAttempt) {
+                        throw error;
+                    }
+                    
+                    console.warn(`Fetch attempt ${i + 1} failed, retrying...`, error);
+                    await new Promise(resolve => setTimeout(resolve, backoff * (i + 1)));
+                }
+            }
+        }
+
+        // Drag and Drop for Method Queue
+        function initDragAndDrop() {
+            const methods = document.querySelectorAll('.method-card');
+            methods.forEach(method => {
+                method.addEventListener('dragstart', handleDragStart);
+                method.addEventListener('dragend', handleDragEnd);
+            });
+            
+            // Add drop zone listeners
+            const dropZone = document.getElementById('execution-queue');
+            if (dropZone) {
+                dropZone.addEventListener('dragover', allowDrop);
+                dropZone.addEventListener('drop', drop);
+            }
+        }
+
+        function handleDragStart(e) {
+            draggedElement = e.target;
+            e.target.style.opacity = '0.4';
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', e.target.innerHTML);
+        }
+
+        function handleDragEnd(e) {
+            e.target.style.opacity = '1';
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            if (draggedElement) {
+                const method = draggedElement.getAttribute('data-method');
+                addMethodToQueue(method);
+            }
+
+            return false;
+        }
+
+        async function addMethodToQueue(method) {
+            const queueItem = { method: method, ir_keys: [], voice_text: '', remote_keys: '', expected_screen: '', screen_name: '', wait_seconds: 0 };
+            
+            // Prompt for inputs based on method type
+            if (method === 'ir_test') {
+                // Show IR key selection modal or prompt
+                const selectedKeys = await promptForIrKeys();
+                if (selectedKeys === null) return; // User cancelled
+                queueItem.ir_keys = selectedKeys;
+            } else if (method === 'voice_command') {
+                // Prompt for voice command text
+                const voiceText = prompt('Enter voice command text (e.g., "Turn on Netflix", "Volume up"):');
+                if (!voiceText || voiceText.trim() === '') {
+                    showNotification('Voice command text is required', 'error');
+                    return;
+                }
+                queueItem.voice_text = voiceText.trim();
+            } else if (method === 'send_remote_keys') {
+                // Prompt for remote keys
+                const remoteKeys = prompt('Enter remote keys (comma-separated, e.g., RIGHT,RIGHT,DOWN,SELECT):');
+                if (!remoteKeys || remoteKeys.trim() === '') {
+                    showNotification('Remote keys are required', 'error');
+                    return;
+                }
+                queueItem.remote_keys = remoteKeys.trim();
+                console.log('DEBUG: Added remote_keys to queueItem:', queueItem);
+            } else if (method === 'screen_validation') {
+                // Prompt for expected screen
+                const expectedScreen = prompt('Enter expected screen (e.g., HOME, NETFLIX_HOME, YOUTUBE_HOME):\n\nAvailable: HOME, NETFLIX_HOME, NETFLIX_SIGNIN, YOUTUBE_HOME, YOUTUBE_SIGNIN, PRIME_HOME, DISNEY_HOME, BOOT_SCREEN');
+                if (!expectedScreen || expectedScreen.trim() === '') {
+                    showNotification('Expected screen is required', 'error');
+                    return;
+                }
+                queueItem.expected_screen = expectedScreen.trim().toUpperCase();
+            } else if (method === 'xumo_activation') {
+                // XUMO activation doesn't need input - it auto-fetches code from device
+                showNotification('XUMO activation will auto-fetch code from device', 'info');
+            } else if (method === 'capture_base_image') {
+                // Prompt for screen name
+                const screenName = prompt('Enter screen name for the base image (e.g., home_screen, login_page, app_menu):');
+                if (!screenName || screenName.trim() === '') {
+                    showNotification('Screen name is required for base image capture', 'error');
+                    return;
+                }
+                queueItem.screen_name = screenName.trim();
+            } else if (method === 'wait') {
+                // Prompt for wait duration
+                const waitSeconds = prompt('Enter wait duration in seconds (1-300):', '5');
+                if (!waitSeconds || isNaN(waitSeconds) || waitSeconds < 1 || waitSeconds > 300) {
+                    showNotification('Valid wait duration (1-300 seconds) is required', 'error');
+                    return;
+                }
+                queueItem.wait_seconds = parseInt(waitSeconds);
+            }
+            
+            executionQueue.push(queueItem);
+            console.log('DEBUG: executionQueue after push:', JSON.stringify(executionQueue, null, 2));
+            renderExecutionQueue();
+            showNotification(`Method "${getMethodName(method)}" added to queue`, 'success');
+        }
+        
+        async function promptForIrKeys() {
+            return new Promise((resolve) => {
+                // Get current IR keys from checkboxes
+                const checkboxes = document.querySelectorAll('.ir-key-checkbox');
+                const availableKeys = Array.from(checkboxes).map(cb => cb.value);
+                
+                // Create a modal dialog for IR key selection
+                const selectedKeys = [];
+                let message = 'Select IR keys for this IR Command Test:\n\n';
+                availableKeys.forEach((key, idx) => {
+                    message += `${idx + 1}. ${key}\n`;
+                });
+                message += '\nEnter key numbers separated by commas (e.g., 1,3,5) or "all" for all keys:';
+                
+                const input = prompt(message);
+                
+                if (input === null) {
+                    resolve(null); // User cancelled
+                    return;
+                }
+                
+                if (input.trim().toLowerCase() === 'all') {
+                    resolve(availableKeys);
+                    return;
+                }
+                
+                if (input.trim() === '') {
+                    resolve(['HOME', 'POWER']); // Default keys
+                    return;
+                }
+                
+                // Parse selected numbers
+                const numbers = input.split(',').map(n => parseInt(n.trim()) - 1);
+                numbers.forEach(idx => {
+                    if (idx >= 0 && idx < availableKeys.length) {
+                        selectedKeys.push(availableKeys[idx]);
+                    }
+                });
+                
+                if (selectedKeys.length === 0) {
+                    selectedKeys.push('HOME', 'POWER'); // Default if nothing selected
+                }
+                
+                resolve(selectedKeys);
+            });
+        }
+
+        function removeMethodFromQueue(index) {
+            const queueItem = executionQueue[index];
+            executionQueue.splice(index, 1);
+            renderExecutionQueue();
+            showNotification(`Method "${getMethodName(queueItem.method)}" removed from queue`, 'info');
+        }
+        
+        function moveMethodUp(index) {
+            if (index === 0) return;
+            const temp = executionQueue[index];
+            executionQueue[index] = executionQueue[index - 1];
+            executionQueue[index - 1] = temp;
+            renderExecutionQueue();
+        }
+        
+        function moveMethodDown(index) {
+            if (index === executionQueue.length - 1) return;
+            const temp = executionQueue[index];
+            executionQueue[index] = executionQueue[index + 1];
+            executionQueue[index + 1] = temp;
+            renderExecutionQueue();
+        }
+        
+        function moveMethodToPosition(currentIndex, targetPosition) {
+            // Validate target position (1-based input, convert to 0-based index)
+            const targetIndex = parseInt(targetPosition) - 1;
+            
+            if (isNaN(targetIndex) || targetIndex < 0 || targetIndex >= executionQueue.length) {
+                showNotification(`Invalid position. Please enter a number between 1 and ${executionQueue.length}`, 'error');
+                return;
+            }
+            
+            if (currentIndex === targetIndex) {
+                return; // Already at target position
+            }
+            
+            // Remove item from current position
+            const item = executionQueue.splice(currentIndex, 1)[0];
+            
+            // Insert at target position
+            executionQueue.splice(targetIndex, 0, item);
+            
+            renderExecutionQueue();
+            showNotification(`Moved method from position ${currentIndex + 1} to ${targetIndex + 1}`, 'success');
+        }
+        
+        function handleMoveToPositionKeypress(event, currentIndex) {
+            if (event.key === 'Enter') {
+                const input = event.target;
+                moveMethodToPosition(currentIndex, input.value);
+                input.value = ''; // Clear input after move
+            }
+        }
+        
+        function editMethodInQueue(index) {
+            const queueItem = executionQueue[index];
+            const method = queueItem.method;
+            
+            // Prompt for inputs based on method type
+            if (method === 'ir_test') {
+                const irKeys = prompt('Enter IR keys (comma-separated):', queueItem.irKeys ? queueItem.irKeys.join(', ') : '');
+                if (irKeys !== null) {
+                    queueItem.irKeys = irKeys.split(',').map(k => k.trim()).filter(k => k);
+                }
+            } else if (method === 'voice_command') {
+                const voiceText = prompt('Enter voice command:', queueItem.voiceText || '');
+                if (voiceText !== null) {
+                    queueItem.voiceText = voiceText.trim();
+                }
+            } else if (method === 'send_remote_keys') {
+                const remoteKeys = prompt('Enter remote keys (comma-separated, e.g., UP,UP,RIGHT,OK):', queueItem.remoteKeys || '');
+                if (remoteKeys !== null) {
+                    queueItem.remoteKeys = remoteKeys.trim();
+                }
+            } else if (method === 'screen_validation') {
+                const expectedScreen = prompt('Enter expected screen name (e.g., HOME, NETFLIX_HOME, FactoryReset_screen1):', queueItem.expectedScreen || '');
+                if (expectedScreen !== null) {
+                    queueItem.expectedScreen = expectedScreen.trim();
+                }
+            } else if (method === 'capture_base_image') {
+                const screenName = prompt('Enter screen name for reference image:', queueItem.screenName || '');
+                if (screenName !== null) {
+                    queueItem.screenName = screenName.trim();
+                }
+            } else if (method === 'wait') {
+                const waitSeconds = prompt('Enter wait duration (1-300 seconds):', queueItem.waitSeconds || '');
+                if (waitSeconds !== null) {
+                    const duration = parseInt(waitSeconds);
+                    if (duration >= 1 && duration <= 300) {
+                        queueItem.waitSeconds = duration;
+                    } else {
+                        alert('Wait duration must be between 1 and 300 seconds');
+                        return;
+                    }
+                }
+            } else {
+                alert('This method has no editable parameters');
+                return;
+            }
+            
+            renderExecutionQueue();
+        }
+
+        function clearDragDropQueue() {
+            console.log('clearDragDropQueue called, current queue length:', executionQueue.length);
+            if (executionQueue.length === 0) {
+                showNotification('Queue is already empty', 'info');
+                return;
+            }
+            executionQueue = [];
+            loadedSequenceId = null; // Reset loaded sequence tracking
+            console.log('Queue cleared, new length:', executionQueue.length);
+            renderExecutionQueue();
+            showNotification('Execution queue cleared', 'info');
+        }
+
+        function renderExecutionQueue() {
+            const queueEl = document.getElementById('execution-queue');
+            
+            if (executionQueue.length === 0) {
+                queueEl.innerHTML = `
+                    <div class="empty-execution">
+                        <i class="bi bi-inbox"></i>
+                        <p>Drag and drop test methods here to build your execution queue</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            executionQueue.forEach((queueItem, index) => {
+                const methodInfo = getMethodInfo(queueItem.method);
+                
+                // Build input display
+                let inputsHtml = '';
+                if (queueItem.method === 'ir_test' && (queueItem.ir_keys || queueItem.irKeys) && (queueItem.ir_keys?.length > 0 || queueItem.irKeys?.length > 0)) {
+                    const irKeys = queueItem.ir_keys || queueItem.irKeys;
+                    inputsHtml = `<div style="margin-top: 4px;"><small style="color: #10b981;"><i class="bi bi-broadcast"></i> IR Keys: ${irKeys.join(', ')}</small></div>`;
+                } else if (queueItem.method === 'voice_command' && (queueItem.voice_text || queueItem.voiceText)) {
+                    const voiceText = queueItem.voice_text || queueItem.voiceText;
+                    inputsHtml = `<div style="margin-top: 4px;"><small style="color: #ec4899;"><i class="bi bi-mic-fill"></i> "${voiceText}"</small></div>`;
+                } else if (queueItem.method === 'send_remote_keys' && (queueItem.remote_keys || queueItem.remoteKeys)) {
+                    const remoteKeys = queueItem.remote_keys || queueItem.remoteKeys;
+                    inputsHtml = `<div style="margin-top: 4px;"><small style="color: #f97316;"><i class="bi bi-controller"></i> Keys: ${remoteKeys}</small></div>`;
+                } else if (queueItem.method === 'screen_validation' && (queueItem.expected_screen || queueItem.expectedScreen)) {
+                    const screenName = queueItem.expected_screen || queueItem.expectedScreen;
+                    inputsHtml = `<div style="margin-top: 4px;"><small style="color: #0ea5e9;"><i class="bi bi-display"></i> Expected: ${screenName}</small></div>`;
+                } else if (queueItem.method === 'xumo_activation') {
+                    inputsHtml = `<div style="margin-top: 4px;"><small style="color: #6366f1;"><i class="bi bi-key-fill"></i> Auto-fetch & activate</small></div>`;
+                } else if (queueItem.method === 'capture_base_image' && (queueItem.screen_name || queueItem.screenName)) {
+                    const screenName = queueItem.screen_name || queueItem.screenName;
+                    inputsHtml = `<div style="margin-top: 4px;"><small style="color: #10b981;"><i class="bi bi-camera-fill"></i> Screen: ${screenName}</small></div>`;
+                } else if (queueItem.method === 'wait' && (queueItem.wait_seconds || queueItem.waitSeconds)) {
+                    const waitSeconds = queueItem.wait_seconds || queueItem.waitSeconds;
+                    inputsHtml = `<div style="margin-top: 4px;"><small style="color: #8b5cf6;"><i class="bi bi-hourglass-split"></i> Wait: ${waitSeconds}s</small></div>`;
+                }
+                
+                html += `
+                    <div class="execution-item">
+                        <div class="execution-item-info">
+                            <div class="execution-order">${index + 1}</div>
+                            <div class="method-icon ${queueItem.method}">
+                                <i class="bi bi-${methodInfo.icon}"></i>
+                            </div>
+                            <div>
+                                <h6 style="margin: 0; color: #e5e7eb; font-size: 0.9rem;">${methodInfo.name}</h6>
+                                <small style="color: #9ca3af;">${methodInfo.description}</small>
+                                ${inputsHtml}
+                            </div>
+                        </div>
+                        <div class="execution-item-actions">
+                            <button class="btn-move-method" onclick="moveMethodUp(${index})" ${index === 0 ? 'disabled' : ''} title="Move up">
+                                <i class="bi bi-arrow-up"></i>
+                            </button>
+                            <button class="btn-move-method" onclick="moveMethodDown(${index})" ${index === executionQueue.length - 1 ? 'disabled' : ''} title="Move down">
+                                <i class="bi bi-arrow-down"></i>
+                            </button>
+                            <input type="number" min="1" max="${executionQueue.length}" 
+                                   placeholder="${index + 1}" 
+                                   onkeypress="handleMoveToPositionKeypress(event, ${index})"
+                                   title="Enter position (1-${executionQueue.length}) and press Enter"
+                                   style="width: 50px; padding: 4px; border: 1px solid #4b5563; background: #1f2937; color: #e5e7eb; border-radius: 4px; text-align: center; font-size: 0.85rem; margin: 0 4px;">
+                            <button class="btn-edit-method" onclick="editMethodInQueue(${index})" title="Edit parameters">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <button class="btn-remove-method" onclick="removeMethodFromQueue(${index})" title="Remove">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            queueEl.innerHTML = html;
+            
+            // Hide IR key selection and voice command input since we prompt immediately
+            const irKeySelection = document.getElementById('ir-key-selection');
+            irKeySelection.classList.add('hidden');
+            
+            const voiceCommandSection = document.getElementById('voice-command-input-section');
+            voiceCommandSection.classList.add('hidden');
+            
+            // Enable/disable save sequence button
+            const saveBtn = document.getElementById('save-sequence-btn');
+            if (executionQueue.length > 0) {
+                saveBtn.disabled = false;
+            } else {
+                saveBtn.disabled = true;
+            }
+            updateSaveButton(); // Update button text based on loaded sequence
+        }
+
+        function getMethodInfo(method) {
+            const methods = {
+                'reboot': { name: 'Reboot Device', description: 'System reboot test', icon: 'arrow-clockwise' },
+                'deepsleep': { name: 'Deep Sleep', description: 'Power state transition', icon: 'moon-stars-fill' },
+                'power_key': { name: 'Power Key', description: 'Power button simulation', icon: 'power' },
+                'status': { name: 'Query Power State', description: 'Check device status', icon: 'speedometer2' },
+                'ir_test': { name: 'IR Command Test', description: 'Send IR & verify logs', icon: 'broadcast' },
+                'voice_command': { name: 'Send Voice Command', description: 'Execute voice via text', icon: 'mic-fill' },
+                'send_remote_keys': { name: 'Send Remote Keys', description: 'Simulate remote control', icon: 'controller' },
+                'screen_validation': { name: 'Screen Validation', description: 'Validate device screen', icon: 'display' },
+                'xumo_activation': { name: 'XUMO Activation', description: 'Auto-activate XUMO device', icon: 'key-fill' },
+                'capture_base_image': { name: 'Base Image Capture', description: 'Capture reference screen', icon: 'camera-fill' },
+                'wait': { name: 'Wait', description: 'Pause for duration', icon: 'hourglass-split' }
+            };
+            return methods[method] || { name: method, description: '', icon: 'gear-fill' };
+        }
+
+        function getMethodName(method) {
+            return getMethodInfo(method).name;
+        }
+
+        // Event Source for streaming logs
+        let eventSource = null;
+        let reconnectAttempts = 0;
+        const maxReconnectAttempts = 5;
+        
+        // Stats tracking
+        let testsRunning = 0;
+        let testsPassed = 0;
+        
+        function updateStats() {
+            document.getElementById('tests-running').textContent = testsRunning;
+            document.getElementById('tests-passed').textContent = testsPassed;
+        }
+
+        function initLogStream() {
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            eventSource = new EventSource('/api/logs');
+            
+            eventSource.onopen = function() {
+                reconnectAttempts = 0; // Reset on successful connection
+                console.log('Log stream connected');
+            };
+            
+            eventSource.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.message) {
+                        // Don't display logs in dashboard - they're shown in job details page
+                        // Just track test progress
+                        if (data.message.includes('Started')) {
+                            testsRunning++;
+                            updateStats();
+                        }
+                        if (data.message.includes('✓') && (data.message.includes('completed successfully') || data.message.includes('COMPLETED SUCCESSFULLY'))) {
+                            if (testsRunning > 0) testsRunning--;
+                            testsPassed++;
+                            updateStats();
+                            // Auto-refresh log files when test completes
+                            setTimeout(loadLogFiles, 2000);
+                        }
+                        if (data.message.includes('❌') && (data.message.includes('failed') || data.message.includes('Error during'))) {
+                            if (testsRunning > 0) testsRunning--;
+                            updateStats();
+                            // Auto-refresh log files on failure too
+                            setTimeout(loadLogFiles, 2000);
+                        }
+                    }
+                } catch (e) {
+                    // Log stream sends plain text, not JSON - ignore parse errors
+                    console.debug('Log stream message (non-JSON):', event.data);
+                }
+            };
+
+            eventSource.onerror = function(error) {
+                console.error('EventSource error:', error);
+                eventSource.close();
+                
+                // Attempt to reconnect with exponential backoff
+                if (reconnectAttempts < maxReconnectAttempts) {
+                    reconnectAttempts++;
+                    const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000); // Max 30 seconds
+                    console.log(`Reconnecting log stream in ${delay}ms (attempt ${reconnectAttempts}/${maxReconnectAttempts})...`);
+                    
+                    setTimeout(() => {
+                        console.log(`⚠ Log stream reconnecting... (attempt ${reconnectAttempts}/${maxReconnectAttempts})`);
+                        initLogStream();
+                    }, delay);
+                } else {
+                    console.error('❌ Log stream connection failed. Please refresh the page.');
+                    showNotification('Log stream disconnected. Please refresh the page.', 'error');
+                }
+            };
+        }
+        
+        // Load available IR keycodes dynamically from JSON
+        async function loadIrKeycodes() {
+            try {
+                const response = await fetchWithRetry('/api/ir_keycodes', {}, 2, 1000);
+                const data = await response.json();
+                
+                if (data.keycodes) {
+                    const checkboxContainer = document.getElementById('ir-key-checkboxes');
+                    checkboxContainer.innerHTML = ''; // Clear existing checkboxes
+                    
+                    // Convert keycodes object to array and sort by name
+                    const keycodesArray = Object.values(data.keycodes).sort((a, b) => a.name.localeCompare(b.name));
+                    
+                    keycodesArray.forEach((keycode, index) => {
+                        const checkboxDiv = document.createElement('div');
+                        checkboxDiv.className = index > 0 ? 'form-check mt-2' : 'form-check';
+                        
+                        const checkboxId = `ir-key-${keycode.name.toLowerCase()}`;
+                        // Check HOME and POWER by default
+                        const isChecked = (keycode.name === 'HOME' || keycode.name === 'POWER') ? 'checked' : '';
+                        
+                        checkboxDiv.innerHTML = `
+                            <input class="form-check-input ir-key-checkbox" type="checkbox" value="${keycode.name}" id="${checkboxId}" ${isChecked}>
+                            <label class="form-check-label" for="${checkboxId}">
+                                <strong>${keycode.display_name}</strong> - ${keycode.description}
+                            </label>
+                        `;
+                        
+                        checkboxContainer.appendChild(checkboxDiv);
+                    });
+                    
+                    console.log(`✅ Loaded ${keycodesArray.length} IR keycodes dynamically`);
+                } else {
+                    console.error('No keycodes found in response');
+                }
+            } catch (error) {
+                console.error('Error loading IR keycodes:', error);
+                // Fall back to showing default HOME and POWER
+                showNotification('Using default IR keys (HOME, POWER)', 'warning');
+            }
+        }
+
+        function addLog(message) {
+            // Log section removed from dashboard - logs now shown in job details page
+            // Just log to console for debugging
+            console.log('[LOG]', message);
+        }
+        
+        function clearAllLogs() {
+            // Log section removed - no-op
+            console.log('Clear logs called');
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `toast-notification ${type}`;
+            
+            let icon = 'info-circle-fill';
+            if (type === 'success') icon = 'check-circle-fill';
+            else if (type === 'error') icon = 'x-circle-fill';
+            else if (type === 'warning') icon = 'exclamation-triangle-fill';
+            
+            notification.innerHTML = `
+                <i class="bi bi-${icon}"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        // Test SSH Connection
+        document.getElementById('test-connection-btn').addEventListener('click', async function() {
+            // Always read device selection from localStorage
+            const selectedDevicesList = Array.from(getPersistedSelectedDevices());
+
+            if (selectedDevicesList.length === 0) {
+                showNotification('Please select at least one device', 'error');
+                return;
+            }
+
+            this.disabled = true;
+            this.textContent = 'Testing connections...';
+
+            try {
+                for (const deviceIp of selectedDevicesList) {
+                    const response = await fetchWithRetry('/api/test_connection', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ device_ip: deviceIp })
+                    }, 2, 1000);
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        showNotification(`✓ ${deviceIp}: Connection successful!`, 'success');
+                        addLog(`✓ SSH connection to ${deviceIp} successful`);
+                    } else {
+                        showNotification(`❌ ${deviceIp}: ${data.message}`, 'error');
+                        addLog(`❌ SSH connection to ${deviceIp} failed: ${data.message}`);
+                    }
+                }
+            } catch (error) {
+                showNotification('Network error - please check connection', 'error');
+                addLog(`⚠ Network error: ${error.message}`);
+            } finally {
+                this.disabled = false;
+                this.textContent = 'Test SSH Connection';
+            }
+        });
+
+        // Execute Method
+        document.getElementById('execute-btn').addEventListener('click', async function() {
+            const iterations = document.getElementById('iterations').value;
+            
+            // Always read device selection from localStorage
+            const selectedDevicesList = Array.from(getPersistedSelectedDevices());
+            console.log('[DEBUG] Execute button clicked. Selected devices from localStorage:', selectedDevicesList);
+            console.log('[DEBUG] localStorage.selectedDevices:', localStorage.getItem('selectedDevices'));
+
+            if (selectedDevicesList.length === 0) {
+                showNotification('Please select at least one device', 'error');
+                return;
+            }
+
+            if (executionQueue.length === 0) {
+                showNotification('Please add methods to the execution queue', 'error');
+                return;
+            }
+
+            if (!iterations || iterations < 1) {
+                showNotification('Please enter a valid iteration count', 'error');
+                return;
+            }
+
+            this.disabled = true;
+            this.textContent = 'Executing...';
+
+            // Close existing EventSource and clear log
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            // Reinitialize log stream for fresh execution
+            initLogStream();
+
+            try {
+                let executionCount = 0;
+                for (const deviceIp of selectedDevicesList) {
+                    // Prepare execution queue data with inputs
+                    const queueData = executionQueue.map(item => ({
+                        method: item.method,
+                        ir_keys: item.ir_keys || [],
+                        voice_text: item.voice_text || '',
+                        remote_keys: item.remote_keys || '',
+                        expected_screen: item.expected_screen || '',
+                        screen_name: item.screen_name || '',
+                        wait_seconds: item.wait_seconds || 0
+                    }));
+
+                    // Send entire execution queue as a sequence to backend with retry
+                    const response = await fetchWithRetry('/api/execute', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            device_ip: deviceIp,
+                            execution_queue: queueData,
+                            iterations: iterations
+                        })
+                    }, 3, 2000); // 3 retries, 2 second initial backoff
+
+                    const data = await response.json();
+                    console.log('[EXECUTE] Response from /api/execute:', data);
+                    executionCount++;
+
+                    // Show ETA and busy status on device card
+                    const card = document.querySelector(`.device-card[data-device-ip="${deviceIp}"]`);
+                    const eta = data.eta_formatted || data.eta; // Support both eta_formatted and eta
+                    console.log('[EXECUTE] ETA for device', deviceIp, ':', eta);
+                    if (card && eta) {
+                        let etaDiv = card.querySelector('.device-eta');
+                        if (!etaDiv) {
+                            etaDiv = document.createElement('div');
+                            etaDiv.className = 'device-eta';
+                            card.appendChild(etaDiv);
+                        }
+                        etaDiv.innerHTML = `<i class="bi bi-clock"></i> ETA: ${eta}`;
+                        card.classList.add('locked');
+                        const checkbox = card.querySelector('input.device-checkbox');
+                        if (checkbox) checkbox.disabled = true;
+                        const statusBadge = card.querySelector('.device-status');
+                        if (statusBadge) {
+                            statusBadge.className = 'device-status busy';
+                            statusBadge.innerHTML = `<i class="bi bi-lock-fill"></i> Busy <span class="device-eta"><i class="bi bi-clock"></i> ETA: ${eta}</span>`;
+                        }
+                        console.log('[EXECUTE] Device card updated with BUSY status and ETA');
+                    } else {
+                        console.warn('[EXECUTE] Card not found or no ETA:', { card: !!card, eta });
+                    }
+
+                    if (executionQueue.length === 1) {
+                        addLog(`[${executionCount}] Started ${getMethodName(executionQueue[0].method)} on ${deviceIp}`);
+                    } else {
+                        const methodNames = executionQueue.map(item => getMethodName(item.method)).join(' → ');
+                        addLog(`[${executionCount}] Started sequence: ${methodNames} on ${deviceIp}`);
+                    }
+                }
+
+                // Clear execution queue after successful start
+                executionQueue = [];
+                renderExecutionQueue();
+
+                // Clear device selections and uncheck all checkboxes
+                localStorage.removeItem('selectedDevices');
+                document.querySelectorAll('.device-checkbox').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                console.log('[DEBUG] Cleared device selections after execution');
+
+                // Immediately refresh running and pending jobs
+                loadRunningJobs();
+                loadPendingJobs();
+
+                showNotification(`✓ Started ${executionCount} execution(s) on ${selectedDevicesList.length} device(s)`, 'success');
+            } catch (error) {
+                showNotification('Network error - operation may still be running. Check logs.', 'warning');
+                addLog(`⚠ Network error: ${error.message} - The operation may still be running on the device.`);
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<i class=\"bi bi-rocket-takeoff-fill\"></i> Execute Queue';
+            }
+        });
+
+        // Add Device
+        document.getElementById('add-device-btn').addEventListener('click', async function() {
+            const name = document.getElementById('device-name').value;
+            const ip = document.getElementById('device-ip').value;
+
+            if (!ip) {
+                showNotification('Please enter an IP address', 'error');
+                return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = '<i class="bi bi-spinner-border spinner-border-sm"></i> Adding...';
+
+            try {
+                const response = await fetchWithRetry('/api/devices', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name || ip,
+                        ip: ip,
+                        port: 10022,
+                        username: 'root',
+                        password: ''
+                    })
+                }, 3, 1000); // 3 retries, 1 second initial backoff
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showNotification('Device added successfully!', 'success');
+                    // Clear form
+                    document.getElementById('device-name').value = '';
+                    document.getElementById('device-ip').value = '';
+                    // Reload page to update device list
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification(data.error || 'Error adding device', 'error');
+                }
+            } catch (error) {
+                showNotification('Network error - please check connection and try again', 'error');
+                console.error('Add device error:', error);
+            } finally {
+                this.disabled = false;
+                this.innerHTML = '<i class="bi bi-plus-lg"></i> Add Device';
+            }
+        });
+
+        // Remove Device
+        async function removeDevice(ip) {
+            if (!confirm(`Are you sure you want to remove device ${ip}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetchWithRetry('/api/devices', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ ip: ip })
+                }, 2, 1000);
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showNotification('Device removed successfully!', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showNotification('Error removing device', 'error');
+                }
+            } catch (error) {
+                showNotification('Error removing device', 'error');
+            }
+        }
+
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[PAGE INIT] DOM ready, initializing...');
+            
+            // Initialize log stream and drag/drop
+            initDragAndDrop();
+            initLogStream();
+            
+            // Render devices immediately from server-side data
+            if (Array.isArray(initialDevices) && initialDevices.length > 0) {
+                console.log('[DEBUG] Rendering initial devices on page load:', initialDevices);
+                allDevices = initialDevices;
+                renderDevices(initialDevices);
+            } else {
+                console.warn('[DEBUG] No initialDevices available on page load');
+            }
+            
+            // Start auto-refresh for live updates
+            startAutoRefresh();
+        });
+
+        // Add search filter event listener
+        setTimeout(() => {
+            const filterInput = document.getElementById('job-search-filter');
+            if (filterInput) {
+                filterInput.addEventListener('input', function() {
+                    applyJobFilter();
+                });
+                filterInput.addEventListener('keyup', function(e) {
+                    if (e.key === 'Escape') {
+                        clearJobFilter();
+                    }
+                });
+            }
+        }, 1000);
+
+        // Download log file
+        function downloadLogFile(filename) {
+            window.open('/api/iteration_logs/' + filename, '_blank');
+        }
+
+        // Queue Management Functions
+        async function addToQueue() {
+            // Always read device selection from localStorage
+            const selectedDevicesList = Array.from(getPersistedSelectedDevices());
+            const iterations = parseInt(document.getElementById('iterations').value);
+            const selectedIrKeys = getSelectedIrKeys();
+            
+            if (selectedDevicesList.length === 0) {
+                showNotification('Please select at least one device', 'error');
+                return;
+            }
+            
+            if (executionQueue.length === 0) {
+                showNotification('Execution queue is empty. Please add methods first.', 'error');
+                return;
+            }
+            
+            // Get voice command text if voice_command is in queue
+            let voiceText = '';
+            if (executionQueue.some(item => item.method === 'voice_command')) {
+                const voiceItem = executionQueue.find(item => item.method === 'voice_command');
+                voiceText = voiceItem ? voiceItem.voiceText : '';
+            }
+            
+            // Get remote keys if send_remote_keys is in queue
+            let remoteKeys = '';
+            if (executionQueue.some(item => item.method === 'send_remote_keys')) {
+                const remoteItem = executionQueue.find(item => item.method === 'send_remote_keys');
+                remoteKeys = remoteItem ? remoteItem.remoteKeys : '';
+            }
+            
+            // Get expected screen if screen_validation is in queue
+            let expectedScreen = '';
+            if (executionQueue.some(item => item.method === 'screen_validation')) {
+                const screenItem = executionQueue.find(item => item.method === 'screen_validation');
+                expectedScreen = screenItem ? screenItem.expectedScreen : '';
+            }
+            
+            try {
+                console.log('DEBUG executeNow: executionQueue =', JSON.stringify(executionQueue, null, 2));
+                for (const deviceIp of selectedDevicesList) {
+                    const response = await fetchWithRetry('/api/queue/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            device_ip: deviceIp,
+                            method: executionQueue.length === 1 ? executionQueue[0].method : executionQueue.map(item => item.method),
+                            execution_queue: executionQueue,  // Send full queue with all parameters
+                            iterations: iterations,
+                            selected_ir_keys: selectedIrKeys,
+                            voice_text: voiceText,
+                            remote_keys: remoteKeys,
+                            expected_screen: expectedScreen
+                        })
+                    });
+                    
+                    const data = await response.json();
+                }
+                
+                showNotification(`✓ Added ${selectedDevicesList.length} job(s) to queue`, 'success');
+                refreshQueue();
+            } catch (error) {
+                showNotification('Error adding to queue: ' + error.message, 'error');
+            }
+        }
+        
+        async function refreshQueue() {
+            // Queue section removed - now using job tracking system
+            // No-op function to prevent errors
+            console.log('Queue refresh called - using job tracking instead');
+        }
+        
+        async function clearQueue() {
+            // Queue section removed - now using job tracking system
+            console.log('Clear queue called - using job tracking instead');
+        }
+
+        // Log files section removed - logs now accessible via job details
+        
+        // Load IR keycodes on page load
+        loadIrKeycodes();
+        loadSavedSequences();
+        
+        // ===== SAVED SEQUENCES FUNCTIONS =====
+        
+        async function saveCurrentSequence() {
+            if (executionQueue.length === 0) {
+                showNotification('No methods in queue to save', 'error');
+                return;
+            }
+            
+            // If a sequence was loaded, ask whether to update or save as new
+            if (loadedSequenceId) {
+                const choice = confirm('Update the loaded sequence?\n\nOK = Update existing sequence\nCancel = Save as new sequence');
+                if (choice) {
+                    await updateExistingSequence();
+                } else {
+                    await saveAsNewSequence();
+                }
+            } else {
+                await saveAsNewSequence();
+            }
+        }
+        
+        async function updateExistingSequence() {
+            if (!loadedSequenceId) return;
+            
+            // Convert queue to saveable format
+            const queueData = executionQueue.map(item => ({
+                method: item.method,
+                ir_keys: item.ir_keys || item.irKeys || [],
+                voice_text: item.voice_text || item.voiceText || '',
+                remote_keys: item.remote_keys || item.remoteKeys || '',
+                expected_screen: item.expected_screen || item.expectedScreen || '',
+                screen_name: item.screen_name || item.screenName || '',
+                wait_seconds: item.wait_seconds || item.waitSeconds || null
+            }));
+            
+            try {
+                const response = await fetch(`/api/sequences/${loadedSequenceId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        queue_data: queueData
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showNotification('✓ Sequence updated successfully', 'success');
+                    loadSavedSequences();
+                } else {
+                    showNotification('Error updating sequence: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showNotification('Error updating sequence: ' + error.message, 'error');
+            }
+        }
+        
+        async function saveAsNewSequence() {
+            const sequenceName = prompt('Enter a name for this sequence (e.g., "Morning Test Flow", "Full Device Check"):');
+            if (!sequenceName || sequenceName.trim() === '') {
+                showNotification('Sequence name is required', 'error');
+                return;
+            }
+            
+            // Convert queue to saveable format - handle both snake_case and camelCase
+            const queueData = executionQueue.map(item => ({
+                method: item.method,
+                ir_keys: item.ir_keys || item.irKeys || [],
+                voice_text: item.voice_text || item.voiceText || '',
+                remote_keys: item.remote_keys || item.remoteKeys || '',
+                expected_screen: item.expected_screen || item.expectedScreen || '',
+                screen_name: item.screen_name || item.screenName || '',
+                wait_seconds: item.wait_seconds || item.waitSeconds || null
+            }));
+            
+            // Debug: Log what we're saving
+            console.log('DEBUG: Saving sequence with queue data:', JSON.stringify(queueData, null, 2));
+            
+            try {
+                const response = await fetch('/api/sequences/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: sequenceName.trim(),
+                        queue_data: queueData
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    showNotification('✓ Sequence saved successfully', 'success');
+                    loadSavedSequences();
+                    // Update loaded sequence ID to the new one
+                    loadedSequenceId = data.sequence_id;
+                    updateSaveButton();
+                } else {
+                    showNotification('Error saving sequence: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showNotification('Error saving sequence: ' + error.message, 'error');
+            }
+        }
+        
+        function updateSaveButton() {
+            const saveBtn = document.getElementById('save-sequence-btn');
+            if (saveBtn) {
+                if (loadedSequenceId) {
+                    saveBtn.innerHTML = '<i class="bi bi-save-fill"></i> Update/Save As';
+                    saveBtn.title = 'Update existing sequence or save as new';
+                } else {
+                    saveBtn.innerHTML = '<i class="bi bi-save-fill"></i> Save Queue';
+                    saveBtn.title = 'Save current queue as new sequence';
+                }
+            }
+        }
+        
+        async function loadSavedSequences() {
+            try {
+                const response = await fetch('/api/sequences/list');
+                const data = await response.json();
+                
+                const container = document.getElementById('saved-sequences-list');
+                const countBadge = document.getElementById('saved-sequences-count');
+                
+                if (!data.sequences || data.sequences.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="bi bi-inbox"></i>
+                            <p>No saved sequences yet. Add methods to queue and click "Save Current Queue"</p>
+                        </div>
+                    `;
+                    countBadge.textContent = '0';
+                    return;
+                }
+                
+                countBadge.textContent = data.sequences.length;
+                
+                let html = '';
+                data.sequences.forEach(seq => {
+                    // Handle both old and new formats
+                    let queueData = seq.queue_data || [];
+                    if (queueData.length === 0 && seq.methods) {
+                        // Old format - convert to display format
+                        queueData = seq.methods.map(m => ({
+                            method: m,
+                            ir_keys: seq.user_inputs?.ir_keys || [],
+                            voice_text: seq.user_inputs?.voice_text || ''
+                        }));
+                    }
+                    
+                    const methodNames = queueData.map(item => getMethodName(item.method)).join(' → ');
+                    const stepCount = queueData.length;
+                    
+                    // Build detailed description for tooltip
+                    let tooltipDescription = 'Methods:\n' + methodNames + '\n\n';
+                    queueData.forEach((item, idx) => {
+                        tooltipDescription += `Step ${idx + 1}: ${getMethodName(item.method)}\n`;
+                        if (item.ir_keys && item.ir_keys.length > 0) {
+                            tooltipDescription += `  IR Keys: ${item.ir_keys.join(', ')}\n`;
+                        }
+                        if (item.voice_text) {
+                            tooltipDescription += `  Voice: "${item.voice_text}"\n`;
+                        }
+                        if (item.remote_keys) {
+                            tooltipDescription += `  Remote Keys: ${item.remote_keys}\n`;
+                        }
+                        if (item.expected_screen) {
+                            tooltipDescription += `  Expected Screen: ${item.expected_screen}\n`;
+                        }
+                        if (item.screen_name) {
+                            tooltipDescription += `  Screen Name: ${item.screen_name}\n`;
+                        }
+                        if (item.wait_seconds) {
+                            tooltipDescription += `  Wait: ${item.wait_seconds}s\n`;
+                        }
+                    });
+                    tooltipDescription += `\nCreated: ${new Date(seq.created_at).toLocaleString()}`;
+                    
+                    html += `
+                        <div class="saved-sequence-item" data-sequence-id="${seq.sequence_id}" title="${tooltipDescription.replace(/"/g, '&quot;')}">
+                            <div class="sequence-info">
+                                <h6><i class="bi bi-bookmark-star"></i> ${seq.name}</h6>
+                                <p class="mb-0 text-muted"><small><i class="bi bi-list-ol"></i> ${stepCount} step${stepCount !== 1 ? 's' : ''}</small></p>
+                            </div>
+                            <div class="sequence-actions">
+                                <button class="btn btn-sm btn-success-custom" onclick="loadSequence('${seq.sequence_id}')" title="Load this sequence">
+                                    <i class="bi bi-arrow-down-circle-fill"></i> Load
+                                </button>
+                                <button class="btn btn-sm btn-danger-custom" onclick="deleteSequence('${seq.sequence_id}')" title="Delete this sequence">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading saved sequences:', error);
+            }
+        }
+        
+        async function loadSequence(sequenceId) {
+            try {
+                const response = await fetch(`/api/sequences/${sequenceId}`);
+                const data = await response.json();
+                
+                if (!data.sequence) {
+                    showNotification('Sequence not found', 'error');
+                    return;
+                }
+                
+                const seq = data.sequence;
+                
+                // Clear current queue
+                executionQueue = [];
+                
+                // Track the loaded sequence ID for updating
+                loadedSequenceId = sequenceId;
+                
+                // Handle both old and new formats
+                if (seq.queue_data && seq.queue_data.length > 0) {
+                    // New format - load queue with inputs (maintain snake_case for consistency)
+                    seq.queue_data.forEach(item => {
+                        executionQueue.push({
+                            method: item.method,
+                            ir_keys: item.ir_keys || [],
+                            voice_text: item.voice_text || '',
+                            remote_keys: item.remote_keys || '',
+                            expected_screen: item.expected_screen || '',
+                            screen_name: item.screen_name || '',
+                            wait_seconds: item.wait_seconds || null
+                        });
+                    });
+                } else if (seq.methods) {
+                    // Old format - convert to new format
+                    seq.methods.forEach(method => {
+                        executionQueue.push({
+                            method: method,
+                            irKeys: seq.user_inputs?.ir_keys || [],
+                            voiceText: seq.user_inputs?.voice_text || ''
+                        });
+                    });
+                }
+                
+                renderExecutionQueue();
+                updateSaveButton();
+                showNotification(`✓ Loaded sequence: "${seq.name}"`, 'success');
+            } catch (error) {
+                showNotification('Error loading sequence: ' + error.message, 'error');
+            }
+        }
+        
+        async function deleteSequence(sequenceId) {
+            if (!confirm('Delete this saved sequence? This cannot be undone.')) {
+                return;
+            }
+            try {
+                const response = await fetch(`/api/sequences/${sequenceId}`, {
+                    method: 'DELETE'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showNotification('✓ Sequence deleted', 'success');
+                    loadSavedSequences();
+                } else {
+                    showNotification('Error deleting sequence: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showNotification('Error deleting sequence: ' + error.message, 'error');
+            }
+        }
+
+    </script>
+</body>

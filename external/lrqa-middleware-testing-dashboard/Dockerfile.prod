@@ -1,0 +1,75 @@
+# Multi-stage production Dockerfile for Flask middleware
+# Optimized for Raspberry Pi 4 and standard deployments
+# No code obfuscation - relies on Docker isolation security
+
+# Stage 1: Dependencies builder
+FROM python:3.11-slim as builder
+
+WORKDIR /build
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY requirements.txt .
+
+# Build wheels for faster installation in final stage
+RUN pip install --no-cache-dir --upgrade pip wheel setuptools && \
+    pip wheel --no-cache-dir --no-deps --wheel-dir /build/wheels -r requirements.txt
+
+# Stage 2: Runtime
+FROM python:3.11-slim
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONHASHSEED=random \
+    PIP_NO_CACHE_DIR=1 \
+    FLASK_APP=app.py \
+    FLASK_ENV=production
+
+# Install runtime dependencies only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libssl3 \
+    libffi8 \
+    openssh-client \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app user for security
+RUN useradd -m -u 1000 appuser
+
+WORKDIR /app
+
+# Copy requirements and pre-built wheels from builder
+COPY requirements.txt .
+COPY --from=builder /build/wheels /tmp/wheels
+
+# Install dependencies from wheels (with PyPI fallback for missing deps)
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir --find-links /tmp/wheels -r requirements.txt && \
+    rm -rf /tmp/wheels
+
+# Copy application code
+COPY . .
+
+# Set proper permissions
+RUN chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose Flask port
+EXPOSE 11078
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:11078/health || exit 1
+
+# Run Flask app
+CMD ["python", "app.py"]

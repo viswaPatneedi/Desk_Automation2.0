@@ -1,0 +1,143 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rdk-testing-dashboard
+  namespace: rdk-testing
+  labels:
+    app: device-testing-dashboard
+spec:
+  # Single replica recommended for stateful operations (device locks, job queues)
+  # Increase replicas only if using external database/redis for state management
+  replicas: 1
+  strategy:
+    type: Recreate  # Ensures only one pod at a time (important for file-based state)
+  selector:
+    matchLabels:
+      app: device-testing-dashboard
+  template:
+    metadata:
+      labels:
+        app: device-testing-dashboard
+    spec:
+      containers:
+      - name: rdk-testing
+        image: rdk-testing-dashboard:latest  # CHANGE THIS to your image registry
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 5000
+          protocol: TCP
+        
+        # Environment variables from ConfigMap
+        envFrom:
+        - configMapRef:
+            name: rdk-config
+        
+        # Sensitive environment variables from Secret
+        env:
+        - name: SMTP_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: rdk-secrets
+              key: SMTP_USERNAME
+        - name: SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rdk-secrets
+              key: SMTP_PASSWORD
+        - name: SMTP_FROM_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: rdk-secrets
+              key: SMTP_FROM_EMAIL
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: rdk-secrets
+              key: SECRET_KEY
+        
+        # Volume mounts for persistent data
+        volumeMounts:
+        - name: data-volume
+          mountPath: /app/devices.json
+          subPath: devices.json
+        - name: data-volume
+          mountPath: /app/jobs.json
+          subPath: jobs.json
+        - name: data-volume
+          mountPath: /app/device_job_queue.json
+          subPath: device_job_queue.json
+        - name: data-volume
+          mountPath: /app/device_locks.json
+          subPath: device_locks.json
+        - name: data-volume
+          mountPath: /app/saved_sequences.json
+          subPath: saved_sequences.json
+        - name: data-volume
+          mountPath: /app/app_state.json
+          subPath: app_state.json
+        - name: data-volume
+          mountPath: /app/ir_keycodes.json
+          subPath: ir_keycodes.json
+        - name: data-volume
+          mountPath: /app/reset_codes.json
+          subPath: reset_codes.json
+        - name: logs-volume
+          mountPath: /app/iteration_logs
+        - name: screenshots-volume
+          mountPath: /app/screenshots
+        
+        # Resource limits and requests
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 45
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+      
+      # Volumes
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: rdk-data-pvc
+      - name: logs-volume
+        persistentVolumeClaim:
+          claimName: rdk-logs-pvc
+      - name: screenshots-volume
+        persistentVolumeClaim:
+          claimName: rdk-screenshots-pvc
+      
+      # Security context
+      securityContext:
+        fsGroup: 1000
+      
+      # Optional: Node selector for specific node requirements
+      # nodeSelector:
+      #   kubernetes.io/hostname: your-node-name
+      
+      # Optional: Tolerations for tainted nodes
+      # tolerations:
+      # - key: "dedicated"
+      #   operator: "Equal"
+      #   value: "rdk-testing"
+      #   effect: "NoSchedule"

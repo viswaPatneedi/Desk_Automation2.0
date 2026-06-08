@@ -1,0 +1,32 @@
+EXECUTION FAILURE REPORT
+================================================================================
+Report Generated: 2026-02-01T16:23:18.097017 UTC
+
+
+DEVICE: ES1-DESK-LAVANYA (10.0.0.249)
+--------------------------------------------------------------------------------
+Job ID: 625fd8d3-7db7-4b7d-9fdf-b90741271ea2
+Status: STOPPED
+Progress: 109/150 iterations (72.7% complete)
+Start Time: 2026-02-01T00:32:14.865143
+End Time: 2026-02-01T16:23:01.570813+00:00
+Method: reboot_perf_v2_optimized
+Iterations Completed: 109
+Iterations Failed: 1+ (device offline)
+Root Cause: Device did not come back online after reboot command
+Last Known Activity: 2026-02-01 06:34:25 UTC (sent reboot command)
+Device Reachability: SSH timeout - Device offline
+
+DEVICE: ELEMENT-X3 (10.0.0.20)
+--------------------------------------------------------------------------------
+Job ID: 15a41607-a445-4f33-aea6-1ef13901e817
+Status: STOPPED
+Progress: 133/150 iterations (88.7% complete)
+Start Time: 2026-02-01T00:32:15.190032
+End Time: 2026-02-01T16:23:01.570875+00:00
+Method: reboot_perf_v2_optimized
+Iterations Completed: 133
+Iterations Failed: 1+ (device offline)
+Root Cause: Device did not come back online after reboot command
+Last Known Activity: 2026-02-01 06:34:25 UTC (sent reboot command)
+Device Reachability: SSH timeout - Device offline

@@ -1,0 +1,41 @@
+[Unit]
+Description=RDK-E Middleware QA Testing Service
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/Desktop/viswa/Latest_Enhancement/Enhancement
+Environment="PATH=/home/pi/Desktop/viswa/Latest_Enhancement/Enhancement/venv/bin:/usr/local/bin:/usr/bin:/bin"
+EnvironmentFile=/home/pi/Desktop/viswa/Latest_Enhancement/Enhancement/.env
+ExecStart=/home/pi/Desktop/viswa/Latest_Enhancement/Enhancement/venv/bin/gunicorn \
+    --workers 4 \
+    --worker-class gevent \
+    --worker-connections 1000 \
+    --bind 0.0.0.0:8080 \
+    --timeout 120 \
+    --access-logfile /home/pi/Desktop/viswa/Latest_Enhancement/Enhancement/logs/access.log \
+    --error-logfile /home/pi/Desktop/viswa/Latest_Enhancement/Enhancement/logs/error.log \
+    --log-level warning \
+    app:app
+
+# Auto-restart configuration
+Restart=always
+RestartSec=10
+StartLimitInterval=200
+StartLimitBurst=5
+
+# Resource limits
+LimitNOFILE=65536
+
+# Graceful shutdown
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# Standard output
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

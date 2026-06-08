@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Results - Card View | RDK-E Middleware QA Testing Tool</title>
+    
+    <!-- Bootstrap 5.3.8 CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-icons.min.css') }}">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #6b7280;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #3b82f6;
+            --dark-color: #1f2937;
+            --darker-color: #111827;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .navbar-custom {
+            background: #1f2937;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            padding: 1rem 0;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #d1d5db !important;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .navbar-brand i {
+            font-size: 1.8rem;
+        }
+        
+        .nav-link {
+            color: #9ca3af !important;
+            margin: 0 0.5rem;
+            border-radius: 6px;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover {
+            background: #374151;
+            color: #f3f4f6 !important;
+        }
+        
+        .nav-link.active {
+            background: #4b5563;
+            color: #f3f4f6 !important;
+        }
+        
+        .container-fluid.main-content {
+            padding: 2rem;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            color: #f3f4f6;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .view-toggle {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .view-btn {
+            padding: 0.75rem 1.5rem;
+            border: 1px solid #374151;
+            background: #374151;
+            color: #9ca3af;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .view-btn:hover {
+            background: #4b5563;
+            color: #f3f4f6;
+        }
+        
+        .view-btn.active {
+            background: var(--info-color);
+            color: white;
+            border-color: var(--info-color);
+        }
+        
+        .filters-section {
+            background: #374151;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        
+        .filter-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            min-width: 0;
+        }
+        
+        .filter-group label {
+            color: #d1d5db;
+            font-weight: 500;
+            margin: 0;
+            white-space: nowrap;
+            font-size: 0.95rem;
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            background: #1f2937;
+            color: #f3f4f6;
+            border: 1px solid #4b5563;
+            padding: 0.75rem;
+            border-radius: 6px;
+            min-width: auto;
+            font-size: 0.95rem;
+        }
+        
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--info-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        /* Date picker styling */
+        #datePickerInput {
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        #datePickerInput::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+        
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .result-card {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Transparent scrollbar for Firefox */
+        .result-card { 
+            scrollbar-width: thin;
+            scrollbar-color: rgba(107, 114, 128, 0.4) rgba(75, 85, 99, 0.2);
+        }
+        
+        .result-card:hover {
+            border-color: var(--info-color);
+            box-shadow: 0 12px 24px rgba(59, 130, 246, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        .card-status-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            z-index: 10;
+        }
+        
+        .badge-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+        
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+        
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid #f59e0b;
+        }
+        
+        .card-header-section {
+            background: #374151;
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #4b5563;
+            position: relative;
+        }
+        
+        .card-device-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #f3f4f6;
+            margin-bottom: 0.25rem;
+        }
+        
+        .card-device-ip {
+            color: #9ca3af;
+            font-size: 0.8rem;
+        }
+        
+        .card-body-section {
+            padding: 1rem 1.25rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 500px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+        
+        /* Transparent scrollbar styling */
+        .card-body-section::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .card-body-section::-webkit-scrollbar-track {
+            background: rgba(75, 85, 99, 0.2);
+            border-radius: 3px;
+        }
+        
+        .card-body-section::-webkit-scrollbar-thumb {
+            background: rgba(107, 114, 128, 0.4);
+            border-radius: 3px;
+        }
+        
+        .card-body-section::-webkit-scrollbar-thumb:hover {
+            background: rgba(107, 114, 128, 0.6);
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .info-value {
+            color: #f3f4f6;
+            font-weight: 600;
+        }
+        
+        .method-badge {
+            display: inline-block;
+            background: #4b5563;
+            color: #d1d5db;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .performance-metric {
+            text-align: center;
+            padding: 1rem;
+            background: #374151;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+        }
+        
+        .metric-label {
+            color: #9ca3af;
+            font-size: 0.875rem;
+        }
+        
+        .metric-value {
+            color: #10b981;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+        }
+        
+        .screenshot-preview {
+            width: 100%;
+            height: 150px;
+            background: #374151;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 1rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #4b5563;
+        }
+        
+        .screenshot-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .sequence-methods-section {
+            margin: 1rem 0;
+            padding: 1rem;
+            background: #2d3748;
+            border-radius: 8px;
+            border: 1px solid #4b5563;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .sequence-methods-section::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sequence-methods-section::-webkit-scrollbar-track {
+            background: #374151;
+            border-radius: 3px;
+        }
+        
+        .sequence-methods-section::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+        }
+        
+        .sequence-methods-section::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+        
+        /* Screenshot grid scrollbar styling */
+        .screenshot-grid {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(107, 114, 128, 0.4) rgba(75, 85, 99, 0.2);
+        }
+        
+        .screenshot-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .screenshot-grid::-webkit-scrollbar-track {
+            background: rgba(75, 85, 99, 0.15);
+            border-radius: 3px;
+        }
+        
+        .screenshot-grid::-webkit-scrollbar-thumb {
+            background: rgba(107, 114, 128, 0.35);
+            border-radius: 3px;
+        }
+        
+        .screenshot-grid::-webkit-scrollbar-thumb:hover {
+            background: rgba(107, 114, 128, 0.55);
+        }
+        
+        .method-result-item {
+            padding: 0.5rem 0.65rem;
+            margin-bottom: 0.35rem;
+            background: #374151;
+            border-radius: 6px;
+            border-left: 3px solid #4b5563;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        
+        .method-result-item.success {
+            border-left-color: var(--success-color);
+        }
+        
+        .method-result-item.failed {
+            border-left-color: var(--danger-color);
+        }
+        
+        .method-result-name {
+            color: #d1d5db;
+            font-weight: 500;
+            flex: 1;
+        }
+        
+        .method-result-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        
+        .method-result-status.success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+        
+        .method-result-status.failed {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .method-result-item.skipped {
+            border-left-color: #6b7280;
+        }
+
+        .method-result-status.skipped {
+            background: rgba(107, 114, 128, 0.2);
+            color: #9ca3af;
+        }
+        
+        .card-footer-section {
+            background: #374151;
+            padding: 0.75rem 1.25rem;
+            border-top: 1px solid #4b5563;
+            display: flex;
+            gap: 0.5rem;
+            justify-content: space-between;
+        }
+        
+        .btn-small {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .btn-view {
+            background: var(--info-color);
+            color: white;
+            flex-grow: 1;
+        }
+        
+        .btn-view:hover {
+            background: #2563eb;
+            text-decoration: none;
+            color: white;
+        }
+        
+        .btn-delete {
+            background: #4b5563;
+            color: #ef4444;
+        }
+        
+        .btn-delete:hover {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: #9ca3af;
+        }
+        
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+        
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .filters-section {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .stat-card {
+            background: #374151;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 1px solid #4b5563;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--info-color);
+        }
+        
+        .stat-label {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #374151;
+            border-top-color: var(--info-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Screenshot Carousel Styles */
+        .screenshot-carousel {
+            margin: 1rem 0;
+            padding: 0;
+            background: #1f2937;
+            border-radius: 8px;
+            border: 1px solid #4b5563;
+            overflow: hidden;
+        }
+        
+        .carousel-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: #2d3748;
+            min-height: 180px;
+        }
+        
+        .carousel-viewport {
+            flex: 1;
+            overflow: hidden;
+            border-radius: 6px;
+            background: #1f2937;
+            height: 160px;
+        }
+        
+        .carousel-track {
+            display: flex;
+            transition: transform 0.3s ease;
+            height: 100%;
+        }
+        
+        .carousel-slide {
+            flex: 0 0 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #374151;
+            overflow: hidden;
+        }
+        
+        .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .carousel-button {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            background: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 6px;
+            color: #d1d5db;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .carousel-button:hover {
+            background: #4b5563;
+            color: #fff;
+        }
+        
+        .carousel-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .carousel-indicators {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            padding: 0.75rem;
+            background: #2d3748;
+            border-top: 1px solid #4b5563;
+        }
+        
+        .carousel-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .carousel-dot.active {
+            background: #10b981;
+            width: 28px;
+            border-radius: 5px;
+        }
+        
+        .carousel-dot:hover {
+            background: #9ca3af;
+        }
+        
+        .carousel-counter {
+            display: flex;
+            justify-content: center;
+            padding: 0.5rem;
+            background: #1f2937;
+            border-top: 1px solid #4b5563;
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+        
+        .counter-text {
+            color: #d1d5db;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-custom">
+        <div class="container-fluid" style="max-width: 100%; margin: 0 auto;">
+            <div class="d-flex flex-column">
+                <a class="navbar-brand mb-0" href="#">
+                    <i class="bi bi-cpu-fill"></i>
+                    RDK-E Middleware QA Testing Tool
+                </a>
+                <span class="developer-credit" style="font-size: 0.75rem; color: #9ca3af; margin-left: 2rem;">
+                    <i class="bi bi-code-slash"></i> Designed & Developed by <strong>VISWA</strong>
+                </span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Results Dropdown -->
+                <div class="btn-group" role="group">
+                    <a href="/results" class="btn btn-sm btn-outline-light" title="View Results">
+                        <i class="bi bi-table"></i> Results
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="View Options">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/results"><i class="bi bi-table"></i> Table View</a></li>
+                        <li><a class="dropdown-item" href="/results-cards"><i class="bi bi-grid-3x2"></i> Card View</a></li>
+                    </ul>
+                </div>
+                <!-- Services Dropdown -->
+                <div class="btn-group" role="group">
+                    <a href="/services/system-commands" class="btn btn-sm btn-outline-light" title="Services">
+                        <i class="bi bi-gear-fill"></i> Services
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="Service Options">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/services/system-commands"><i class="bi bi-terminal"></i> System Commands</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Results Pages</h6></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-results"><i class="bi bi-speedometer2"></i> Reboot Perf Results</a></li>
+                        <li><a class="dropdown-item" href="/deepsleep-results"><i class="bi bi-moon-fill"></i> DeepSleep Results</a></li>
+                        <li><a class="dropdown-item" href="/soft-hard-boot-results"><i class="bi bi-arrow-repeat"></i> Boot Results</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-compare"><i class="bi bi-columns-gap"></i> Compare Executions</a></li>
+                    </ul>
+                </div>
+                <!-- User Info with Team Name -->
+                <span class="text-white d-flex align-items-center gap-2">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i class="bi bi-person-circle"></i>
+                            <div>
+                                <div>{{ current_user.name if current_user else 'Guest' }}</div>
+                                {% if current_user and current_user.team_name %}
+                                <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 2px;">{{ current_user.team_name }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </span>
+                <a href="/logout" class="btn btn-sm btn-danger">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container-fluid main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-title">
+                <i class="bi bi-grid-3x2"></i>
+                Test Results - Card View
+            </div>
+            <div class="view-toggle">
+                <a href="{{ url_for('results_page') }}" class="view-btn">
+                    <i class="bi bi-table"></i> Table View
+                </a>
+            </div>
+        </div>
+        
+        <!-- Filters Section -->
+        <div class="filters-section">
+            <div class="filter-group">
+                <label for="typeFilter">Sequence:</label>
+                <select id="typeFilter">
+                    <option value="">All</option>
+                    <option value="sequence">Sequences</option>
+                    <option value="single">Single Methods</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="methodFilter">Methods:</label>
+                <select id="methodFilter">
+                    <option value="">All Methods</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="deviceFilter">Devices:</label>
+                <select id="deviceFilter">
+                    <option value="">All Devices</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="datePickerInput" style="font-weight: 600; color: #f3f4f6;">
+                    <i class="bi bi-calendar-event"></i> Date:
+                </label>
+                <input type="date" id="datePickerInput" style="background: #1f2937; color: #f3f4f6; border: 1px solid #4b5563; padding: 0.75rem; border-radius: 6px; cursor: pointer;">
+                <button class="btn-small" style="background: #10b981; color: white; padding: 0.75rem 1.5rem; margin-left: 0.5rem;" onclick="selectDateAndLoad()">
+                    <i class="bi bi-search"></i> View
+                </button>
+            </div>
+            <div class="filter-group" style="margin-left: auto;">
+                <button class="btn-small" style="background: #4b5563; color: #d1d5db; padding: 0.75rem 1.5rem;" onclick="clearFilters()">
+                    <i class="bi bi-arrow-clockwise"></i> Reset Filters
+                </button>
+            </div>
+        </div>
+        
+        <!-- Results Grid -->
+        <div id="resultsContainer" class="results-grid">
+            <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+                <div class="loading-spinner"></div>
+                <p style="color: #9ca3af; margin-top: 1rem;">Loading results...</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    
+    <script>
+        let allResults = [];
+        let currentOffsetDays = 0;
+        let paginationMetadata = {};
+        let loadedDates = new Set();
+        let selectedDate = null;  // Track selected date for calendar
+        let availableDates = [];  // Store all available dates
+        
+        // Helper function to ensure methods is an array
+        function ensureMethodsArray(methods) {
+            if (Array.isArray(methods)) {
+                return methods;
+            }
+            if (typeof methods === 'string' && methods) {
+                // Try to parse as JSON array, or return empty array
+                try {
+                    return JSON.parse(methods);
+                } catch (e) {
+                    return [];
+                }
+            }
+            return [];
+        }
+        
+        // Save filter state to URL parameters
+        function saveFilterStateToUrl() {
+            const params = new URLSearchParams();
+            
+            const typeFilter = document.getElementById('typeFilter')?.value;
+            const methodFilter = document.getElementById('methodFilter')?.value;
+            const deviceFilter = document.getElementById('deviceFilter')?.value;
+            const dateInput = document.getElementById('datePickerInput')?.value;
+            
+            if (typeFilter) params.set('sequence_type', typeFilter);
+            if (methodFilter) params.set('method', methodFilter);
+            if (deviceFilter) params.set('device', deviceFilter);
+            if (dateInput) params.set('date', dateInput);
+            
+            const newUrl = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+        }
+        
+        // Load filter state from URL parameters
+        function loadFilterStateFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            
+            const sequenceType = params.get('sequence_type');
+            const method = params.get('method');
+            const device = params.get('device');
+            const date = params.get('date');
+            
+            return {
+                sequenceType: sequenceType || '',
+                method: method || '',
+                device: device || '',
+                date: date || ''
+            };
+        }
+        
+        // Apply filters from state
+        function applyFilterState(state) {
+            if (state.sequenceType) {
+                const typeFilter = document.getElementById('typeFilter');
+                if (typeFilter) typeFilter.value = state.sequenceType;
+            }
+            if (state.method) {
+                const methodFilter = document.getElementById('methodFilter');
+                if (methodFilter) methodFilter.value = state.method;
+            }
+            if (state.device) {
+                const deviceFilter = document.getElementById('deviceFilter');
+                if (deviceFilter) deviceFilter.value = state.device;
+            }
+            if (state.date) {
+                const dateInput = document.getElementById('datePickerInput');
+                if (dateInput) dateInput.value = state.date;
+            }
+        }
+        
+        // Fetch results on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            const filterState = loadFilterStateFromUrl();
+            
+            try {
+                // If date is specified in URL, load that date
+                if (filterState.date) {
+                    // Fetch data for the specific date
+                    const response = await fetch(`/api/results?filter_date=${filterState.date}`);
+                    const data = await response.json();
+                    allResults = data.results || [];
+                    paginationMetadata = data.pagination || {};
+                    loadedDates.clear();
+                    loadedDates.add(filterState.date);
+                    
+                    // Populate filters from API metadata
+                    populateFilters();
+                    
+                    // Apply saved filter state
+                    applyFilterState(filterState);
+                    
+                    // Initialize date picker
+                    initializeDatePicker();
+                    
+                    // Render with applied filters
+                    renderCards();
+                } else {
+                    // Default: load today's results
+                    const response = await fetch(`/api/results?offset_days=0&limit_days=1`);
+                    const data = await response.json();
+                    allResults = data.results || [];
+                    paginationMetadata = data.pagination || {};
+                    
+                    if (data.pagination) {
+                        data.pagination.current_dates.forEach(date => loadedDates.add(date));
+                        availableDates = data.pagination.all_dates || [];
+                    }
+                    
+                    // Initialize date picker
+                    initializeDatePicker();
+                    
+                    // Populate filters
+                    populateFilters();
+                    
+                    // Render
+                    renderCards();
+                }
+            } catch (error) {
+                console.error('Error loading results on page load:', error);
+                document.getElementById('resultsContainer').innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #ef4444;">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                        Error loading results. Please refresh the page.
+                    </div>
+                `;
+            }
+        });
+        
+        async function fetchResults() {
+            try {
+                currentOffsetDays = 0;
+                loadedDates.clear();
+                allResults = [];
+                const response = await fetch(`/api/results?offset_days=${currentOffsetDays}&limit_days=1`);
+                const data = await response.json();
+                allResults = data.results || [];
+                paginationMetadata = data.pagination || {};
+                
+                if (data.pagination) {
+                    data.pagination.current_dates.forEach(date => loadedDates.add(date));
+                    availableDates = data.pagination.all_dates || [];
+                }
+                
+                // Initialize date picker with available dates
+                initializeDatePicker();
+                
+                // Populate filters
+                populateFilters();
+                
+                // Render cards
+                renderCards();
+            } catch (error) {
+                console.error('Error fetching results:', error);
+                document.getElementById('resultsContainer').innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #ef4444;">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                        Error loading results. Please refresh the page.
+                    </div>
+                `;
+            }
+        }
+        
+        function initializeDatePicker() {
+            const dateInput = document.getElementById('datePickerInput');
+            
+            if (availableDates.length > 0) {
+                // Set max date to most recent available date
+                const maxDate = availableDates[0];
+                dateInput.max = maxDate;
+                
+                // Set min date to oldest available date
+                const minDate = availableDates[availableDates.length - 1];
+                dateInput.min = minDate;
+                
+                // Set default to most recent date
+                selectedDate = maxDate;
+                dateInput.value = maxDate;
+            }
+        }
+        
+        function selectDateAndLoad() {
+            const dateInput = document.getElementById('datePickerInput');
+            const selectedDate = dateInput.value;
+            
+            if (!selectedDate) {
+                alert('Please select a date first');
+                return;
+            }
+            
+            // Save date to URL
+            loadResultsForDate(selectedDate);
+        }
+        
+        async function loadResultsForDate(date) {
+            try {
+                // Show loading indicator
+                document.getElementById('resultsContainer').innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+                        <div class="loading-spinner"></div>
+                        <p style="color: #9ca3af; margin-top: 1rem;">Loading results for ${date}...</p>
+                    </div>
+                `;
+                
+                // Fetch results for specific date
+                const response = await fetch(`/api/results?filter_date=${date}`);
+                const data = await response.json();
+                
+                allResults = data.results || [];
+                paginationMetadata = data.pagination || {};
+                loadedDates.clear();
+                loadedDates.add(date);
+                selectedDate = date;
+                
+                // Populate filters
+                populateFilters();
+                
+                // Render cards (which will save state to URL)
+                renderCards();
+            } catch (error) {
+                console.error('Error loading results for date:', error);
+                document.getElementById('resultsContainer').innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #ef4444;">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                        Error loading results for ${date}.
+                    </div>
+                `;
+            }
+        }
+        
+        async function loadMoreDays() {
+            try {
+                const loadMoreBtn = document.getElementById('loadMoreBtn');
+                loadMoreBtn.disabled = true;
+                loadMoreBtn.innerHTML = '<span class="loading-spinner" style="display: inline-block; margin-right: 0.5rem;"></span>Loading...';
+                
+                currentOffsetDays += 1;
+                const response = await fetch(`/api/results?offset_days=${currentOffsetDays}&limit_days=1`);
+                const data = await response.json();
+                
+                const newResults = data.results || [];
+                if (data.pagination) {
+                    data.pagination.current_dates.forEach(date => loadedDates.add(date));
+                    paginationMetadata = data.pagination;
+                }
+                
+                // Merge new results with existing
+                allResults = [...allResults, ...newResults];
+                
+                // Update statistics
+                updateStats();
+                
+                // Render cards
+                renderCards();
+                
+                // Update load more button
+                updateLoadMoreButton();
+            } catch (error) {
+                console.error('Error loading more results:', error);
+                const loadMoreBtn = document.getElementById('loadMoreBtn');
+                loadMoreBtn.textContent = '❌ Error Loading More';
+            }
+        }
+        
+        function updateLoadMoreButton() {
+            const container = document.getElementById('resultsContainer');
+            
+            // Remove existing button if present
+            let existingBtn = document.getElementById('loadMoreBtn');
+            if (existingBtn) {
+                existingBtn.remove();
+            }
+            
+            if (paginationMetadata.has_more_days) {
+                const wrapper = document.createElement('div');
+                wrapper.style.cssText = 'grid-column: 1/-1; text-align: center; padding: 2rem;';
+                wrapper.innerHTML = `
+                    <button id="loadMoreBtn" class="btn-small" style="background: #3b82f6; color: white; padding: 1rem 2rem; cursor: pointer; border: none; border-radius: 8px; font-weight: 600; width: auto; transition: all 0.2s;">
+                        <i class="bi bi-arrow-down"></i> Load More Results from Earlier Days
+                    </button>
+                `;
+                wrapper.querySelector('button').onclick = loadMoreDays;
+                container.appendChild(wrapper);
+            }
+        }
+        
+        function populateFilters() {
+            // Use sequences, methods, and devices from API response
+            let sequences = [];
+            let methods = [];
+            let devices = [];
+            
+            // Get from pagination metadata if available
+            if (paginationMetadata.all_sequences) {
+                sequences = paginationMetadata.all_sequences;
+            }
+            if (paginationMetadata.all_methods) {
+                methods = paginationMetadata.all_methods;
+            }
+            if (paginationMetadata.all_devices) {
+                devices = paginationMetadata.all_devices;
+            }
+            
+            // Backup: extract from loaded results if metadata not available
+            if (sequences.length === 0 || methods.length === 0 || devices.length === 0) {
+                const seqSet = new Set();
+                const methodSet = new Set();
+                const devSet = new Set();
+                
+                allResults.forEach(result => {
+                    if (result.is_sequence) {
+                        seqSet.add(result.sequence_name);
+                    } else {
+                        methodSet.add(result.method_name);
+                    }
+                    devSet.add(result.device_name);
+                });
+                
+                if (sequences.length === 0) sequences = Array.from(seqSet).sort();
+                if (methods.length === 0) methods = Array.from(methodSet).sort();
+                if (devices.length === 0) devices = Array.from(devSet).sort();
+            }
+            
+            // Populate sequence filter
+            const typeFilter = document.getElementById('typeFilter');
+            if (typeFilter) {
+                const currentValue = typeFilter.value;
+                typeFilter.innerHTML = '<option value="">All</option><option value="sequence">Sequences</option><option value="single">Single Methods</option>';
+                typeFilter.value = currentValue;
+                typeFilter.removeEventListener('change', renderCards);
+                typeFilter.addEventListener('change', renderCards);
+            }
+            
+            // Populate method filter
+            const methodFilter = document.getElementById('methodFilter');
+            if (methodFilter) {
+                const currentValue = methodFilter.value;
+                methodFilter.innerHTML = '<option value="">All Methods</option>';
+                methods.forEach(method => {
+                    const option = document.createElement('option');
+                    option.value = method;
+                    option.textContent = method;
+                    methodFilter.appendChild(option);
+                });
+                methodFilter.value = currentValue;
+                methodFilter.removeEventListener('change', renderCards);
+                methodFilter.addEventListener('change', renderCards);
+            }
+            
+            // Populate device filter
+            const deviceFilter = document.getElementById('deviceFilter');
+            if (deviceFilter) {
+                const currentValue = deviceFilter.value;
+                deviceFilter.innerHTML = '<option value="">All Devices</option>';
+                devices.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device;
+                    option.textContent = device;
+                    deviceFilter.appendChild(option);
+                });
+                deviceFilter.value = currentValue;
+                deviceFilter.removeEventListener('change', renderCards);
+                deviceFilter.addEventListener('change', renderCards);
+            }
+        }
+        
+        function updateStats() {
+            const total = allResults.length;
+            const passed = allResults.filter(r => r.success === true).length;
+            const failed = allResults.filter(r => r.success === false).length;
+            const passRate = total > 0 ? Math.round((passed / total) * 100) : 0;
+            
+            document.getElementById('totalTests').textContent = total;
+            document.getElementById('passedTests').textContent = passed;
+            document.getElementById('failedTests').textContent = failed;
+            document.getElementById('passRate').textContent = passRate + '%';
+        }
+        
+        function getFilteredResults() {
+            const typeFilter = document.getElementById('typeFilter')?.value || '';
+            const methodFilter = document.getElementById('methodFilter').value;
+            const deviceFilter = document.getElementById('deviceFilter').value;
+            
+            return allResults.filter(result => {
+                const typeMatch = typeFilter === '' || 
+                                  (typeFilter === 'sequence' && result.is_sequence) || 
+                                  (typeFilter === 'single' && !result.is_sequence);
+                const methodMatch = methodFilter === '' || result.method_name === methodFilter;
+                const deviceMatch = deviceFilter === '' || result.device_name === deviceFilter;
+                
+                return typeMatch && methodMatch && deviceMatch;
+            }).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        }
+        
+        function renderCards() {
+            const filtered = getFilteredResults();
+            const container = document.getElementById('resultsContainer');
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center;">
+                        <div class="no-results">
+                            <i class="bi bi-inbox"></i>
+                            <p>No results found matching your filters.</p>
+                        </div>
+                    </div>
+                `;
+                updateLoadMoreButton();
+                // Save state after rendering
+                saveFilterStateToUrl();
+                return;
+            }
+            
+            // Group results by date
+            const groupedByDate = {};
+            filtered.forEach(result => {
+                const date = result.date || result.display_datetime?.split(' ')[0] || 'Unknown Date';
+                if (!groupedByDate[date]) {
+                    groupedByDate[date] = [];
+                }
+                groupedByDate[date].push(result);
+            });
+            
+            // Sort dates (most recent first)
+            const sortedDates = Object.keys(groupedByDate).sort().reverse();
+            
+            // Build HTML with day headers
+            let html = '';
+            sortedDates.forEach(date => {
+                const dateObj = new Date(date + 'T00:00:00');
+                const dateLabel = dateObj.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                const resultsForDate = groupedByDate[date];
+                const dateStats = {
+                    total: resultsForDate.length,
+                    passed: resultsForDate.filter(r => r.success === true).length,
+                    failed: resultsForDate.filter(r => r.success === false).length
+                };
+                
+                html += `
+                    <div style="grid-column: 1/-1; margin: 1.5rem 0 1rem 0;">
+                        <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1rem; background: #374151; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                            <div style="flex: 1;">
+                                <h3 style="margin: 0; color: #f3f4f6; font-size: 1.1rem; font-weight: 600;">
+                                    📅 ${dateLabel}
+                                </h3>
+                            </div>
+                            <div style="display: flex; gap: 1rem; font-size: 0.9rem;">
+                                <span style="color: #d1d5db;">
+                                    <i class="bi bi-list" style="color: #9ca3af;"></i> ${dateStats.total} tests
+                                </span>
+                                <span style="color: #10b981;">
+                                    <i class="bi bi-check-circle" style="color: #10b981;"></i> ${dateStats.passed}
+                                </span>
+                                <span style="color: #ef4444;">
+                                    <i class="bi bi-x-circle" style="color: #ef4444;"></i> ${dateStats.failed}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Add result cards for this date
+                html += resultsForDate.map(result => `
+                    <div class="result-card">
+                        <div class="card-header-section">
+                            <div class="card-status-badge ${result.success ? 'badge-success' : 'badge-danger'}">
+                                <i class="bi ${result.success ? 'bi-check-circle-fill' : 'bi-x-circle-fill'}"></i>
+                                ${result.success ? 'PASSED' : 'FAILED'}
+                            </div>
+                            <div class="card-device-name">${escapeHtml(result.device_name || 'Unknown Device')}</div>
+                            <div class="card-device-ip">${escapeHtml(result.device_ip || 'N/A')}</div>
+                        </div>
+                        
+                        <div class="card-body-section">
+                            <div class="info-row">
+                                <span class="info-label">${result.is_sequence ? 'Sequence' : 'Method'}</span>
+                                <span class="method-badge">${escapeHtml((result.sequence_name || result.method_name) || 'N/A')}</span>
+                            </div>
+                            
+                            <div class="info-row">
+                                <span class="info-label">Iteration</span>
+                                <span class="info-value">#${result.iteration || 'N/A'}</span>
+                            </div>
+                            
+                            <div class="info-row">
+                                <span class="info-label">Date & Time</span>
+                                <span class="info-value">${formatDate(result.timestamp)}</span>
+                            </div>
+                            
+                            ${result.performance_seconds ? `
+                            <div class="performance-metric">
+                                <div class="metric-label">Reboot Time</div>
+                                <div class="metric-value">${result.performance_seconds.toFixed(2)}s</div>
+                            </div>
+                            ` : ''}
+                            
+                            ${result.is_sequence && result.methods && ensureMethodsArray(result.methods).length > 0 ? `
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #4b5563;">
+                                <div style="color: #9ca3af; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 600;">
+                                    📋 Methods (${ensureMethodsArray(result.methods).length})
+                                </div>
+                                <div class="sequence-methods-section">
+                                    ${ensureMethodsArray(result.methods).map(method => `
+                                        <div class="method-result-item ${method.success === true ? 'success' : (method.success === false ? 'failed' : 'skipped')}">
+                                            <span class="method-result-name">${escapeHtml(method.method_name || 'N/A')}</span>
+                                            <span class="method-result-status ${method.success === true ? 'success' : (method.success === false ? 'failed' : 'skipped')}">
+                                                ${method.success === true ? '✓ PASS' : (method.success === false ? '✗ FAIL' : (method.status || 'SKIPPED'))}
+                                            </span>
+                                        </div>
+                                        ${method.details ? `
+                                        <div style="margin-top: 0.35rem; margin-bottom: 0.5rem; padding: 0.5rem; background: #2d3748; border-radius: 4px; font-size: 0.75rem; line-height: 1.3; color: #d1d5db; word-break: break-word;">
+                                            ${escapeHtml(method.details)}
+                                        </div>
+                                        ` : ''}
+                                    `).join('')}
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            ${result.methods && ensureMethodsArray(result.methods).length > 0 && !result.is_sequence ? `
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #4b5563;">
+                                ${ensureMethodsArray(result.methods).map(method => `
+                                    ${method.details ? `
+                                    <div style="padding: 0.5rem; background: #2d3748; border-radius: 4px; font-size: 0.75rem; line-height: 1.4; color: #d1d5db; word-break: break-word;">
+                                        ${escapeHtml(method.details)}
+                                    </div>
+                                    ` : ''}
+                                `).join('')}
+                            </div>
+                            ` : ''}
+                            
+                            ${result.screenshots && result.screenshots.length > 0 ? `
+                            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #4b5563;">
+                                <div style="color: #9ca3af; font-size: 0.875rem; margin-bottom: 0.75rem; font-weight: 600;">
+                                    📸 Screenshots
+                                </div>
+                                <div class="screenshot-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; max-height: 280px; overflow-y: auto; padding-right: 0.5rem; scrollbar-width: thin; scrollbar-color: rgba(107, 114, 128, 0.4) rgba(75, 85, 99, 0.2);">
+                                    ${(() => {
+                                        const allShots = result.screenshots.filter(s => s && s.trim() !== '');
+                                        
+                                        // Check what methods are in this result (methods is a STRING like "method1 → method2")
+                                        let methodNames = [];
+                                        if (result.methods) {
+                                            if (typeof result.methods === 'string') {
+                                                methodNames = result.methods.split(' → ').map(m => m.trim().toLowerCase());
+                                            } else if (Array.isArray(result.methods)) {
+                                                methodNames = result.methods.map(m => (m.method_name || '').toLowerCase());
+                                            }
+                                        }
+                                        const hasRebootMethod = methodNames.some(m => m.includes('reboot'));
+                                        const hasNavigateMethod = methodNames.some(m => m.includes('navigate') || m.includes('input'));
+                                        
+                                        let filtered = [];
+                                        
+                                        // Show ONLY AFTER_REBOOT if reboot method present (exclude BEFORE screenshots)
+                                        if (hasRebootMethod) {
+                                            const rebootShots = allShots.filter(shot => {
+                                                const lower = shot.toLowerCase();
+                                                return lower.includes('after_reboot') && !lower.includes('before');
+                                            });
+                                            // Get only first after_reboot screenshot
+                                            if (rebootShots.length > 0) {
+                                                filtered.push(rebootShots[0]);
+                                            }
+                                        }
+                                        
+                                        // Show ONLY INPUTROW if navigate method present
+                                        if (hasNavigateMethod) {
+                                            const inputShots = allShots.filter(shot => {
+                                                const lower = shot.toLowerCase();
+                                                return (lower.includes('input_row') || lower.includes('inputrow') || lower.includes('xumo_input')) && !lower.includes('before') && !lower.includes('after_reboot');
+                                            });
+                                            // Get only first inputrow screenshot
+                                            if (inputShots.length > 0) {
+                                                filtered.push(inputShots[0]);
+                                            }
+                                        }
+                                        
+                                        // Fallback: If no specific match, show first 2 valid ones
+                                        if (filtered.length === 0) {
+                                            filtered = allShots.slice(0, 2);
+                                        }
+                                        
+                                        return filtered.map((shot, idx) => `
+                                        <div style="display: flex; flex-direction: column; border: 1px solid #4b5563; border-radius: 6px; overflow: hidden; background: #1a202c;">
+                                            <img src="${shot}" alt="Screenshot ${idx + 1}" 
+                                                 style="width: 100%; height: 140px; object-fit: cover; cursor: pointer;" 
+                                                 onclick="window.open('${shot}', '_blank')"
+                                                 onerror="this.style.display='none'">
+                                        </div>
+                                        `).join('');
+                                    })()}
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            <div class="info-row">
+                                <span class="info-label">Status</span>
+                                <span class="info-value" style="color: ${result.success ? 'var(--success-color)' : 'var(--danger-color)'};">
+                                    ${result.success ? '✓ Success' : '✗ Failed'}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer-section">
+                            <a href="{{ url_for('results_page') }}?device_ip=${result.device_ip}&iteration=${result.iteration}" 
+                               class="btn-small btn-view" target="_blank">
+                                <i class="bi bi-eye"></i> View Details
+                            </a>
+                        </div>
+                    </div>
+                `).join('');
+            });
+            
+            container.innerHTML = html;
+            
+            // Initialize carousels after rendering cards
+            initializeCarousels();
+            
+            // Update load more button
+            updateLoadMoreButton();
+            
+            // Save current filter state to URL after rendering
+            saveFilterStateToUrl();
+        }
+        
+        function clearFilters() {
+            const typeFilter = document.getElementById('typeFilter');
+            if (typeFilter) typeFilter.value = '';
+            document.getElementById('methodFilter').value = '';
+            document.getElementById('deviceFilter').value = '';
+            document.getElementById('datePickerInput').value = '';
+            
+            // Clear URL parameters
+            window.history.replaceState({}, '', window.location.pathname);
+            
+            fetchResults();  // Reset to initial load
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Screenshot Carousel Functions
+        function slideScreenshot(button, direction) {
+            const carousel = button.closest('.screenshot-carousel');
+            const track = carousel.querySelector('.carousel-track');
+            const slides = carousel.querySelectorAll('.carousel-slide');
+            const currentSlide = [...slides].findIndex(s => s.classList.contains('active'));
+            const nextSlide = currentSlide + direction;
+            
+            if (nextSlide >= 0 && nextSlide < slides.length) {
+                goToScreenshot(null, nextSlide, carousel);
+            }
+        }
+        
+        function goToScreenshot(dot, index, carousel) {
+            if (!carousel) {
+                carousel = dot.closest('.screenshot-carousel');
+            }
+            
+            const slides = carousel.querySelectorAll('.carousel-slide');
+            const dots = carousel.querySelectorAll('.carousel-dot');
+            const track = carousel.querySelector('.carousel-track');
+            
+            // Update slides
+            slides.forEach(s => s.classList.remove('active'));
+            slides[index].classList.add('active');
+            
+            // Update dots
+            dots.forEach(d => d.classList.remove('active'));
+            dots[index].classList.add('active');
+            
+            // Update counter
+            const counter = carousel.querySelector('.current-index');
+            counter.textContent = index + 1;
+            
+            // Update track position
+            track.style.transform = `translateX(-${index * 100}%)`;
+            
+            // Update button states
+            const prevBtn = carousel.querySelector('.carousel-prev');
+            const nextBtn = carousel.querySelector('.carousel-next');
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === slides.length - 1;
+        }
+        
+        // Initialize carousels when rendered
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.screenshot-carousel').forEach(carousel => {
+                const slides = carousel.querySelectorAll('.carousel-slide');
+                if (slides.length > 0) {
+                    const prevBtn = carousel.querySelector('.carousel-prev');
+                    const nextBtn = carousel.querySelector('.carousel-next');
+                    const dots = carousel.querySelectorAll('.carousel-dot');
+                    
+                    prevBtn.disabled = true;
+                    if (slides.length === 1) {
+                        nextBtn.disabled = true;
+                        dots.forEach(d => d.style.display = 'none');
+                    }
+                }
+            });
+        });
+        
+        // Reinitialize carousels after rendering new cards
+        function initializeCarousels() {
+            document.querySelectorAll('.screenshot-carousel').forEach(carousel => {
+                const slides = carousel.querySelectorAll('.carousel-slide');
+                if (slides.length > 0) {
+                    const prevBtn = carousel.querySelector('.carousel-prev');
+                    const nextBtn = carousel.querySelector('.carousel-next');
+                    const dots = carousel.querySelectorAll('.carousel-dot');
+                    
+                    prevBtn.disabled = true;
+                    nextBtn.disabled = slides.length <= 1;
+                    if (slides.length === 1) {
+                        dots.forEach(d => d.style.display = 'none');
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

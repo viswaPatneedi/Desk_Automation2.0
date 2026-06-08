@@ -1,0 +1,1712 @@
+{
+  "job_id": "e2a9a09c-7871-46eb-bd4c-ca33989f3af2",
+  "device": "SHARP-DEVICE-DESK_10.0.0.232",
+  "total_iterations": 100,
+  "tiles_data": [
+    {
+      "iteration": 1,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 2,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 3,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 4,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 5,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 6,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 7,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 8,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 9,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 10,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 11,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 12,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 13,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 14,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 15,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 16,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 17,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 18,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 19,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 20,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 21,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 22,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 23,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 24,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 25,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 26,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 27,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 28,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 29,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 30,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 31,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 32,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 33,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 34,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 35,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 36,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 37,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 38,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 39,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 40,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 41,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 42,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 43,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 44,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 45,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 46,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 47,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 48,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 49,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 50,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 51,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 52,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 53,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 54,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 55,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 56,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 57,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 58,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 59,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 60,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 61,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 62,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 63,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 64,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 65,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 66,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 67,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 68,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 69,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 70,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 71,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 72,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 73,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 74,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 75,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 76,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 77,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 78,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 79,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 80,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 81,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 82,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 83,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 84,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 85,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 86,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 87,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 88,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 89,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 90,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 91,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 92,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 93,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 94,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 95,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 96,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 97,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 98,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 99,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    },
+    {
+      "iteration": 100,
+      "found_count": 8,
+      "total_count": 8,
+      "found_tiles": [
+        "ANTENNA",
+        "HDMI 1",
+        "HDMI 2",
+        "HDMI 3",
+        "COMPOSITE",
+        "AIRPLAY",
+        "USB",
+        "SCREEN MIRRORING."
+      ],
+      "missing_tiles": [],
+      "tiles_status": "8/8"
+    }
+  ],
+  "summary": {
+    "all_perfect": true,
+    "iterations_with_missing": 0,
+    "average_found": 8.0
+  }
+}

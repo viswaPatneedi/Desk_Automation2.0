@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Command Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .results-table th, .results-table td {
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+        .block-label {
+            background: #facc15;
+            color: #111827;
+            font-weight: 700;
+        }
+        .average-row {
+            background: #fde68a;
+            font-weight: 700;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-custom navbar-expand-lg sticky-top">
+        <div class="container-fluid px-4">
+            <div class="d-flex flex-column">
+                <a class="navbar-brand mb-0" href="/">
+                    <i class="bi bi-cpu-fill"></i>
+                    RDK-E Middleware QA Testing Tool
+                </a>
+                <span class="developer-credit" style="font-size: 0.75rem; color: #9ca3af; margin-left: 2rem;">
+                    <i class="bi bi-code-slash"></i> Designed & Developed by <strong>VISWA</strong>
+                </span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Results Dropdown -->
+                <div class="btn-group" role="group">
+                    <a href="/results" class="btn btn-sm btn-outline-light" title="View Results">
+                        <i class="bi bi-table"></i> Results
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="View Options">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/results"><i class="bi bi-table"></i> Table View</a></li>
+                        <li><a class="dropdown-item" href="/results-cards"><i class="bi bi-grid-3x2"></i> Card View</a></li>
+                    </ul>
+                </div>
+                <!-- Services Dropdown -->
+                <div class="btn-group" role="group">
+                    <a href="/services/system-commands" class="btn btn-sm btn-outline-light" title="Services">
+                        <i class="bi bi-gear-fill"></i> Services
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="Service Options">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/services/system-commands"><i class="bi bi-terminal"></i> System Commands</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Results Pages</h6></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-results"><i class="bi bi-speedometer2"></i> Reboot Perf Results</a></li>
+                        <li><a class="dropdown-item" href="/deepsleep-results"><i class="bi bi-moon-fill"></i> DeepSleep Results</a></li>
+                        <li><a class="dropdown-item" href="/soft-hard-boot-results"><i class="bi bi-arrow-repeat"></i> Boot Results</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-compare"><i class="bi bi-columns-gap"></i> Compare Executions</a></li>
+                    </ul>
+                </div>
+                <a href="/log-patterns" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-file-earmark-lines"></i> Log Patterns
+                </a>
+                <span class="text-white d-flex align-items-center gap-2">
+                    <i class="bi bi-person-circle"></i> {{ current_user.name }}
+                </span>
+                <a href="/logout" class="btn btn-sm btn-danger">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="dashboard-card mb-4">
+            <div class="card-header-custom">
+                <i class="bi bi-terminal"></i>
+                <h5>System Command Results</h5>
+            </div>
+            <div class="card-body-custom">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label">Job</label>
+                        <select id="jobSelect" class="form-select"></select>
+                    </div>
+                    <div class="col-12 col-lg-3">
+                        <label class="form-label">Iteration</label>
+                        <select id="iterationSelect" class="form-select"></select>
+                    </div>
+                    <div class="col-12 col-lg-3 d-flex gap-2">
+                        <button class="btn btn-sm btn-primary" onclick="loadIterationData()">
+                            <i class="bi bi-eye"></i> View
+                        </button>
+                        <button class="btn btn-sm btn-success" onclick="downloadExcel()">
+                            <i class="bi bi-download"></i> Download Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-header-custom">
+                <i class="bi bi-table"></i>
+                <h5>Iteration Data</h5>
+            </div>
+            <div class="card-body-custom table-wrapper">
+                <div id="resultsContainer" class="text-muted">Select a job and iteration to view data.</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script>
+        const jobSelect = document.getElementById('jobSelect');
+        const iterationSelect = document.getElementById('iterationSelect');
+        const resultsContainer = document.getElementById('resultsContainer');
+
+        async function loadJobs() {
+            const response = await fetch('/api/jobs');
+            const data = await response.json();
+            if (!data.success) {
+                jobSelect.innerHTML = '<option value="">No jobs found</option>';
+                return;
+            }
+            const jobs = (data.jobs || []).filter(j => (j.execution_queue || []).some(item => item.method === 'system_command'));
+            if (jobs.length === 0) {
+                jobSelect.innerHTML = '<option value="">No system command jobs</option>';
+                return;
+            }
+            jobSelect.innerHTML = jobs.map(j => `<option value="${j.job_id}">${j.job_id} — ${j.device_name}</option>`).join('');
+            await loadIterations();
+        }
+
+        async function loadIterations() {
+            const jobId = jobSelect.value;
+            iterationSelect.innerHTML = '';
+            if (!jobId) return;
+            const response = await fetch(`/api/system-command-logs/${jobId}`);
+            const data = await response.json();
+            if (!data.success || !data.files) {
+                iterationSelect.innerHTML = '<option value="">No iterations</option>';
+                return;
+            }
+            const iterations = data.files.map(f => f.iteration);
+            if (iterations.length === 0) {
+                iterationSelect.innerHTML = '<option value="">No iterations</option>';
+                return;
+            }
+            iterationSelect.innerHTML = iterations.map(i => `<option value="${i}">ITR-${i}</option>`).join('');
+        }
+
+        async function loadIterationData() {
+            const jobId = jobSelect.value;
+            const iteration = iterationSelect.value;
+            if (!jobId || !iteration) return;
+            resultsContainer.textContent = 'Loading...';
+            const response = await fetch(`/api/system-command-logs/${jobId}/preview?iteration=${encodeURIComponent(iteration)}`);
+            const data = await response.json();
+            if (!data.success || !data.blocks || data.blocks.length === 0) {
+                resultsContainer.textContent = 'No data for selected iteration.';
+                return;
+            }
+
+            const header = [
+                'Time','MemTotal','MemFree','MemUsed','BuffCache','SwapTotal','SwapFree','SwapUsed','AvailMem',
+                'RSS_KB','PSS_KB','PID','VIRT_KiB','RES_KiB','SHR_KiB','CPU_pct','MEM_pct'
+            ];
+
+            let html = '<table class="table table-sm table-dark table-bordered results-table">';
+            data.blocks.forEach(block => {
+                html += `<tr class="block-label"><td colspan="${header.length}">${block.label}</td></tr>`;
+                html += '<tr>' + header.map(h => `<th>${h}</th>`).join('') + '</tr>';
+                block.rows.forEach(row => {
+                    html += '<tr>' + row.map(cell => `<td>${cell || ''}</td>`).join('') + '</tr>';
+                });
+                if (block.average) {
+                    html += '<tr class="average-row">' + block.average.map(cell => `<td>${cell || ''}</td>`).join('') + '</tr>';
+                }
+            });
+            html += '</table>';
+            resultsContainer.innerHTML = html;
+        }
+
+        async function downloadExcel() {
+            const jobId = jobSelect.value;
+            if (!jobId) return;
+            const response = await fetch(`/api/system-command-logs/${jobId}`);
+            const data = await response.json();
+            if (!data.success || !data.files || data.files.length === 0) {
+                alert('No logs available');
+                return;
+            }
+            const files = data.files.map(f => f.path);
+            const excelResponse = await fetch(`/api/system-command-logs/${jobId}/consolidate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ files })
+            });
+            if (!excelResponse.ok) {
+                const err = await excelResponse.json();
+                alert(err.error || 'Failed to generate Excel');
+                return;
+            }
+            const blob = await excelResponse.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `system_command_consolidated_${jobId}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        }
+
+        jobSelect.addEventListener('change', loadIterations);
+        document.addEventListener('DOMContentLoaded', loadJobs);
+    </script>
+</body>
+</html>

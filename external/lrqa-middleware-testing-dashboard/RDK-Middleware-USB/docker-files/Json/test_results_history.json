@@ -1,0 +1,3516 @@
+[
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:01:19.246331+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.178647,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 2,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:04:40.574330+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 90.70066,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 3,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:08:13.222327+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 100.709691,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 4,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:11:40.134349+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.355691,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 5,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:15:07.398326+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 96.602688,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 6,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:18:34.294374+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.898682,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 7,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:22:01.278338+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.214697,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 8,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:25:33.942322+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 99.808698,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 9,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:29:01.262320+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.51168,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 10,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:32:29.126325+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.330581,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 11,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:35:55.630314+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.456697,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 12,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "FAILED",
+    "details": "",
+    "screenshots": [],
+    "logs": [
+      "/media/apps/10.0.0.175_BCM-XFINITY_ITR-12_logs_20260417_044043.tar.gz"
+    ],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:40:50.350318+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": null,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 13,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:44:17.702329+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.19969,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 14,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:47:44.574314+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 96.258695,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 15,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:51:11.758342+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.971704,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 16,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:54:38.294323+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 99.056697,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 17,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T04:58:04.766312+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.788689,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 18,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:01:31.334334+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.391694,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 19,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:04:52.191399+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 92.06465,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 20,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:08:13.918323+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 92.635688,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 21,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:11:46.078333+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 100.111618,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 22,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:15:13.390335+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 99.399709,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 23,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:18:39.567376+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.684689,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 24,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:22:06.678327+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.3117,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 25,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:25:34.118334+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.630653,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 26,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:29:01.150335+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.205704,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 27,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:32:22.238327+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 93.561692,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 28,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:35:49.454318+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.218691,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 29,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:39:16.630323+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.564611,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 30,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:42:44.366319+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.256685,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 31,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:46:10.430338+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.050702,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 32,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:49:37.510316+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 96.223676,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 33,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:53:10.246323+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 100.608626,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 34,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T05:56:37.486320+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.593694,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 35,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:00:04.398327+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.164662,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 36,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:03:31.398323+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.727702,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 37,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:06:58.566311+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.774663,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 38,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:10:25.534323+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 96.877701,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 39,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:13:52.118337+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.205686,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 40,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:17:19.166327+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.236674,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 41,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:20:46.822313+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.402669,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 42,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:24:13.518312+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.169703,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 43,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:27:41.150333+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.106688,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 44,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:31:08.078339+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.352692,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 45,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:34:35.278317+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.137698,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 46,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:38:02.206323+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.076692,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 47,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:41:29.310348+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.178688,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 48,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:44:56.206342+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 96.979694,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 49,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:48:23.030325+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.930696,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 50,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:51:50.022322+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.079694,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 51,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:55:17.062324+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.517699,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 52,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T06:58:44.630342+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.182694,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 53,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:02:11.622320+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.06969,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 54,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:05:38.846326+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.571702,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 55,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:09:05.878313+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.461681,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 56,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:12:32.878362+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.695701,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 57,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:15:59.966331+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.551695,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 58,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:19:27.214310+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 96.924693,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 59,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:22:54.134340+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.904698,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 60,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:26:27.110337+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 99.194663,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 61,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [
+      "/media/apps/10.0.0.175_BCM-XFINITY_ITR-61_logs_20260417_072953.tar.gz",
+      "/media/apps/10.0.0.175_BCM-XFINITY_ITR-61_logs_20260417_073000.tar.gz"
+    ],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:30:07.103404+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.238699,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "2026-04-17T07:29:35.091Z process crashed = WPEWebProcess",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": true
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [
+        "/media/apps/10.0.0.175_BCM-XFINITY_ITR-61_logs_20260417_072953.tar.gz"
+      ],
+      "detections": [
+        {
+          "check_key": "process_crash",
+          "description": "Detects when any system process crashes",
+          "pattern_found": "2026-04-17T07:29:35.091Z process crashed = WPEWebProcess"
+        }
+      ],
+      "detection_triggered_logs": "/media/apps/10.0.0.175_BCM-XFINITY_ITR-61_logs_20260417_073000.tar.gz"
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 62,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:33:34.390316+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.748696,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 63,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:37:01.038319+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.899677,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 64,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:40:27.838318+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.616693,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 65,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:43:49.334344+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 93.303703,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 66,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:47:16.742335+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 99.022683,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 67,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:50:43.886326+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.358491,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 68,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:54:10.734314+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.871698,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 69,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T07:57:38.350333+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.418668,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 70,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:01:05.382317+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 96.155704,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 71,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:04:32.846355+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.490629,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 72,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:07:59.694326+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.688695,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 73,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:11:26.982326+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 96.339687,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 74,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:14:53.878328+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 96.258691,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 75,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:18:21.926325+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.602552,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 76,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:21:48.174333+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.473695,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 77,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:25:14.830319+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.562681,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 78,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:28:42.134342+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.210699,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 79,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:32:08.990335+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.377664,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 80,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:35:36.294316+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.235694,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 81,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:39:02.718355+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.625698,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 82,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:42:30.518331+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.086683,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 83,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:45:57.422317+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 96.978675,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 84,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:49:24.262343+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.563707,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 85,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:52:51.638407+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.944696,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 86,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:56:18.646323+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.895692,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 87,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T08:59:45.774318+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 99.046685,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 88,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T09:03:12.686324+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 96.872681,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 89,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T09:06:39.718408+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.844693,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 90,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T09:10:07.094327+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.291686,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 91,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T09:13:34.070336+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.645701,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 92,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T09:17:00.870373+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 97.13969,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 93,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T09:20:27.694350+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.428666,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 94,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T09:23:54.510313+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 93.354681,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 95,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T09:27:22.014313+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.516686,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 96,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T09:30:49.150352+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 99.269693,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 97,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T09:34:16.294330+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 95.35168,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 98,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T09:37:43.222325+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 98.09667,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 99,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T09:41:10.278345+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 94.994698,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 100,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.175",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-04-17T09:44:37.734364+00:00",
+    "date": "2026-04-17",
+    "job_id": "682e59ba-8996-4df5-841f-7f7bebc95aa1",
+    "performance_seconds": 93.901693,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SCXI11BEI_DEV_rel-15567_20260415083612_XOE\nOSS_VERSION=4.12.0\nAPPLICATION_VERSION=4.51.0\nVENDOR_VERSION=4.1.0\nMIDDLEWARE_VERSION=8.5.3.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=22.0 Linux 5.4 android 64 bit\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=BCM-XIONE-XUMO-CHARTER-BOX-Image-Assembler-Build\nJENKINS_BUILD_NUMBER=406\nBRANCH=rel-15567\nBUILD_TIME=\"2026-04-15 08:36:12\"",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  }
+]

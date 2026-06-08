@@ -1,0 +1,585 @@
+{
+  "10.0.0.191": [
+    {
+      "job_id": "ae9d1468-4988-495f-9c85-0af92b59fa93",
+      "user_id": "bsatya541",
+      "device_ip": "10.0.0.191",
+      "device_name": "RAGHAVA-XIONE-US",
+      "methods": [
+        "execute_command",
+        "execute_command",
+        "send_remote_keys",
+        "wait",
+        "voice_command",
+        "wait",
+        "send_remote_keys",
+        "wait",
+        "execute_command",
+        "send_remote_keys",
+        "wait",
+        "voice_command",
+        "wait",
+        "send_remote_keys",
+        "wait",
+        "send_remote_keys",
+        "wait",
+        "execute_command",
+        "send_remote_keys",
+        "voice_command",
+        "wait",
+        "send_remote_keys",
+        "wait",
+        "execute_command",
+        "send_remote_keys",
+        "voice_command",
+        "wait",
+        "send_remote_keys",
+        "wait",
+        "execute_command",
+        "send_remote_keys",
+        "voice_command",
+        "wait",
+        "execute_command",
+        "execute_command",
+        "execute_command",
+        "execute_command",
+        "collect_device_logs"
+      ],
+      "execution_queue": [
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "cat /opt/secure/reboot/previousreboot.info",
+          "expected_output": "KERNEL_PANIC",
+          "validation_type": "not_contains"
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "cat /opt/secure/reboot/previousreboot.info",
+          "expected_output": "WATCHDOG_TIMER_RESET",
+          "validation_type": "not_contains"
+        },
+        {
+          "method": "send_remote_keys",
+          "ir_keys": [],
+          "remote_keys": "HOME"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 10
+        },
+        {
+          "method": "voice_command",
+          "ir_keys": [],
+          "voice_text": "Launch OZARK in Netflix app"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 15
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "OK"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 600
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}'",
+          "expected_output": "Netflix",
+          "validation_type": "contains"
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "HOME"
+        },
+        {
+          "method": "wait",
+          "wait_seconds": 10
+        },
+        {
+          "method": "voice_command",
+          "ir_keys": [],
+          "voice_text": "Launch Invinsicble Season1 Episode 1 in Prime Video"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 20
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,DOWN,OK"
+        },
+        {
+          "method": "wait",
+          "wait_seconds": 10
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "UP,RIGHT,OK"
+        },
+        {
+          "method": "wait",
+          "wait_seconds": 600
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}'",
+          "expected_output": "Prime",
+          "validation_type": "contains"
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "HOME"
+        },
+        {
+          "method": "voice_command",
+          "ir_keys": [],
+          "voice_text": "Play MOANA 2 in Disney Plus"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 20
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "RIGHT,OK,RIGHT,OK"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 600
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}'",
+          "expected_output": "disneyPlus",
+          "validation_type": "contains"
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "HOME"
+        },
+        {
+          "method": "voice_command",
+          "ir_keys": [],
+          "voice_text": "Play 4K SWISS city video in Youtube"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 15
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "OK"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 600
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}'",
+          "expected_output": "YouTube",
+          "validation_type": "contains"
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "HOME"
+        },
+        {
+          "method": "voice_command",
+          "voice_text": "Play Criminal Record in Apple TV+"
+        },
+        {
+          "method": "wait",
+          "wait_seconds": 600
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}'",
+          "expected_output": "apple_inc_apple_tv",
+          "validation_type": "contains"
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "grep -i \".*process crash.*\" /opt/logs/core_log.txt",
+          "expected_output": ".*process crashed.*",
+          "validation_type": "not_contains"
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "cat /opt/secure/reboot/previousreboot.info",
+          "expected_output": "KERNEL_PANIC",
+          "validation_type": "not_contains"
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "cat /opt/secure/reboot/previousreboot.info",
+          "expected_output": "WATCHDOG_TIMER_RESET",
+          "validation_type": "not_contains"
+        },
+        {
+          "method": "collect_device_logs",
+          "ir_keys": []
+        }
+      ],
+      "iterations": 1,
+      "status": "pending",
+      "start_time": "2026-04-28T15:00:37.163064",
+      "end_time": null,
+      "log_file_path": null,
+      "sequence_name": "MULTIPLE-APPS-LAUNCH-WITH-PLAYBACK (APPS : NETFLIX,YT,PRIME,D+,APPLE TV+)",
+      "current_step": 0,
+      "current_iteration": 1,
+      "iteration_results": {},
+      "created_at": "2026-04-28T15:00:37.163105",
+      "eta_seconds": 3696,
+      "eta_formatted": "1h 1m",
+      "time_per_iteration": 3696,
+      "remaining_iterations": 1
+    },
+    {
+      "job_id": "999e10dd-719d-4048-9f0f-9ef4ede04daa",
+      "user_id": "bsatya541",
+      "device_ip": "10.0.0.191",
+      "device_name": "RAGHAVA-XIONE-US",
+      "methods": [
+        "reboot",
+        "execute_command",
+        "execute_command",
+        "send_remote_keys",
+        "wait",
+        "voice_command",
+        "wait",
+        "send_remote_keys",
+        "wait",
+        "execute_command",
+        "send_remote_keys",
+        "wait",
+        "voice_command",
+        "wait",
+        "send_remote_keys",
+        "wait",
+        "send_remote_keys",
+        "wait",
+        "execute_command",
+        "send_remote_keys",
+        "voice_command",
+        "wait",
+        "send_remote_keys",
+        "wait",
+        "execute_command",
+        "send_remote_keys",
+        "voice_command",
+        "wait",
+        "send_remote_keys",
+        "wait",
+        "execute_command",
+        "send_remote_keys",
+        "voice_command",
+        "wait",
+        "execute_command",
+        "execute_command",
+        "execute_command",
+        "execute_command",
+        "collect_device_logs",
+        "deepsleep"
+      ],
+      "execution_queue": [
+        {
+          "method": "reboot"
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "cat /opt/secure/reboot/previousreboot.info",
+          "expected_output": "KERNEL_PANIC",
+          "validation_type": "not_contains"
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "cat /opt/secure/reboot/previousreboot.info",
+          "expected_output": "WATCHDOG_TIMER_RESET",
+          "validation_type": "not_contains"
+        },
+        {
+          "method": "send_remote_keys",
+          "ir_keys": [],
+          "remote_keys": "HOME"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 10
+        },
+        {
+          "method": "voice_command",
+          "ir_keys": [],
+          "voice_text": "Launch OZARK in Netflix app"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 15
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "OK"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 600
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}'",
+          "expected_output": "Netflix",
+          "validation_type": "contains"
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "HOME"
+        },
+        {
+          "method": "wait",
+          "wait_seconds": 10
+        },
+        {
+          "method": "voice_command",
+          "ir_keys": [],
+          "voice_text": "Launch Invinsicble Season1 Episode 1 in Prime Video"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 20
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,RIGHT,DOWN,OK"
+        },
+        {
+          "method": "wait",
+          "wait_seconds": 10
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "UP,RIGHT,OK"
+        },
+        {
+          "method": "wait",
+          "wait_seconds": 600
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}'",
+          "expected_output": "Prime",
+          "validation_type": "contains"
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "HOME"
+        },
+        {
+          "method": "voice_command",
+          "ir_keys": [],
+          "voice_text": "Play MOANA 2 in Disney Plus"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 20
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "RIGHT,OK,RIGHT,OK"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 600
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}'",
+          "expected_output": "disneyPlus",
+          "validation_type": "contains"
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "HOME"
+        },
+        {
+          "method": "voice_command",
+          "ir_keys": [],
+          "voice_text": "Play 4K SWISS city video in Youtube"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 15
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "OK"
+        },
+        {
+          "method": "wait",
+          "ir_keys": [],
+          "wait_seconds": 600
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}'",
+          "expected_output": "YouTube",
+          "validation_type": "contains"
+        },
+        {
+          "method": "send_remote_keys",
+          "remote_keys": "HOME"
+        },
+        {
+          "method": "voice_command",
+          "voice_text": "Play Criminal Record in Apple TV+"
+        },
+        {
+          "method": "wait",
+          "wait_seconds": 600
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}'",
+          "expected_output": "apple_inc_apple_tv",
+          "validation_type": "contains"
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "grep -i \".*process crash.*\" /opt/logs/core_log.txt",
+          "expected_output": ".*process crashed.*",
+          "validation_type": "not_contains"
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "cat /opt/secure/reboot/previousreboot.info",
+          "expected_output": "KERNEL_PANIC",
+          "validation_type": "not_contains"
+        },
+        {
+          "method": "execute_command",
+          "ir_keys": [],
+          "command": "",
+          "command_text": "cat /opt/secure/reboot/previousreboot.info",
+          "expected_output": "WATCHDOG_TIMER_RESET",
+          "validation_type": "not_contains"
+        },
+        {
+          "method": "collect_device_logs",
+          "ir_keys": []
+        },
+        {
+          "method": "deepsleep",
+          "remote_type": "XUMO_PR3",
+          "sleep_duration_minutes": 1
+        }
+      ],
+      "iterations": 1,
+      "status": "pending",
+      "start_time": "2026-04-28T15:28:26.161182",
+      "end_time": null,
+      "log_file_path": null,
+      "sequence_name": "Raghav",
+      "current_step": 0,
+      "current_iteration": 1,
+      "iteration_results": {},
+      "created_at": "2026-04-28T15:28:26.161221",
+      "eta_seconds": 5586,
+      "eta_formatted": "1h 33m",
+      "time_per_iteration": 5586,
+      "remaining_iterations": 1
+    }
+  ],
+  "10.0.0.230": [],
+  "10.0.0.252": [
+    {
+      "job_id": "6df30b03-9b23-4497-9db5-3bc7454defb9",
+      "user_id": "vpatne290",
+      "device_ip": "10.0.0.252",
+      "device_name": "SKY_ALPACA_IT-252",
+      "methods": [
+        "ir_test"
+      ],
+      "execution_queue": [
+        {
+          "method": "ir_test",
+          "ir_keys": [
+            "POWER",
+            "HOME"
+          ]
+        }
+      ],
+      "iterations": 1,
+      "status": "pending",
+      "start_time": "2026-05-21T18:28:26.466196",
+      "end_time": null,
+      "log_file_path": null,
+      "sequence_name": null,
+      "execution_type": "direct_method",
+      "current_step": 0,
+      "current_iteration": 0,
+      "iteration_results": {},
+      "created_at": "2026-05-21T18:28:26.466281",
+      "eta_seconds": 61,
+      "eta_formatted": "1m 1s",
+      "time_per_iteration": 61,
+      "remaining_iterations": 2
+    }
+  ],
+  "10.0.0.141": []
+}

@@ -1,0 +1,104 @@
+version: '3.8'
+
+# =============================================================================
+# Production Docker Compose Configuration
+# RDK-E Middleware QA Testing Dashboard
+# =============================================================================
+# This configuration:
+# ✅ Runs the application on port 11078
+# ✅ Mounts execution data as volumes (not in image)
+# ✅ Persists logs, screenshots, and device data
+# ✅ Auto-restarts on failure
+# ✅ Includes health checks
+# =============================================================================
+
+services:
+  
+  rdk-middleware-dashboard:
+    image: rdk-middleware:latest
+    container_name: rdk-middleware-dashboard
+    
+    # ========== PORT CONFIGURATION ==========
+    ports:
+      - "11078:11078"
+    
+    # ========== VOLUME MOUNTS ==========
+    # Application code is in image, data is in volumes
+    volumes:
+      # Execution data volumes
+      - ./iteration_logs:/app/iteration_logs          # Execution logs
+      - ./screenshots:/app/screenshots                # Test screenshots
+      - ./data:/app/data                              # Application data
+      - ./reference_screens:/app/reference_screens    # Reference screens
+      
+      # Configuration data
+      - ./Json:/app/Json                              # JSON configs (devices, jobs, etc)
+    
+    # ========== ENVIRONMENT VARIABLES ==========
+    environment:
+      FLASK_ENV: production
+      PORT: 11078
+      PYTHONDONTWRITEBYTECODE: 1
+      PYTHONUNBUFFERED: 1
+      TZ: UTC
+    
+    # ========== RESOURCE LIMITS ==========
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1024M
+        reservations:
+          cpus: '1'
+          memory: 512M
+    
+    # ========== RESTART POLICY ==========
+    restart: unless-stopped
+    
+    # ========== HEALTH CHECK ==========
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11078/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    # ========== LOGGING ==========
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "3"
+
+# =============================================================================
+# NAMED VOLUMES (for reference - can be used instead of host mounts)
+# =============================================================================
+# Uncomment to use named volumes instead of host mounts:
+#
+# volumes:
+#   iteration_logs:
+#     driver: local
+#   screenshots:
+#     driver: local
+#   reference_screens:
+#     driver: local
+#   app_config:
+#     driver: local
+
+# =============================================================================
+# DESCRIPTION OF VOLUMES
+# =============================================================================
+# 
+# Host Mount Method (currently used):
+# - Data stored directly on host machine
+# - Easy to access and backup
+# - Path: ./iteration_logs, ./screenshots, etc
+# 
+# Execution Data Stored:
+# - iteration_logs/: Log files from test executions (timestamped)
+# - screenshots/: Screenshots captured during tests
+# - data/: Application runtime data
+# - reference_screens/: Reference images for validation
+# - Json/: Configuration and state files (devices.json, jobs.json, etc)
+#
+# =============================================================================

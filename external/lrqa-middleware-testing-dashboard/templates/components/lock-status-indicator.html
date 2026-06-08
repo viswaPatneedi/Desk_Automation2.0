@@ -1,0 +1,99 @@
+<!-- Lock Status Indicator Component - Include in job execution templates -->
+<!-- Usage: Include this in your job execution template, then call initLockStatusMonitor(jobId) in JavaScript -->
+
+<div class="container" style="margin-bottom: 2rem;">
+    <!-- Lock Status Alert Container - Hidden by default, shown when lock requires attention -->
+    <div id="lock-status-indicator" style="display: none; margin-bottom: 2rem;">
+        <!-- Content will be dynamically inserted by lock-status-monitor.js -->
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/lock-status-monitor.js') }}"></script>
+
+<script>
+    // On page load, initialize lock status monitoring if jobId is available
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get job ID from data attribute or URL parameter
+        const jobId = document.querySelector('[data-job-id]')?.dataset.jobId || 
+                      new URLSearchParams(window.location.search).get('jobId');
+        
+        if (jobId) {
+            console.log(`[LOCK-INDICATOR] Initializing lock status monitor for job: ${jobId}`);
+            
+            // Request notification permission
+            requestNotificationPermission();
+            
+            // Initialize monitor with custom handlers
+            initLockStatusMonitor(jobId, {
+                checkInterval: 30000, // Check every 30 seconds
+                warningThreshold: 600, // 10 minutes
+                criticalThreshold: 300, // 5 minutes
+                containerId: 'lock-status-indicator',
+                
+                // Custom handlers
+                onWarning: function(status) {
+                    console.warn(`[LOCK-INDICATOR] Lock warning: ${status.time_remaining_formatted} remaining`);
+                },
+                
+                onCritical: function(status) {
+                    console.error(`[LOCK-INDICATOR] CRITICAL: Lock expiring in ${status.time_remaining_formatted}!`);
+                    // Play audio alert if available
+                    try {
+                        const audio = new Audio('data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==');
+                        audio.play().catch(() => {});
+                    } catch (e) {}
+                },
+                
+                onLostLock: function(status) {
+                    console.error('[LOCK-INDICATOR] CRITICAL: Device lock was lost!');
+                    alert('⛔ CRITICAL: Device lock was lost during job execution!\nJob may fail if it attempts to use the device.');
+                }
+            });
+        }
+    });
+    
+    // Clean up on page unload
+    window.addEventListener('beforeunload', function() {
+        const jobId = document.querySelector('[data-job-id]')?.dataset.jobId;
+        if (jobId) {
+            stopLockStatusMonitor(jobId);
+        }
+    });
+</script>
+
+<style>
+    /* Lock Status Alert Styling */
+    #lock-status-indicator .alert {
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    
+    #lock-status-indicator .alert-info {
+        background-color: #e3f2fd;
+        border-color: #2196f3;
+        color: #1565c0;
+    }
+    
+    #lock-status-indicator .alert-warning {
+        background-color: #fff3e0;
+        border-color: #ff9800;
+        color: #e65100;
+    }
+    
+    #lock-status-indicator .alert-danger {
+        background-color: #ffebee;
+        border-color: #f44336;
+        color: #b71c1c;
+        animation: pulse-red 1s infinite;
+    }
+    
+    @keyframes pulse-red {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+    
+    #lock-status-indicator .btn-sm {
+        margin-top: 0.5rem;
+    }
+</style>

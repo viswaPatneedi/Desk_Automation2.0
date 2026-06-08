@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepSleep Results | RDK-E Middleware QA Testing Tool</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        :root {
+            --primary-color: #6b7280;
+            --secondary-color: #4b5563;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --info-color: #6b7280;
+            --dark-color: #1f2937;
+            --darker-color: #111827;
+            --light-grey: #9ca3af;
+            --medium-grey: #6b7280;
+            --dark-grey: #374151;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            --card-shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+        }
+        
+        .container {
+            width: 100% !important;
+            max-width: none !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        
+        .dashboard-card {
+            background: #1f2937;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #374151;
+            margin-left: 1rem;
+            margin-right: 1rem;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-lg);
+        }
+        
+        .card-header-custom {
+            background: #4b5563;
+            color: #f3f4f6;
+            padding: 1.25rem 1.5rem;
+            border: none;
+            border-bottom: 1px solid #374151;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .card-header-custom h5 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .card-body-custom {
+            padding: 1.5rem;
+        }
+        
+        .table-modern {
+            margin-bottom: 0;
+        }
+        
+        .table-modern thead th {
+            background: #374151;
+            color: #f3f4f6;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            padding: 1rem;
+            border: none;
+            text-align: left;
+        }
+        
+        .table-modern thead th:first-child {
+            border-radius: 8px 0 0 0;
+        }
+        
+        .table-modern thead th:last-child {
+            border-radius: 0 8px 0 0;
+        }
+        
+        .table-modern tbody td {
+            padding: 0.9rem 1rem;
+            border-bottom: 1px solid #374151;
+            vertical-align: top;
+            color: #e5e7eb;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            background: #111827;
+        }
+        
+        .table-modern tbody tr:hover {
+            background: #1a202f;
+        }
+        
+        /* Execution Block Styles */
+        .execution-block {
+            margin-bottom: 2rem;
+            border-left: 4px solid #4b5563;
+            padding-left: 1.5rem;
+        }
+        
+        .execution-block.sequence {
+            border-left-color: #8b5cf6;
+        }
+        
+        .execution-block.method {
+            border-left-color: #3b82f6;
+        }
+        
+        .execution-block-type {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.5rem;
+            background: #2d3748;
+            color: #f3f4f6;
+        }
+        
+        .execution-block.sequence .execution-block-type {
+            background: rgba(139, 92, 246, 0.2);
+            color: #d8b4fe;
+            border: 1px solid #8b5cf6;
+        }
+        
+        .execution-block.method .execution-block-type {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border: 1px solid #3b82f6;
+        }
+        
+        .batch-header {
+            background: #1a202f;
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 3px solid #4b5563;
+        }
+        
+        .batch-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #f3f4f6;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .batch-meta {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .batch-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .result-card {
+            background: #111827;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 1rem;
+            overflow: hidden;
+        }
+        
+        .result-card:hover {
+            border-color: #4b5563;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .result-iteration {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .result-device {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #f3f4f6;
+            margin-bottom: 0.75rem;
+        }
+        
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        .result-label {
+            color: #9ca3af;
+            font-weight: 500;
+        }
+        
+        .result-value {
+            color: #e5e7eb;
+            text-align: right;
+            flex: 1;
+            margin-left: 1rem;
+        }
+        
+        .execution-type-badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        
+        .execution-single {
+            background: rgba(59, 130, 246, 0.25);
+            color: #93c5fd;
+            border: 1px solid #3b82f6;
+        }
+        
+        .execution-sequence {
+            background: rgba(139, 92, 246, 0.25);
+            color: #d8b4fe;
+            border: 1px solid #8b5cf6;
+        }
+        
+        .sequence-methods {
+            font-size: 0.85rem;
+            color: #a5b4fc;
+            font-style: italic;
+            margin-top: 0.25rem;
+        }
+        
+        .iteration-cell {
+            font-weight: 700;
+            color: #f3f4f6;
+            min-width: 50px;
+        }
+        
+        .device-cell {
+            font-weight: 600;
+            color: #f3f4f6;
+            min-width: 100px;
+        }
+        
+        .details-cell {
+            max-width: 200px;
+            word-break: break-word;
+        }
+        
+        .datetime-cell {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            min-width: 140px;
+        }
+        
+        .screenshots-cell {
+            font-size: 0.85rem;
+            max-width: 300px;
+        }
+        
+        .screenshot-link {
+            color: #60a5fa;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.3rem 0.3rem 0.3rem 0;
+            padding: 0.2rem 0.5rem;
+        }
+        
+        .screenshot-link:hover {
+            color: #93c5fd;
+            text-decoration: underline;
+            background: rgba(96, 165, 250, 0.1);
+            border-radius: 3px;
+        }
+        
+        .execution-type-badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        
+        .execution-single {
+            background: rgba(59, 130, 246, 0.25);
+            color: #93c5fd;
+            border: 1px solid #3b82f6;
+        }
+        
+        .execution-sequence {
+            background: rgba(139, 92, 246, 0.25);
+            color: #d8b4fe;
+            border: 1px solid #8b5cf6;
+        }
+        
+        .sequence-methods {
+            font-size: 0.85rem;
+            color: #a5b4fc;
+            font-style: italic;
+            margin-top: 0.25rem;
+        }
+        
+        .iteration-cell {
+            font-weight: 700;
+            color: #f3f4f6;
+            min-width: 50px;
+        }
+        
+        .device-cell {
+            font-weight: 600;
+            color: #f3f4f6;
+            min-width: 100px;
+        }
+        
+        .details-cell {
+            max-width: 200px;
+            word-break: break-word;
+        }
+        
+        .datetime-cell {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            min-width: 140px;
+        }
+        
+        .screenshots-cell {
+            font-size: 0.85rem;
+            max-width: 300px;
+        }
+        
+        .screenshot-link {
+            color: #60a5fa;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0.3rem 0;
+        }
+        
+        .screenshot-link:hover {
+            color: #93c5fd;
+            text-decoration: underline;
+        }
+        
+        .badge-home-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .badge-home-yes {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        
+        .badge-home-no {
+            background: #fee2e2;
+            color: #7f1d1d;
+            border: 1px solid #ef4444;
+        }
+        
+        .badge-home-recovered {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+        
+        .badge-status {
+            display: inline-block;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .badge-passed {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-failed {
+            background: #fee2e2;
+            color: #7f1d1d;
+        }
+        
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .icon-check {
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        .icon-x {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        
+        .icon-alert {
+            color: #f59e0b;
+            font-weight: bold;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: #1f2937;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            border-left: 4px solid var(--medium-grey);
+            border: 1px solid #374151;
+        }
+        
+        .stat-card.success { border-left-color: var(--success-color); }
+        .stat-card.danger { border-left-color: var(--danger-color); }
+        .stat-card.warning { border-left-color: var(--warning-color); }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f3f4f6;
+            line-height: 1;
+        }
+        
+        .stat-label {
+            color: #9ca3af;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        .details-link {
+            color: #60a5fa;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .details-link:hover {
+            color: #93c5fd;
+            text-decoration: underline;
+        }
+        
+        .filter-section {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-section label {
+            color: #f3f4f6;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filter-section select {
+            background: #374151;
+            color: #f3f4f6;
+            border: 1px solid #4b5563;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 3rem 1.5rem;
+            color: #9ca3af;
+        }
+        
+        .no-results i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-custom navbar-expand-lg sticky-top">
+        <div class="container-fluid px-4">
+            <div class="d-flex flex-column">
+                <a class="navbar-brand mb-0" href="/">
+                    <i class="bi bi-cpu-fill"></i>
+                    RDK-E Middleware QA Testing Tool
+                </a>
+                <span class="developer-credit" style="font-size: 0.75rem; color: #9ca3af; margin-left: 2rem;">
+                    <i class="bi bi-code-slash"></i> Designed & Developed by <strong>VISWA</strong>
+                </span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <!-- Results Dropdown -->
+                <div class="btn-group" role="group">
+                    <a href="/results" class="btn btn-sm btn-outline-light" title="View Results">
+                        <i class="bi bi-table"></i> Results
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="View Options">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/results"><i class="bi bi-table"></i> Table View</a></li>
+                        <li><a class="dropdown-item" href="/results-cards"><i class="bi bi-grid-3x2"></i> Card View</a></li>
+                    </ul>
+                </div>
+                <!-- Services Dropdown -->
+                <div class="btn-group" role="group">
+                    <a href="/services/system-commands" class="btn btn-sm btn-outline-light" title="Services">
+                        <i class="bi bi-gear-fill"></i> Services
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="Service Options">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/services/system-commands"><i class="bi bi-terminal"></i> System Commands</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Results Pages</h6></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-results"><i class="bi bi-speedometer2"></i> Reboot Perf Results</a></li>
+                        <li><a class="dropdown-item" href="/deepsleep-results"><i class="bi bi-moon-fill"></i> DeepSleep Results</a></li>
+                        <li><a class="dropdown-item" href="/soft-hard-boot-results"><i class="bi bi-arrow-repeat"></i> Boot Results</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-compare"><i class="bi bi-columns-gap"></i> Compare Executions</a></li>
+                    </ul>
+                </div>
+                <a href="/log-patterns" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-file-earmark-lines"></i> Log Patterns
+                </a>
+                <span class="text-white" style="display: flex; align-items: center; gap: 8px;">
+                    <i class="bi bi-person-circle"></i> {{ current_user.name }}
+                </span>
+                <a href="/logout" class="btn btn-sm btn-danger">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+                <span class="badge bg-success badge-status">
+                    <i class="bi bi-check-circle-fill"></i> System Online
+                </span>
+            </div>
+        </div>
+    </nav>
+    <div class="container" style="padding-top: 2rem; padding-bottom: 3rem;">
+        <div class="dashboard-card">
+            <div class="card-header-custom">
+                <i class="bi bi-moon-fill"></i>
+                <h5>DeepSleep Method - HOME Screen Status by Iteration</h5>
+            </div>
+            <div class="card-body-custom">
+                <!-- Latest Job Section -->
+                <div id="latestJobSection" style="display: none; margin-bottom: 2.5rem;">
+                    <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%); border-left: 4px solid #3b82f6; border-radius: 8px; padding: 1.5rem; border: 1px solid rgba(59, 130, 246, 0.3);">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                            <i class="bi bi-lightning-fill" style="font-size: 1.5rem; color: #3b82f6;"></i>
+                            <h6 style="margin: 0; color: #f3f4f6; font-weight: 700; font-size: 1.1rem;">Latest Job Execution</h6>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                            <div>
+                                <div style="color: #9ca3af; font-size: 0.85rem; margin-bottom: 0.3rem;">Job ID</div>
+                                <div style="font-family: monospace; background: rgba(0,0,0,0.3); padding: 0.6rem; border-radius: 4px; color: #60a5fa; font-weight: 600; word-break: break-all;"id="latestJobId">—</div>
+                            </div>
+                            <div>
+                                <div style="color: #9ca3af; font-size: 0.85rem; margin-bottom: 0.3rem;">Device</div>
+                                <div style="color: #f3f4f6; font-weight: 600; padding: 0.6rem;" id="latestJobDevice">—</div>
+                            </div>
+                            <div>
+                                <div style="color: #9ca3af; font-size: 0.85rem; margin-bottom: 0.3rem;">Build Name</div>
+                                <div style="color: #f3f4f6; font-weight: 600; padding: 0.6rem;" id="latestJobBuild">—</div>
+                            </div>
+                            <div>
+                                <div style="color: #9ca3af; font-size: 0.85rem; margin-bottom: 0.3rem;">Iterations</div>
+                                <div style="color: #f3f4f6; font-weight: 600; padding: 0.6rem;" id="latestJobIterations">—</div>
+                            </div>
+                            <div>
+                                <div style="color: #9ca3af; font-size: 0.85rem; margin-bottom: 0.3rem;">Execution Time</div>
+                                <div style="color: #f3f4f6; font-weight: 600; padding: 0.6rem;" id="latestJobDateTime">—</div>
+                            </div>
+                            <div>
+                                <div style="color: #9ca3af; font-size: 0.85rem; margin-bottom: 0.3rem;">Status</div>
+                                <div id="latestJobStatus" style="padding: 0.6rem;">—</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Summary -->
+                <div class="stats-grid" id="statsGrid" style="display: none;">
+                    <div class="stat-card success">
+                        <div class="stat-value"><span id="totalPassed">0</span></div>
+                        <div class="stat-label">HOME Screen (Yes)</div>
+                    </div>
+                    <div class="stat-card danger">
+                        <div class="stat-value"><span id="totalFailed">0</span></div>
+                        <div class="stat-label">NOT HOME Screen (No)</div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-value"><span id="totalRecovered">0</span></div>
+                        <div class="stat-label">Recovered After Retry</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value"><span id="totalIterations">0</span></div>
+                        <div class="stat-label">Total Iterations</div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-section">
+                    <div style="margin-bottom: 1rem;">
+                        <label for="dateFilter" style="margin-right: 0.5rem;">Select Date:</label>
+                        <input type="date" id="dateFilter" onchange="onDateSelected()" style="padding: 0.4rem; border-radius: 4px; background: #2d3748; color: #f3f4f6; border: 1px solid #4b5563;">
+                        <button onclick="clearDateFilter()" class="btn btn-sm btn-outline-light" style="margin-left: 0.5rem;"><i class="bi bi-x-circle"></i> Clear</button>
+                    </div>
+                    <label for="deviceFilter">Filter by Device:</label>
+                    <select id="deviceFilter" onchange="filterResults()">
+                        <option value="">All Devices</option>
+                    </select>
+                </div>
+
+                <!-- Results Container - Now showing execution blocks instead of table -->
+                <div id="resultsContainer" style="display: none;">
+                    <!-- Execution blocks will be rendered here -->
+                </div>
+
+                <div id="noResults" class="no-results" style="display: none;">
+                    <i class="bi bi-inbox"></i>
+                    <p id="noResultsMessage">No DeepSleep results found</p>
+                </div>
+                
+                <!-- Loading indicator -->
+                <div id="loadingIndicator" style="text-align: center; padding: 2rem; color: #9ca3af;">
+                    <i class="bi bi-hourglass-split" style="font-size: 2rem; margin-right: 1rem;"></i>
+                    Loading results...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allResults = [];
+        let currentOffsetDays = 0;
+        let availableDates = [];
+        let paginationMetadata = {};
+        let selectedDate = null;
+
+        async function loadResults(offsetDays = 0, filterDate = null) {
+            try {
+                currentOffsetDays = offsetDays;
+                selectedDate = filterDate;
+                // Load 7 days at a time to find deepsleep results
+                let apiUrl = `/api/results?offset_days=${offsetDays}&limit_days=7`;
+                if (filterDate) {
+                    apiUrl += `&filter_date=${filterDate}`;
+                }
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                console.log('API Response:', data);
+                console.log('Total results:', (data.results || []).length);
+                console.log('Pagination metadata:', data.pagination);
+                
+                paginationMetadata = data.pagination || {};
+                if (data.pagination) {
+                    availableDates = data.pagination.all_dates || [];
+                }
+                
+                // Filter for DeepSleep method results:
+                // ONLY include results that are EITHER:
+                // 1. Single deepsleep method execution
+                // 2. OR part of a saved sequence that includes deepsleep
+                const deepsleepResults = (data.results || []).filter(r => {
+                    console.log('Checking result:', r.method, r.method_name, r.methods ? 'has methods array' : 'no methods', 'sequence_name:', r.sequence_name);
+                    
+                    // Case 1: Direct deepsleep method (single method)
+                    if (r.method && r.method.toLowerCase() === 'deepsleep') {
+                        console.log('✓ Single deepsleep method');
+                        return true;
+                    }
+                    
+                    // Case 2: Part of a sequence with deepsleep
+                    if (r.methods && Array.isArray(r.methods) && r.methods.length > 0) {
+                        const hasDeepsleep = r.methods.some(m => {
+                            const methodName = (m.method_name || m.method || '').toLowerCase();
+                            return methodName.includes('deepsleep');
+                        });
+                        
+                        if (hasDeepsleep) {
+                            // Also verify it's from a saved sequence or has sequence structure
+                            const isSequence = r.is_sequence || r.methods.length > 1 || r.sequence_name;
+                            if (isSequence) {
+                                console.log('✓ Deepsleep part of sequence:', r.sequence_name);
+                                return true;
+                            }
+                        }
+                    }
+                    
+                    // Case 3: Legacy check - method_name contains deepsleep (fallback)
+                    if (r.method_name && r.method_name.toLowerCase().includes('deepsleep')) {
+                        console.log('✓ Matched by method_name field (legacy)');
+                        return true;
+                    }
+                    
+                    console.log('✗ Not a deepsleep result');
+                    return false;
+                });
+                
+                console.log('Filtered deepsleep results:', deepsleepResults.length);
+                
+                allResults = deepsleepResults.sort((a, b) => {
+                    const aDevice = a.device_ip || a.device_name || '';
+                    const bDevice = b.device_ip || b.device_name || '';
+                    const aIter = parseInt(a.iteration) || 0;
+                    const bIter = parseInt(b.iteration) || 0;
+                    
+                    if (aDevice !== bDevice) return aDevice.localeCompare(bDevice);
+                    return aIter - bIter;
+                });
+                
+                // Aggressive duplicate removal: keep only first occurrence per device+iteration+job_id
+                // BUT prefer results with valid status/details over UNKNOWN ones
+                const dedupeMap = {};
+                allResults.forEach(result => {
+                    const device = result.device_ip || result.device_name || 'unknown';
+                    const iteration = result.iteration || 'unknown';
+                    const jobId = result.job_id || 'no-job';
+                    const key = `${device}_${iteration}_${jobId}`;
+                    
+                    const status = result.status || 'UNKNOWN';
+                    const hasDetails = result.details && result.details.trim().length > 0;
+                    const isValid = status !== 'UNKNOWN' && hasDetails;
+                    
+                    if (!dedupeMap[key]) {
+                        dedupeMap[key] = result;
+                    } else {
+                        // Compare: prefer valid results over UNKNOWN
+                        const existing = dedupeMap[key];
+                        const existingStatus = existing.status || 'UNKNOWN';
+                        const existingHasDetails = existing.details && existing.details.trim().length > 0;
+                        const existingIsValid = existingStatus !== 'UNKNOWN' && existingHasDetails;
+                        
+                        // If new is valid and existing is not, replace
+                        if (isValid && !existingIsValid) {
+                            dedupeMap[key] = result;
+                            console.log(`🔄 Replaced [${key}] with better result (status: ${status}, has details: ${hasDetails})`);
+                        } else if (isValid === existingIsValid) {
+                            // Both valid or both invalid - keep existing (first one wins)
+                            console.log(`⏭️ Skipped duplicate [${key}] (kept first, new status: ${status})`);
+                        }
+                        // If new is invalid and existing is valid, keep existing (implicit - do nothing)
+                    }
+                });
+                
+                allResults = Object.values(dedupeMap);
+                console.log('After removing duplicates:', allResults.length, 'remaining');
+                
+                displayResults();
+                populateDeviceFilter();
+                updateStatistics();
+            } catch (error) {
+                console.error('Error loading results:', error);
+                document.getElementById('resultsContainer').innerHTML = 
+                    '<div style="text-align: center; padding: 2rem; color: #ef4444;"><i class="bi bi-exclamation-triangle" style="font-size: 2rem; margin-right: 1rem;"></i>Failed to load results</div>';
+                document.getElementById('loadingIndicator').style.display = 'none';
+                document.getElementById('resultsContainer').style.display = 'block';
+            }
+        }
+
+        function displayLatestJob() {
+            if (allResults.length === 0) {
+                document.getElementById('latestJobSection').style.display = 'none';
+                return;
+            }
+            
+            // Group results into batches (same job_id + device + build)
+            const batches = {};
+            allResults.forEach(result => {
+                const jobId = result.job_id || 'default';
+                const device = result.device_name || result.device_ip || 'unknown';
+                const build = result.sequence_name || result.method_name || 'unknown';
+                const batchKey = `${device}_${build}_${jobId}`;
+                
+                if (!batches[batchKey]) {
+                    batches[batchKey] = {
+                        results: [],
+                        jobId: jobId,
+                        device: device,
+                        build: build,
+                        latestTimestamp: new Date(0)
+                    };
+                }
+                batches[batchKey].results.push(result);
+                const resultTime = new Date(result.timestamp || 0);
+                if (resultTime > batches[batchKey].latestTimestamp) {
+                    batches[batchKey].latestTimestamp = resultTime;
+                }
+            });
+            
+            // Find the batch with the latest timestamp
+            let latestBatch = null;
+            let latestTime = new Date(0);
+            Object.values(batches).forEach(batch => {
+                if (batch.latestTimestamp > latestTime) {
+                    latestTime = batch.latestTimestamp;
+                    latestBatch = batch;
+                }
+            });
+            
+            if (!latestBatch) {
+                document.getElementById('latestJobSection').style.display = 'none';
+                return;
+            }
+            
+            // Use the latest result from the latest batch for display
+            let latestResult = latestBatch.results[0];
+            for (let i = 1; i < latestBatch.results.length; i++) {
+                if (new Date(latestBatch.results[i].timestamp) > new Date(latestResult.timestamp)) {
+                    latestResult = latestBatch.results[i];
+                }
+            }
+            
+            // Extract batch metadata
+            const latestJobId = latestBatch.jobId;
+            const latestDevice = latestBatch.device;
+            const latestBuild = latestBatch.build;
+            
+            // Use results from the latest batch
+            const batchResults = latestBatch.results;
+            
+            // Count iterations and status
+            const passedCount = batchResults.filter(r => {
+                const details = (r.details || '').toLowerCase();
+                return r.status === 'PASSED' || details.includes('on home screen') || details.includes('recovered');
+            }).length;
+            const failedCount = batchResults.filter(r => r.status === 'FAILED').length;
+            const totalCount = batchResults.length;
+            
+            // Format datetime
+            const datetime = latestResult.display_datetime || formatDate(new Date(latestResult.timestamp));
+            
+            // Create status badge
+            let statusBadgeHTML = '';
+            if (failedCount === 0 && passedCount > 0) {
+                statusBadgeHTML = `<span style="display: inline-block; background: #10b981; color: #fff; padding: 0.4rem 0.8rem; border-radius: 4px; font-weight: 600; font-size: 0.9rem;"><i class="bi bi-check-circle"></i> ${passedCount}/${totalCount} PASSED</span>`;
+            } else if (passedCount === 0 && failedCount > 0) {
+                statusBadgeHTML = `<span style="display: inline-block; background: #ef4444; color: #fff; padding: 0.4rem 0.8rem; border-radius: 4px; font-weight: 600; font-size: 0.9rem;"><i class="bi bi-x-circle"></i> ${failedCount}/${totalCount} FAILED</span>`;
+            } else if (passedCount > 0 && failedCount > 0) {
+                statusBadgeHTML = `<span style="display: inline-block; background: #f59e0b; color: #fff; padding: 0.4rem 0.8rem; border-radius: 4px; font-weight: 600; font-size: 0.9rem;"><i class="bi bi-exclamation-circle"></i> ${passedCount}/${totalCount} PASSED</span>`;
+            } else {
+                statusBadgeHTML = `<span style="display: inline-block; background: #6b7280; color: #fff; padding: 0.4rem 0.8rem; border-radius: 4px; font-weight: 600; font-size: 0.9rem;"><i class="bi bi-dash-circle"></i> NO DATA</span>`;
+            }
+            
+            // Populate the latest job section
+            document.getElementById('latestJobId').textContent = latestJobId;
+            document.getElementById('latestJobDevice').textContent = latestDevice;
+            document.getElementById('latestJobBuild').textContent = latestBuild;
+            document.getElementById('latestJobIterations').textContent = `${totalCount} iterations`;
+            document.getElementById('latestJobDateTime').textContent = datetime;
+            document.getElementById('latestJobStatus').innerHTML = statusBadgeHTML;
+            
+            document.getElementById('latestJobSection').style.display = 'block';
+        }
+        
+        function displayResults() {
+            const container = document.getElementById('resultsContainer');
+            const statsGrid = document.getElementById('statsGrid');
+            const noResults = document.getElementById('noResults');
+            const noResultsMessage = document.getElementById('noResultsMessage');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            
+            if (allResults.length === 0) {
+                container.style.display = 'none';
+                loadingIndicator.style.display = 'none';
+                statsGrid.style.display = 'none';
+                noResults.style.display = 'block';
+                document.getElementById('latestJobSection').style.display = 'none';
+                
+                // Update message based on whether a date is selected
+                if (selectedDate) {
+                    const dateObj = new Date(selectedDate + 'T00:00:00');
+                    const formattedDate = dateObj.toLocaleDateString('en-US', { 
+                        weekday: 'long', 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                    noResultsMessage.textContent = `No Results for today '${formattedDate}'`;
+                } else {
+                    noResultsMessage.textContent = 'No DeepSleep results found';
+                }
+                return;
+            }
+            
+            statsGrid.style.display = 'grid';
+            noResults.style.display = 'none';
+            loadingIndicator.style.display = 'none';
+            
+            // Display latest job info
+            displayLatestJob();
+            
+            // Group results by execution type and batch
+            const groupedResults = groupResultsByExecutionType(allResults);
+            
+            // Generate HTML for execution blocks
+            let html = '';
+            
+            // SEQUENCE Executions
+            if (groupedResults.sequence.length > 0) {
+                html += generateExecutionBlock('SEQUENCE', groupedResults.sequence);
+            }
+            
+            // METHOD Executions
+            if (groupedResults.method.length > 0) {
+                html += generateExecutionBlock('METHOD', groupedResults.method);
+            }
+            
+            container.innerHTML = html;
+            container.style.display = 'block';
+        }
+        
+        function groupResultsByExecutionType(results) {
+            const grouped = {
+                sequence: [],
+                method: []
+            };
+            
+            const sequenceBatches = {};
+            const methodBatches = {};
+            
+            results.forEach(result => {
+                // A result is a sequence execution if:
+                // 1. It has multiple methods in the methods array, OR
+                // 2. It has a sequence_name that is DIFFERENT from the method_name
+                const hasMultipleMethods = result.methods && Array.isArray(result.methods) && result.methods.length > 1;
+                const hasDistinctSequence = result.sequence_name && result.method_name && result.sequence_name !== result.method_name;
+                const isSequence = hasMultipleMethods || hasDistinctSequence;
+                
+                const executionType = isSequence ? 'sequence' : 'method';
+                const batchKey = getBatchKey(result, executionType);
+                
+                if (executionType === 'sequence') {
+                    if (!sequenceBatches[batchKey]) {
+                        sequenceBatches[batchKey] = [];
+                    }
+                    sequenceBatches[batchKey].push(result);
+                } else {
+                    if (!methodBatches[batchKey]) {
+                        methodBatches[batchKey] = [];
+                    }
+                    methodBatches[batchKey].push(result);
+                }
+            });
+            
+            grouped.sequence = Object.values(sequenceBatches).flat();
+            grouped.method = Object.values(methodBatches).flat();
+            
+            return grouped;
+        }
+        
+        function getBatchKey(result, executionType) {
+            const device = result.device_name || result.device_ip || 'unknown';
+            const jobId = result.job_id || 'default';
+            
+            // Use sequence_name for sequences, method_name for methods
+            let buildName = 'unknown';
+            if (executionType === 'sequence') {
+                buildName = result.sequence_name || 'default';
+            } else {
+                buildName = result.method_name || result.sequence_name || 'default';
+            }
+            
+            return `${device}_${buildName}_${jobId}`;
+        }
+        
+        function generateExecutionBlock(executionType, results) {
+            const blockType = executionType.toLowerCase();
+            const icon = blockType === 'sequence' ? 'bi-diagram-3' : 'bi-play-circle';
+            const color = blockType === 'sequence' ? '#8b5cf6' : '#3b82f6';
+            
+            // Group by batch (same iteration count + sequence name + job_id)
+            const batches = {};
+            results.forEach(result => {
+                const totalIter = result.total_iterations || '?';
+                const buildName = result.sequence_name || result.method_name || 'Unknown Build';
+                const jobId = result.job_id || 'unknown-job';
+                const batchLabel = `${totalIter} Iterations - ${buildName}`;
+                const batchKey = `${batchLabel}_${jobId}`;
+                
+                if (!batches[batchKey]) {
+                    batches[batchKey] = {
+                        label: batchLabel,
+                        jobId: jobId,
+                        results: []
+                    };
+                }
+                batches[batchKey].results.push(result);
+            });
+            
+            let html = `<div class="execution-block ${blockType}">`;
+            html += `<div class="execution-block-type"><i class="bi ${icon}"></i> ${executionType} Execution</div>`;
+            
+            // Generate batch sections - sort by latest timestamp descending
+            const batchEntries = Object.keys(batches).map(key => ({ key, batch: batches[key] }));
+            batchEntries.sort((a, b) => {
+                // Sort by latest timestamp in each batch (descending - newest first)
+                const aLast = Math.max(...a.batch.results.map(r => new Date(r.timestamp || 0).getTime()));
+                const bLast = Math.max(...b.batch.results.map(r => new Date(r.timestamp || 0).getTime()));
+                return bLast - aLast;
+            });
+            
+            batchEntries.forEach(({ key: batchKey, batch }) => {
+                const batchResults = batch.results;
+                const firstResult = batchResults[0];
+                const datetime = firstResult.display_datetime || firstResult.timestamp || formatDate(new Date());
+                const jobId = batch.jobId;
+                const batchLabel = batch.label;
+                
+                html += `
+                <div class="batch-header">
+                    <div class="batch-title">
+                        <i class="bi bi-moon-fill" style="color: ${color};"></i>
+                        DeepSleep Execution Results: <span style="color: ${color}; font-weight: 800;">${batchLabel}</span>
+                    </div>
+                    <div class="batch-meta">
+                        <span><i class="bi bi-key-fill"></i> <span style="font-family: monospace; background: rgba(255,255,255,0.1); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.85rem;">Job ID: ${jobId}</span></span>
+                        <span><i class="bi bi-calendar3"></i> ${datetime}</span>
+                        <span><i class="bi bi-cpu"></i> Device: ${firstResult.device_name || firstResult.device_ip || 'Unknown'}</span>
+                    </div>
+                </div>
+                `;
+                
+                // Display individual results
+                html += '<div class="results-grid">';
+                batchResults.forEach((result, idx) => {
+                    html += generateResultCard(result, idx);
+                });
+                html += '</div>';
+            });
+            
+            html += '</div>';
+            return html;
+        }
+        
+        function generateResultCard(result, index) {
+            const iteration = result.iteration || 'N/A';
+            const device = result.device_name || result.device_ip || 'Unknown';
+            const status = result.status || 'UNKNOWN';
+            const details = result.details || '';
+            const jobId = result.job_id || 'N/A';
+            
+            // Determine HOME screen status
+            let homeScreenBadge = '';
+            if (details.toLowerCase().includes('not on home screen')) {
+                homeScreenBadge = '<span class="badge-home-status badge-home-no"><i class="bi bi-x-circle"></i> NOT HOME</span>';
+            } else if (details.toLowerCase().includes('recovered') || details.toLowerCase().includes('ir home retry')) {
+                homeScreenBadge = '<span class="badge-home-status badge-home-recovered"><i class="bi bi-exclamation-circle"></i> RECOVERED</span>';
+            } else if (details.toLowerCase().includes('on home screen') || status.toUpperCase() === 'PASSED') {
+                homeScreenBadge = '<span class="badge-home-status badge-home-yes"><i class="bi bi-check-circle"></i> HOME</span>';
+            } else if (status.toUpperCase() === 'FAILED') {
+                homeScreenBadge = '<span class="badge-home-status badge-home-no"><i class="bi bi-x-circle"></i> NOT HOME</span>';
+            }
+            
+            const statusBadge = `<span class="badge-status badge-${status.toLowerCase() === 'passed' ? 'passed' : status.toLowerCase() === 'failed' ? 'failed' : 'warning'}">${status}</span>`;
+            
+            // Format screenshots
+            let screenshotsHtml = '';
+            if (result.screenshots && result.screenshots.length > 0) {
+                screenshotsHtml = result.screenshots.map(shot => {
+                    const filename = shot.split('/').pop();
+                    return `<a href="${shot}" target="_blank" class="screenshot-link" style="display: block; margin: 0.25rem 0;"><i class="bi bi-image"></i> ${filename}</a>`;
+                }).join('');
+            }
+            
+            return `
+            <div class="result-card">
+                <div class="result-iteration">Iteration #${iteration}</div>
+                <div class="result-device">${device}</div>
+                <div class="result-row">
+                    <span class="result-label">Job ID:</span>
+                    <span class="result-value" style="font-family: monospace; background: rgba(255,255,255,0.05); padding: 0.2rem 0.4rem; border-radius: 3px; font-size: 0.85rem;">${jobId}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">Status:</span>
+                    <span class="result-value">${statusBadge}</span>
+                </div>
+                <div class="result-row">
+                    <span class="result-label">HOME Screen:</span>
+                    <span class="result-value">${homeScreenBadge}</span>
+                </div>
+                <div class="result-row" style="align-items: flex-start;">
+                    <span class="result-label">Details:</span>
+                    <span class="result-value" style="font-size: 0.85rem;">${details || 'N/A'}</span>
+                </div>
+                ${screenshotsHtml ? `<div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #374151;">${screenshotsHtml}</div>` : ''}
+            </div>
+            `;
+        }
+        
+        function extractIterationCount(result) {
+            // Use total_iterations from result object directly
+            if (typeof result === 'object' && result.total_iterations) {
+                return result.total_iterations;
+            }
+            return '?';
+        }
+        
+        function extractBuildName(result) {
+            // Use sequence_name or method_name for batch identification
+            if (result.sequence_name) return result.sequence_name;
+            if (result.method_name) return result.method_name;
+            return 'Unknown Build';
+        }
+        
+        function formatDate(date) {
+            return new Intl.DateTimeFormat('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            }).format(date);
+        }
+
+        function populateDeviceFilter() {
+            const devices = [...new Set(allResults.map(r => r.device_name || r.device_ip || 'Unknown'))].sort();
+            const select = document.getElementById('deviceFilter');
+            const currentValue = select.value;
+            
+            select.innerHTML = '<option value="">All Devices</option>' + 
+                devices.map(d => `<option value="${d}">${d}</option>`).join('');
+            
+            select.value = currentValue;
+        }
+
+        function filterResults() {
+            const deviceFilter = document.getElementById('deviceFilter').value;
+            
+            if (deviceFilter) {
+                allResults = allResults.filter(r => (r.device_name || r.device_ip) === deviceFilter);
+            } else {
+                // Preserve selected date when filtering - reload with the same date
+                loadResults(0, selectedDate);
+                return;
+            }
+            
+            displayResults();
+            updateStatistics();
+        }
+
+        function updateStatistics() {
+            let homeYes = 0;
+            let homeNo = 0;
+            let homeRecovered = 0;
+            
+            allResults.forEach(result => {
+                const details = result.details || '';
+                const status = result.status || '';
+                
+                if (details.toLowerCase().includes('recovered') || details.toLowerCase().includes('ir home retry')) {
+                    homeRecovered++;
+                } else if (details.toLowerCase().includes('not on home screen')) {
+                    homeNo++;
+                } else if (details.toLowerCase().includes('on home screen') || status.toUpperCase() === 'PASSED') {
+                    homeYes++;
+                } else if (status.toUpperCase() === 'FAILED') {
+                    homeNo++;
+                }
+            });
+            
+            document.getElementById('totalPassed').textContent = homeYes;
+            document.getElementById('totalFailed').textContent = homeNo;
+            document.getElementById('totalRecovered').textContent = homeRecovered;
+            document.getElementById('totalIterations').textContent = allResults.length;
+        }
+
+        function onDateSelected() {
+            const dateInput = document.getElementById('dateFilter');
+            const selectedDateValue = dateInput.value;
+            if (selectedDateValue) {
+                // Reset device filter to show all devices for the selected date
+                document.getElementById('deviceFilter').value = '';
+                
+                document.getElementById('loadingIndicator').style.display = 'block';
+                document.getElementById('resultsContainer').style.display = 'none';
+                loadResults(0, selectedDateValue);
+            }
+        }
+
+        function clearDateFilter() {
+            document.getElementById('dateFilter').value = '';
+            document.getElementById('deviceFilter').value = '';
+            selectedDate = null;
+            document.getElementById('loadingIndicator').style.display = 'block';
+            document.getElementById('resultsContainer').style.display = 'none';
+            loadResults(0);
+        }
+
+        // Show loading indicator initially
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loadingIndicator').style.display = 'block';
+            document.getElementById('resultsContainer').style.display = 'none';
+            loadResults(0);
+        });
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+</body>
+</html>

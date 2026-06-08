@@ -1,0 +1,2296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Log Pattern Management - RDK-E Middleware QA Testing Tool</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+    
+    <!-- Bootstrap 5.3.8 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    
+    <style>
+        /* Page-specific styles for Log Pattern Management */
+        
+        /* Container */
+        .container {
+            max-width: 1400px;
+            padding-top: 2rem;
+            padding-bottom: 3rem;
+        }
+
+        /* Header */
+        .header {
+            /* background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid #374151; */
+            padding: 10px;
+        }
+
+        .header h1 {
+            color: #f3f4f6;
+            font-size: 2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 0;
+        }
+
+        .header h1 i {
+            color: #6b7280;
+            font-size: 2.5rem;
+        }
+
+        /* Button icon sizing - matching Dashboard */
+        
+        .pattern-actions .btn-sm i {
+            font-size: 0.9rem;
+        }
+
+        /* Stats Section */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid #4b5563;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border-color: #6b7280;
+        }
+
+        .stat-card .number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #6b7280;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .label {
+            color: #d1d5db;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        /* Cards */
+        .card {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid #374151;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: #4b5563;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .card h2 {
+            color: #f3f4f6;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .card h2 i {
+            color: #6b7280;
+            font-size: 1.75rem;
+        }
+
+        /* Content Grid */
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #d1d5db;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid #374151;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: #111827;
+            color: #f3f4f6;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #6b7280;
+            box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.2);
+            background: #1f2937;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+
+        .form-group small {
+            display: block;
+            margin-top: 0.5rem;
+            color: #9ca3af;
+            font-size: 0.85rem;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            /* padding: 0.875rem 1.75rem; */
+            /*border: none;
+             border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600; */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Pattern List */
+        .patterns-list {
+            max-height: 600px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #4b5563 #1f2937;
+        }
+
+        .patterns-list::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .patterns-list::-webkit-scrollbar-track {
+            background: #1f2937;
+            border-radius: 10px;
+        }
+
+        .patterns-list::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 10px;
+        }
+
+        .patterns-list::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+
+        .pattern-item {
+            background: #111827;
+            padding: 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border: 2px solid #374151;
+            border-left: 4px solid #6b7280;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .pattern-item:hover {
+            background: #1f2937;
+            border-color: #4b5563;
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .pattern-info {
+            flex: 1;
+        }
+
+        .pattern-info h4 {
+            color: #f3f4f6;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .pattern-info p {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            margin-bottom: 0.375rem;
+            line-height: 1.5;
+        }
+
+        .pattern-info code {
+            background: #1f2937;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            color: #6ee7b7;
+            border: 1px solid #374151;
+            display: inline-block;
+            word-break: break-all;
+        }
+
+        .pattern-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        /* Submission Cards */
+        .submission-card {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+            border: 2px solid #f59e0b;
+            padding: 1.25rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .submission-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
+        }
+
+        .submission-card.rejected {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%);
+            border-color: #ef4444;
+        }
+
+        .submission-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .submission-header h4 {
+            color: #f3f4f6;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .submission-meta {
+            color: #9ca3af;
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Validation Status */
+        .validation-status {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1rem;
+            border-radius: 8px;
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .validation-status.success {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+            border: 2px solid #10b981;
+            display: flex;
+        }
+
+        .validation-status.error {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border: 2px solid #ef4444;
+            display: flex;
+        }
+
+        .validation-status i {
+            font-size: 1.1rem;
+        }
+
+        /* Alerts */
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border: 2px solid;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+            border-color: #10b981;
+        }
+
+        .alert-error {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            border-color: #ef4444;
+        }
+
+        .alert-info {
+            background-color: rgba(107, 114, 128, 0.15);
+            color: #d1d5db;
+            border-color: #6b7280;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            padding: 2rem;
+            border-radius: 16px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid #374151;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #374151;
+        }
+
+        .modal-header h3 {
+            color: #f3f4f6;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #9ca3af;
+            transition: all 0.3s;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: #f3f4f6;
+            transform: rotate(90deg);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #9ca3af;
+        }
+
+        .spinner {
+            border: 4px solid #374151;
+            border-top: 4px solid #6b7280;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Admin-only sections */
+        .admin-only {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .admin-only.enabled {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* System Commands Styles */
+        .commands-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .commands-list {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .command-card {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border: 1px solid #4a5568;
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .command-card:hover {
+            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+            border-color: #6b7280;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .command-card.builtin {
+            opacity: 0.9;
+        }
+
+        .command-card .command-name {
+            color: #f3f4f6;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            word-break: break-word;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .command-card .command-text {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #4a5568;
+            border-radius: 6px;
+            padding: 0.75rem;
+            font-family: 'Courier New', monospace;
+            color: #d1d5db;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+            word-break: break-all;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+
+        .command-card .command-description {
+            color: #a0aec0;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .command-card .command-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #718096;
+            margin-bottom: 1rem;
+            border-top: 1px solid #4a5568;
+            padding-top: 0.75rem;
+        }
+
+        .command-card .command-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        .command-card .command-actions button {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .command-card .command-actions .btn-edit {
+            background: #4b5563;
+            color: #f3f4f6;
+            border: none;
+        }
+
+        .command-card .command-actions .btn-edit:hover {
+            background: #6b7280;
+        }
+
+        .command-card .command-actions .btn-delete {
+            background: #dc2626;
+            color: #fff;
+            border: none;
+        }
+
+        .command-card .command-actions .btn-delete:hover {
+            background: #991b1b;
+        }
+
+        .command-card.empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #718096;
+            padding: 3rem 1.5rem;
+        }
+
+        .command-card.empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            display: block;
+            color: #4a5568;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-custom navbar-expand-lg sticky-top">
+        <div class="container-fluid px-4">
+            <div class="d-flex flex-column">
+                <a class="navbar-brand mb-0" href="/">
+                    <i class="bi bi-cpu-fill"></i>
+                    RDK-E Middleware QA Testing Tool
+                </a>
+                <span class="developer-credit" style="font-size: 0.75rem; color: #9ca3af; margin-left: 2rem;">
+                    <i class="bi bi-code-slash"></i> Designed & Developed by <strong>VISWA</strong>
+                </span>
+            </div>
+            <div class="d-flex align-items-center gap-3">
+                <a href="/results" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-bar-chart-fill"></i> View Results
+                </a>
+                <div class="btn-group" role="group">
+                    <a href="/services/system-commands" class="btn btn-sm btn-outline-light">
+                        <i class="bi bi-gear-fill"></i> Services
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="visually-hidden">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/services/system-commands"><i class="bi bi-terminal"></i> System Commands</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Results Pages</h6></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-results"><i class="bi bi-speedometer2"></i> Reboot Perf Results</a></li>
+                        <li><a class="dropdown-item" href="/deepsleep-results"><i class="bi bi-moon-fill"></i> DeepSleep Results</a></li>
+                        <li><a class="dropdown-item" href="/soft-hard-boot-results"><i class="bi bi-arrow-repeat"></i> Boot Results</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-compare"><i class="bi bi-columns-gap"></i> Compare Executions</a></li>
+                    </ul>
+                </div>
+                <a href="/log-patterns" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-file-earmark-lines"></i> Log Patterns
+                </a>
+                <span class="text-white d-flex align-items-center gap-2">
+                    <i class="bi bi-person-circle"></i> {{ current_user.name }}
+                    {% if current_user.is_admin %}
+                    <span class="badge bg-danger">♔ Admin</span>
+                    {% endif %}
+                </span>
+                <a href="/logout" class="btn btn-sm btn-danger">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>
+                <i class="bi bi-file-earmark-text"></i>
+                Log Pattern Management
+            </h1>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats" id="statsContainer">
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading statistics...
+            </div>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+
+        <!-- Existing Patterns from Config -->
+        <div class="card" style="padding-top: 30px; padding-bottom: 30px; margin-bottom: 30px;">
+            <h2>
+                <i class="bi bi-list-ul"></i>
+                Existing Patterns
+            </h2>
+
+            <div id="existingPatternsContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading existing patterns...
+                </div>
+            </div>
+        </div>
+
+        <!-- Content: Submit & Approved Patterns -->
+        <div class="content" style="padding-top: 20px; padding-bottom: 20px; margin-bottom: 30px;">
+            <!-- Submit New Pattern -->
+            <div class="card" style="padding-top: 30px; padding-bottom: 30px;">
+                <h2>
+                    <i class="bi bi-plus-circle-fill"></i>
+                    Submit Log Pattern
+                </h2>
+
+                <div id="submitForm">
+                    <div class="form-group">
+                        <label for="patternName">Pattern Name *</label>
+                        <input type="text" id="patternName" placeholder="e.g., HOME, Network_Error">
+                        <small style="color: #666;">Alphanumeric characters and underscores only</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="logPattern">Log Search Pattern (Regex) *</label>
+                        <textarea id="logPattern" placeholder="e.g., QMS Bookmark.*HOME_TILES.*load.*complete"></textarea>
+                        <div id="patternValidation" class="validation-status"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="filePath">File Location *</label>
+                        <input type="text" id="filePath" placeholder="/opt/logs/sky-messages.log">
+                        <div id="fileValidation" class="validation-status"></div>
+                        <small style="color: #666;">The file must exist on the system</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" placeholder="What does this pattern validate?" style="min-height: 60px;"></textarea>
+                    </div>
+
+                    <div class="button-group" style="gap: 12px; display: flex;">
+                        <button class="btn btn-sm btn-success-custom" id="submitBtn" style="flex: 1;">
+                            <i class="bi bi-send-fill"></i>
+                            Submit for Approval
+                        </button>
+                        <button class="btn btn-sm btn-secondary" id="clearFormBtn" style="flex: 1;">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                            Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approved Patterns -->
+            <div class="card" style="padding-top: 30px; padding-bottom: 30px;">
+                <h2>
+                    <i class="bi bi-check-circle-fill"></i>
+                    Approved Patterns
+                </h2>
+
+                <div id="approvedPatternsContainer">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading patterns...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Submissions (Admin Only) -->
+        <div class="card" id="pendingSection" style="display: none; padding-top: 30px; padding-bottom: 30px; margin-bottom: 30px;">
+            <h2>
+                <i class="bi bi-hourglass"></i>
+                Pending Approvals
+                <span id="pendingCount" style="background: #ffc107; color: #333; padding: 2px 8px; border-radius: 12px; font-size: 14px; margin-left: 10px;"></span>
+            </h2>
+
+            <div id="pendingPatternsContainer">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading pending submissions...
+                </div>
+            </div>
+        </div>
+
+        <!-- System Commands (Admin Only) -->
+        <div class="card" id="systemCommandsSection" style="display: none; padding-top: 30px; padding-bottom: 30px; margin-bottom: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0;">
+                    <i class="bi bi-terminal"></i>
+                    System Commands
+                </h2>
+                <button class="btn btn-sm btn-success-custom" onclick="openAddCommandModal()" title="Add New System Command">
+                    <i class="bi bi-plus-circle"></i>
+                    Add Command
+                </button>
+            </div>
+
+            <!-- Builtin Commands (Read-only) -->
+            <div id="builtinCommandsContainer" style="margin-bottom: 30px;">
+                <h4 style="color: #6b7280; margin-bottom: 15px;">
+                    <i class="bi bi-lock"></i>
+                    Built-in Commands (System)
+                </h4>
+                <div id="builtinCommandsList" class="commands-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading built-in commands...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Approved Commands -->
+            <div id="approvedCommandsContainer" style="margin-bottom: 30px; display: none;">
+                <h4 style="color: #6b7280; margin-bottom: 15px;">
+                    <i class="bi bi-check-circle"></i>
+                    Approved System Commands
+                </h4>
+                <div id="approvedCommandsList" class="commands-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading approved commands...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Approvals (Admin Only) -->
+            <div id="pendingApprovalsCommandsContainer" style="margin-bottom: 30px; display: none;">
+                <h4 style="color: #6b7280; margin-bottom: 15px;">
+                    <i class="bi bi-hourglass-split"></i>
+                    Pending Approvals
+                    <span id="pendingCommandsCount" style="background: #ffc107; color: #333; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px;"></span>
+                </h4>
+                <div id="pendingApprovalsCommandsList" class="commands-list">
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>No pending submissions</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User-defined Commands (Deprecated - kept for backward compatibility) -->
+            <div id="userDefinedCommandsContainer" style="display: none;">
+                <h4 style="color: #6b7280; margin-bottom: 15px;">
+                    <i class="bi bi-pencil"></i>
+                    User-Defined Commands
+                </h4>
+                <div id="userDefinedCommandsList" class="commands-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading user-defined commands...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for viewing pattern details -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Pattern Details</h3>
+                <button class="modal-close" onclick="closeViewModal()">&times;</button>
+            </div>
+
+            <div class="form-group">
+                <label>Pattern Name</label>
+                <input type="text" id="viewPatternName" disabled>
+            </div>
+
+            <div class="form-group">
+                <label>Log Search Pattern (Regex)</label>
+                <textarea id="viewLogPattern" disabled style="min-height: 100px;"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>File Location</label>
+                <input type="text" id="viewFilePath" disabled>
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="viewDescription" disabled style="min-height: 80px;"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Submitted By</label>
+                <input type="text" id="viewSubmittedBy" disabled>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-sm btn-secondary" onclick="closeViewModal()">
+                    <i class="bi bi-x-circle"></i>
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for editing existing patterns (submits for approval) -->
+    <div id="editExistingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Existing Pattern</h3>
+                <p style="font-size: 12px; color: #9ca3af; margin-top: 5px;">Changes will be submitted for admin approval</p>
+                <button class="modal-close" onclick="closeEditExistingModal()">&times;</button>
+            </div>
+
+            <div class="form-group">
+                <label for="editExistingPatternName">Pattern Name</label>
+                <input type="text" id="editExistingPatternName" disabled>
+            </div>
+
+            <div class="form-group">
+                <label for="editExistingLogPattern">Log Search Pattern (Regex) *</label>
+                <textarea id="editExistingLogPattern"></textarea>
+                <div id="editExistingPatternValidation" class="validation-status"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="editExistingFilePath">File Location *</label>
+                <input type="text" id="editExistingFilePath">
+                <div id="editExistingFileValidation" class="validation-status"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="editExistingDescription">Description</label>
+                <textarea id="editExistingDescription" style="min-height: 60px;"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="editExistingReason">Reason for Change *</label>
+                <textarea id="editExistingReason" placeholder="Explain why this pattern needs to be modified..." style="min-height: 60px;"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-sm btn-success-custom" id="submitEditExistingBtn">
+                    <i class="bi bi-send-fill"></i>
+                    Submit for Approval
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="closeEditExistingModal()">
+                    <i class="bi bi-x-circle"></i>
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for editing patterns (Admin only) -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Log Pattern</h3>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+
+            <div class="form-group">
+                <label for="editPatternName">Pattern Name</label>
+                <input type="text" id="editPatternName" disabled>
+            </div>
+
+            <div class="form-group">
+                <label for="editLogPattern">Log Search Pattern (Regex) *</label>
+                <textarea id="editLogPattern"></textarea>
+                <div id="editPatternValidation" class="validation-status"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="editFilePath">File Location *</label>
+                <input type="text" id="editFilePath">
+                <div id="editFileValidation" class="validation-status"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="editDescription">Description</label>
+                <textarea id="editDescription" style="min-height: 60px;"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-sm btn-success-custom" id="saveEditBtn">
+                    <i class="bi bi-download"></i>
+                    Save Changes
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="closeEditModal()">
+                    <i class="bi bi-x-circle"></i>
+                    Cancel
+                </button>
+                <button class="btn btn-sm btn-danger-custom" id="deletePatternBtn" title="Delete this pattern">
+                    <i class="bi bi-trash-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for rejecting submissions (Admin only) -->
+    <div id="rejectModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Reject Submission</h3>
+                <button class="modal-close" onclick="closeRejectModal()">&times;</button>
+            </div>
+
+            <div class="form-group">
+                <label for="rejectReason">Reason for Rejection *</label>
+                <textarea id="rejectReason" placeholder="Why are you rejecting this submission?"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-sm btn-danger-custom" id="confirmRejectBtn">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="closeRejectModal()">
+                    <i class="bi bi-x-circle"></i>
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for adding system command -->
+    <div id="addCommandModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add System Command</h3>
+                <button class="modal-close" onclick="closeAddCommandModal()">&times;</button>
+            </div>
+
+            <div class="form-group">
+                <label for="addCommandName">Command Name *</label>
+                <input type="text" id="addCommandName" placeholder="e.g., disk_space_check" title="Alphanumeric characters and underscores only">
+                <small style="color: #a0aec0;">Alphanumeric characters and underscores only</small>
+            </div>
+
+            <div class="form-group">
+                <label for="addCommandText">Command *</label>
+                <textarea id="addCommandText" placeholder="e.g., df -h" style="min-height: 80px; font-family: 'Courier New', monospace;"></textarea>
+                <small style="color: #a0aec0;">The shell command to execute</small>
+            </div>
+
+            <div class="form-group">
+                <label for="addCommandDescription">Description</label>
+                <textarea id="addCommandDescription" placeholder="Brief description of what this command does..." style="min-height: 60px;"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-sm btn-success-custom" id="addCommandSubmitBtn" onclick="submitAddCommand()">
+                    <i class="bi bi-plus-circle"></i>
+                    Add Command
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="closeAddCommandModal()">
+                    <i class="bi bi-x-circle"></i>
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for editing system command -->
+    <div id="editCommandModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit System Command</h3>
+                <button class="modal-close" onclick="closeEditCommandModal()">&times;</button>
+            </div>
+
+            <div class="form-group">
+                <label for="editCommandName">Command Name (Read-only)</label>
+                <input type="text" id="editCommandName" disabled>
+            </div>
+
+            <div class="form-group">
+                <label for="editCommandText">Command *</label>
+                <textarea id="editCommandText" style="min-height: 80px; font-family: 'Courier New', monospace;"></textarea>
+                <small style="color: #a0aec0;">The shell command to execute</small>
+            </div>
+
+            <div class="form-group">
+                <label for="editCommandDescription">Description</label>
+                <textarea id="editCommandDescription" style="min-height: 60px;"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-sm btn-primary" onclick="submitEditCommand()">
+                    <i class="bi bi-check-circle"></i>
+                    Save Changes
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="closeEditCommandModal()">
+                    <i class="bi bi-x-circle"></i>
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const isAdmin = {{ 'true' if current_user.is_admin else 'false' }};
+        // Expose admin flag globally for legacy references
+        window.isAdmin = isAdmin;
+        let currentEditingPattern = null;
+        let currentRejectingSubmission = null;
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStatistics();
+            loadExistingPatterns();
+            loadApprovedPatterns();
+            if (isAdmin) {
+                loadPendingPatterns();
+                loadSystemCommands();
+                document.getElementById('pendingSection').style.display = 'block';
+                document.getElementById('systemCommandsSection').style.display = 'block';
+            }
+
+            // Set up event listeners
+            document.getElementById('patternName').addEventListener('input', validatePatternName);
+            document.getElementById('logPattern').addEventListener('input', validateLogPattern);
+            document.getElementById('filePath').addEventListener('input', validateFilePath);
+            document.getElementById('submitBtn').addEventListener('click', submitPattern);
+            document.getElementById('clearFormBtn').addEventListener('click', clearForm);
+
+            // Edit modal validations
+            document.getElementById('editLogPattern').addEventListener('input', validateEditLogPattern);
+            document.getElementById('editFilePath').addEventListener('input', validateEditFilePath);
+            document.getElementById('saveEditBtn').addEventListener('click', saveEditPattern);
+            document.getElementById('deletePatternBtn').addEventListener('click', deletePattern);
+
+            // Edit existing pattern validations
+            document.getElementById('editExistingLogPattern').addEventListener('input', validateEditExistingLogPattern);
+            document.getElementById('editExistingFilePath').addEventListener('input', validateEditExistingFilePath);
+            document.getElementById('submitEditExistingBtn').addEventListener('click', submitEditExistingPattern);
+
+            // Reject modal
+            document.getElementById('confirmRejectBtn').addEventListener('click', confirmReject);
+        });
+
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            
+            const iconMap = {
+                'success': 'fas fa-check-circle',
+                'error': 'fas fa-exclamation-circle',
+                'info': 'fas fa-info-circle'
+            };
+
+            alertDiv.innerHTML = `
+                <i class="${iconMap[type]}"></i>
+                <span>${message}</span>
+            `;
+
+            alertContainer.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        function validatePatternName() {
+            const input = document.getElementById('patternName');
+            const pattern = /^[a-zA-Z0-9_]+$/;
+            
+            if (!input.value) {
+                input.style.borderColor = '#e0e0e0';
+                return;
+            }
+
+            if (pattern.test(input.value)) {
+                input.style.borderColor = '#28a745';
+            } else {
+                input.style.borderColor = '#dc3545';
+            }
+        }
+
+        function validateLogPattern() {
+            const pattern = document.getElementById('logPattern').value;
+            const statusDiv = document.getElementById('patternValidation');
+
+            if (!pattern) {
+                statusDiv.style.display = 'none';
+                return;
+            }
+
+            fetch('/api/log-patterns/validate-regex', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pattern })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.className = 'validation-status success';
+                    statusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>Valid regex pattern</span>';
+                } else {
+                    statusDiv.className = 'validation-status error';
+                    statusDiv.innerHTML = `<i class="bi bi-x-circle-fill"></i> <span>${data.message}</span>`;
+                }
+            });
+        }
+
+        function validateFilePath() {
+            const filePath = document.getElementById('filePath').value;
+            const statusDiv = document.getElementById('fileValidation');
+
+            if (!filePath) {
+                statusDiv.style.display = 'none';
+                return;
+            }
+
+            fetch('/api/log-patterns/validate-file', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ file_path: filePath })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.className = 'validation-status success';
+                    statusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>File found and readable</span>';
+                } else {
+                    statusDiv.className = 'validation-status error';
+                    statusDiv.innerHTML = `<i class="bi bi-x-circle-fill"></i> <span>${data.message}</span>`;
+                }
+            });
+        }
+
+        function validateEditLogPattern() {
+            const pattern = document.getElementById('editLogPattern').value;
+            const statusDiv = document.getElementById('editPatternValidation');
+
+            if (!pattern) {
+                statusDiv.style.display = 'none';
+                return;
+            }
+
+            fetch('/api/log-patterns/validate-regex', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pattern })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.className = 'validation-status success';
+                    statusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>Valid regex pattern</span>';
+                } else {
+                    statusDiv.className = 'validation-status error';
+                    statusDiv.innerHTML = `<i class="bi bi-x-circle-fill"></i> <span>${data.message}</span>`;
+                }
+            });
+        }
+
+        function validateEditFilePath() {
+            const filePath = document.getElementById('editFilePath').value;
+            const statusDiv = document.getElementById('editFileValidation');
+
+            if (!filePath) {
+                statusDiv.style.display = 'none';
+                return;
+            }
+
+            fetch('/api/log-patterns/validate-file', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ file_path: filePath })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.className = 'validation-status success';
+                    statusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>File found and readable</span>';
+                } else {
+                    statusDiv.className = 'validation-status error';
+                    statusDiv.innerHTML = `<i class="bi bi-x-circle-fill"></i> <span>${data.message}</span>`;
+                }
+            });
+        }
+
+        function validateEditExistingLogPattern() {
+            const pattern = document.getElementById('editExistingLogPattern').value;
+            const statusDiv = document.getElementById('editExistingPatternValidation');
+
+            if (!pattern) {
+                statusDiv.style.display = 'none';
+                return;
+            }
+
+            fetch('/api/log-patterns/validate-regex', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pattern })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.className = 'validation-status success';
+                    statusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>Valid regex pattern</span>';
+                } else {
+                    statusDiv.className = 'validation-status error';
+                    statusDiv.innerHTML = `<i class="bi bi-x-circle-fill"></i> <span>${data.message}</span>`;
+                }
+            });
+        }
+
+        function validateEditExistingFilePath() {
+            const filePath = document.getElementById('editExistingFilePath').value;
+            const statusDiv = document.getElementById('editExistingFileValidation');
+
+            if (!filePath) {
+                statusDiv.style.display = 'none';
+                return;
+            }
+
+            fetch('/api/log-patterns/validate-file', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ file_path: filePath })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    statusDiv.className = 'validation-status success';
+                    statusDiv.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>File found and readable</span>';
+                } else {
+                    statusDiv.className = 'validation-status error';
+                    statusDiv.innerHTML = `<i class="bi bi-x-circle-fill"></i> <span>${data.message}</span>`;
+                }
+            });
+        }
+
+        function submitPattern() {
+            const patternName = document.getElementById('patternName').value.trim();
+            const logPattern = document.getElementById('logPattern').value.trim();
+            const filePath = document.getElementById('filePath').value.trim();
+            const description = document.getElementById('description').value.trim();
+
+            if (!patternName || !logPattern || !filePath) {
+                showAlert('Please fill in all required fields', 'error');
+                return;
+            }
+
+            fetch('/api/log-patterns/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pattern_name: patternName,
+                    log_pattern: logPattern,
+                    file_path: filePath,
+                    description: description
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    clearForm();
+                    loadApprovedPatterns();
+                    loadStatistics();
+                    if (isAdmin) loadPendingPatterns();
+                } else {
+                    showAlert(data.message || 'Error submitting pattern', 'error');
+                }
+            })
+            .catch(err => {
+                showAlert('Error: ' + err, 'error');
+            });
+        }
+
+        function clearForm() {
+            document.getElementById('patternName').value = '';
+            document.getElementById('logPattern').value = '';
+            document.getElementById('filePath').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('patternValidation').style.display = 'none';
+            document.getElementById('fileValidation').style.display = 'none';
+        }
+
+        function loadStatistics() {
+            fetch('/api/log-patterns/summary')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const stats = data.data;
+                    document.getElementById('statsContainer').innerHTML = `
+                        <div class="stat-card">
+                            <div class="number">${stats.approved_count}</div>
+                            <div class="label">Approved Patterns</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="number">${stats.pending_count}</div>
+                            <div class="label">Pending Approvals</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="number">${stats.rejected_count}</div>
+                            <div class="label">Rejected Submissions</div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function loadExistingPatterns() {
+            fetch('/api/log-patterns/existing')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const patterns = data.data;
+                    const container = document.getElementById('existingPatternsContainer');
+
+                    if (Object.keys(patterns).length === 0) {
+                        container.innerHTML = '<p style="color: #9ca3af; text-align: center; padding: 20px;">No existing patterns configured</p>';
+                        return;
+                    }
+
+                    container.innerHTML = '<div class="patterns-list">' + 
+                        Object.entries(patterns).map(([name, pattern]) => `
+                            <div class="pattern-item">
+                                <div class="pattern-info">
+                                    <h4>${escapeHtml(name)}</h4>
+                                    <p><strong>Pattern:</strong> <code>${escapeHtml(pattern.log_pattern.substring(0, 50))}${pattern.log_pattern.length > 50 ? '...' : ''}</code></p>
+                                    <p><strong>File:</strong> <code>${escapeHtml(pattern.file_path)}</code></p>
+                                    ${pattern.description ? `<p><strong>Description:</strong> ${escapeHtml(pattern.description)}</p>` : ''}
+                                    <p style="color: #9ca3af; font-size: 12px; margin-top: 8px;"><i class="bi bi-gear-fill"></i> System Pattern</p>
+                                </div>
+                                <div class="pattern-actions" style="display: flex; gap: 8px;">
+                                    <button class="btn btn-sm btn-outline-info" onclick="viewPattern('${escapeHtml(name)}')" title="View Pattern">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </button>
+                                    ${isAdmin ? `
+                                        <button class="btn btn-sm btn-success-custom" onclick="openEditExistingModal('${escapeHtml(name)}')" title="Edit this pattern">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger-custom" onclick="deleteExistingPattern('${escapeHtml(name)}')" title="Delete this pattern">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `).join('') +
+                    '</div>';
+                }
+            })
+            .catch(err => console.error('Error loading existing patterns:', err));
+        }
+
+        function loadApprovedPatterns() {
+            fetch('/api/log-patterns/approved')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const patterns = data.data;
+                    const container = document.getElementById('approvedPatternsContainer');
+
+                    if (Object.keys(patterns).length === 0) {
+                        container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No approved patterns yet</p>';
+                        return;
+                    }
+
+                    container.innerHTML = '<div class="patterns-list">' + 
+                        Object.entries(patterns).map(([name, pattern]) => `
+                            <div class="pattern-item">
+                                <div class="pattern-info">
+                                    <h4>${escapeHtml(name)}</h4>
+                                    <p><strong>Pattern:</strong> <code>${escapeHtml(pattern.log_pattern.substring(0, 50))}${pattern.log_pattern.length > 50 ? '...' : ''}</code></p>
+                                    <p><strong>File:</strong> <code>${escapeHtml(pattern.file_path)}</code></p>
+                                    ${pattern.description ? `<p><strong>Description:</strong> ${escapeHtml(pattern.description)}</p>` : ''}
+                                    <p style="color: #d1d5db; font-size: 13px; margin-top: 8px;"><i class="fas fa-user-circle"></i> <strong>Submitted by: ${escapeHtml(pattern.submitted_by)}</strong></p>
+                                </div>
+                                <div class="pattern-actions" style="display: flex; gap: 8px;">
+                                    <button class="btn btn-sm btn-outline-info" onclick="viewApprovedPattern('${escapeHtml(name)}')" title="View Pattern">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </button>
+                                    ${isAdmin ? `
+                                        <button class="btn btn-sm btn-success-custom" onclick="openEditModal('${escapeHtml(name)}')" title="Edit this pattern">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `).join('') +
+                    '</div>';
+                }
+            });
+        }
+
+        function loadPendingPatterns() {
+            if (!isAdmin) return;
+
+            fetch('/api/log-patterns/pending')
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const pending = data.data;
+                    const container = document.getElementById('pendingPatternsContainer');
+                    const countBadge = document.getElementById('pendingCount');
+
+                    countBadge.textContent = Object.keys(pending).length;
+
+                    if (Object.keys(pending).length === 0) {
+                        container.innerHTML = '<p style="color: #666; text-align: center; padding: 20px;">No pending submissions</p>';
+                        return;
+                    }
+
+                    container.innerHTML = Object.entries(pending).map(([id, submission]) => `
+                        <div class="submission-card">
+                            <div class="submission-header">
+                                <h4>${escapeHtml(submission.pattern_name)}</h4>
+                                <span style="color: #666; font-size: 12px;">${new Date(submission.submitted_at).toLocaleDateString()}</span>
+                            </div>
+                            <div class="submission-meta">
+                                <p><strong>Submitted by:</strong> ${escapeHtml(submission.submitted_by)}</p>
+                                <p><strong>Pattern:</strong> <code>${escapeHtml(submission.log_pattern.substring(0, 50))}${submission.log_pattern.length > 50 ? '...' : ''}</code></p>
+                                <p><strong>File:</strong> <code>${escapeHtml(submission.file_path)}</code></p>
+                                ${submission.description ? `<p><strong>Description:</strong> ${escapeHtml(submission.description)}</p>` : ''}
+                            </div>
+                            <div class="button-group">
+                                <button class="btn btn-sm btn-success-custom" onclick="approvePending('${escapeHtml(id)}')">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger-custom" onclick="openRejectModal('${escapeHtml(id)}')" title="Reject this submission">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            });
+        }
+
+        function viewPattern(patternName) {
+            fetch('/api/log-patterns/existing')
+            .then(r => r.json())
+            .then(data => {
+                const pattern = data.data[patternName];
+                if (pattern) {
+                    document.getElementById('viewPatternName').value = patternName;
+                    document.getElementById('viewLogPattern').value = pattern.log_pattern;
+                    document.getElementById('viewFilePath').value = pattern.file_path;
+                    document.getElementById('viewDescription').value = pattern.description || '';
+                    document.getElementById('viewSubmittedBy').value = pattern.submitted_by || 'System';
+                    document.getElementById('viewModal').classList.add('active');
+                }
+            });
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.remove('active');
+        }
+
+        function viewApprovedPattern(patternName) {
+            fetch('/api/log-patterns/approved')
+            .then(r => r.json())
+            .then(data => {
+                const pattern = data.data[patternName];
+                if (pattern) {
+                    document.getElementById('viewPatternName').value = patternName;
+                    document.getElementById('viewLogPattern').value = pattern.log_pattern;
+                    document.getElementById('viewFilePath').value = pattern.file_path;
+                    document.getElementById('viewDescription').value = pattern.description || '';
+                    document.getElementById('viewSubmittedBy').value = pattern.submitted_by || 'Unknown';
+                    document.getElementById('viewModal').classList.add('active');
+                }
+            });
+        }
+
+        function openEditExistingModal(patternName) {
+            fetch('/api/log-patterns/existing')
+            .then(r => r.json())
+            .then(data => {
+                const pattern = data.data[patternName];
+                if (pattern) {
+                    currentEditingPattern = patternName;
+                    document.getElementById('editExistingPatternName').value = patternName;
+                    document.getElementById('editExistingLogPattern').value = pattern.log_pattern;
+                    document.getElementById('editExistingFilePath').value = pattern.file_path;
+                    document.getElementById('editExistingDescription').value = pattern.description || '';
+                    document.getElementById('editExistingReason').value = '';
+                    document.getElementById('editExistingModal').classList.add('active');
+                }
+            });
+        }
+
+        function closeEditExistingModal() {
+            document.getElementById('editExistingModal').classList.remove('active');
+            currentEditingPattern = null;
+        }
+
+        function submitEditExistingPattern() {
+            const newLogPattern = document.getElementById('editExistingLogPattern').value.trim();
+            const newFilePath = document.getElementById('editExistingFilePath').value.trim();
+            const newDescription = document.getElementById('editExistingDescription').value.trim();
+            const changeReason = document.getElementById('editExistingReason').value.trim();
+
+            if (!newLogPattern || !newFilePath) {
+                showAlert('Pattern and file path are required', 'error');
+                return;
+            }
+
+            if (!changeReason) {
+                showAlert('Reason for change is required', 'error');
+                return;
+            }
+
+            // Submit as a new pattern submission that will go to admin approval
+            fetch('/api/log-patterns/submit-existing-edit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pattern_name: currentEditingPattern,
+                    log_pattern: newLogPattern,
+                    file_path: newFilePath,
+                    description: newDescription,
+                    change_reason: changeReason,
+                    base_pattern: currentEditingPattern
+                })
+            })
+            .then(r => {
+                if (!r.ok) {
+                    return r.json().then(data => Promise.reject(data));
+                }
+                return r.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showAlert('Changes submitted for admin approval', 'success');
+                    closeEditExistingModal();
+                    loadExistingPatterns();
+                    loadStatistics();
+                } else {
+                    showAlert(data.message || 'Error submitting changes', 'error');
+                }
+            })
+            .catch(err => {
+                const errorMsg = err.message || err.error || 'Unknown error occurred';
+                showAlert('Error: ' + errorMsg, 'error');
+                console.error('API Error:', err);
+            });
+        }
+
+        function openEditModal(patternName) {
+            if (!isAdmin) return;
+
+            fetch('/api/log-patterns/approved')
+            .then(r => r.json())
+            .then(data => {
+                const pattern = data.data[patternName];
+                if (pattern) {
+                    currentEditingPattern = patternName;
+                    document.getElementById('editPatternName').value = patternName;
+                    document.getElementById('editLogPattern').value = pattern.log_pattern;
+                    document.getElementById('editFilePath').value = pattern.file_path;
+                    document.getElementById('editDescription').value = pattern.description || '';
+                    document.getElementById('editModal').classList.add('active');
+                }
+            });
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+            currentEditingPattern = null;
+        }
+
+        function saveEditPattern() {
+            if (!isAdmin) {
+                showAlert('Admin access required', 'error');
+                return;
+            }
+            
+            const newLogPattern = document.getElementById('editLogPattern').value.trim();
+            const newFilePath = document.getElementById('editFilePath').value.trim();
+            const newDescription = document.getElementById('editDescription').value.trim();
+
+            if (!newLogPattern || !newFilePath) {
+                showAlert('Pattern and file path are required', 'error');
+                return;
+            }
+
+            fetch(`/api/log-patterns/${encodeURIComponent(currentEditingPattern)}/modify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    log_pattern: newLogPattern,
+                    file_path: newFilePath,
+                    description: newDescription
+                })
+            })
+            .then(r => {
+                if (!r.ok) {
+                    return r.json().then(data => Promise.reject(data));
+                }
+                return r.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    closeEditModal();
+                    loadApprovedPatterns();
+                    loadStatistics();
+                } else {
+                    showAlert(data.message || 'Error saving pattern', 'error');
+                }
+            })
+            .catch(err => {
+                const errorMsg = err.message || err.error || 'Unknown error occurred';
+                showAlert('Error: ' + errorMsg, 'error');
+                console.error('API Error:', err);
+            });
+        }
+
+        function deletePattern() {
+            if (!isAdmin) {
+                showAlert('Admin access required', 'error');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to delete this pattern?')) return;
+
+            fetch(`/api/log-patterns/${encodeURIComponent(currentEditingPattern)}/delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    closeEditModal();
+                    loadApprovedPatterns();
+                    loadStatistics();
+                } else {
+                    showAlert(data.message || 'Error deleting pattern', 'error');
+                }
+            })
+            .catch(err => {
+                showAlert('Error: ' + err, 'error');
+            });
+        }
+
+        function deleteExistingPattern(patternName) {
+            if (!isAdmin) {
+                showAlert('Admin access required', 'error');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to delete the pattern "${patternName}"?\n\nThis will remove it from the approved patterns.`)) return;
+
+            fetch(`/api/log-patterns/${encodeURIComponent(patternName)}/delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    loadExistingPatterns();
+                    loadApprovedPatterns();
+                    loadStatistics();
+                } else {
+                    showAlert(data.message || 'Error deleting pattern', 'error');
+                }
+            })
+            .catch(err => {
+                showAlert('Error: ' + err, 'error');
+            });
+        }
+
+        function approvePending(submissionId) {
+            fetch(`/api/log-patterns/${encodeURIComponent(submissionId)}/approve`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => {
+                if (!r.ok) {
+                    return r.json().then(data => Promise.reject(data));
+                }
+                return r.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    loadPendingPatterns();
+                    loadApprovedPatterns();
+                    loadStatistics();
+                } else {
+                    showAlert(data.message || 'Error approving submission', 'error');
+                }
+            })
+            .catch(err => {
+                const errorMsg = err.message || err.error || 'Unknown error occurred';
+                showAlert('Error: ' + errorMsg, 'error');
+                console.error('Approve Error:', err);
+            });
+        }
+
+        function openRejectModal(submissionId) {
+            if (!isAdmin) return;
+            currentRejectingSubmission = submissionId;
+            document.getElementById('rejectReason').value = '';
+            document.getElementById('rejectModal').classList.add('active');
+        }
+
+        function closeRejectModal() {
+            document.getElementById('rejectModal').classList.remove('active');
+            currentRejectingSubmission = null;
+        }
+
+        function confirmReject() {
+            const reason = document.getElementById('rejectReason').value.trim();
+
+            if (!reason) {
+                showAlert('Rejection reason is required', 'error');
+                return;
+            }
+
+            fetch(`/api/log-patterns/${encodeURIComponent(currentRejectingSubmission)}/reject`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rejection_reason: reason })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    closeRejectModal();
+                    loadPendingPatterns();
+                    loadStatistics();
+                } else {
+                    showAlert(data.message || 'Error rejecting submission', 'error');
+                }
+            })
+            .catch(err => {
+                showAlert('Error: ' + err, 'error');
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ===== System Commands Management Functions =====
+
+        let currentEditingCommand = null;
+
+        // Load all system commands (builtin and user-defined)
+        function loadSystemCommands() {
+            fetch('/api/system-commands', {
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    renderBuiltinCommands(data.data.builtin || {});
+                    renderApprovedCommands(data.data.approved || {});
+                    renderPendingApprovals(data.data.pending || {});
+                } else {
+                    showAlert('Error loading system commands: ' + (data.message || 'Unknown error'), 'error');
+                }
+            })
+            .catch(err => {
+                showAlert('Error loading system commands: ' + err, 'error');
+                console.error('Load error:', err);
+            });
+        }
+
+        // Render builtin commands (read-only)
+        function renderBuiltinCommands(commands) {
+            const container = document.getElementById('builtinCommandsList');
+            
+            if (!commands || Object.keys(commands).length === 0) {
+                container.innerHTML = '<div class="command-card empty-state"><i class="bi bi-info-circle"></i><p>No built-in commands found</p></div>';
+                return;
+            }
+
+            let html = '';
+            for (const [name, cmd] of Object.entries(commands)) {
+                html += `
+                    <div class="command-card builtin">
+                        <div class="command-name">
+                            <i class="bi bi-lock"></i>
+                            ${escapeHtml(name)}
+                        </div>
+                        <div class="command-text">${escapeHtml(cmd.command || '')}</div>
+                        ${cmd.description ? `<div class="command-description">${escapeHtml(cmd.description)}</div>` : ''}
+                        <div class="command-meta">
+                            <span><i class="bi bi-gear"></i> System</span>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        // Render approved commands (ready to use)
+        function renderApprovedCommands(commands) {
+            const container = document.getElementById('approvedCommandsList');
+            const containerDiv = document.getElementById('approvedCommandsContainer');
+            
+            if (!container || !containerDiv) return; // Container might not exist
+            
+            if (!commands || Object.keys(commands).length === 0) {
+                containerDiv.style.display = 'none';
+                return;
+            }
+
+            containerDiv.style.display = 'block';
+            let html = '';
+            for (const [name, cmd] of Object.entries(commands)) {
+                html += `
+                    <div class="command-card approved">
+                        <div class="command-name">
+                            <i class="bi bi-check-circle"></i>
+                            ${escapeHtml(name)}
+                        </div>
+                        <div class="command-text">${escapeHtml(cmd.command || '')}</div>
+                        ${cmd.description ? `<div class="command-description">${escapeHtml(cmd.description)}</div>` : ''}
+                        <div class="command-meta">
+                            <span><i class="bi bi-person"></i> ${escapeHtml(cmd.submitted_by || 'Unknown')}</span>
+                            <span><i class="bi bi-clock"></i> ${new Date(cmd.approved_at || cmd.submitted_at).toLocaleDateString()}</span>
+                        </div>
+                        ${isAdmin ? `
+                            <div class="command-actions">
+                                <button class="btn-promote" onclick="promoteCommandToConfig('${escapeHtml(name)}')" title="Promote to config">
+                                    <i class="bi bi-arrow-up"></i> Promote
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        // Render pending approvals (admin only)
+        function renderPendingApprovals(submissions) {
+            const container = document.getElementById('pendingApprovalsCommandsList');
+            const containerDiv = document.getElementById('pendingApprovalsCommandsContainer');
+            const countBadge = document.getElementById('pendingCommandsCount');
+            
+            if (!container || !containerDiv) return; // Container might not exist if not admin
+            
+            if (!submissions || Object.keys(submissions).length === 0) {
+                containerDiv.style.display = 'none';
+                return;
+            }
+
+            containerDiv.style.display = 'block';
+            const count = Object.keys(submissions).length;
+            if (countBadge) {
+                countBadge.textContent = count;
+            }
+
+            let html = '';
+            for (const [submissionId, cmd] of Object.entries(submissions)) {
+                html += `
+                    <div class="command-card pending">
+                        <div class="command-name">
+                            <i class="bi bi-hourglass-split"></i>
+                            ${escapeHtml(cmd.command_name || '')}
+                        </div>
+                        <div class="command-text">${escapeHtml(cmd.command || '')}</div>
+                        ${cmd.description ? `<div class="command-description">${escapeHtml(cmd.description)}</div>` : ''}
+                        <div class="command-meta">
+                            <span><i class="bi bi-person"></i> ${escapeHtml(cmd.submitted_by || 'Unknown')}</span>
+                            <span><i class="bi bi-clock"></i> ${new Date(cmd.submitted_at).toLocaleDateString()}</span>
+                        </div>
+                        <div class="command-actions">
+                            <button class="btn-approve" onclick="approveCommand('${escapeHtml(submissionId)}')" title="Approve command">
+                                <i class="bi bi-check"></i> Approve
+                            </button>
+                            <button class="btn-reject" onclick="rejectCommand('${escapeHtml(submissionId)}')" title="Reject command">
+                                <i class="bi bi-x"></i> Reject
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        // Render user-defined commands (deprecated - kept for backward compatibility)
+        function renderUserDefinedCommands(commands) {
+            const container = document.getElementById('userDefinedCommandsList');
+            if (!container) return;
+            
+            if (!commands || Object.keys(commands).length === 0) {
+                container.innerHTML = '<div class="command-card empty-state"><i class="bi bi-inbox"></i><p>No user-defined commands yet</p></div>';
+                return;
+            }
+
+            let html = '';
+            for (const [name, cmd] of Object.entries(commands)) {
+                html += `
+                    <div class="command-card">
+                        <div class="command-name">
+                            <i class="bi bi-pencil"></i>
+                            ${escapeHtml(name)}
+                        </div>
+                        <div class="command-text">${escapeHtml(cmd.command || '')}</div>
+                        ${cmd.description ? `<div class="command-description">${escapeHtml(cmd.description)}</div>` : ''}
+                        <div class="command-meta">
+                            <span><i class="bi bi-clock"></i> ${new Date(cmd.updated_at || cmd.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div class="command-actions">
+                            <button class="btn-edit" onclick="openEditCommandModal('${escapeHtml(name)}')" title="Edit command">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn-delete" onclick="deleteCommand('${escapeHtml(name)}')" title="Delete command">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        // Open add command modal
+        function openAddCommandModal() {
+            document.getElementById('addCommandName').value = '';
+            document.getElementById('addCommandText').value = '';
+            document.getElementById('addCommandDescription').value = '';
+            const modal = document.getElementById('addCommandModal');
+            modal.classList.add('active');
+            modal.style.display = 'flex'; // ensure visible even if class toggle fails
+            document.getElementById('addCommandName').focus();
+        }
+
+        // Close add command modal
+        function closeAddCommandModal() {
+            const modal = document.getElementById('addCommandModal');
+            modal.classList.remove('active');
+            modal.style.display = 'none'; // hard hide to avoid stale state
+        }
+
+        // Submit add command
+        async function submitAddCommand() {
+            const name = document.getElementById('addCommandName').value.trim();
+            const command = document.getElementById('addCommandText').value.trim();
+            const description = document.getElementById('addCommandDescription').value.trim();
+            const submitBtn = document.getElementById('addCommandSubmitBtn');
+
+            // Validation
+            if (!name) {
+                showAlert('Command name is required', 'error');
+                return;
+            }
+            if (!command) {
+                showAlert('Command text is required', 'error');
+                return;
+            }
+            if (!/^[a-zA-Z0-9_]+$/.test(name)) {
+                showAlert('Command name must contain only alphanumeric characters and underscores', 'error');
+                return;
+            }
+
+            // Prevent double-submit
+            const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="bi bi-arrow-repeat"></i> Submitting...';
+            }
+
+            try {
+                const response = await fetch('/api/system-commands/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        command_name: name,
+                        command_text: command,
+                        description: description
+                    })
+                });
+
+                // Handle non-200s gracefully
+                if (!response.ok) {
+                    const text = await response.text();
+                    throw new Error(`Server returned ${response.status}: ${text || 'No response body'}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (window.isAdmin) {
+                        showAlert('Command approved and added successfully', 'success');
+                    } else {
+                        showAlert('Command submitted for approval', 'success');
+                    }
+                    closeAddCommandModal();
+                    loadSystemCommands();
+                } else {
+                    showAlert('Error: ' + (data.message || 'Unknown error'), 'error');
+                }
+            } catch (err) {
+                showAlert('Error submitting command: ' + err.message, 'error');
+                console.error('Submit error:', err);
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText || '<i class="bi bi-plus-circle"></i> Add Command';
+                }
+            }
+        }
+
+        // Open edit command modal
+        function openEditCommandModal(name) {
+            currentEditingCommand = name;
+            
+            // Fetch current command data
+            fetch('/api/system-commands', {
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    const commands = data.data.user_defined || {};
+                    const cmd = commands[name];
+                    
+                    if (cmd) {
+                        document.getElementById('editCommandName').value = name;
+                        document.getElementById('editCommandText').value = cmd.command || '';
+                        document.getElementById('editCommandDescription').value = cmd.description || '';
+                        document.getElementById('editCommandModal').classList.add('active');
+                        document.getElementById('editCommandText').focus();
+                    } else {
+                        showAlert('Command not found', 'error');
+                    }
+                } else {
+                    showAlert('Error loading command: ' + (data.message || 'Unknown error'), 'error');
+                }
+            })
+            .catch(err => {
+                showAlert('Error loading command: ' + err, 'error');
+            });
+        }
+
+        // Close edit command modal
+        function closeEditCommandModal() {
+            document.getElementById('editCommandModal').classList.remove('active');
+            currentEditingCommand = null;
+        }
+
+        // Submit edit command
+        function submitEditCommand() {
+            if (!currentEditingCommand) {
+                showAlert('No command selected for editing', 'error');
+                return;
+            }
+
+            const command = document.getElementById('editCommandText').value.trim();
+            const description = document.getElementById('editCommandDescription').value.trim();
+
+            // Validation
+            if (!command) {
+                showAlert('Command text is required', 'error');
+                return;
+            }
+
+            // Submit
+            fetch(`/api/system-commands/${encodeURIComponent(currentEditingCommand)}/update`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    command_text: command,
+                    description: description
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Command updated successfully', 'success');
+                    closeEditCommandModal();
+                    loadSystemCommands();
+                } else {
+                    showAlert('Error: ' + (data.message || 'Unknown error'), 'error');
+                }
+            })
+            .catch(err => {
+                showAlert('Error updating command: ' + err, 'error');
+                console.error('Update error:', err);
+            });
+        }
+
+        // Delete command
+        function deleteCommand(name) {
+            if (!confirm(`Are you sure you want to delete the command "${name}"?`)) {
+                return;
+            }
+
+            fetch(`/api/system-commands/${encodeURIComponent(name)}/delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Command deleted successfully', 'success');
+                    loadSystemCommands();
+                } else {
+                    showAlert('Error: ' + (data.message || 'Unknown error'), 'error');
+                }
+            })
+            .catch(err => {
+                showAlert('Error deleting command: ' + err, 'error');
+                console.error('Delete error:', err);
+            });
+        }
+
+        // Approve a pending command submission (admin only)
+        function approveCommand(submissionId) {
+            if (!confirm('Approve this command submission?')) {
+                return;
+            }
+
+            fetch(`/api/system-commands/approve/${encodeURIComponent(submissionId)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message || 'Command approved successfully', 'success');
+                    loadSystemCommands();
+                } else {
+                    showAlert('Error: ' + (data.message || 'Unknown error'), 'error');
+                }
+            })
+            .catch(err => {
+                showAlert('Error approving command: ' + err, 'error');
+                console.error('Approve error:', err);
+            });
+        }
+
+        // Reject a pending command submission (admin only)
+        function rejectCommand(submissionId) {
+            const reason = prompt('Reason for rejection (optional):', '');
+            if (reason === null) {
+                return; // User clicked cancel
+            }
+
+            fetch(`/api/system-commands/reject/${encodeURIComponent(submissionId)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    rejection_reason: reason || ''
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message || 'Command rejected successfully', 'success');
+                    loadSystemCommands();
+                } else {
+                    showAlert('Error: ' + (data.message || 'Unknown error'), 'error');
+                }
+            })
+            .catch(err => {
+                showAlert('Error rejecting command: ' + err, 'error');
+                console.error('Reject error:', err);
+            });
+        }
+
+        // Promote an approved command to config (make it builtin) - admin only
+        function promoteCommandToConfig(commandName) {
+            if (!confirm(`Promote "${commandName}" to permanent builtin in config?`)) {
+                return;
+            }
+
+            fetch(`/api/system-commands/promote/${encodeURIComponent(commandName)}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert(data.message || 'Command promoted successfully', 'success');
+                    loadSystemCommands();
+                } else {
+                    showAlert('Error: ' + (data.message || 'Unknown error'), 'error');
+                }
+            })
+            .catch(err => {
+                showAlert('Error promoting command: ' + err, 'error');
+                console.error('Promote error:', err);
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,100 @@
+ 5704 root       0 -20       0      0      0 S   0.0   0.0   0:00.00 kbase_eve+
+ 6149 root      20   0   29032   6520   5804 S   0.0   0.2   0:00.10 appsservi+
+ 6150 root      20   0   35020  10344   9160 S   0.0   0.3   0:00.92 appsservi+
+ 6160 root      20   0   75060  12048   6932 S   0.0   0.3   0:04.74 ASAnalyti+
+ 6780 root      20   0    2156    712    640 S   0.0   0.0   0:00.00 sleep
+ 8707 root      20   0  170980  26032  21284 S   0.0   0.7   0:00.84 RialtoSer+
+ 8740 root      20   0   34192   4316   3840 S   0.0   0.1   0:00.04 nfrtool
+ 8743 root      20   0  625944  49988  36352 S   0.0   1.4   0:10.38 WPEFramew+
+ 8803 root      20   0   26472   2784   2320 S   0.0   0.1   0:00.01 thunderHa+
+ 8815 root      20   0   83548  16696  13756 S   0.0   0.5   0:00.13 TextToSpe+
+ 8823 root      20   0  133220  23420  16272 S   0.0   0.6   0:02.75 NWMgrPlug+
+ 8855 root      20   0   90376  18124  15936 S   0.0   0.5   0:00.11 Xcast
+ 8910 root      20   0  125272  35372  26728 S   0.0   1.0   0:02.85 MediaRite
+ 8997 root      20   0   64024   9448   8376 S   0.0   0.3   0:00.27 fogcli
+ 9035 root      20   0   80708  13884  12024 S   0.0   0.4   0:00.16 WifiMetri+
+ 9050 root      20   0   91712  19548  17040 S   0.0   0.5   0:00.73 CloudStore
+ 9057 root      20   0   59008  17196  14356 S   0.0   0.5   0:00.11 SystemAud+
+ 9102 root      20   0  143332  26592  22704 S   0.0   0.7   0:00.70 TextTrack
+ 9155 root      20   0   54264   5124   4348 S   0.0   0.1   0:00.08 ASNetwork+
+ 9212 root      20   0  211116  12452   9976 S   0.0   0.3   0:00.97 ASSystemS+
+ 9274 root      20   0  127256  23612  18812 S   0.0   0.6   0:01.54 OCDM
+ 9277 root      20   0  104948  15104   8668 S   0.0   0.4   0:00.70 btMgrBus
+ 9347 root      20   0   71696  16572  13748 S   0.0   0.4   0:00.10 RialtoSer+
+ 9352 root      39  19    2592   1892   1492 S   0.0   0.1   0:00.05 busybox
+ 9381 root       0 -20       0      0      0 S   0.0   0.0   0:00.00 loop0
+ 9395 root       0 -20       0      0      0 S   0.0   0.0   0:00.00 kbase_eve+
+ 9406 root       0 -20       0      0      0 S   0.0   0.0   0:00.00 ext4-rsv-+
+ 9445 app-88    20   0    3328    564    496 S   0.0   0.0   0:00.03 DobbyInit
+ 9625 app-88    20   0  219924  38340  33048 S   0.0   1.0   0:02.58 SkyBrowse+
+ 9730 root      39  19    2156    712    640 S   0.0   0.0   0:00.00 sleep
+ 9855 app-88    20   0  229420  36840  30940 S   0.0   1.0   0:00.56 WPENetwor+
+ 9884 app-88    20   0  356860  66636  52612 S   0.0   1.8   0:03.17 WPEWebPro+
+10054 root      20   0       0      0      0 Z   0.0   0.0   0:00.00 ASSystemS+
+10107 root      20   0  341056  18332  10960 S   0.0   0.5   0:02.87 asrdkplay+
+10179 root      20   0   78888   7396   5736 S   0.0   0.2   0:00.11 VoiceSear+
+10181 root      20   0   72292   5500   4712 S   0.0   0.1   0:00.08 ASPeriphe+
+10184 root      20   0   79084   6172   4612 S   0.0   0.2   0:00.09 ASBridgeS+
+10421 root      20   0  222352  34640  29740 S   0.0   0.9   0:00.32 JSPP
+10582 root      20   0  245580  33204  28112 S   0.0   0.9   0:00.37 WPENetwor+
+10712 root       0 -20       0      0      0 S   0.0   0.0   0:00.00 kbase_eve+
+13320 root     -11   0       0      0      0 S   0.0   0.0   0:00.00 kworker/0+
+13767 root     -11   0       0      0      0 S   0.0   0.0   0:00.00 kworker/1+
+13772 root     -11   0       0      0      0 S   0.0   0.0   0:00.00 kworker/2+
+14083 root     -11   0       0      0      0 S   0.0   0.0   0:00.00 kworker/2+
+14129 root       0 -20       0      0      0 S   0.0   0.0   0:00.00 loop1
+14132 root      20   0       0      0      0 S   0.0   0.0   0:00.00 jbd2/loop+
+14133 root       0 -20       0      0      0 S   0.0   0.0   0:00.00 ext4-rsv-+
+14145 app-4     20   0    3328    564    496 S   0.0   0.0   0:00.02 DobbyInit
+14199 app-4     20   0  211140  43232  35272 S   0.0   1.2   0:01.47 epg_ui
+14206 root       0 -20       0      0      0 S   0.0   0.0   0:00.00 kbase_eve+
+14235 root     -11   0    2256   1772   1580 S   0.0   0.0   0:00.01 core_shel+
+Filesystem           1K-blocks      Used Available Use% Mounted on
+none                   1377244         0   1377244   0% /dev
+/dev/dm-0               178944    178944         0 100% /
+tmpfs                  1845576        44   1845532   0% /dev/shm
+tmpfs                  1845576     60820   1784756   3% /run
+tmpfs                  1845576         0   1845576   0% /sys/fs/cgroup
+tmpfs                  1845576     60820   1784756   3% /etc/machine-id
+tmpfs                  1845576      2120   1843456   0% /tmp
+tmpfs                  1845576      2120   1843456   0% /etc/systemd/timesyncd.conf
+/dev/mmcblk0p3          499656    379104     83856  82% /opt
+/dev/mmcblk0p4           59365     16658     38121  30% /mnt/critical
+/dev/mmcblk0p4           59365     16658     38121  30% /opt/persistent
+/dev/mmcblk0p4           59365     16658     38121  30% /opt/www
+/dev/mmcblk0p4           59365     16658     38121  30% /opt/drm
+/dev/mmcblk0p4           59365     16658     38121  30% /opt/gp
+tmpfs                   589824         0    589824   0% /opt/CDL
+tmpfs                     5120         0      5120   0% /opt/oem
+tmpfs                   131072         0    131072   0% /mnt/memory
+/dev/mmcblk0p3          499656    379104     83856  82% /nvram
+/dev/mmcblk0p4           59365     16658     38121  30% /etc/timezone
+/dev/mmcblk0p3          499656    379104     83856  82% /var/lib
+tmpfs                  1845576        40   1845536   0% /var/volatile
+tmpfs                  1845576        40   1845536   0% /etc/asound.conf
+tmpfs                  1845576        40   1845536   0% /var/spool/cron
+tmpfs                  1845576        40   1845536   0% /etc/hostname
+tmpfs                  1845576        40   1845536   0% /etc/hosts
+tmpfs                  1845576        40   1845536   0% /etc/resolv.conf
+tmpfs                  1845576        40   1845536   0% /etc/xupnp
+tmpfs                  1845576        40   1845536   0% /www
+/opt/secure             499656    379104     83856  82% /opt/secure
+/opt/secure             499656    379104     83856  82% /nvram/secure
+/opt/secure             499656    379104     83856  82% /var/lib/secure
+/opt/drm                 59365     16658     38121  30% /opt/drm
+/opt/drm                 59365     16658     38121  30% /mnt/critical/drm
+/dev/mmcblk0p2         1386844    305480    994532  23% /media/apps
+/dev/mmcblk0p1         5898360     14456   5567900   0% /tmp/data
+tmpfs                  1845576      2120   1843456   0% /tmp/.hostmnttunnel-com.sky.as.apps_com.xumo.ipa
+tmpfs                  1845576      2120   1843456   0% /tmp/.hostmnttunnel-com.sky.as.apps_com.bskyb.epgui
+2026-01-30T18:55:52.453Z process crashed = epg_ui
+2026-01-30T18:55:52.483Z signal causing dump = 6
+2026-01-30T18:55:52.504Z time of dump = 1769799352
+2026-01-30T18:55:52.524Z Process ID = 9
+2026-01-30T18:55:52.545Z Thread ID within process = 9
+2026-01-30T18:55:52.583Z epg_ui crash and uploading the cores
+2026-01-30T18:55:52.604Z corename = 1769799352_core.prog_epg_ui.signal_6.gz
+2026-01-30T18:55:52.628Z processing_corename = 1769799352_core_prog_epg_ui.signal_6.gz.tmp
+2026-01-30T18:55:52.649Z core-shell core started pid : 14235
+2026-01-30T18:56:00.021Z core-shell core created pid : 14235
+2026-01-30T18:56:00.078Z Deleting 1769799299_core.prog_epg_ui.signal_6.gz as the same process has more than 5 cores in /opt/secure/corefiles

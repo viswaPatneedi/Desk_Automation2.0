@@ -1,0 +1,100 @@
+ 5099 root      20   0  127856  13956  12080 S   0.0   0.4   0:01.18 controlMgr
+ 5158 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.09 PluginAct+
+ 5164 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.06 PluginAct+
+ 5327 root      20   0  398624  74844  50420 S   0.0   2.0   0:15.27 appsservi+
+ 5340 root      20   0    2156    712    640 S   0.0   0.0   0:00.00 sleep
+ 5515 root      20   0    1988    100      0 S   0.0   0.0   0:00.00 dropbear
+ 5535 systemd+  20   0   11732   1636   1472 S   0.0   0.0   0:00.04 systemd-t+
+ 5646 root       0 -20       0      0      0 S   0.0   0.0   0:00.00 bioset
+ 5651 root       0 -20       0      0      0 S   0.0   0.0   0:00.00 bioset
+ 5654 root       0 -20       0      0      0 S   0.0   0.0   0:00.00 bioset
+ 5657 root       0 -20       0      0      0 S   0.0   0.0   0:00.00 bioset
+ 5667 non-root  20   0  127864   8124   5228 S   0.0   0.2   0:01.56 telemetry+
+ 5742 root       0 -20       0      0      0 S   0.0   0.0   0:00.00 kbase_eve+
+ 5763 root      20   0    2076   1628   1444 S   0.0   0.0   0:00.43 dropbear
+ 6198 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.09 PluginAct+
+ 6231 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.08 PluginAct+
+ 6355 root      20   0   35020  10344   9160 S   0.0   0.3   0:00.85 appsservi+
+ 6358 root      20   0   29032   6520   5804 S   0.0   0.2   0:00.10 appsservi+
+ 6637 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.10 PluginAct+
+ 7127 root      20   0    2156    712    640 S   0.0   0.0   0:00.00 sleep
+ 8377 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.08 PluginAct+
+ 8393 root      20   0   24456   4820   4364 S   0.0   0.1   0:00.10 PluginAct+
+ 8394 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.07 PluginAct+
+ 8403 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.07 PluginAct+
+ 8711 root      39  19    2592   1892   1492 S   0.0   0.1   0:00.06 busybox
+ 8882 root      39  19    2156    712    640 S   0.0   0.0   0:00.00 sleep
+ 8930 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.06 PluginAct+
+ 8945 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.08 PluginAct+
+ 8947 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.06 PluginAct+
+ 8949 root      20   0   24456   4888   4424 S   0.0   0.1   0:00.06 PluginAct+
+ 8953 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.05 PluginAct+
+ 8984 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.06 PluginAct+
+ 9632 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.06 PluginAct+
+11271 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.05 PluginAct+
+12050 root     -11   0       0      0      0 S   0.0   0.0   0:00.17 kworker/1+
+12175 root     -11   0       0      0      0 S   0.0   0.0   0:00.00 kworker/2+
+12251 root      20   0   34192   4152   3780 S   0.0   0.1   0:00.04 nfrtool
+12253 root     -11   0       0      0      0 S   0.0   0.0   0:00.00 kworker/3+
+12260 root      20   0  354148  28368  22212 D   0.0   0.8   0:00.80 WPEFramew+
+12285 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.04 PluginAct+
+12286 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.03 PluginAct+
+12287 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.04 PluginAct+
+12291 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.04 PluginAct+
+12297 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.04 PluginAct+
+12299 root      20   0   24456   4892   4428 S   0.0   0.1   0:00.04 PluginAct+
+12311 root     -11   0       0      0      0 S   0.0   0.0   0:00.00 kworker/0+
+12313 root      20   0   26472   2784   2320 S   0.0   0.1   0:00.01 thunderHa+
+12332 root      20   0  121872  19312  15068 S   0.0   0.5   0:00.38 NWMgrPlug+
+12334 root      20   0   45148  15268  13196 S   0.0   0.4   0:00.13 TextTrack
+13019 root     -36 -20       0      0      0 S   0.0   0.0   0:00.00 kworker/u+
+13490 root      20   0   71696  16572  13748 S   0.0   0.4   0:00.15 RialtoSer+
+13633 root      20   0   66132  16540  13692 S   0.0   0.4   0:00.16 TextToSpe+
+13655 root      20   0  354180   6936    776 S   0.0   0.2   0:00.00 WorkerPoo+
+13656 root     -11   0    2256   1772   1580 S   0.0   0.0   0:00.01 core_shel+
+Filesystem           1K-blocks      Used Available Use% Mounted on
+none                   1377244         0   1377244   0% /dev
+/dev/dm-0               178944    178944         0 100% /
+tmpfs                  1845576        40   1845536   0% /dev/shm
+tmpfs                  1845576     60780   1784796   3% /run
+tmpfs                  1845576         0   1845576   0% /sys/fs/cgroup
+tmpfs                  1845576     60780   1784796   3% /etc/machine-id
+tmpfs                  1845576      1844   1843732   0% /tmp
+tmpfs                  1845576      1844   1843732   0% /etc/systemd/timesyncd.conf
+/dev/mmcblk0p3          499656     79600    383360  17% /opt
+/dev/mmcblk0p4           59365     16542     38237  30% /mnt/critical
+/dev/mmcblk0p4           59365     16542     38237  30% /opt/persistent
+/dev/mmcblk0p4           59365     16542     38237  30% /opt/www
+/dev/mmcblk0p4           59365     16542     38237  30% /opt/drm
+/dev/mmcblk0p4           59365     16542     38237  30% /opt/gp
+tmpfs                   589824         0    589824   0% /opt/CDL
+tmpfs                     5120         0      5120   0% /opt/oem
+tmpfs                   131072         0    131072   0% /mnt/memory
+/dev/mmcblk0p3          499656     79600    383360  17% /nvram
+/dev/mmcblk0p4           59365     16542     38237  30% /etc/timezone
+/dev/mmcblk0p3          499656     79600    383360  17% /var/lib
+tmpfs                  1845576        40   1845536   0% /var/volatile
+tmpfs                  1845576        40   1845536   0% /etc/resolv.conf
+tmpfs                  1845576        40   1845536   0% /etc/asound.conf
+tmpfs                  1845576        40   1845536   0% /etc/hosts
+tmpfs                  1845576        40   1845536   0% /var/spool/cron
+tmpfs                  1845576        40   1845536   0% /www
+tmpfs                  1845576        40   1845536   0% /etc/hostname
+tmpfs                  1845576        40   1845536   0% /etc/xupnp
+/opt/secure             499656     79600    383360  17% /opt/secure
+/opt/secure             499656     79600    383360  17% /nvram/secure
+/opt/secure             499656     79600    383360  17% /var/lib/secure
+/opt/drm                 59365     16542     38237  30% /opt/drm
+/opt/drm                 59365     16542     38237  30% /mnt/critical/drm
+/dev/mmcblk0p2         1386844    280812   1019200  22% /media/apps
+/dev/mmcblk0p1         5898360     14452   5567904   0% /tmp/data
+2026-01-29T00:38:54.278Z process crashed = Monitor::IResou
+2026-01-29T00:38:54.312Z signal causing dump = 11
+2026-01-29T00:38:54.332Z time of dump = 1769647134
+2026-01-29T00:38:54.355Z Process ID = 12260
+2026-01-29T00:38:54.374Z Thread ID within process = 12262
+2026-01-29T00:38:54.404Z Monitor::IResou crash and uploading the cores
+2026-01-29T00:38:54.421Z corename = 1769647134_core.prog_Monitor::IResou.signal_11.gz
+2026-01-29T00:38:54.442Z processing_corename = 1769647134_core_prog_Monitor::IResou.signal_11.gz.tmp
+2026-01-29T00:38:54.460Z core-shell core started pid : 13656
+2026-01-29T00:39:07.242Z core-shell core created pid : 13656

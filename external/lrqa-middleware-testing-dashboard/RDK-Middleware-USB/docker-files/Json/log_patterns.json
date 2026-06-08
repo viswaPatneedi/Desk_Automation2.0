@@ -1,0 +1,97 @@
+{
+  "LOG_PATTERNS": {
+    "HOME": {
+      "id": "HOME_EDIT_1775594859",
+      "pattern_name": "HOME",
+      "log_pattern": "QMS Bookmark.*HOME_.*load.*complete|App focus: Focus set to app.*appId=com.entos.monarch_ui",
+      "file_path": "/opt/logs/sky-messages.log",
+      "description": "Detects when HOME screen loads successfully on XUMO & SKY and Rogers-Xfinity IUIv2 devices\n\n[EDIT REQUEST for 'HOME']\nReason: universal grep pattern for HOME SCREEN in XUMO TV's across X3 and A4K panels",
+      "submitted_by": "vpatne290",
+      "submitted_at": "2026-04-07T20:47:39.662041+00:00",
+      "approved_at": "2026-04-07T20:47:50.527099+00:00",
+      "is_admin_submission": false,
+      "is_config_override": false
+    },
+    "NETWORK_ERROR": {
+      "log_pattern": ".*MS:EPG Set new panel gadget.*tiles-disconnected.*|.*Argument missing: Let's try that again|.*to refresh your connection.*",
+      "file_path": "/opt/logs/sky-messages.log",
+      "description": "Detects network connectivity errors and EPG panel failures",
+      "submitted_by": "vpatne290"
+    },
+    "PROCESS_CRASH": {
+      "log_pattern": ".*process crash.*",
+      "file_path": "/opt/logs/core_log.txt",
+      "description": "Detects when any system process crashes",
+      "submitted_by": "vpatne290"
+    },
+    "REALTEK_MODULE": {
+      "log_pattern": ".*Realtek module.*",
+      "file_path": "/opt/logs/*",
+      "description": "Detects Realtek module events",
+      "submitted_by": "vpatne290"
+    },
+    "HOME_APP_CONTAINER": {
+      "id": "HOME_APP_CONTAINER_1774987229",
+      "pattern_name": "HOME_APP_CONTAINER",
+      "log_pattern": ".*Home app.*has failed to start.*",
+      "file_path": "/opt/logs/sky-messages.log",
+      "description": "This patten will validate container for 'com.bskyb.epgui'",
+      "submitted_by": "vpatne290",
+      "submitted_at": "2026-03-31T20:00:29.682522+00:00",
+      "is_admin_submission": true
+    },
+    "BOOST_THUNDER": {
+      "id": "BOOST_THUNDER_EDIT_1775587108",
+      "pattern_name": "BOOST_THUNDER",
+      "log_pattern": ".*BoostThunderRPCClient.cpp.*callMethod.*result.*9",
+      "file_path": "/opt/logs/sky-messages.log",
+      "description": "Checks for the BoostThunderRPCClient error\n\n[EDIT REQUEST for 'BOOST_THUNDER']\nReason: updated the string with proper regex\n\n[EDIT REQUEST for 'BOOST_THUNDER']\nReason: Added new string complex check for 9",
+      "submitted_by": "vpatne290",
+      "submitted_at": "2026-04-07T18:38:28.021484+00:00",
+      "approved_at": "2026-04-07T18:38:32.547019+00:00",
+      "is_admin_submission": false,
+      "is_config_override": false
+    },
+    "THUNDER_TIMEOUT": {
+      "id": "THUNDER_TIMEOUT_EDIT_1775596463",
+      "pattern_name": "THUNDER_TIMEOUT",
+      "log_pattern": ".*Failed to load DeviceInfo value from RDK.*Value retrieval failed.*|.*Setting device type to default value of IpStb.*",
+      "file_path": "/opt/logs/sky-messages.log",
+      "description": "Thunder Timeout check if there are any timeout error are there\n\n[EDIT REQUEST for 'THUNDER_TIMEOUT']\nReason: Thunder Timeout check",
+      "submitted_by": "vpatne290",
+      "submitted_at": "2026-04-07T21:14:23.483006+00:00",
+      "approved_at": "2026-04-07T21:14:40.328526+00:00",
+      "is_admin_submission": false,
+      "is_config_override": false
+    }
+  },
+  "SYSTEM_COMMAND_PATTERNS": {
+    "TEETZ": {
+      "command": "ls -ltr /lib/teetz/",
+      "description": "Checks for presence of Teetz module which is used for HDMI-CEC control",
+      "submitted_by": "vpatne290"
+    },
+    "DSMGR_STATUS": {
+      "command": "systemctl status dsmgr.service | grep -E \"Active\"",
+      "description": "Checks the status of dsmgr service which manages display and input devices",
+      "submitted_by": "vpatne290"
+    },
+    "MEMORY_USAGE": {
+      "command": "free -h",
+      "description": "Checks current memory usage of the system",
+      "submitted_by": "vpatne290"
+    },
+    "DISK_USAGE": {
+      "command": "df -h",
+      "description": "Checks current disk usage of the system",
+      "submitted_by": "vpatne290"
+    },
+    "CPU_USAGE": {
+      "command": "top -b -n 1 | head -n 30; top -b -n 1 | grep -E 'WPEFrame|WPEFramework'",
+      "description": "Checks current CPU usage and captures WPEFramework process metrics",
+      "submitted_by": "vpatne290"
+    }
+  },
+  "PENDING_PATTERNS": {},
+  "REJECTED_PATTERNS": []
+}

@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rdk-testing-dashboard
+    network_mode: host
+    volumes:
+      # Configuration files (persist locally) - now in Json folder
+      - ./Json/devices.json:/app/Json/devices.json
+      - ./Json/jobs.json:/app/Json/jobs.json
+      - ./Json/device_job_queue.json:/app/Json/device_job_queue.json
+      - ./Json/device_locks.json:/app/Json/device_locks.json
+      - ./Json/saved_sequences.json:/app/Json/saved_sequences.json
+      - ./Json/app_state.json:/app/Json/app_state.json
+      - ./Json/ir_keycodes.json:/app/Json/ir_keycodes.json
+      - ./Json/reset_codes.json:/app/Json/reset_codes.json
+      
+      # Application code
+      - ./static:/app/static
+      - ./templates:/app/templates
+      
+      # Execution data - mounted from USB if available, else local
+      # For Linux desktop: mounts USB or local Enhancement_output
+      # USB paths: /media/lrqa/Lexar or /mnt/usb_storage
+      - /media/lrqa/Lexar:/app/data:rw
+      # Fallback for local development (uncomment if no USB available)
+      # - ./Enhancement_output:/app/data:rw
+      
+    environment:
+      # Flask configuration
+      - FLASK_APP=app.py
+      - FLASK_ENV=production
+      
+      # Email configuration (set via .env file or environment variables)
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SENDER_EMAIL=${SENDER_EMAIL:-cperdkemiddleware@gmail.com}
+      - SENDER_PASSWORD=${SENDER_PASSWORD:-}
+      
+      # Application configuration
+      - SECRET_KEY=${SECRET_KEY:-change-me-in-production}
+      
+      # Storage configuration
+      - DATA_ROOT=/app/data
+      
+    restart: unless-stopped
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
