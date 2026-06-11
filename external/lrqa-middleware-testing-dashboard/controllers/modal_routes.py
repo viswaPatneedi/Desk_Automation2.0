@@ -410,16 +410,12 @@ def get_sequence(sequence_id):
         if not sequence:
             return error_response('Sequence not found', 404)
 
-        return success_response({
-            'sequence_id': sequence.sequence_id,
-            'name': sequence.name,
-            'description': sequence.description,
-            'rationale': sequence.rationale,
-            'methods': json.loads(sequence.methods) if sequence.methods else [],
-            'devices': json.loads(sequence.devices) if sequence.devices else [],
-            'visibility': sequence.visibility,
-            'readonly': sequence.readonly,
-            'tags': sequence.tags
+        # Match the main app response shape and model fields.
+        # SavedSequence is JSON-backed and does not expose modal ORM-only fields
+        # such as description/rationale/devices/visibility.
+        return jsonify({
+            'success': True,
+            'sequence': sequence.to_dict()
         })
 
     except Exception as e:
@@ -438,20 +434,33 @@ def update_sequence(sequence_id):
 
         data = request.get_json()
 
-        sequence.name = data.get('sequence_name', sequence.name)
-        sequence.description = data.get('description', sequence.description)
-        sequence.rationale = data.get('rationale', sequence.rationale)
-        sequence.visibility = data.get('visibility', sequence.visibility)
-        sequence.readonly = data.get('is_readonly', sequence.readonly)
-        sequence.tags = data.get('tags', sequence.tags)
+        # Support both payload styles used across the codebase.
+        name = data.get('name') if data.get('name') is not None else data.get('sequence_name')
+        methods = data.get('methods')
+        user_inputs = data.get('user_inputs')
+        queue_data = data.get('queue_data')
 
-        sequence.save()
+        success = SavedSequence.update_sequence(
+            sequence_id,
+            name=name,
+            methods=methods,
+            user_inputs=user_inputs,
+            queue_data=queue_data
+        )
+
+        if not success:
+            return error_response('Failed to update sequence', 500)
+
+        updated_sequence = SavedSequence.find_by_id(sequence_id)
+        if not updated_sequence:
+            return error_response('Sequence not found after update', 404)
 
         logger.info(f"✅ Sequence updated: {sequence.name}")
-        return success_response({
-            'sequence_id': sequence.sequence_id,
-            'sequence_name': sequence.name
-        }, 'Sequence updated successfully')
+        return jsonify({
+            'success': True,
+            'sequence': updated_sequence.to_dict(),
+            'message': 'Sequence updated successfully'
+        })
 
     except Exception as e:
         logger.error(f"Error updating sequence: {str(e)}")
