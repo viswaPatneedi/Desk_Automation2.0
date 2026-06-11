@@ -159,7 +159,7 @@ class TestExecutionService:
             log_file_path = os.path.join(job_log_dir, 'execution.log')
             
             # Create USB execution session folder for screenshots and device logs
-            from session_utils import create_execution_session_folder
+            from utils.session_utils import create_execution_session_folder
             
             # Use sequence name if available, otherwise use truncated method list
             if sequence_name:
