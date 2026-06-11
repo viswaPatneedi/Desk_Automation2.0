@@ -178,7 +178,6 @@ def get_available_methods():
     except Exception as e:
         app.logger.warning(f"Falling back to config methods: {e}")
 
-    from config_commands import AVAILABLE_METHODS
     return jsonify({'methods': AVAILABLE_METHODS, 'source': 'config'})
 
 
@@ -223,7 +222,6 @@ def _build_method_catalog():
     if methods_catalog:
         return methods_catalog
 
-    from config_commands import AVAILABLE_METHODS
     for method_id in AVAILABLE_METHODS:
         methods_catalog.append({
             'method_id': method_id,
@@ -346,6 +344,354 @@ def _split_workflow_steps(workflow_text):
     return steps[:25]
 
 
+def _regenerate_steps_for_confirmation(parsed_steps):
+    """Return cleaner, actionable step text for user confirmation before method suggestion."""
+    regenerated = []
+    for raw_step in parsed_steps:
+        step = str(raw_step or '').strip().rstrip('.').strip()
+        lowered = step.lower()
+
+        if not step:
+            continue
+
+        if 'home button' in lowered or ('press' in lowered and 'home' in lowered):
+            regenerated.append('Press HOME button and verify Home screen log')
+            continue
+
+        if any(keyword in lowered for keyword in ['xumo play', 'linear channel', 'launch xumo']):
+            regenerated.append('Launch XUMO PLAY, wait 15 seconds, verify IP_AAMP_TUNETIME log')
+            continue
+
+        if any(keyword in lowered for keyword in ['standby', 'setpowerstare standby', 'set power state standby', 'power state standby']):
+            wait_seconds = _extract_wait_seconds(step) or 300
+            regenerated.append(f'Send IR POWER for standby, verify QueryPowerState=STANDBY, wait {wait_seconds} seconds')
+            continue
+
+        if ('wake up' in lowered or 'wakeup' in lowered) and 'youtube' in lowered:
+            regenerated.append('Send IR POWER for wakeup, verify QueryPowerState=ON, verify Home log, launch YouTube')
+            continue
+
+        regenerated.append(step)
+
+    return regenerated[:25]
+
+
+def _find_method_info(methods_catalog, method_id):
+    for method_info in methods_catalog:
+        if method_info.get('method_id') == method_id:
+            return method_info
+    return {
+        'method_id': method_id,
+        'name': method_id,
+        'description': ''
+    }
+
+
+def _build_ai_queue_item(method_info, description, step_text, reason_text, confidence, params=None):
+    return {
+        'method': method_info['method_id'],
+        'name': method_info.get('name') or method_info['method_id'],
+        'description': description,
+        'params': params or {},
+        'ai_step_text': step_text,
+        'ai_reason': reason_text,
+        'ai_confidence': round(confidence, 2)
+    }
+
+
+def _extract_wait_seconds(step_text):
+    lowered = step_text.lower()
+    match = re.search(r'(\d+)\s*(sec|secs|second|seconds|min|mins|minute|minutes)', lowered)
+    if not match:
+        return None
+
+    value = int(match.group(1))
+    unit = match.group(2)
+    if unit.startswith('min'):
+        return value * 60
+    return value
+
+
+def _infer_voice_command_text(step_text):
+    normalized = step_text.strip()
+    app_match = re.search(r'(launch|open|start)\s+(.+?)(?:\s+app)?(?:\s+and\s+wait.*)?$', normalized, re.IGNORECASE)
+    if not app_match:
+        return None
+
+    app_name = app_match.group(2).strip(' .')
+    app_name = re.sub(r'([a-z])([A-Z])', r'\1 \2', app_name)
+    app_name = re.sub(r'\s+', ' ', app_name)
+    if not app_name:
+        return None
+
+    return f"Launch {app_name.upper()}"
+
+
+def _infer_execute_command_params(step_text):
+    normalized = step_text.strip()
+    validation_match = re.search(
+        r'validate\s+(.+?)\s+is\s+there\s+in\s+([^\s]+)',
+        normalized,
+        re.IGNORECASE
+    )
+    if validation_match:
+        expected_output = validation_match.group(1).strip(' .')
+        file_path = validation_match.group(2).strip(' .')
+        return {
+            'command_text': f'grep -i "{expected_output}" {file_path}',
+            'validation_type': 'contains',
+            'expected_output': expected_output
+        }
+
+    if '/opt/logs/' in normalized or 'sky-messages.log' in normalized:
+        token_match = re.search(r'validate\s+(.+?)(?:\s+in\s+|\s+from\s+|\s+there)', normalized, re.IGNORECASE)
+        expected_output = token_match.group(1).strip(' .') if token_match else ''
+        if expected_output:
+            return {
+                'command_text': f'grep -i "{expected_output}" /opt/logs/sky-messages.log',
+                'validation_type': 'contains',
+                'expected_output': expected_output
+            }
+
+    return None
+
+
+def _build_execute_command_queue_item(methods_catalog, step_index, step_text, command_text, expected_output='', validation_type='contains', reason='inferred execute command from validation step', confidence=0.95):
+    exec_method = _find_method_info(methods_catalog, 'execute_command')
+    return _build_ai_queue_item(
+        exec_method,
+        f"AI step {step_index + 1}: Execute validation command",
+        step_text,
+        reason,
+        confidence,
+        params={
+            'command_text': command_text,
+            'validation_type': validation_type,
+            'expected_output': expected_output
+        }
+    )
+
+
+def _generate_queue_items_for_step(step_text, methods_catalog, token_learning_map, sequence_intelligence, step_index, previous_method_id):
+    lowered = step_text.lower()
+    generated_items = []
+
+    def _push(item):
+        generated_items.append(item)
+
+    # Point 1 style: press HOME + validate Home screen log line
+    if ('home button' in lowered or ('press' in lowered and 'home' in lowered)):
+        send_keys_method = _find_method_info(methods_catalog, 'send_remote_keys')
+        _push(_build_ai_queue_item(
+            send_keys_method,
+            f"AI step {step_index + 1}: Send HOME remote key",
+            step_text,
+            'explicit HOME keypress detected; mapped to send_remote_keys',
+            0.98,
+            params={'remote_keys': 'HOME'}
+        ))
+
+        _push(_build_execute_command_queue_item(
+            methods_catalog,
+            step_index,
+            step_text,
+            'grep -i "home" /opt/logs/sky-messages.log | tail -1',
+            expected_output='home',
+            validation_type='contains',
+            reason='home screen verification requested; added execute_command log check',
+            confidence=0.97
+        ))
+        return generated_items
+
+    # Point 2 style: launch linear/Xumo and verify AV playback (AAMP tunetime)
+    if any(keyword in lowered for keyword in ['xumo play', 'linear channel', 'launch xumo', 'play a linear channel']):
+        voice_method = _find_method_info(methods_catalog, 'voice_command')
+        wait_method = _find_method_info(methods_catalog, 'wait')
+        voice_text = _infer_voice_command_text(step_text) or 'Launch XUMO PLAY'
+
+        _push(_build_ai_queue_item(
+            voice_method,
+            f"AI step {step_index + 1}: Launch linear channel app",
+            step_text,
+            'linear/Xumo launch intent detected; using voice_command',
+            0.98,
+            params={'voice_text': voice_text}
+        ))
+        _push(_build_ai_queue_item(
+            wait_method,
+            f"AI step {step_index + 1}: Wait for playback start",
+            step_text,
+            'added wait for app launch and stream startup',
+            0.96,
+            params={'wait_seconds': 15}
+        ))
+        _push(_build_execute_command_queue_item(
+            methods_catalog,
+            step_index,
+            step_text,
+            'grep -i "IP_AAMP_TUNETIME" /opt/logs/sky-messages.log | tail -1',
+            expected_output='IP_AAMP_TUNETIME',
+            validation_type='contains',
+            reason='playback verification requested; validating latest AAMP tunetime log line',
+            confidence=0.97
+        ))
+        return generated_items
+
+    # Point 3 style: standby + QueryPowerState + wait
+    if any(keyword in lowered for keyword in ['standby', 'setpowerstare standby', 'set power state standby', 'power state standby']):
+        ir_method = _find_method_info(methods_catalog, 'ir_test')
+        wait_method = _find_method_info(methods_catalog, 'wait')
+
+        _push(_build_ai_queue_item(
+            ir_method,
+            f"AI step {step_index + 1}: Send IR POWER key for standby",
+            step_text,
+            'standby intent detected; using IR POWER key with auto remote type selection',
+            0.98,
+            params={'ir_keys': ['POWER'], 'remote_type': 'auto'}
+        ))
+        _push(_build_execute_command_queue_item(
+            methods_catalog,
+            step_index,
+            step_text,
+            'QueryPowerState',
+            expected_output='STANDBY',
+            validation_type='contains',
+            reason='confirming standby power state after IR POWER key',
+            confidence=0.97
+        ))
+
+        wait_seconds = _extract_wait_seconds(step_text) or 300
+        _push(_build_ai_queue_item(
+            wait_method,
+            f"AI step {step_index + 1}: Wait in standby",
+            step_text,
+            'converted idle duration to wait_seconds for standby hold',
+            0.97,
+            params={'wait_seconds': wait_seconds}
+        ))
+        return generated_items
+
+    # Point 4 style: wakeup + QueryPowerState ON + home log + launch YouTube
+    if ('wake up' in lowered or 'wakeup' in lowered) and 'youtube' in lowered:
+        ir_method = _find_method_info(methods_catalog, 'ir_test')
+        voice_method = _find_method_info(methods_catalog, 'voice_command')
+
+        _push(_build_ai_queue_item(
+            ir_method,
+            f"AI step {step_index + 1}: Send IR POWER key for wakeup",
+            step_text,
+            'wake-up intent detected; using IR POWER key with auto remote type selection',
+            0.98,
+            params={'ir_keys': ['POWER'], 'remote_type': 'auto'}
+        ))
+        _push(_build_execute_command_queue_item(
+            methods_catalog,
+            step_index,
+            step_text,
+            'QueryPowerState',
+            expected_output='ON',
+            validation_type='contains',
+            reason='confirming device wake-up state is ON',
+            confidence=0.97
+        ))
+        _push(_build_execute_command_queue_item(
+            methods_catalog,
+            step_index,
+            step_text,
+            'grep -i "home" /opt/logs/sky-messages.log | tail -1',
+            expected_output='home',
+            validation_type='contains',
+            reason='post-wakeup home screen log validation requested',
+            confidence=0.95
+        ))
+        _push(_build_ai_queue_item(
+            voice_method,
+            f"AI step {step_index + 1}: Launch YouTube",
+            step_text,
+            'launch YouTube intent detected; mapped to voice_command',
+            0.97,
+            params={'voice_text': 'Launch YOUTUBE'}
+        ))
+        return generated_items
+
+    # Combined action: launch/open app and wait N seconds -> voice_command + wait
+    if any(keyword in lowered for keyword in ['launch ', 'open ', 'start ']) and 'wait' in lowered:
+        voice_text = _infer_voice_command_text(step_text)
+        wait_seconds = _extract_wait_seconds(step_text)
+
+        if voice_text:
+            voice_method = _find_method_info(methods_catalog, 'voice_command')
+            generated_items.append(_build_ai_queue_item(
+                voice_method,
+                f"AI step {step_index + 1}: Launch app using voice command",
+                step_text,
+                'split combined app-launch step into voice command action',
+                0.94,
+                params={'voice_text': voice_text}
+            ))
+            previous_method_id = 'voice_command'
+
+        if wait_seconds:
+            wait_method = _find_method_info(methods_catalog, 'wait')
+            generated_items.append(_build_ai_queue_item(
+                wait_method,
+                f"AI step {step_index + 1}: Wait for app to finish loading",
+                step_text,
+                'split combined app-launch step into wait action',
+                0.95,
+                params={'wait_seconds': wait_seconds}
+            ))
+
+        if generated_items:
+            return generated_items
+
+    # Validation of log token in a file -> execute_command with inferred grep params
+    if 'validate' in lowered and ('/opt/logs/' in lowered or 'log' in lowered):
+        exec_params = _infer_execute_command_params(step_text)
+        if exec_params:
+            exec_method = _find_method_info(methods_catalog, 'execute_command')
+            return [
+                _build_ai_queue_item(
+                    exec_method,
+                    f"AI step {step_index + 1}: Validate expected token in logs",
+                    step_text,
+                    'inferred execute command and validation inputs from log assertion',
+                    0.96,
+                    params=exec_params
+                )
+            ]
+
+    # Default single-method selection using scored ranking
+    scored = []
+    for method_info in methods_catalog:
+        score, reason = _score_method_for_step(
+            step_text,
+            method_info,
+            token_learning_map,
+            seq_model=sequence_intelligence,
+            step_index=step_index,
+            previous_method_id=previous_method_id
+        )
+        scored.append((score, reason, method_info))
+
+    scored.sort(key=lambda item: item[0], reverse=True)
+    top_score, reason, top_method = scored[0]
+    confidence = max(0.35, min(0.98, 0.35 + (top_score / 12.0)))
+    reason_text = reason or 'best semantic match from available methods'
+
+    return [
+        _build_ai_queue_item(
+            top_method,
+            f"AI step {step_index + 1}: {step_text}",
+            step_text,
+            reason_text,
+            confidence,
+            params={}
+        )
+    ]
+
+
 def _score_method_for_step(step_text, method_info, token_learning_map, seq_model=None, step_index=0, previous_method_id=None):
     method_id = method_info['method_id']
     method_name = method_info.get('name') or method_id
@@ -448,7 +794,10 @@ def generate_ai_sequence_plan():
     try:
         data = request.json or {}
         workflow_text = (data.get('workflow_text') or '').strip()
-        if not workflow_text:
+        preview_only = bool(data.get('preview_only'))
+        confirmed_steps = data.get('confirmed_steps') or []
+
+        if not workflow_text and not confirmed_steps:
             return jsonify({'success': False, 'error': 'workflow_text is required'}), 400
 
         methods_catalog = _build_method_catalog()
@@ -459,53 +808,52 @@ def generate_ai_sequence_plan():
         token_learning_map = _build_learning_token_map(learning_entries)
         sequence_intelligence = _build_sequence_intelligence_model(learning_entries)
 
-        parsed_steps = _split_workflow_steps(workflow_text)
+        parsed_steps = [str(step).strip() for step in confirmed_steps if str(step).strip()] if confirmed_steps else _split_workflow_steps(workflow_text)
         if not parsed_steps:
             return jsonify({'success': False, 'error': 'Unable to parse workflow into actionable steps'}), 400
+
+        regenerated_steps = _regenerate_steps_for_confirmation(parsed_steps)
+
+        if preview_only:
+            return jsonify({
+                'success': True,
+                'workflow_text': workflow_text,
+                'generated_at_utc': datetime.now(timezone.utc).isoformat(),
+                'parsed_steps': parsed_steps,
+                'regenerated_steps': regenerated_steps,
+                'requires_confirmation': True
+            })
+
+        steps_for_generation = regenerated_steps if regenerated_steps else parsed_steps
 
         queue_data = []
         selected_methods = []
 
         previous_method_id = None
-        for idx, step_text in enumerate(parsed_steps, start=1):
-            scored = []
-            for method_info in methods_catalog:
-                score, reason = _score_method_for_step(
-                    step_text,
-                    method_info,
-                    token_learning_map,
-                    seq_model=sequence_intelligence,
-                    step_index=idx - 1,
-                    previous_method_id=previous_method_id
-                )
-                scored.append((score, reason, method_info))
+        generated_step_number = 1
+        for idx, step_text in enumerate(steps_for_generation, start=1):
+            generated_items = _generate_queue_items_for_step(
+                step_text,
+                methods_catalog,
+                token_learning_map,
+                sequence_intelligence,
+                generated_step_number - 1,
+                previous_method_id
+            )
 
-            scored.sort(key=lambda item: item[0], reverse=True)
-            top_score, reason, top_method = scored[0]
-
-            confidence = max(0.35, min(0.98, 0.35 + (top_score / 12.0)))
-            reason_text = reason or 'best semantic match from available methods'
-
-            queue_item = {
-                'method': top_method['method_id'],
-                'name': top_method.get('name') or top_method['method_id'],
-                'description': f"AI step {idx}: {step_text}",
-                'params': {},
-                'ai_step_text': step_text,
-                'ai_reason': reason_text,
-                'ai_confidence': round(confidence, 2)
-            }
-
-            queue_data.append(queue_item)
-            selected_methods.append({
-                'step': idx,
-                'step_text': step_text,
-                'method_id': top_method['method_id'],
-                'method_name': top_method.get('name') or top_method['method_id'],
-                'reason': reason_text,
-                'confidence': round(confidence, 2)
-            })
-            previous_method_id = top_method['method_id']
+            for generated_item in generated_items:
+                queue_data.append(generated_item)
+                selected_methods.append({
+                    'step': generated_step_number,
+                    'step_text': step_text,
+                    'method_id': generated_item['method'],
+                    'method_name': generated_item.get('name') or generated_item['method'],
+                    'reason': generated_item.get('ai_reason') or 'AI generated method',
+                    'confidence': round(generated_item.get('ai_confidence', 0.0), 2),
+                    'params': generated_item.get('params', {})
+                })
+                previous_method_id = generated_item['method']
+                generated_step_number += 1
 
         method_frequency = sequence_intelligence.get('method_frequency', Counter())
         top_historical_methods = [
@@ -518,6 +866,7 @@ def generate_ai_sequence_plan():
             'workflow_text': workflow_text,
             'generated_at_utc': datetime.now(timezone.utc).isoformat(),
             'parsed_steps': parsed_steps,
+            'regenerated_steps': regenerated_steps,
             'selected_methods': selected_methods,
             'queue_data': queue_data,
             'learning_samples': len(learning_entries),

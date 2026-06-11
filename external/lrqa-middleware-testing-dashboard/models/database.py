@@ -251,7 +251,7 @@ class Job(Base):
     user = relationship("User", back_populates="jobs")
     device = relationship("Device", back_populates="jobs")
     sequence = relationship("SavedSequence", back_populates="jobs")
-    execution_context = relationship("ExecutionContext", back_populates="job", uselist=False)
+    execution_context = relationship("ExecutionContext", primaryjoin="Job.execution_context_id == ExecutionContext.id", foreign_keys="[Job.execution_context_id]", uselist=False)
     test_results = relationship("TestResult", back_populates="job")
 
 
@@ -269,7 +269,7 @@ class ExecutionContext(Base):
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
     
     # Relationships
-    job = relationship("Job", back_populates="execution_context")
+    job = relationship("Job", primaryjoin="ExecutionContext.job_id == Job.job_id", foreign_keys="[ExecutionContext.job_id]", uselist=False)
     test_results = relationship("TestResult", back_populates="execution_context")
 
 

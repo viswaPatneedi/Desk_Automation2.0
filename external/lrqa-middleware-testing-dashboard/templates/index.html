@@ -209,7 +209,7 @@
         
         /* Column 1 specific styling for Available Methods - 700px max height */
         .three-column-grid > div:first-child .card-body-custom {
-            max-height: 65rem;
+            max-height: 88rem;
             overflow-y: auto;
         }
         
@@ -221,7 +221,7 @@
         
         /* Column 3: Saved Sequences - flexible */
         .three-column-grid > div:nth-child(3) .card-body-custom {
-            max-height: 65rem;
+            max-height: 88rem;
             overflow-y: auto;
         }
         
@@ -1168,6 +1168,9 @@
                                 <button class="btn btn-sm btn-success" id="ai-apply-sequence-btn" onclick="applyAiSequenceToQueue()" disabled style="padding: 0.35rem 0.7rem;">
                                     <i class="bi bi-list-check"></i> Apply to Queue
                                 </button>
+                                <button class="btn btn-sm btn-warning" id="ai-save-sequence-btn" onclick="saveAiGeneratedSequence()" disabled style="padding: 0.35rem 0.7rem; color: #111827; font-weight: 600;">
+                                    <i class="bi bi-bookmark-plus"></i> Save as Sequence
+                                </button>
                                 <button class="btn btn-sm btn-secondary" onclick="clearAiSequenceSuggestion()" style="padding: 0.35rem 0.7rem;">
                                     <i class="bi bi-x-circle"></i> Clear
                                 </button>
@@ -1181,6 +1184,7 @@
                                 </label>
                             </div>
                             <input id="ai-sequence-review-notes" class="form-control" placeholder="Optional review/test notes" style="background: #0b1220; color: #e2e8f0; border: 1px solid #475569; margin-bottom: 0.75rem;" />
+                            <div style="color: #94a3b8; font-size: 0.76rem; margin-bottom: 0.65rem;">Use `Save as Sequence` to store the AI-generated flow directly in Saved Sequences.</div>
                             <div id="ai-sequence-preview" style="display: none; max-height: 220px; overflow-y: auto; border: 1px dashed #475569; border-radius: 8px; padding: 0.75rem; background: #0b1220;"></div>
                         </div>
 
@@ -1878,6 +1882,7 @@
         let currentLoadedSequence = null; // Track which sequence is currently loaded
         let selectedSequences = []; // Store selected sequences for batch operations
         let latestAiSequenceSuggestion = null;
+        let latestAiRegeneratedSteps = [];
 
         function escapeHtmlUnsafe(str) {
             return String(str || '')
@@ -2081,6 +2086,33 @@
             generateBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
 
             try {
+                const previewResponse = await fetch('/api/ai/sequences/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        workflow_text: workflowText,
+                        preview_only: true
+                    })
+                });
+
+                const previewData = await previewResponse.json();
+                if (!previewResponse.ok || !previewData.success) {
+                    throw new Error(previewData.error || 'Failed to parse workflow');
+                }
+
+                const regeneratedSteps = previewData.regenerated_steps || previewData.parsed_steps || [];
+                latestAiRegeneratedSteps = regeneratedSteps;
+
+                const confirmText = regeneratedSteps.map((step, index) => `${index + 1}. ${step}`).join('\n');
+                const approved = confirm(`AI re-generated steps for confirmation:\n\n${confirmText}\n\nClick OK to proceed with method suggestion, or Cancel to edit workflow text.`);
+                if (!approved) {
+                    showNotification('⚠️ AI generation cancelled. Please edit workflow and try again.', 'warning');
+                    return;
+                }
+
                 const response = await fetch('/api/ai/sequences/generate', {
                     method: 'POST',
                     headers: {
@@ -2088,7 +2120,8 @@
                     },
                     credentials: 'include',
                     body: JSON.stringify({
-                        workflow_text: workflowText
+                        workflow_text: workflowText,
+                        confirmed_steps: regeneratedSteps
                     })
                 });
 
@@ -2100,6 +2133,7 @@
                 latestAiSequenceSuggestion = data;
                 renderAiSequencePreview(data);
                 document.getElementById('ai-apply-sequence-btn').disabled = false;
+                document.getElementById('ai-save-sequence-btn').disabled = false;
                 showNotification(`✅ AI selected ${data.queue_data.length} step(s)`, 'success');
             } catch (error) {
                 console.error('AI generation error:', error);
@@ -2146,13 +2180,12 @@
             preview.style.display = 'block';
         }
 
-        function applyAiSequenceToQueue() {
+        function buildAiGeneratedQueueItems() {
             if (!latestAiSequenceSuggestion || !latestAiSequenceSuggestion.queue_data) {
-                showNotification('⚠️ Generate a sequence suggestion first', 'warning');
-                return;
+                return [];
             }
 
-            const generatedQueue = latestAiSequenceSuggestion.queue_data.map((item, idx) => ({
+            return latestAiSequenceSuggestion.queue_data.map((item, idx) => ({
                 id: `ai-${Date.now()}-${idx}`,
                 method: item.method,
                 name: item.name || getMethodName(item.method),
@@ -2162,15 +2195,84 @@
                 ai_reason: item.ai_reason || '',
                 ai_confidence: item.ai_confidence || 0
             }));
+        }
 
-            executionQueue = generatedQueue;
+        function applyAiSequenceToQueue() {
+            if (!latestAiSequenceSuggestion || !latestAiSequenceSuggestion.queue_data) {
+                showNotification('⚠️ Generate a sequence suggestion first', 'warning');
+                return;
+            }
+
+            executionQueue = buildAiGeneratedQueueItems();
             renderQueue();
             showNotification('✅ AI sequence applied to queue. Review and edit as needed.', 'success');
+        }
+
+        async function saveAiGeneratedSequence() {
+            if (!latestAiSequenceSuggestion || !latestAiSequenceSuggestion.queue_data) {
+                showNotification('⚠️ Generate a sequence suggestion first', 'warning');
+                return;
+            }
+
+            const sequenceName = prompt('Enter a name for the AI-generated sequence:', 'AI Generated Sequence');
+            if (!sequenceName || !sequenceName.trim()) {
+                return;
+            }
+
+            const queueData = buildAiGeneratedQueueItems().map(item => ({
+                method: item.method,
+                name: item.name,
+                description: item.description,
+                params: item.params || {}
+            }));
+            const methodRationaleMeta = buildAiSequenceMetadata();
+            const saveBtn = document.getElementById('ai-save-sequence-btn');
+            const originalHtml = saveBtn ? saveBtn.innerHTML : '';
+
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
+            }
+
+            try {
+                const response = await fetch('/api/sequences/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        name: sequenceName.trim(),
+                        queue_data: queueData,
+                        method_rationale: methodRationaleMeta
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || data.message || 'Failed to save AI-generated sequence');
+                }
+
+                executionQueue = buildAiGeneratedQueueItems();
+                renderQueue();
+                await submitAiSequenceFeedback(sequenceName.trim(), queueData, methodRationaleMeta);
+                loadSavedSequences();
+                showNotification(`✅ AI-generated sequence saved: ${sequenceName.trim()}`, 'success');
+            } catch (error) {
+                console.error('AI save sequence error:', error);
+                showNotification(`❌ ${error.message}`, 'error');
+            } finally {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalHtml;
+                }
+            }
         }
 
         function clearAiSequenceSuggestion(clearWorkflowText = true) {
             latestAiSequenceSuggestion = null;
             document.getElementById('ai-apply-sequence-btn').disabled = true;
+            document.getElementById('ai-save-sequence-btn').disabled = true;
 
             const preview = document.getElementById('ai-sequence-preview');
             if (preview) {
