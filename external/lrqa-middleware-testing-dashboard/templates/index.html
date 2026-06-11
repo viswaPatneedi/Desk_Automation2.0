@@ -1155,6 +1155,35 @@
                             </div>
                         </div>
 
+                        <div style="margin-bottom: 1.5rem; padding: 1rem; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 10px; border: 1px solid #334155;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <h6 style="margin: 0; color: #e2e8f0;"><i class="bi bi-magic"></i> AI Sequence Builder</h6>
+                                <small style="color: #94a3b8;">Text workflow to queue steps</small>
+                            </div>
+                            <textarea id="ai-sequence-workflow-input" class="form-control" rows="4" placeholder="Describe your workflow in plain text. Example: reboot device, wait for home screen, validate logs, and capture screenshot." style="background: #0b1220; color: #e2e8f0; border: 1px solid #475569; margin-bottom: 0.75rem;"></textarea>
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+                                <button class="btn btn-sm btn-primary" id="ai-generate-sequence-btn" onclick="generateAiSequenceFromWorkflow()" style="padding: 0.35rem 0.7rem;">
+                                    <i class="bi bi-stars"></i> Generate
+                                </button>
+                                <button class="btn btn-sm btn-success" id="ai-apply-sequence-btn" onclick="applyAiSequenceToQueue()" disabled style="padding: 0.35rem 0.7rem;">
+                                    <i class="bi bi-list-check"></i> Apply to Queue
+                                </button>
+                                <button class="btn btn-sm btn-secondary" onclick="clearAiSequenceSuggestion()" style="padding: 0.35rem 0.7rem;">
+                                    <i class="bi bi-x-circle"></i> Clear
+                                </button>
+                            </div>
+                            <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; gap: 0.35rem; color: #cbd5e1; font-size: 0.85rem;">
+                                    <input type="checkbox" id="ai-sequence-reviewed-checkbox"> Reviewed
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 0.35rem; color: #cbd5e1; font-size: 0.85rem;">
+                                    <input type="checkbox" id="ai-sequence-tested-checkbox"> Tested
+                                </label>
+                            </div>
+                            <input id="ai-sequence-review-notes" class="form-control" placeholder="Optional review/test notes" style="background: #0b1220; color: #e2e8f0; border: 1px solid #475569; margin-bottom: 0.75rem;" />
+                            <div id="ai-sequence-preview" style="display: none; max-height: 220px; overflow-y: auto; border: 1px dashed #475569; border-radius: 8px; padding: 0.75rem; background: #0b1220;"></div>
+                        </div>
+
                         <div id="execution-queue" style="border: 2px dashed #4b5563; border-radius: 12px; padding: 1.5rem; min-height: 360px; max-height: 360px; overflow-y: auto; color: #6b7280; margin-bottom: 1rem;">
                             <i class="bi bi-cloud-upload" style="font-size: 2rem; opacity: 0.5; display: block; margin-bottom: 0.5rem;"></i>
                             <div>Drop methods here to build your execution queue</div>
@@ -1848,6 +1877,16 @@
         let executionQueue = [];
         let currentLoadedSequence = null; // Track which sequence is currently loaded
         let selectedSequences = []; // Store selected sequences for batch operations
+        let latestAiSequenceSuggestion = null;
+
+        function escapeHtmlUnsafe(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
         
         // Helper function to convert UTC ISO timestamp to local date string (YYYY-MM-DD)
         function utcToLocalDateString(isoString) {
@@ -2026,6 +2065,171 @@
             
             // ✅ MANUAL DEVICE STATUS REFRESH: Click "Refresh Status" button to check all devices
             // (Removed auto-refresh - users can now click the button to check device status on-demand)
+        }
+
+        async function generateAiSequenceFromWorkflow() {
+            const workflowInput = document.getElementById('ai-sequence-workflow-input');
+            const generateBtn = document.getElementById('ai-generate-sequence-btn');
+            const workflowText = (workflowInput?.value || '').trim();
+
+            if (!workflowText) {
+                showNotification('⚠️ Enter a workflow description first', 'warning');
+                return;
+            }
+
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
+
+            try {
+                const response = await fetch('/api/ai/sequences/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        workflow_text: workflowText
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Failed to generate sequence');
+                }
+
+                latestAiSequenceSuggestion = data;
+                renderAiSequencePreview(data);
+                document.getElementById('ai-apply-sequence-btn').disabled = false;
+                showNotification(`✅ AI selected ${data.queue_data.length} step(s)`, 'success');
+            } catch (error) {
+                console.error('AI generation error:', error);
+                showNotification(`❌ ${error.message}`, 'error');
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<i class="bi bi-stars"></i> Generate';
+            }
+        }
+
+        function renderAiSequencePreview(aiData) {
+            const preview = document.getElementById('ai-sequence-preview');
+            if (!preview) return;
+
+            if (!aiData || !aiData.selected_methods || aiData.selected_methods.length === 0) {
+                preview.style.display = 'none';
+                preview.innerHTML = '';
+                return;
+            }
+
+            let html = '<div style="margin-bottom: 0.6rem; color: #cbd5e1; font-size: 0.82rem;">Suggested methods:</div>';
+            const seqIntel = aiData.sequence_intelligence || {};
+            const topHist = seqIntel.top_historical_methods || [];
+            if (topHist.length > 0) {
+                const topText = topHist.map(item => `${escapeHtmlUnsafe(item.method_id)} (${item.count})`).join(', ');
+                html += `<div style="margin-bottom: 0.55rem; color: #94a3b8; font-size: 0.74rem;">Learned from ${seqIntel.historical_sequences_analyzed || 0} historical sequence(s). Top method usage: ${topText}</div>`;
+            }
+
+            aiData.selected_methods.forEach(item => {
+                const confidencePct = Math.round((Number(item.confidence) || 0) * 100);
+                html += `
+                    <div style="padding: 0.5rem; border: 1px solid #334155; border-radius: 6px; margin-bottom: 0.45rem; background: #111827;">
+                        <div style="display: flex; justify-content: space-between; gap: 0.5rem; align-items: center;">
+                            <strong style="color: #93c5fd; font-size: 0.85rem;">${escapeHtmlUnsafe(item.step)}. ${escapeHtmlUnsafe(item.method_name || item.method_id)}</strong>
+                            <span style="font-size: 0.72rem; padding: 0.15rem 0.45rem; border-radius: 12px; background: #1d4ed8; color: #dbeafe;">${confidencePct}%</span>
+                        </div>
+                        <div style="color: #e5e7eb; font-size: 0.8rem; margin-top: 0.2rem;">${escapeHtmlUnsafe(item.step_text)}</div>
+                        <div style="color: #94a3b8; font-size: 0.75rem; margin-top: 0.2rem;">${escapeHtmlUnsafe(item.reason || 'match')}</div>
+                    </div>
+                `;
+            });
+
+            preview.innerHTML = html;
+            preview.style.display = 'block';
+        }
+
+        function applyAiSequenceToQueue() {
+            if (!latestAiSequenceSuggestion || !latestAiSequenceSuggestion.queue_data) {
+                showNotification('⚠️ Generate a sequence suggestion first', 'warning');
+                return;
+            }
+
+            const generatedQueue = latestAiSequenceSuggestion.queue_data.map((item, idx) => ({
+                id: `ai-${Date.now()}-${idx}`,
+                method: item.method,
+                name: item.name || getMethodName(item.method),
+                description: item.description || '',
+                params: item.params || {},
+                ai_step_text: item.ai_step_text || '',
+                ai_reason: item.ai_reason || '',
+                ai_confidence: item.ai_confidence || 0
+            }));
+
+            executionQueue = generatedQueue;
+            renderQueue();
+            showNotification('✅ AI sequence applied to queue. Review and edit as needed.', 'success');
+        }
+
+        function clearAiSequenceSuggestion(clearWorkflowText = true) {
+            latestAiSequenceSuggestion = null;
+            document.getElementById('ai-apply-sequence-btn').disabled = true;
+
+            const preview = document.getElementById('ai-sequence-preview');
+            if (preview) {
+                preview.style.display = 'none';
+                preview.innerHTML = '';
+            }
+
+            if (clearWorkflowText) {
+                const input = document.getElementById('ai-sequence-workflow-input');
+                if (input) input.value = '';
+            }
+        }
+
+        function buildAiSequenceMetadata() {
+            const reviewed = document.getElementById('ai-sequence-reviewed-checkbox')?.checked || false;
+            const tested = document.getElementById('ai-sequence-tested-checkbox')?.checked || false;
+            const reviewNotes = (document.getElementById('ai-sequence-review-notes')?.value || '').trim();
+
+            if (!latestAiSequenceSuggestion && !reviewed && !tested && !reviewNotes) {
+                return null;
+            }
+
+            return {
+                ai_sequence_builder: {
+                    prompt: latestAiSequenceSuggestion?.workflow_text || '',
+                    parsed_steps: latestAiSequenceSuggestion?.parsed_steps || [],
+                    generated_method_ids: (latestAiSequenceSuggestion?.selected_methods || []).map(item => item.method_id),
+                    reviewed: reviewed,
+                    tested: tested,
+                    review_notes: reviewNotes,
+                    generated_at_utc: latestAiSequenceSuggestion?.generated_at_utc || null
+                }
+            };
+        }
+
+        async function submitAiSequenceFeedback(sequenceName, queueData, methodRationaleMeta) {
+            try {
+                const aiMeta = methodRationaleMeta?.ai_sequence_builder;
+                if (!aiMeta || !aiMeta.prompt) return;
+
+                await fetch('/api/ai/sequences/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        sequence_name: sequenceName || '',
+                        prompt: aiMeta.prompt,
+                        generated_method_ids: aiMeta.generated_method_ids || [],
+                        corrected_queue_data: queueData || [],
+                        reviewed: !!aiMeta.reviewed,
+                        tested: !!aiMeta.tested,
+                        review_notes: aiMeta.review_notes || ''
+                    })
+                });
+            } catch (feedbackError) {
+                console.warn('AI feedback save warning:', feedbackError);
+            }
         }
         
         // Setup device form submission handler
@@ -7735,6 +7939,7 @@
                 });
                 
                 console.log('📋 Final queue data to save:', queueData);
+                const methodRationaleMeta = buildAiSequenceMetadata();
                 
                 const endpoint = updateMode ? `/api/sequences/${sequenceId}` : '/api/sequences/save';
                 const method = updateMode ? 'PUT' : 'POST';
@@ -7746,7 +7951,8 @@
                     },
                     body: JSON.stringify({
                         name: sequenceName,
-                        queue_data: queueData
+                        queue_data: queueData,
+                        method_rationale: methodRationaleMeta
                     })
                 })
                 .then(response => response.json())
@@ -7754,6 +7960,7 @@
                     if (data.success) {
                         const action = updateMode ? 'updated' : 'saved';
                         showNotification(`✅ Sequence ${action}: ${sequenceName}`, 'success');
+                        submitAiSequenceFeedback(sequenceName, queueData, methodRationaleMeta);
 
                         // Invalidate local sequence cache so next edit fetches fresh data,
                         // including latest step descriptions.
@@ -7778,6 +7985,7 @@
                         }
                         
                         renderQueue();
+                        clearAiSequenceSuggestion(false);
                         console.log('✅ Queue cleared after saving');
                     } else {
                         showNotification(`❌ Error: ${data.message || 'Unknown error'}`, 'error');

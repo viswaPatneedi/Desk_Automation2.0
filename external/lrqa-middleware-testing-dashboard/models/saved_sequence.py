@@ -6,7 +6,7 @@ Stores user-defined method sequences with custom names and input parameters
 import json
 import os
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 from config.config_paths import SAVED_SEQUENCES_FILE
 from models.database import Session, SavedSequence as DBSavedSequence
 
@@ -16,7 +16,7 @@ class SavedSequence:
     def __init__(self, name: str, queue_data: List[Dict[str, any]] = None, methods: List[str] = None,
                  user_inputs: Dict[str, any] = None, sequence_id: str = None, created_at: str = None,
                  created_by: str = None, team_name: str = None, description: str = None,
-                 method_rationale: List[Dict[str, any]] = None, execution_count: int = 0,
+                 method_rationale: Any = None, execution_count: int = 0,
                  total_duration_seconds: float = None, average_duration_seconds: float = None,
                  location: str = None, is_active: bool = True, updated_at: str = None):
         """
@@ -41,7 +41,7 @@ class SavedSequence:
         self.created_by = created_by  # Track creator for permissions
         self.team_name = team_name or ''  # Team for filtering
         self.description = description or ''
-        self.method_rationale = method_rationale or []
+        self.method_rationale = method_rationale if method_rationale is not None else []
         self.execution_count = execution_count or 0
         self.total_duration_seconds = total_duration_seconds
         self.average_duration_seconds = average_duration_seconds
@@ -197,7 +197,7 @@ class SavedSequence:
                         name=sequence.name,
                         description=sequence.description,
                         methods=queue_data,
-                        method_rationale=sequence.method_rationale or [],
+                        method_rationale=sequence.method_rationale if sequence.method_rationale is not None else [],
                         execution_count=sequence.execution_count or 0,
                         total_duration_seconds=sequence.total_duration_seconds,
                         average_duration_seconds=sequence.average_duration_seconds,
@@ -210,7 +210,7 @@ class SavedSequence:
                     row.name = sequence.name
                     row.description = sequence.description
                     row.methods = queue_data
-                    row.method_rationale = sequence.method_rationale or []
+                    row.method_rationale = sequence.method_rationale if sequence.method_rationale is not None else []
                     row.execution_count = sequence.execution_count or 0
                     row.total_duration_seconds = sequence.total_duration_seconds
                     row.average_duration_seconds = sequence.average_duration_seconds
@@ -233,8 +233,9 @@ class SavedSequence:
             session.close()
     
     @classmethod
-    def add_sequence(cls, name: str, queue_data: List[Dict[str, any]] = None, methods: List[str] = None, 
-                    user_inputs: Dict[str, any] = None, created_by: str = None, team_name: str = None) -> 'SavedSequence':
+    def add_sequence(cls, name: str, queue_data: List[Dict[str, any]] = None, methods: List[str] = None,
+                    user_inputs: Dict[str, any] = None, created_by: str = None, team_name: str = None,
+                    description: str = None, method_rationale: Any = None) -> 'SavedSequence':
         """Add a new saved sequence"""
         sequences = cls.load_all()
         new_sequence = cls(
@@ -243,7 +244,9 @@ class SavedSequence:
             methods=methods,
             user_inputs=user_inputs,
             created_by=created_by,
-            team_name=team_name
+            team_name=team_name,
+            description=description,
+            method_rationale=method_rationale
         )
         sequences.append(new_sequence)
         cls.save_all(sequences)
@@ -266,9 +269,9 @@ class SavedSequence:
         return None
     
     @classmethod
-    def update_sequence(cls, sequence_id: str, name: str = None, methods: List[str] = None, 
+    def update_sequence(cls, sequence_id: str, name: str = None, methods: List[str] = None,
                        user_inputs: Dict[str, any] = None, queue_data: List[Dict[str, any]] = None,
-                       description: str = None) -> bool:
+                       description: str = None, method_rationale: Any = None) -> bool:
         """Update an existing sequence - Enhanced with better logging and validation"""
         sequences = cls.load_all()
         for seq in sequences:
@@ -280,6 +283,9 @@ class SavedSequence:
                 if description is not None:
                     seq.description = description
                     print("[UPDATE] Sequence description updated")
+                if method_rationale is not None:
+                    seq.method_rationale = method_rationale
+                    print("[UPDATE] Sequence method_rationale updated")
                 if methods is not None:  # Allow empty list
                     seq.methods = methods
                     print(f"[UPDATE] Sequence methods updated: {len(methods)} items")

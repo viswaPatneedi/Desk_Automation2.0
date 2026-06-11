@@ -17,10 +17,12 @@ import warnings
 import os
 import sys
 import json
+import re
 import signal
 import atexit
 import random
 import smtplib
+from collections import Counter, defaultdict
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timezone, timedelta
@@ -77,6 +79,9 @@ from config.config_ir_blaster import *
 from config.config_eta import calculate_eta, format_eta
 from config.config_deployment import print_deployment_info
 import config.config_email  # Loads Gmail SMTP settings from .env
+from config.config_paths import get_data_file_path
+
+AI_SEQUENCE_LEARNING_FILE = get_data_file_path('ai_sequence_learning.json')
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -175,6 +180,400 @@ def get_available_methods():
 
     from config_commands import AVAILABLE_METHODS
     return jsonify({'methods': AVAILABLE_METHODS, 'source': 'config'})
+
+
+def _normalize_text(text):
+    if not text:
+        return ''
+    return re.sub(r'\s+', ' ', re.sub(r'[^a-z0-9_\s]', ' ', str(text).lower())).strip()
+
+
+def _tokenize_text(text):
+    normalized = _normalize_text(text)
+    return [token for token in normalized.split() if len(token) > 1]
+
+
+def _build_method_catalog():
+    """Load available methods with labels/descriptions from DB first, then config fallback."""
+    methods_catalog = []
+    try:
+        from models.database import Session, Method as DBMethod
+
+        session = Session()
+        try:
+            rows = (
+                session.query(DBMethod)
+                .filter_by(is_active=True)
+                .order_by(DBMethod.name.asc())
+                .all()
+            )
+            for row in rows:
+                if not row.method_id:
+                    continue
+                methods_catalog.append({
+                    'method_id': row.method_id,
+                    'name': row.name or row.method_id,
+                    'description': row.description or ''
+                })
+        finally:
+            session.close()
+    except Exception as db_err:
+        app.logger.warning(f"AI sequence generation using config fallback for methods: {db_err}")
+
+    if methods_catalog:
+        return methods_catalog
+
+    from config_commands import AVAILABLE_METHODS
+    for method_id in AVAILABLE_METHODS:
+        methods_catalog.append({
+            'method_id': method_id,
+            'name': method_id,
+            'description': ''
+        })
+    return methods_catalog
+
+
+def _load_ai_learning_entries():
+    if not os.path.exists(AI_SEQUENCE_LEARNING_FILE):
+        return []
+    try:
+        with open(AI_SEQUENCE_LEARNING_FILE, 'r', encoding='utf-8') as learning_file:
+            data = json.load(learning_file)
+        if isinstance(data, list):
+            return data
+    except Exception as load_err:
+        app.logger.warning(f"Unable to load AI learning file: {load_err}")
+    return []
+
+
+def _save_ai_learning_entries(entries):
+    os.makedirs(os.path.dirname(AI_SEQUENCE_LEARNING_FILE), exist_ok=True)
+    with open(AI_SEQUENCE_LEARNING_FILE, 'w', encoding='utf-8') as learning_file:
+        json.dump(entries, learning_file, indent=2)
+
+
+def _build_learning_token_map(entries):
+    """Map prompt tokens to methods users actually kept/corrected in saved results."""
+    token_map = defaultdict(Counter)
+    for entry in entries[-300:]:
+        prompt_tokens = set(_tokenize_text(entry.get('prompt', '')))
+        corrected_methods = entry.get('corrected_method_ids') or []
+        for token in prompt_tokens:
+            for method_id in corrected_methods:
+                token_map[token][method_id] += 1
+    return token_map
+
+
+def _extract_method_ids_from_queue(queue_data):
+    method_ids = []
+    for item in queue_data or []:
+        if isinstance(item, dict):
+            method_id = item.get('method') or item.get('method_id')
+            if method_id:
+                method_ids.append(str(method_id))
+    return method_ids
+
+
+def _build_sequence_intelligence_model(learning_entries):
+    """Learn method usage patterns from saved sequences and feedback history."""
+    method_frequency = Counter()
+    start_method_frequency = Counter()
+    transition_frequency = defaultdict(Counter)
+    position_frequency = defaultdict(Counter)
+    description_token_map = defaultdict(Counter)
+
+    # Learn from existing saved sequences (persistent organizational behavior)
+    try:
+        saved_sequences = SavedSequence.load_all()
+        for seq in saved_sequences:
+            queue_data = getattr(seq, 'queue_data', None) or []
+            method_ids = _extract_method_ids_from_queue(queue_data)
+            if not method_ids:
+                continue
+
+            start_method_frequency[method_ids[0]] += 1
+            for idx, method_id in enumerate(method_ids):
+                method_frequency[method_id] += 1
+                position_bucket = min(idx, 9)
+                position_frequency[position_bucket][method_id] += 1
+
+                if idx > 0:
+                    prev_method = method_ids[idx - 1]
+                    transition_frequency[prev_method][method_id] += 1
+
+                queue_item = queue_data[idx] if idx < len(queue_data) else {}
+                if isinstance(queue_item, dict):
+                    description_text = queue_item.get('description', '')
+                    for token in set(_tokenize_text(description_text)):
+                        description_token_map[token][method_id] += 1
+    except Exception as seq_err:
+        app.logger.warning(f"Unable to learn from saved sequences: {seq_err}")
+
+    # Learn from explicit AI feedback corrections
+    for entry in learning_entries[-400:]:
+        corrected_method_ids = [m for m in (entry.get('corrected_method_ids') or []) if m]
+        if not corrected_method_ids:
+            continue
+
+        start_method_frequency[corrected_method_ids[0]] += 1
+        for idx, method_id in enumerate(corrected_method_ids):
+            method_frequency[method_id] += 1
+            position_bucket = min(idx, 9)
+            position_frequency[position_bucket][method_id] += 1
+
+            if idx > 0:
+                prev_method = corrected_method_ids[idx - 1]
+                transition_frequency[prev_method][method_id] += 1
+
+    return {
+        'method_frequency': method_frequency,
+        'start_method_frequency': start_method_frequency,
+        'transition_frequency': transition_frequency,
+        'position_frequency': position_frequency,
+        'description_token_map': description_token_map
+    }
+
+
+def _split_workflow_steps(workflow_text):
+    raw_lines = [line.strip(" -•\t") for line in str(workflow_text).splitlines() if line.strip()]
+    if not raw_lines:
+        return []
+
+    if len(raw_lines) == 1:
+        raw_lines = re.split(r'\s*(?:then|->|=>|;|\.|, then| and then )\s*', raw_lines[0], flags=re.IGNORECASE)
+
+    steps = [step.strip(" -•\t") for step in raw_lines if step and step.strip(" -•\t")]
+    return steps[:25]
+
+
+def _score_method_for_step(step_text, method_info, token_learning_map, seq_model=None, step_index=0, previous_method_id=None):
+    method_id = method_info['method_id']
+    method_name = method_info.get('name') or method_id
+    method_description = method_info.get('description') or ''
+
+    normalized_step = _normalize_text(step_text)
+    step_tokens = set(_tokenize_text(step_text))
+    method_tokens = set(_tokenize_text(f"{method_id} {method_name} {method_description}"))
+
+    score = 0.0
+    reason_bits = []
+
+    if method_id.lower() in normalized_step:
+        score += 6.0
+        reason_bits.append('exact method id mention')
+
+    overlap = step_tokens.intersection(method_tokens)
+    if overlap:
+        score += min(4.0, len(overlap) * 1.2)
+        reason_bits.append(f"token overlap: {', '.join(sorted(list(overlap))[:4])}")
+
+    phrase_hints = {
+        'reboot': ['reboot', 'restart', 'boot'],
+        'deepsleep': ['deep sleep', 'sleep wake', 'wakeup', 'wake up'],
+        'screen_validation': ['screen', 'validate screen', 'home screen', 'verification'],
+        'check_logs': ['check logs', 'error logs', 'grep', 'log pattern'],
+        'execute_command': ['run command', 'execute command', 'terminal'],
+        'capture_current_screen': ['capture screen', 'screenshot'],
+        'capture_base_image': ['base image', 'reference image'],
+        'voice_command': ['voice command', 'say', 'speak'],
+        'send_remote_keys': ['remote key', 'press key', 'key sequence'],
+        'wait': ['wait', 'delay', 'pause', 'hold'],
+        'navigate_to_tiles': ['navigate', 'tile', 'apps row']
+    }
+
+    for hint_method, phrases in phrase_hints.items():
+        if hint_method in method_id.lower():
+            for phrase in phrases:
+                if phrase in normalized_step:
+                    score += 3.5
+                    reason_bits.append(f"matched phrase '{phrase}'")
+                    break
+
+    learned_boost = 0.0
+    for token in step_tokens:
+        count = token_learning_map.get(token, {}).get(method_id, 0)
+        if count > 0:
+            learned_boost += min(3.0, count * 0.5)
+    if learned_boost > 0:
+        score += learned_boost
+        reason_bits.append('boost from prior user corrections')
+
+    # Sequence intelligence boosts from historical sequence usage
+    if seq_model:
+        method_frequency = seq_model.get('method_frequency', Counter())
+        start_method_frequency = seq_model.get('start_method_frequency', Counter())
+        transition_frequency = seq_model.get('transition_frequency', defaultdict(Counter))
+        position_frequency = seq_model.get('position_frequency', defaultdict(Counter))
+        description_token_map = seq_model.get('description_token_map', defaultdict(Counter))
+
+        global_freq = method_frequency.get(method_id, 0)
+        if global_freq > 0:
+            score += min(2.2, global_freq * 0.08)
+            reason_bits.append('frequently used in saved sequences')
+
+        if step_index == 0:
+            start_freq = start_method_frequency.get(method_id, 0)
+            if start_freq > 0:
+                score += min(2.0, start_freq * 0.12)
+                reason_bits.append('common first-step method')
+
+        position_bucket = min(step_index, 9)
+        pos_freq = position_frequency.get(position_bucket, Counter()).get(method_id, 0)
+        if pos_freq > 0:
+            score += min(1.8, pos_freq * 0.12)
+            reason_bits.append('often used at this sequence position')
+
+        if previous_method_id:
+            transition_freq = transition_frequency.get(previous_method_id, Counter()).get(method_id, 0)
+            if transition_freq > 0:
+                score += min(2.6, transition_freq * 0.15)
+                reason_bits.append(f"common transition after {previous_method_id}")
+
+        desc_boost = 0.0
+        for token in step_tokens:
+            count = description_token_map.get(token, Counter()).get(method_id, 0)
+            if count > 0:
+                desc_boost += min(1.6, count * 0.1)
+        if desc_boost > 0:
+            score += desc_boost
+            reason_bits.append('matched historical step descriptions')
+
+    return score, '; '.join(reason_bits)
+
+
+@app.route('/api/ai/sequences/generate', methods=['POST'])
+@login_required
+def generate_ai_sequence_plan():
+    """Generate a sequence plan from free-text workflow using available methods and learned corrections."""
+    try:
+        data = request.json or {}
+        workflow_text = (data.get('workflow_text') or '').strip()
+        if not workflow_text:
+            return jsonify({'success': False, 'error': 'workflow_text is required'}), 400
+
+        methods_catalog = _build_method_catalog()
+        if not methods_catalog:
+            return jsonify({'success': False, 'error': 'No methods available for mapping'}), 500
+
+        learning_entries = _load_ai_learning_entries()
+        token_learning_map = _build_learning_token_map(learning_entries)
+        sequence_intelligence = _build_sequence_intelligence_model(learning_entries)
+
+        parsed_steps = _split_workflow_steps(workflow_text)
+        if not parsed_steps:
+            return jsonify({'success': False, 'error': 'Unable to parse workflow into actionable steps'}), 400
+
+        queue_data = []
+        selected_methods = []
+
+        previous_method_id = None
+        for idx, step_text in enumerate(parsed_steps, start=1):
+            scored = []
+            for method_info in methods_catalog:
+                score, reason = _score_method_for_step(
+                    step_text,
+                    method_info,
+                    token_learning_map,
+                    seq_model=sequence_intelligence,
+                    step_index=idx - 1,
+                    previous_method_id=previous_method_id
+                )
+                scored.append((score, reason, method_info))
+
+            scored.sort(key=lambda item: item[0], reverse=True)
+            top_score, reason, top_method = scored[0]
+
+            confidence = max(0.35, min(0.98, 0.35 + (top_score / 12.0)))
+            reason_text = reason or 'best semantic match from available methods'
+
+            queue_item = {
+                'method': top_method['method_id'],
+                'name': top_method.get('name') or top_method['method_id'],
+                'description': f"AI step {idx}: {step_text}",
+                'params': {},
+                'ai_step_text': step_text,
+                'ai_reason': reason_text,
+                'ai_confidence': round(confidence, 2)
+            }
+
+            queue_data.append(queue_item)
+            selected_methods.append({
+                'step': idx,
+                'step_text': step_text,
+                'method_id': top_method['method_id'],
+                'method_name': top_method.get('name') or top_method['method_id'],
+                'reason': reason_text,
+                'confidence': round(confidence, 2)
+            })
+            previous_method_id = top_method['method_id']
+
+        method_frequency = sequence_intelligence.get('method_frequency', Counter())
+        top_historical_methods = [
+            {'method_id': method_id, 'count': count}
+            for method_id, count in method_frequency.most_common(5)
+        ]
+
+        return jsonify({
+            'success': True,
+            'workflow_text': workflow_text,
+            'generated_at_utc': datetime.now(timezone.utc).isoformat(),
+            'parsed_steps': parsed_steps,
+            'selected_methods': selected_methods,
+            'queue_data': queue_data,
+            'learning_samples': len(learning_entries),
+            'sequence_intelligence': {
+                'historical_sequences_analyzed': int(sum(sequence_intelligence.get('start_method_frequency', Counter()).values())),
+                'top_historical_methods': top_historical_methods
+            }
+        })
+    except Exception as e:
+        app.logger.exception('AI sequence generation failed')
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/ai/sequences/feedback', methods=['POST'])
+@login_required
+def save_ai_sequence_feedback():
+    """Store prompt -> generated -> corrected sequence mapping for future AI suggestions."""
+    try:
+        data = request.json or {}
+        prompt = (data.get('prompt') or '').strip()
+        if not prompt:
+            return jsonify({'success': False, 'error': 'prompt is required'}), 400
+
+        generated_method_ids = data.get('generated_method_ids') or []
+        corrected_queue_data = data.get('corrected_queue_data') or []
+        corrected_method_ids = [
+            item.get('method') for item in corrected_queue_data
+            if isinstance(item, dict) and item.get('method')
+        ]
+
+        feedback_entry = {
+            'created_at_utc': datetime.now(timezone.utc).isoformat(),
+            'created_by': current_user.ntid,
+            'sequence_name': data.get('sequence_name') or '',
+            'prompt': prompt,
+            'generated_method_ids': generated_method_ids,
+            'corrected_method_ids': corrected_method_ids,
+            'reviewed': bool(data.get('reviewed')),
+            'tested': bool(data.get('tested')),
+            'review_notes': data.get('review_notes') or ''
+        }
+
+        entries = _load_ai_learning_entries()
+        entries.append(feedback_entry)
+        if len(entries) > 500:
+            entries = entries[-500:]
+        _save_ai_learning_entries(entries)
+
+        return jsonify({
+            'success': True,
+            'message': 'Feedback stored for future AI suggestions',
+            'total_learning_entries': len(entries)
+        })
+    except Exception as e:
+        app.logger.exception('AI sequence feedback save failed')
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/available_log_patterns', methods=['GET'])
 @login_required
@@ -1853,6 +2252,8 @@ def save_sequence():
         data = request.json
         name = data.get('name')
         queue_data = data.get('queue_data', [])
+        description = data.get('description')
+        method_rationale = data.get('method_rationale')
         
         # Support old format for backwards compatibility
         methods = data.get('methods', [])
@@ -1867,7 +2268,16 @@ def save_sequence():
         # Capture creator and team for permission tracking
         created_by = current_user.ntid
         team_name = getattr(current_user, 'team_name', '')
-        sequence = SavedSequence.add_sequence(name, queue_data, methods, user_inputs, created_by, team_name=team_name)
+        sequence = SavedSequence.add_sequence(
+            name,
+            queue_data,
+            methods,
+            user_inputs,
+            created_by,
+            team_name=team_name,
+            description=description,
+            method_rationale=method_rationale
+        )
         return jsonify({'success': True, 'sequence': sequence.to_dict()})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -1965,6 +2375,8 @@ def update_sequence(sequence_id):
         methods = data.get('methods')  # Can be None to skip updating methods
         user_inputs = data.get('user_inputs')  # Can be None to skip updating user_inputs
         queue_data = data.get('queue_data')  # Can be None or list
+        description = data.get('description')
+        method_rationale = data.get('method_rationale')
         
         print(f"[API_PUT] Request data: name={bool(name)}, methods={bool(methods)}, user_inputs={bool(user_inputs)}, queue_data={bool(queue_data)}")
         if queue_data:
@@ -1978,7 +2390,15 @@ def update_sequence(sequence_id):
                 print(f"[API_PUT] ERROR: Queue data JSON serialization failed: {str(json_err)}")
                 raise ValueError(f"Invalid queue data format: {str(json_err)}")
         
-        success = SavedSequence.update_sequence(sequence_id, name, methods, user_inputs, queue_data)
+        success = SavedSequence.update_sequence(
+            sequence_id,
+            name,
+            methods,
+            user_inputs,
+            queue_data,
+            description=description,
+            method_rationale=method_rationale
+        )
         print(f"[API_PUT] Update result: {success}")
         
         if success:
