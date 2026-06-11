@@ -1978,5 +1978,40 @@
     "eta_formatted": "2m 49s",
     "time_per_iteration": 169,
     "remaining_iterations": 2
+  },
+  {
+    "job_id": "01d14ff7-0449-4fd3-b1a2-afa080d5f816",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME"
+        ],
+        "description": "Bring the device to home screen"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-06-11T17:49:17.061225",
+    "end_time": "2026-06-11T17:49:34.685828+00:00",
+    "log_file_path": "logs/jobs/01d14ff7-0449-4fd3-b1a2-afa080d5f816/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-06-11T17:49:17.061239",
+    "eta_seconds": 43,
+    "eta_formatted": "43s",
+    "time_per_iteration": 43,
+    "remaining_iterations": 2
   }
 ]
