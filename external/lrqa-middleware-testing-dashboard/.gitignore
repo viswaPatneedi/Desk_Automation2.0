@@ -63,3 +63,10 @@ updated_code/
 Unused_Images/
 Unused_Images_DO_NOT_MERGE/
 *.tar
+
+# Runtime data - do not commit
+data/logs/
+Json/*.json
+!Json/.gitkeep
+app.pid
+*.pid

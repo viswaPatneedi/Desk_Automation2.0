@@ -5,7 +5,7 @@ Device Controller - Handles device management requests
 from flask import jsonify, request
 from models.device import Device
 from models.device_lock import DeviceLock
-from config_eta import format_eta
+from config.config_eta import format_eta
 
 class DeviceController:
     """Controller for device-related operations"""

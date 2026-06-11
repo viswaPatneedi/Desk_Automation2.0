@@ -7,7 +7,7 @@ import json
 import os
 from datetime import datetime
 from typing import List, Dict, Optional
-from config_paths import SAVED_SEQUENCES_FILE
+from config.config_paths import SAVED_SEQUENCES_FILE
 
 class SavedSequence:
     """Model for saved method sequences"""

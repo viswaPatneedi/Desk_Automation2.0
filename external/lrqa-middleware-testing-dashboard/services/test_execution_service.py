@@ -13,26 +13,26 @@ from models.test_result import TestResult
 from models.job import Job
 from models.device_lock import DeviceLock
 from utils.device_lock_manager import DeviceLockManager
-from method_reboot import execute_reboot_process
-from method_deepsleep import execute_deepsleep_process
-from method_ir_test import execute_ir_test_process
-from method_voice_command import execute_voice_command_process
-from method_reboot_performance import execute_reboot_performance_process
-from method_reboot_performance_v2 import execute_reboot_performance_v2_process
-from method_reboot_perf_v2_optimized import execute_reboot_perf_v2_optimized_process
-from method_trail import execute_trail_method_process
-from method_soft_hard_boot import execute_soft_hard_boot_process
-from method_standby_deep_sleep_ir_control import execute_standby_deep_sleep_ir_control_process
-from method_validate_results import validate_command_output
-from method_system_command import execute_system_command
-from method_execute_command import execute_system_command as execute_command
-from method_activate_flux import activate_flux_widget
-from method_navigate_to_tiles import navigate_to_tiles
-from method_collect_device_logs import collect_device_logs
-from method_check_logs import execute_check_logs
-from method_maintenance_deepsleep_wakeup import execute_maintenance_deepsleep_wakeup_process
-from method_maintenance_CURL_deepsleep_wakeup import execute_maintenance_CURL_deepsleep_wakeup_process
-from method_deepsleep_maintenance_wakeup import execute_deepsleep_maintenance_wakeup_process
+from methods.method_reboot import execute_reboot_process
+from methods.method_deepsleep import execute_deepsleep_process
+from methods.method_ir_test import execute_ir_test_process
+from methods.method_voice_command import execute_voice_command_process
+from methods.method_reboot_performance import execute_reboot_performance_process
+from methods.method_reboot_performance_v2 import execute_reboot_performance_v2_process
+from methods.method_reboot_perf_v2_optimized import execute_reboot_perf_v2_optimized_process
+from methods.method_trail import execute_trail_method_process
+from methods.method_soft_hard_boot import execute_soft_hard_boot_process
+from methods.method_standby_deep_sleep_ir_control import execute_standby_deep_sleep_ir_control_process
+from methods.method_validate_results import validate_command_output
+from methods.method_system_command import execute_system_command
+from methods.method_execute_command import execute_system_command as execute_command
+from methods.method_activate_flux import activate_flux_widget
+from methods.method_navigate_to_tiles import navigate_to_tiles
+from methods.method_collect_device_logs import collect_device_logs
+from methods.method_check_logs import execute_check_logs
+from methods.method_maintenance_deepsleep_wakeup import execute_maintenance_deepsleep_wakeup_process
+from methods.method_maintenance_CURL_deepsleep_wakeup import execute_maintenance_CURL_deepsleep_wakeup_process
+from methods.method_deepsleep_maintenance_wakeup import execute_deepsleep_maintenance_wakeup_process
 
 class TestExecutionService:
     """Service for managing test execution"""
@@ -148,7 +148,7 @@ class TestExecutionService:
         # Store combined methods and sequence name for this thread (for screenshot folder naming)
         import sys, os
         sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        from method_utils import set_execution_methods
+        from methods.method_utils import set_execution_methods
         thread_id = threading.get_ident()
         set_execution_methods(thread_id, method_names, sequence_name)
         
@@ -567,7 +567,7 @@ class TestExecutionService:
                             }
                         else:
                             # Get all available checks dynamically from config_log_patterns
-                            from config_log_patterns import get_all_optional_checks
+                            from config.config_log_patterns import get_all_optional_checks
                             available_checks = get_all_optional_checks()
                             
                             # Resolve check_keys to actual commands
@@ -617,7 +617,7 @@ class TestExecutionService:
                             }
                         else:
                             # Get all available checks dynamically from config_log_patterns
-                            from config_log_patterns import get_all_optional_checks
+                            from config.config_log_patterns import get_all_optional_checks
                             available_checks = get_all_optional_checks()
                             
                             # Resolve check_keys to actual commands
@@ -679,7 +679,7 @@ class TestExecutionService:
                             }
                         else:
                             # Get all available checks dynamically from config_log_patterns
-                            from config_log_patterns import get_all_optional_checks
+                            from config.config_log_patterns import get_all_optional_checks
                             available_checks = get_all_optional_checks()
                             
                             # Resolve check_keys to actual commands
@@ -880,7 +880,7 @@ class TestExecutionService:
                             import sys, os as os_mod
                             if os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))) not in sys.path:
                                 sys.path.insert(0, os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))))
-                            from method_remote_keys import send_remote_keys as send_keys_func
+                            from methods.method_remote_keys import send_remote_keys as send_keys_func
                             # Use the new unified function signature
                             if remote_keys:
                                 log_service.log(f"[SENDKEYS-START] Beginning remote key execution")
@@ -916,7 +916,7 @@ class TestExecutionService:
                             import sys, os as os_mod
                             if os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))) not in sys.path:
                                 sys.path.insert(0, os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))))
-                            from method_screen_validation import validate_screen as validate_screen_func
+                            from methods.method_screen_validation import validate_screen as validate_screen_func
                             # Use device credentials and expected_screen parameter
                             if expected_screen:
                                 result = validate_screen_func(
@@ -952,7 +952,7 @@ class TestExecutionService:
                             import sys, os as os_mod
                             if os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))) not in sys.path:
                                 sys.path.insert(0, os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))))
-                            from method_xumo_activation import activate_xumo
+                            from methods.method_xumo_activation import activate_xumo
                             # Use device credentials
                             result = activate_xumo(
                                 device_ip=device.ip,
@@ -987,7 +987,7 @@ class TestExecutionService:
                             import sys, os as os_mod
                             if os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))) not in sys.path:
                                 sys.path.insert(0, os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))))
-                            from method_capture_base_image import capture_base_image
+                            from methods.method_capture_base_image import capture_base_image
                             # Use device credentials
                             result = capture_base_image(
                                 device_ip=device.ip,
@@ -1019,7 +1019,7 @@ class TestExecutionService:
                             import sys, os as os_mod
                             if os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))) not in sys.path:
                                 sys.path.insert(0, os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))))
-                            from method_capture_current_screen import capture_current_screen
+                            from methods.method_capture_current_screen import capture_current_screen
                             # Use the same screenshots_dir/session_folder as the rest of the job
                             result = capture_current_screen(
                                 device_ip=device.ip,
@@ -1059,7 +1059,7 @@ class TestExecutionService:
                             import sys, os as os_mod
                             if os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))) not in sys.path:
                                 sys.path.insert(0, os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))))
-                            from method_navigate_inputs_xumo import navigate_inputs_xumo
+                            from methods.method_navigate_inputs_xumo import navigate_inputs_xumo
                             result = navigate_inputs_xumo(
                                 device_ip=device.ip,
                                 port=device.port,
@@ -1437,7 +1437,7 @@ class TestExecutionService:
                             import sys, os as os_mod
                             if os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))) not in sys.path:
                                 sys.path.insert(0, os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))))
-                            from method_wait import wait_duration
+                            from methods.method_wait import wait_duration
                             result = wait_duration(
                                 wait_seconds=wait_seconds,
                                 log_callback=log_service.log

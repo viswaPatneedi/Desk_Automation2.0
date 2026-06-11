@@ -1,11 +1,12 @@
 """
-Centralized Path Configuration
-All data file paths are defined here for easy maintenance and consistency.
+Root-level config_paths shim.
+Re-exports everything from config/config_paths.py so that
+`from config_paths import ...` works when app.py is run from the project root.
 """
 
 import os
 
-# Get the base directory (project root)
+# Get the base directory (project root - same directory as this file)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'Json')
 LOGS_DIR = os.path.join(BASE_DIR, 'iteration_logs')
@@ -39,10 +40,11 @@ CHECKPOINT_FILE = os.path.join(DATA_DIR, 'checkpoint.pkl')
 ITERATION_LOGS_DIRECTORY = LOGS_DIR
 SCREENSHOTS_DIRECTORY = SCREENSHOTS_DIR
 
-# Utility function to get relative path for backward compatibility
+
 def get_data_file_path(filename):
     """Get the full path to a data file"""
     return os.path.join(DATA_DIR, filename)
+
 
 __all__ = [
     'BASE_DIR',

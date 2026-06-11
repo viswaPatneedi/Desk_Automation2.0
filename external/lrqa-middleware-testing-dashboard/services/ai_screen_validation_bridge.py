@@ -21,7 +21,7 @@ class AIScreenValidationBridge:
             use_ai (bool): Whether to use AI analyzer
             fallback_to_legacy (bool): Whether to fallback to legacy validation if AI fails
         """
-        self.use_ai = use_ai and os.environ.get('ANTHROPIC_API_KEY') is not None
+        self.use_ai = use_ai and os.environ.get('GOOGLE_API_KEY') is not None
         self.fallback_to_legacy = fallback_to_legacy
         self.analyzer = get_analyzer() if self.use_ai else None
     

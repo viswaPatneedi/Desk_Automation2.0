@@ -1649,6 +1649,29 @@
         </div>
     </div>
 
+    <!-- Modal: Screen Validation - Expected Screen Name -->
+    <div class="modal fade" id="screenValidationModal" tabindex="-1" aria-labelledby="screenValidationLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background: #1f2937; border: 1px solid #374151; border-radius: 8px;">
+                <div class="modal-header" style="background: #111827; border-bottom: 1px solid #374151;">
+                    <h5 class="modal-title" id="screenValidationLabel" style="color: #e5e7eb;"><i class="bi bi-check-square-fill"></i> Screen Validation</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="background: #111827; color: #e5e7eb;">
+                    <div class="mb-3">
+                        <label for="expectedScreenInput" class="form-label">Expected Screen Name:</label>
+                        <input type="text" id="expectedScreenInput" class="form-control" placeholder="e.g., HOME, NETFLIX_HOME, YOUTUBE" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                        <small style="color: #9ca3af;">Enter the expected screen name to validate device is on that screen (HOME, Netflix, Settings, etc.)</small>
+                    </div>
+                </div>
+                <div class="modal-footer" style="background: #0f172a; border-top: 1px solid #374151;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmScreenValidation()">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     
@@ -3363,6 +3386,20 @@
             if (modal) modal.hide();
         }
 
+        function confirmScreenValidation() {
+            const expectedScreen = document.getElementById('expectedScreenInput').value.trim();
+            
+            if (!expectedScreen) {
+                alert('Expected screen name is required');
+                return;
+            }
+            
+            pendingModalParams.expected_screen = expectedScreen;
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('screenValidationModal'));
+            if (modal) modal.hide();
+        }
+
         function confirmCaptureBaseImage() {
             const screenName = document.getElementById('screenNameInput').value.trim();
             
@@ -3633,12 +3670,28 @@
                     break;
                     
                 case 'screen_validation':
-                    params.expected_text = prompt('Enter expected text to validate:', '');
-                    if (!params.expected_text) {
-                        console.log('❌ User cancelled screen_validation prompt');
+                    // Show modal for screen validation input
+                    pendingModalParams = {};
+                    const screenValModalEl = document.getElementById('screenValidationModal');
+                    document.getElementById('expectedScreenInput').value = '';
+                    
+                    const screenValModal = new bootstrap.Modal(screenValModalEl);
+                    screenValModal.show();
+                    
+                    // Wait for modal to close
+                    await new Promise((resolve) => {
+                        screenValModalEl.addEventListener('hidden.bs.modal', () => {
+                            resolve();
+                        }, { once: true });
+                    });
+                    
+                    if (!pendingModalParams.expected_screen) {
+                        console.log('❌ User cancelled screen_validation parameters');
                         return null;
                     }
-                    console.log(`✅ Screen Validation: ${params.expected_text}`);
+                    
+                    params.expected_screen = pendingModalParams.expected_screen;
+                    console.log(`✅ Screen Validation - Expected Screen: ${params.expected_screen}`);
                     break;
                     
                 case 'memcapture_tool':

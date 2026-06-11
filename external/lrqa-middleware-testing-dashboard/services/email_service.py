@@ -34,7 +34,7 @@ class EmailService:
     def __init__(self):
       # SINGLE EMAIL CONFIGURATION - Shared by all email types
       try:
-        from config_email import SMTP_SERVER, SMTP_PORT, SENDER_EMAIL, SENDER_PASSWORD, EMAIL_ENABLED
+        from config.config_email import SMTP_SERVER, SMTP_PORT, SENDER_EMAIL, SENDER_PASSWORD, EMAIL_ENABLED
       except Exception:
         SMTP_SERVER, SMTP_PORT, SENDER_EMAIL, SENDER_PASSWORD, EMAIL_ENABLED = (
           'smtp.gmail.com', 587, '', '', True

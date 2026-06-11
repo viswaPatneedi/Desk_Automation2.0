@@ -1,12 +1,12 @@
 {
-  "last_checkpoint": "2026-06-08T14:29:46.373108+00:00",
+  "last_checkpoint": "2026-06-11T14:27:46.335860+00:00",
   "execution_context": {
-    "device_ip": "10.0.0.61",
-    "method": "reboot_perf_v2_optimized",
-    "current_iteration": 100,
-    "total_iterations": 100,
-    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_ROGERS-WST-RTK-IUIV2_10-0-0-61_100_ITR_20260602_204803_UTC",
-    "timestamp": "2026-06-03T04:51:14.693429+00:00"
+    "device_ip": "10.0.0.250",
+    "method": "reboot_perf_v2_optimized,navigate_inputs_xumo,voice_command,screen_validation",
+    "current_iteration": 1,
+    "total_iterations": 1,
+    "session_folder": "/media/lrqa/Lexar/sessions/REBOOT_PERF_V2_OPTIMIZED,NAVIGATE_INPUTS_XUMO,VOICE_COMMAND+1MORE_ELEMENT_A4K_10-0-0-250_1_ITR_20260609_181827_UTC",
+    "timestamp": "2026-06-09T18:18:27.338104+00:00"
   },
   "queue_state": {},
   "active_sessions": {},

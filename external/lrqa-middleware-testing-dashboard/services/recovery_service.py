@@ -10,7 +10,7 @@ import threading
 import time
 from datetime import datetime, timezone
 from typing import Dict, Any, Optional
-from config_paths import APP_STATE_FILE, CHECKPOINT_FILE
+from config.config_paths import APP_STATE_FILE, CHECKPOINT_FILE
 
 class RecoveryService:
     """Service for handling application state recovery"""

@@ -1,0 +1,71 @@
+{# 
+    Modal Body Component - Standardized body for all modals
+    
+    Usage:
+    {% include "modals/base/modal_body.html" %}
+    
+    Variables:
+    - body_content: HTML content for body (required)
+    - max_height: CSS max-height value (default: auto)
+    - scrollable: Boolean - enable scrollable body (default: false)
+    - custom_class: Additional CSS classes for body
+#}
+
+<div class="modal-body" 
+     style="
+        background: #111827; 
+        color: #d1d5db;
+        {% if max_height %}max-height: {{ max_height }};{% endif %}
+        {% if scrollable %}overflow-y: auto;{% endif %}
+     "
+     {% if custom_class %}class="{{ custom_class }}"{% endif %}>
+    {{ body_content | safe }}
+</div>
+
+<style>
+/* Fine-tune scrollbar for modal body */
+.modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+    background-clip: content-box;
+}
+
+/* Form elements in modal body */
+.modal-body .form-control,
+.modal-body .form-select {
+    background: #1f2937;
+    border: 1px solid #374151;
+    color: #e5e7eb;
+}
+
+.modal-body .form-control:focus,
+.modal-body .form-select:focus {
+    background: #1f2937;
+    border-color: #3b82f6;
+    color: #e5e7eb;
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+}
+
+.modal-body .form-label {
+    color: #d1d5db;
+    font-weight: 500;
+}
+
+.modal-body .form-text {
+    color: #9ca3af;
+}
+</style>

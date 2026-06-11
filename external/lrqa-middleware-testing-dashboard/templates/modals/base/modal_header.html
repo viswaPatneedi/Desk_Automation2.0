@@ -1,0 +1,29 @@
+{# 
+    Modal Header Component - Standardized header for all modals
+    
+    Usage:
+    {% include "modals/base/modal_header.html" %}
+    
+    Variables:
+    - modal_id: Unique identifier for the modal (required)
+    - modal_title: Title text (required)
+    - close_button: Boolean - show close button (default: true)
+    - custom_class: Additional CSS classes for header
+#}
+
+<div class="modal-header" style="background: #0f172a; border-bottom: 1px solid #1f2937;">
+    <h5 class="modal-title" 
+        id="{{ modal_id }}Label" 
+        style="color: #e5e7eb; font-weight: 600;"
+        {% if custom_class %}class="{{ custom_class }}"{% endif %}>
+        {{ modal_title }}
+    </h5>
+    {% if close_button != false %}
+    <button type="button" 
+            class="btn-close btn-close-white" 
+            data-bs-dismiss="modal" 
+            aria-label="Close"
+            style="opacity: 0.7; cursor: pointer;">
+    </button>
+    {% endif %}
+</div>

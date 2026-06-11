@@ -1,0 +1,263 @@
+{# 
+    Device Management - Add Device Modal
+    
+    Replaces the deviceManagementModal from index.html
+    
+    Features:
+    - Add new device
+    - Edit existing device
+    - Form validation
+    - SSH connection testing
+    
+    Usage in JavaScript:
+    const modal = new bootstrap.Modal(document.getElementById('deviceManagementAddModal'));
+    modal.show();
+#}
+
+<div class="modal fade" 
+     id="deviceManagementAddModal" 
+     tabindex="-1" 
+     aria-labelledby="deviceManagementAddLabel" 
+     aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+        <div class="modal-content" style="background: #111827; border: 1px solid #1f2937;">
+            
+            <!-- Header -->
+            <div class="modal-header" style="background: #0f172a; border-bottom: 1px solid #1f2937;">
+                <h5 class="modal-title" 
+                    id="deviceManagementAddLabel" 
+                    style="color: #e5e7eb; font-weight: 600;">
+                    <span id="modalTitle">Add New Device</span>
+                </h5>
+                <button type="button" 
+                        class="btn-close btn-close-white" 
+                        data-bs-dismiss="modal" 
+                        aria-label="Close"></button>
+            </div>
+            
+            <!-- Body -->
+            <div class="modal-body" style="background: #111827; color: #d1d5db; max-height: 600px; overflow-y: auto;">
+                <form id="deviceManagementForm" novalidate>
+                    
+                    <input type="hidden" id="deviceId" name="device_id" value="">
+                    
+                    <!-- Device Identification Section -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3" style="color: #3b82f6; font-weight: 600;">
+                            Device Identification
+                        </h6>
+                        
+                        <!-- Device Name/IP -->
+                        <div class="mb-3">
+                            <label for="deviceName" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                                Device Name / IP Address
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="deviceName" 
+                                   name="device_name"
+                                   placeholder="e.g., Living Room Box or 192.168.1.100"
+                                   required
+                                   style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                            <div class="invalid-feedback" style="display: block; color: #ef4444;">
+                                Please provide a device name or IP address.
+                            </div>
+                        </div>
+                        
+                        <!-- Device Type -->
+                        <div class="mb-3">
+                            <label for="deviceType" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                                Device Type
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" 
+                                    id="deviceType" 
+                                    name="device_type"
+                                    required
+                                    style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                                <option value="" selected disabled>Select device type...</option>
+                                <option value="rdk_box">RDK Box</option>
+                                <option value="xumo">Xumo Device</option>
+                                <option value="generic">Generic STB</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <div class="invalid-feedback" style="display: block; color: #ef4444;">
+                                Please select a device type.
+                            </div>
+                        </div>
+                        
+                        <!-- Location -->
+                        <div class="mb-3">
+                            <label for="deviceLocation" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                                Location / Team
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="deviceLocation" 
+                                   name="location"
+                                   placeholder="e.g., UK - London or India - Bangalore"
+                                   style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                        </div>
+                    </div>
+                    
+                    <!-- SSH Credentials Section -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3" style="color: #3b82f6; font-weight: 600;">
+                            SSH Credentials
+                        </h6>
+                        
+                        <!-- SSH Hostname/IP -->
+                        <div class="mb-3">
+                            <label for="sshHost" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                                SSH Host / IP
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="sshHost" 
+                                   name="ssh_host"
+                                   placeholder="192.168.1.100"
+                                   required
+                                   style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                        </div>
+                        
+                        <!-- SSH Port -->
+                        <div class="mb-3">
+                            <label for="sshPort" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                                SSH Port
+                            </label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="sshPort" 
+                                   name="ssh_port"
+                                   placeholder="10022"
+                                   value="10022"
+                                   min="1"
+                                   max="65535"
+                                   style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                        </div>
+                        
+                        <!-- SSH Username -->
+                        <div class="mb-3">
+                            <label for="sshUsername" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                                SSH Username
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="sshUsername" 
+                                   name="ssh_username"
+                                   placeholder="root"
+                                   value="root"
+                                   required
+                                   style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                        </div>
+                        
+                        <!-- SSH Password -->
+                        <div class="mb-3">
+                            <label for="sshPassword" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                                SSH Password
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="sshPassword" 
+                                   name="ssh_password"
+                                   placeholder="Enter SSH password"
+                                   required
+                                   style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                            <small class="form-text" style="color: #9ca3af;">
+                                Password will be encrypted before storage
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- Device Status Section -->
+                    <div class="mb-4">
+                        <h6 class="text-primary mb-3" style="color: #3b82f6; font-weight: 600;">
+                            Device Status
+                        </h6>
+                        
+                        <div class="form-check" style="margin-bottom: 15px;">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="deviceActive" 
+                                   name="is_active"
+                                   checked>
+                            <label class="form-check-label" 
+                                   for="deviceActive"
+                                   style="color: #d1d5db; cursor: pointer;">
+                                Device is Active
+                            </label>
+                        </div>
+                    </div>
+                    
+                </form>
+            </div>
+            
+            <!-- Footer -->
+            <div class="modal-footer" 
+                 style="background: #0f172a; border-top: 1px solid #1f2937; gap: 10px;">
+                <button type="button" 
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal"
+                        style="background: #4b5563; border-color: #4b5563;">
+                    Cancel
+                </button>
+                <button type="button" 
+                        class="btn btn-primary"
+                        id="testConnectionBtn"
+                        onclick="testSSHConnection()"
+                        style="background: #f59e0b; border-color: #f59e0b;">
+                    Test Connection
+                </button>
+                <button type="button" 
+                        class="btn btn-success"
+                        id="saveDeviceBtn"
+                        onclick="saveDevice()"
+                        style="background: #10b981; border-color: #10b981;">
+                    Save Device
+                </button>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+/* Form styling for device management modal */
+.form-control:focus,
+.form-select:focus {
+    background: #1f2937 !important;
+    border-color: #3b82f6 !important;
+    color: #e5e7eb !important;
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25) !important;
+}
+
+/* Input group styling */
+.input-group .form-control,
+.input-group .form-select {
+    background: #1f2937;
+    border: 1px solid #374151;
+    color: #e5e7eb;
+}
+
+/* Invalid feedback styling */
+.invalid-feedback {
+    color: #ef4444;
+    display: block;
+    margin-top: 0.25rem;
+}
+
+/* Form text styling */
+.form-text {
+    color: #9ca3af;
+}
+
+/* Section header styling */
+h6.text-primary {
+    border-bottom: 2px solid #374151;
+    padding-bottom: 10px;
+}
+</style>

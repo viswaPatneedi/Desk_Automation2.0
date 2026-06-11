@@ -1,17 +1,18 @@
 """
 AI Screen Analyzer Service - Standalone AI Agent for Screen Validation
 
-This service uses Claude Vision API to intelligently analyze device screenshots
+This service uses Google Gemini Vision API to intelligently analyze device screenshots
 and provide comprehensive screen validation results including:
 - Whether device is on the desired screen
 - What is currently in focus
 - UI elements visible
 - Screen status and anomalies
+
+✅ FREE TIER: No credit card required, uses Google's free Gemini API
 """
 
 import os
 import sys
-import base64
 import json
 import threading
 import time
@@ -20,39 +21,42 @@ from typing import Dict, Optional, List
 from pathlib import Path
 
 try:
-    import anthropic
+    import google.generativeai as genai
 except ImportError:
-    anthropic = None
+    genai = None
 
 
 class AIScreenAnalyzer:
-    """AI-powered screen analysis agent using Claude Vision API"""
+    """AI-powered screen analysis agent using Google Gemini Vision API (Free Tier)"""
     
-    def __init__(self, api_key: str = None, model: str = "claude-3-5-sonnet-20241022"):
+    def __init__(self, api_key: str = None, model: str = "gemini-2.0-flash"):
         """
-        Initialize AI Screen Analyzer
+        Initialize AI Screen Analyzer with Google Gemini (Free API)
         
         Args:
-            api_key (str): Anthropic API key (or use ANTHROPIC_API_KEY env var)
-            model (str): Claude model to use for vision analysis
+            api_key (str): Google Gemini API key (or use GOOGLE_API_KEY env var)
+            model (str): Gemini model to use for vision analysis (default: gemini-2.0-flash)
         """
-        self.api_key = api_key or os.environ.get('ANTHROPIC_API_KEY')
+        self.api_key = api_key or os.environ.get('GOOGLE_API_KEY')
         self.model = model
         self.client = None
         self.analysis_cache = {}
         self.lock = threading.Lock()
         
         if not self.api_key:
-            print("⚠️  Warning: ANTHROPIC_API_KEY not configured")
-            print("   Set environment variable: export ANTHROPIC_API_KEY='sk-...'")
+            print("⚠️  Warning: GOOGLE_API_KEY not configured")
+            print("   Get free API key from: https://makersuite.google.com/app/apikey")
+            print("   Set environment variable: export GOOGLE_API_KEY='your-key-here'")
             print("   AI Screen Analyzer will be disabled")
             return
         
         try:
-            self.client = anthropic.Anthropic(api_key=self.api_key)
-            print(f"✅ AI Screen Analyzer initialized with model: {self.model}")
+            genai.configure(api_key=self.api_key)
+            self.client = genai.GenerativeModel(self.model)
+            print(f"✅ AI Screen Analyzer initialized with Google Gemini (Free Tier)")
+            print(f"   Model: {self.model}")
         except Exception as e:
-            print(f"❌ Error initializing Anthropic client: {e}")
+            print(f"❌ Error initializing Gemini client: {e}")
             self.client = None
     
     def analyze_screenshot(self, screenshot_path: str, expected_screen: str = None,
@@ -99,44 +103,36 @@ class AIScreenAnalyzer:
             }
         
         try:
-            # Read and encode image
-            with open(screenshot_path, 'rb') as f:
-                image_data = base64.standard_b64encode(f.read()).decode('utf-8')
+            # Load image using Gemini's file API
+            if not os.path.exists(screenshot_path):
+                return {
+                    'success': False,
+                    'error': f'Screenshot not found: {screenshot_path}',
+                    'device_matched': False,
+                    'timestamp': datetime.now().isoformat()
+                }
             
-            # Determine image type
-            file_ext = Path(screenshot_path).suffix.lower()
-            media_type = self._get_media_type(file_ext)
+            # Read image file
+            image_file = Path(screenshot_path)
             
             # Build analysis prompt
             prompt = self._build_analysis_prompt(expected_screen, device_name, detailed)
             
-            # Call Claude Vision API
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=2000,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": media_type,
-                                    "data": image_data
-                                }
-                            },
-                            {
-                                "type": "text",
-                                "text": prompt
-                            }
-                        ]
-                    }
-                ]
-            )
+            # Call Gemini Vision API
+            with open(screenshot_path, 'rb') as f:
+                image_data = f.read()
+            
+            # Upload to Gemini (it handles the image encoding)
+            response = self.client.generate_content([
+                prompt,
+                {
+                    'mime_type': self._get_media_type(image_file.suffix),
+                    'data': image_data
+                }
+            ])
             
             # Parse AI response
-            analysis_text = response.content[0].text
+            analysis_text = response.text
             result = self._parse_analysis_response(analysis_text, expected_screen, screenshot_path)
             result['timestamp'] = datetime.now().isoformat()
             result['analysis_text'] = analysis_text

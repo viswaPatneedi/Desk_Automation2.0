@@ -6,8 +6,8 @@ Handles device data persistence and validation
 import json
 import os
 from typing import List, Dict, Optional
-from config_deployment import get_vnc_url, get_device_connection_params, TUNNEL_MODE
-from config_paths import DEVICES_FILE
+from config.config_deployment import get_vnc_url, get_device_connection_params, TUNNEL_MODE
+from config.config_paths import DEVICES_FILE
 
 class Device:
     """Device model for managing test device data"""

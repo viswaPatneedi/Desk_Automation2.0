@@ -9,7 +9,7 @@ from models.job import Job
 from models.device_lock import DeviceLock
 from services.test_execution_service import TestExecutionService
 from services.log_service import LogService
-from config_eta import calculate_eta, format_eta
+from config.config_eta import calculate_eta, format_eta
 
 class TestController:
     """Controller for test execution operations"""

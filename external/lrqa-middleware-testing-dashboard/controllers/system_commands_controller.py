@@ -9,7 +9,7 @@ import json
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from config_paths import SYSTEM_COMMANDS_FILE, SYSTEM_COMMANDS_SUBMISSIONS_FILE
+from config.config_paths import SYSTEM_COMMANDS_FILE, SYSTEM_COMMANDS_SUBMISSIONS_FILE
 
 
 class SystemCommandsController:
@@ -39,7 +39,7 @@ class SystemCommandsController:
         Returns:
             dict: Dictionary of builtin commands
         """
-        from config_log_patterns import get_system_commands
+        from config.config_log_patterns import get_system_commands
         checks = get_system_commands()
         
         builtin_commands = {}

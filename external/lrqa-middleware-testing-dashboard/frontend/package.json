@@ -1,0 +1,58 @@
+{
+  "name": "lrqa-v2-frontend",
+  "version": "2.0.0",
+  "description": "LRQA v2.0 Frontend - Modal UI System with Real-time WebSocket",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext .js,.jsx",
+    "format": "prettier --write 'src/**/*.{js,jsx,css}'",
+    "test": "vitest",
+    "test:coverage": "vitest --coverage"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.14.0",
+    "@reduxjs/toolkit": "^1.9.5",
+    "react-redux": "^8.1.1",
+    "axios": "^1.4.0",
+    "socket.io-client": "^4.6.2",
+    "react-hook-form": "^7.45.0",
+    "zod": "^3.21.4",
+    "@hookform/resolvers": "^3.3.0",
+    "tailwindcss": "^3.3.2",
+    "@headlessui/react": "^1.7.15",
+    "@heroicons/react": "^2.0.18",
+    "clsx": "^1.2.1",
+    "date-fns": "^2.30.0",
+    "zustand": "^4.3.9",
+    "immer": "^10.0.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.3",
+    "vite": "^4.4.9",
+    "eslint": "^8.46.0",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^3.0.1",
+    "vitest": "^0.34.4",
+    "@vitest/ui": "^0.34.4",
+    "postcss": "^8.4.26",
+    "autoprefixer": "^10.4.14"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

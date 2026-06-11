@@ -1,0 +1,158 @@
+{# 
+    Authentication - Login Modal
+    
+    Replaces login.html page-based form with modal
+    
+    Features:
+    - Email/Username input
+    - Password input
+    - Remember me checkbox  
+    - Forgot password link
+    - Login submit
+    
+    Usage in JavaScript:
+    const modal = new bootstrap.Modal(document.getElementById('authLoginModal'));
+    modal.show();
+#}
+
+<div class="modal fade" 
+     id="authLoginModal" 
+     tabindex="-1" 
+     aria-labelledby="authLoginLabel" 
+     aria-hidden="true"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content" style="background: #111827; border: 1px solid #1f2937;">
+            
+            <!-- Header -->
+            <div class="modal-header" style="background: #0f172a; border-bottom: 1px solid #1f2937;">
+                <h5 class="modal-title" 
+                    id="authLoginLabel" 
+                    style="color: #e5e7eb; font-weight: 600;">
+                    User Login
+                </h5>
+            </div>
+            
+            <!-- Body -->
+            <div class="modal-body" style="background: #111827; color: #d1d5db; padding: 2rem;">
+                <form id="loginForm" novalidate>
+                    
+                    <!-- Email/Username -->
+                    <div class="mb-3">
+                        <label for="loginEmail" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                            Email or Username
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="loginEmail" 
+                               name="email"
+                               placeholder="user@example.com or username"
+                               required
+                               autofocus
+                               style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                        <div class="invalid-feedback" style="color: #ef4444;">
+                            Please enter your email or username.
+                        </div>
+                    </div>
+                    
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <label for="loginPassword" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                            Password
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="loginPassword" 
+                               name="password"
+                               placeholder="Enter your password"
+                               required
+                               style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                        <div class="invalid-feedback" style="color: #ef4444;">
+                            Please enter your password.
+                        </div>
+                    </div>
+                    
+                    <!-- Remember Me / Forgot Password -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="rememberMe" 
+                                   name="remember_me">
+                            <label class="form-check-label" 
+                                   for="rememberMe"
+                                   style="color: #d1d5db; cursor: pointer;">
+                                Remember me
+                            </label>
+                        </div>
+                        <a href="#" 
+                           onclick="showForgotPasswordModal()" 
+                           style="color: #3b82f6; text-decoration: none; font-size: 0.875rem;">
+                            Forgot password?
+                        </a>
+                    </div>
+                    
+                    <!-- Error Message -->
+                    <div id="loginErrorAlert" class="alert alert-danger" role="alert" style="display: none; background: #7f1d1d; border-color: #dc2626; color: #fecaca;">
+                        <small id="loginErrorText"></small>
+                    </div>
+                    
+                </form>
+            </div>
+            
+            <!-- Footer -->
+            <div class="modal-footer" 
+                 style="background: #0f172a; border-top: 1px solid #1f2937; gap: 10px;">
+                <button type="button" 
+                        class="btn btn-primary"
+                        id="loginSubmitBtn"
+                        onclick="submitLogin()"
+                        style="background: #3b82f6; border-color: #3b82f6; width: 100%;">
+                    <span id="loginBtnText">Login</span>
+                    <span id="loginBtnSpinner" class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true" style="display: none;"></span>
+                </button>
+            </div>
+            
+            <!-- Sign Up Link -->
+            <div style="background: #0f172a; border-top: 1px solid #1f2937; padding: 1rem; text-align: center;">
+                <small style="color: #9ca3af;">
+                    Don't have an account? 
+                    <a href="#" 
+                       onclick="showRegisterModal()" 
+                       style="color: #3b82f6; text-decoration: none;">
+                        Sign up here
+                    </a>
+                </small>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+/* Login modal specific styles */
+#loginForm .form-control:focus {
+    background: #1f2937 !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Loading state for login button */
+#loginSubmitBtn.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.spinner-border-sm {
+    width: 1rem;
+    height: 1rem;
+    animation: spin 0.75s linear infinite;
+}
+</style>

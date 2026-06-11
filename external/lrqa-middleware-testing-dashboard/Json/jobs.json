@@ -1717,5 +1717,145 @@
     "eta_formatted": "5h 16m",
     "time_per_iteration": 205,
     "remaining_iterations": 101
+  },
+  {
+    "job_id": "424ef8b2-80aa-4b15-a247-3fb895aa3376",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "POWER",
+          "HOME"
+        ]
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-06-09T17:43:08.087904",
+    "end_time": "2026-06-09T17:43:48.415822+00:00",
+    "log_file_path": "logs/jobs/424ef8b2-80aa-4b15-a247-3fb895aa3376/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-06-09T17:43:08.087917",
+    "eta_seconds": 61,
+    "eta_formatted": "1m 1s",
+    "time_per_iteration": 61,
+    "remaining_iterations": 2
+  },
+  {
+    "job_id": "b6f3ac60-5661-43d7-918b-4ecb2a0d2c8e",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crash"
+        ],
+        "auto_collect_logs": true
+      }
+    ],
+    "iterations": 2,
+    "status": "completed",
+    "start_time": "2026-06-09T17:45:17.854464",
+    "end_time": "2026-06-09T17:51:19.511735+00:00",
+    "log_file_path": "logs/jobs/b6f3ac60-5661-43d7-918b-4ecb2a0d2c8e/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 2,
+    "iteration_results": {
+      "1": "passed",
+      "2": "passed"
+    },
+    "created_at": "2026-06-09T17:45:17.854479",
+    "eta_seconds": 395,
+    "eta_formatted": "6m 35s",
+    "time_per_iteration": 205,
+    "remaining_iterations": 3
+  },
+  {
+    "job_id": "b5cfd240-f4ea-4dd3-9225-dc21c90a3028",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "reboot_perf_v2_optimized",
+      "navigate_inputs_xumo",
+      "voice_command",
+      "screen_validation"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crashed|ERROR.*crash|FATAL|panic"
+        ],
+        "auto_collect_logs": true
+      },
+      {
+        "method": "navigate_inputs_xumo"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "launch Netflix"
+      },
+      {
+        "method": "screen_validation",
+        "expected_text": "Netflix"
+      }
+    ],
+    "iterations": 1,
+    "status": "cancelled",
+    "start_time": "2026-06-09T18:18:27.153542",
+    "end_time": "2026-06-09T18:26:47.048246",
+    "log_file_path": "logs/jobs/b5cfd240-f4ea-4dd3-9225-dc21c90a3028/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 1,
+    "iteration_results": {},
+    "created_at": "2026-06-09T18:18:27.153556",
+    "eta_seconds": 445,
+    "eta_formatted": "7m 25s",
+    "time_per_iteration": 445,
+    "remaining_iterations": 2
   }
 ]

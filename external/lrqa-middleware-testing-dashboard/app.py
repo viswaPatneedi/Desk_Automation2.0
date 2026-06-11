@@ -44,7 +44,7 @@ from utils.file_lock import FileLockManager
 
 # Import USB Storage Manager
 try:
-    from usb_storage_manager import initialize_storage
+    from scripts.data_processing.usb_storage_manager import initialize_storage
     storage_manager = initialize_storage(enable_setup=True)
 except Exception as e:
     print(f"⚠️  USB Storage Manager initialization warning: {e}")
@@ -63,15 +63,30 @@ from controllers.test_controller import TestController
 from controllers.queue_controller import QueueController
 from controllers.results_controller import ResultsController
 
+# Import AI Agent Routes
+from controllers.agents_routes import register_agents_blueprint
+
+# Import Phase 3 Modal Routes
+from controllers.modal_routes import register_modal_routes
+from utils.modal_integration import inject_modal_assets
+
 # Import configuration files
-from config_commands import *
-from config_ir_blaster import *
-from config_eta import calculate_eta, format_eta
-from config_deployment import print_deployment_info
-import config_email  # Loads Gmail SMTP settings from .env
+from config.config_commands import *
+from config.config_ir_blaster import *
+from config.config_eta import calculate_eta, format_eta
+from config.config_deployment import print_deployment_info
+import config.config_email  # Loads Gmail SMTP settings from .env
 
 # Initialize Flask app
 app = Flask(__name__)
+
+# ===== DATABASE CONFIGURATION =====
+from config.flask_database import DatabaseConfig, init_database_for_flask
+db_config = DatabaseConfig()
+init_database_for_flask(app, db_config)
+print("✓ Database initialized for Flask")
+# ===== END DATABASE CONFIGURATION =====
+
 app.secret_key = os.environ.get('SECRET_KEY', 'rdke-qa-dashboard-secret-key-change-in-production')
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -132,7 +147,8 @@ def get_available_log_patterns():
     """Returns available log patterns for method parameter selection."""
     try:
         import json
-        with open('log_patterns.json', 'r') as f:
+        from config_paths import LOG_PATTERNS_FILE
+        with open(LOG_PATTERNS_FILE, 'r') as f:
             data = json.load(f)
             log_patterns = data.get('LOG_PATTERNS', {})
             
@@ -294,6 +310,49 @@ print("[QUEUE] Cleanup completed - keeping last 60 days of job history")
 if execution_monitor_service:
     execution_monitor_service.start_monitoring()
     print("[EXECUTION MONITOR] Monitoring thread started")
+
+# ===== AI AGENTS FRAMEWORK REGISTRATION =====
+print("\n" + "="*60)
+print("AI AGENTS FRAMEWORK INITIALIZATION")
+print("="*60)
+try:
+    # Register agents blueprint for REST API endpoints
+    register_agents_blueprint(app)
+    print("✅ AI Agents Framework: REGISTERED")
+    print("   → Available endpoints: /api/agents/*")
+    print("   → Health check: /api/agents/health")
+    print("   → Manager endpoints: /api/agents/orchestrator/*")
+    print("   → Job management: /api/agents/job-orchestrator/*")
+except Exception as e:
+    print(f"⚠️  AI Agents Framework: Registration error - {e}")
+    import traceback
+    traceback.print_exc()
+print("="*60 + "\n")
+
+# ===== PHASE 3 MODAL UI SYSTEM REGISTRATION =====
+print("\n" + "="*60)
+print("PHASE 3 MODAL UI SYSTEM INITIALIZATION")
+print("="*60)
+try:
+    # Register modal API routes
+    register_modal_routes(app)
+    print("✅ Phase 3 Modal UI: REGISTERED")
+    print("   → Device management endpoints: /api/devices/*")
+    print("   → Authentication endpoints: /api/auth/*")
+    print("   → Execution endpoints: /api/executions/*")
+    print("   → Sequence endpoints: /api/sequences/*")
+    print("   → Methods endpoints: /api/methods/*")
+    
+    # Inject modal assets into template context
+    inject_modal_assets(app)
+    print("✅ Modal assets injected into Flask context")
+    print("   → CSS files: /static/css/modals.css")
+    print("   → JS files: /static/js/modal-handlers.js")
+except Exception as e:
+    print(f"⚠️  Phase 3 Modal UI: Initialization error - {e}")
+    import traceback
+    traceback.print_exc()
+print("="*60 + "\n")
 
 # Note: DO NOT cancel pending jobs at startup
 # They may be legitimately queued from another process or recent creation
@@ -668,7 +727,7 @@ def index():
             continue
         device_list.append(device.to_dict())
     
-    return render_template('dashboard.html', devices=device_list, user=current_user)
+    return render_template('index.html', devices=device_list, user=current_user)
 
 @app.route('/dashboard')
 @login_required
@@ -689,12 +748,12 @@ def dashboard():
             continue
         device_list.append(device.to_dict())
     
-    return render_template('dashboard.html', devices=device_list, user=current_user)
+    return render_template('index.html', devices=device_list, user=current_user)
 
 @app.route('/methods-index')
 @login_required
 def methods_index():
-    """Render methods index page - uses index.html"""
+    """Render methods index page - uses index2.html"""
     from models.device_lock import DeviceLock
     
     devices = Device.load_all()
@@ -710,7 +769,7 @@ def methods_index():
             continue
         device_list.append(device.to_dict())
     
-    return render_template('index.html', devices=device_list, user=current_user)
+    return render_template('index2.html', devices=device_list, user=current_user)
 
 @app.route('/results')
 @login_required
@@ -1122,7 +1181,7 @@ def get_optional_checks():
     """Get dynamically discovered optional post-reboot checks from config_log_patterns"""
     from flask import jsonify
     try:
-        from config_log_patterns import get_all_optional_checks
+        from config.config_log_patterns import get_all_optional_checks
         checks = get_all_optional_checks()
         return jsonify(checks)
     except Exception as e:
@@ -3779,7 +3838,7 @@ if __name__ == '__main__':
     
     # Allow host/port override via environment variables (default to 0.0.0.0 for network access)
     host = os.environ.get('FLASK_HOST', '0.0.0.0')
-    port = int(os.environ.get('FLASK_PORT', 11078))
+    port = int(os.environ.get('FLASK_PORT', 11079))
 
     print(f"\n{'='*60}")
     print(f"FLASK STARTUP CONFIGURATION")

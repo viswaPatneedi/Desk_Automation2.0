@@ -4,8 +4,8 @@ import os
 import uuid
 from datetime import datetime, timezone, timedelta
 from utils.file_lock import FileLockManager
-from config_eta import calculate_eta, format_eta
-from config_paths import JOBS_FILE
+from config.config_eta import calculate_eta, format_eta
+from config.config_paths import JOBS_FILE
 
 
 class Job:

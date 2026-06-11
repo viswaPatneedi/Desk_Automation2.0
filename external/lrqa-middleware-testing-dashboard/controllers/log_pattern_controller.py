@@ -8,7 +8,7 @@ import json
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from config_paths import LOG_PATTERNS_FILE
+from config.config_paths import LOG_PATTERNS_FILE
 
 
 class LogPatternController:

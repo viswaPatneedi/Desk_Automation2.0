@@ -8,7 +8,7 @@ import os
 from typing import List, Dict, Optional
 from datetime import datetime, timezone, timedelta
 from utils.file_lock import FileLockManager
-from config_paths import TEST_RESULTS_FILE
+from config.config_paths import TEST_RESULTS_FILE
 
 class TestResult:
     """Test result model for managing test execution results"""

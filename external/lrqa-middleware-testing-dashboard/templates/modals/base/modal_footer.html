@@ -1,0 +1,79 @@
+{# 
+    Modal Footer Component - Standardized footer for all modals
+    
+    Usage:
+    {% include "modals/base/modal_footer.html" %}
+    
+    Variables:
+    - footer_content: HTML content for footer (required)
+    - show_divider: Boolean - show border divider (default: true)
+    - custom_class: Additional CSS classes for footer
+    
+    Common Button Examples:
+    - <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+    - <button type="button" class="btn btn-primary" onclick="submitForm()">Save</button>
+    - <button type="button" class="btn btn-danger" onclick="deleteItem()">Delete</button>
+#}
+
+<div class="modal-footer" 
+     style="
+        background: #0f172a;
+        border-top: {% if show_divider != false %}1px solid #1f2937{% else %}none{% endif %};
+        gap: 10px;
+        padding: 1.5rem;
+     "
+     {% if custom_class %}class="{{ custom_class }}"{% endif %}>
+    {{ footer_content | safe }}
+</div>
+
+<style>
+/* Modal footer button styling */
+.modal-footer .btn {
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.modal-footer .btn-primary {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+.modal-footer .btn-primary:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+}
+
+.modal-footer .btn-secondary {
+    background: #4b5563;
+    border-color: #4b5563;
+    color: white;
+}
+
+.modal-footer .btn-secondary:hover {
+    background: #6b7280;
+    border-color: #6b7280;
+}
+
+.modal-footer .btn-danger {
+    background: #ef4444;
+    border-color: #ef4444;
+}
+
+.modal-footer .btn-danger:hover {
+    background: #dc2626;
+    border-color: #dc2626;
+}
+
+.modal-footer .btn-success {
+    background: #10b981;
+    border-color: #10b981;
+}
+
+.modal-footer .btn-success:hover {
+    background: #059669;
+    border-color: #059669;
+}
+</style>

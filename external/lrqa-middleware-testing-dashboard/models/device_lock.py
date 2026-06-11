@@ -2,9 +2,9 @@
 import json
 import os
 from datetime import datetime, timezone, timedelta
-from config_eta import format_eta
+from config.config_eta import format_eta
 import logging
-from config_paths import DEVICE_LOCKS_FILE
+from config.config_paths import DEVICE_LOCKS_FILE
 
 logger = logging.getLogger(__name__)
 

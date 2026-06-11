@@ -1,0 +1,31 @@
+Flask==3.0.0
+Flask-Login==0.6.3
+Flask-Bcrypt==1.0.1
+paramiko==3.4.0
+Pillow==10.1.0
+pytesseract==0.3.10
+requests==2.31.0
+gunicorn==21.2.0
+gevent==24.2.1
+openpyxl==3.1.5
+opencv-python==4.8.1.78
+numpy>=1.26.0
+imagehash==4.3.1
+scikit-image==0.22.0
+scipy==1.12.0
+
+# v2.0 Database & ORM (NEW)
+SQLAlchemy==2.0.23
+psycopg2-binary==2.9.9
+alembic==1.13.1
+pydantic==2.5.0
+
+# v2.0 Security & Encryption (NEW)
+cryptography==41.0.7
+PyGithub==2.1.1
+
+# v2.0 Monitoring & Logging (NEW)
+python-dotenv==1.0.0
+
+# v2.0 AI Vision (FREE TIER)
+google-generativeai==0.3.0

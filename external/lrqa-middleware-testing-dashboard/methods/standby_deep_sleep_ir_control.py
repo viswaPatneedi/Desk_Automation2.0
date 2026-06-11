@@ -9,8 +9,8 @@ import paramiko
 from datetime import datetime
 
 ## Import IR utilities 
-from config_ir_blaster import get_ir_config_for_device, generate_ir_code, send_ir_command
-from method_utils import log_message
+from config.config_ir_blaster import get_ir_config_for_device, generate_ir_code, send_ir_command
+from methods.method_utils import log_message
 
 
 def execute_standby_deep_sleep_test(device_ip, device_name, remote_type="SKY", iteration=1):
