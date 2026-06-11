@@ -2691,7 +2691,8 @@
                 // Create controller for all requests
                 const createController = () => {
                     const controller = new AbortController();
-                    setTimeout(() => controller.abort(), 3000);
+                    // Cold start can be slow after cache clear; allow longer preload window.
+                    setTimeout(() => controller.abort(), 8000);
                     return controller;
                 };
                 
@@ -2727,13 +2728,21 @@
                 // Preload log patterns
                 try {
                     const patternsResponse = await fetch('/api/available_log_patterns', { signal: createController().signal, credentials: 'include' });
+                    if (!patternsResponse.ok) {
+                        console.warn('⚠️ Log patterns preload skipped (HTTP ' + patternsResponse.status + ')');
+                        logPatternsCache = [];
+                    } else {
                     const patternsData = await patternsResponse.json();
                     if (patternsData.success && patternsData.patterns) {
                         logPatternsCache = patternsData.patterns || [];
                         console.log('✅ Log patterns cached:', patternsData.patterns.length, 'patterns');
+                        } else {
+                            logPatternsCache = [];
+                            console.warn('⚠️ Log patterns preload skipped (invalid payload)');
+                        }
                     }
                 } catch (error) {
-                    console.warn('⚠️ Failed to preload log patterns');
+                    console.warn('⚠️ Failed to preload log patterns:', error?.message || error);
                     logPatternsCache = [];
                 }
                 
@@ -7036,6 +7045,17 @@
                 jobTitle = `<i class="bi bi-diagram-3"></i> Execution`;
             }
             
+            // Build step descriptions from execution_queue
+            let stepDescriptionsHtml = '';
+            const stepsWithDesc = (job.execution_queue || []).filter(s => s.description);
+            if (stepsWithDesc.length > 0) {
+                const descLines = stepsWithDesc.map((s, i) => {
+                    const stepNum = (job.execution_queue || []).indexOf(s) + 1;
+                    return `<span style="color:#94a3b8;">Step ${stepNum}:</span> ${s.description}`;
+                }).join('<br>');
+                stepDescriptionsHtml = `<small style="color: #cbd5e1; display: block; margin-top: 0.3rem; font-size: 0.8rem; font-style: italic; border-left: 2px solid #475569; padding-left: 0.5rem;">📝 ${descLines}</small>`;
+            }
+            
             // Parse times safely and convert from UTC to local time
             let startTime = 'Unknown';
             let endTime = 'In progress...';
@@ -7100,6 +7120,7 @@
                             <small style="color: #f0fdf4; display: block; margin-top: 0.35rem; font-size: 0.9rem; font-weight: 600;">
                                 ${jobTitle}
                             </small>
+                            ${stepDescriptionsHtml}
                             <small style="color: #e5e7eb; display: block; margin-top: 0.25rem; font-size: 0.85rem;">
                                 👤 ${userId}
                             </small>
@@ -8385,6 +8406,11 @@
                     apiItem.validation_type = item.params?.validation_type;
                 } else if (item.method === 'screen_validation') {
                     apiItem.expected_text = item.params?.expected_text;
+                }
+                
+                // Include step description (user-provided rationale for this step)
+                if (item.description) {
+                    apiItem.description = item.description;
                 }
                 
                 return apiItem;
