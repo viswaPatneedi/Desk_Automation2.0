@@ -7754,6 +7754,14 @@
                     if (data.success) {
                         const action = updateMode ? 'updated' : 'saved';
                         showNotification(`✅ Sequence ${action}: ${sequenceName}`, 'success');
+
+                        // Invalidate local sequence cache so next edit fetches fresh data,
+                        // including latest step descriptions.
+                        if (updateMode && sequenceId) {
+                            delete sequenceCacheMap[sequenceId];
+                        } else {
+                            sequenceCacheMap = {};
+                        }
                         
                         if (!updateMode) {
                             currentLoadedSequence = null;
@@ -7837,6 +7845,7 @@
                 }
                 if (data.success) {
                     showNotification(`✅ Sequence "${sequenceName}" deleted successfully`, 'success');
+                    delete sequenceCacheMap[sequenceId];
                     loadSavedSequences(); // Refresh saved sequences list
                 } else {
                     console.error('❌ Delete not successful:', data);
@@ -7904,6 +7913,7 @@
                             }
                             if (updateData.success) {
                                 showNotification(`✅ Sequence renamed to "${newName}"`, 'success');
+                                delete sequenceCacheMap[sequenceId];
                                 loadSavedSequences(); // Refresh saved sequences list
                             } else {
                                 console.error('❌ Update not successful:', updateData);
