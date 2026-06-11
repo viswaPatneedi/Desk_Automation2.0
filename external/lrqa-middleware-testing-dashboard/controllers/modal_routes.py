@@ -405,7 +405,7 @@ def create_sequence():
 def get_sequence(sequence_id):
     """Get sequence details"""
     try:
-        sequence = SavedSequence.get_by_id(sequence_id)
+        sequence = SavedSequence.find_by_id(sequence_id)
         
         if not sequence:
             return error_response('Sequence not found', 404)
@@ -431,7 +431,7 @@ def get_sequence(sequence_id):
 def update_sequence(sequence_id):
     """Update sequence"""
     try:
-        sequence = SavedSequence.get_by_id(sequence_id)
+        sequence = SavedSequence.find_by_id(sequence_id)
         
         if not sequence:
             return error_response('Sequence not found', 404)
