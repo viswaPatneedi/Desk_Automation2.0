@@ -1,60 +1,165 @@
-"""
-Log Pattern Controller
-Manages log pattern validations, submissions, and admin approvals
-"""
+"""Log Pattern Controller with DB-first approval workflow."""
 
-import os
 import json
+import os
 import re
+import uuid
 from datetime import datetime, timezone
-from pathlib import Path
+
 from config.config_paths import LOG_PATTERNS_FILE
+from models.database import (
+    LogPattern as DBLogPattern,
+    Session,
+    StagingChange,
+    User as DBUser,
+)
 
 
 class LogPatternController:
-    """Controller for managing log patterns and validations"""
-    
-    def __init__(self):
-        """Initialize the controller"""
-        self.ensure_submissions_file_exists()
-    
+    """Controller for managing log patterns and validations."""
+
+    ENTITY_TYPE = "log_pattern"
+
+    @staticmethod
+    def _normalize_pattern_name(pattern_name):
+        return (pattern_name or "").strip().upper()
+
+    @staticmethod
+    def _get_user_id(session, username):
+        if not username:
+            return None
+        user = session.query(DBUser).filter_by(username=username).first()
+        return user.id if user else None
+
+    @staticmethod
+    def _get_username(session, user_id):
+        if not user_id:
+            return "unknown"
+        user = session.query(DBUser).filter_by(id=user_id).first()
+        return user.username if user else "unknown"
+
+    @staticmethod
+    def _format_submission(change, session):
+        payload = change.entity_data or {}
+        return {
+            "id": change.change_id,
+            "pattern_name": payload.get("pattern_name", ""),
+            "log_pattern": payload.get("log_pattern", ""),
+            "file_path": payload.get("file_path", ""),
+            "description": payload.get("description", ""),
+            "submitted_by": LogPatternController._get_username(session, change.submitted_by),
+            "submitted_at": change.submitted_at.isoformat() if change.submitted_at else None,
+            "requested_action": payload.get("action", "add"),
+            "change_comment": payload.get("change_comment", ""),
+            "base_pattern": payload.get("target_pattern") or payload.get("pattern_name", ""),
+            "review_comment": change.review_comment,
+        }
+
+    @staticmethod
+    def _sync_json_from_db(session):
+        current = {
+            "LOG_PATTERNS": {},
+            "SYSTEM_COMMAND_PATTERNS": {},
+            "PENDING_PATTERNS": {},
+            "REJECTED_PATTERNS": [],
+        }
+        if os.path.exists(LOG_PATTERNS_FILE):
+            try:
+                with open(LOG_PATTERNS_FILE, "r", encoding="utf-8") as handle:
+                    existing = json.load(handle)
+                if isinstance(existing, dict):
+                    current.update(existing)
+            except Exception:
+                pass
+
+        rows = (
+            session.query(DBLogPattern)
+            .filter_by(is_active=True)
+            .order_by(DBLogPattern.pattern_id.asc())
+            .all()
+        )
+        approved = {}
+        for row in rows:
+            key = row.pattern_id
+            approved[key] = {
+                "id": key,
+                "pattern_name": key,
+                "log_pattern": row.regex,
+                "regex": row.regex,
+                "file_path": row.location or "",
+                "description": row.description or "",
+                "submitted_by": LogPatternController._get_username(session, row.created_by),
+                "submitted_at": row.created_at.isoformat() if row.created_at else None,
+                "approved_at": row.updated_at.isoformat() if row.updated_at else None,
+                "is_admin_submission": False,
+                "team_name": row.team_name or "",
+            }
+
+        pending_changes = (
+            session.query(StagingChange)
+            .filter_by(entity_type=LogPatternController.ENTITY_TYPE, status="pending")
+            .order_by(StagingChange.submitted_at.desc())
+            .all()
+        )
+        pending = {}
+        for change in pending_changes:
+            pending[change.change_id] = LogPatternController._format_submission(change, session)
+
+        rejected_changes = (
+            session.query(StagingChange)
+            .filter_by(entity_type=LogPatternController.ENTITY_TYPE, status="rejected")
+            .order_by(StagingChange.reviewed_at.desc())
+            .all()
+        )
+        rejected = [LogPatternController._format_submission(change, session) for change in rejected_changes]
+
+        current["LOG_PATTERNS"] = approved
+        current["PENDING_PATTERNS"] = pending
+        current["REJECTED_PATTERNS"] = rejected
+
+        os.makedirs(os.path.dirname(LOG_PATTERNS_FILE) or ".", exist_ok=True)
+        with open(LOG_PATTERNS_FILE, "w", encoding="utf-8") as handle:
+            json.dump(current, handle, indent=2)
+
+    @staticmethod
+    def sync_json_snapshot():
+        session = Session()
+        try:
+            LogPatternController._sync_json_from_db(session)
+            return True
+        except Exception:
+            return False
+        finally:
+            session.close()
+
     @staticmethod
     def ensure_submissions_file_exists():
-        """Ensure the submissions JSON file exists"""
         if not os.path.exists(LOG_PATTERNS_FILE):
-            initial_data = {
-                'LOG_PATTERNS': {},
-                'SYSTEM_COMMAND_PATTERNS': {},
-                'PENDING_PATTERNS': {},
-                'REJECTED_PATTERNS': []
-            }
-            with open(LOG_PATTERNS_FILE, 'w') as f:
-                json.dump(initial_data, f, indent=2)
-    
+            os.makedirs(os.path.dirname(LOG_PATTERNS_FILE) or ".", exist_ok=True)
+            with open(LOG_PATTERNS_FILE, "w", encoding="utf-8") as handle:
+                json.dump(
+                    {
+                        "LOG_PATTERNS": {},
+                        "SYSTEM_COMMAND_PATTERNS": {},
+                        "PENDING_PATTERNS": {},
+                        "REJECTED_PATTERNS": [],
+                    },
+                    handle,
+                    indent=2,
+                )
+
     @staticmethod
     def get_all_submissions():
-        """Get all log pattern submissions (approved, pending, rejected)"""
-        try:
-            with open(LOG_PATTERNS_FILE, 'r') as f:
-                data = json.load(f)
-                data.setdefault('LOG_PATTERNS', {})
-                data.setdefault('SYSTEM_COMMAND_PATTERNS', {})
-                data.setdefault('PENDING_PATTERNS', {})
-                data.setdefault('REJECTED_PATTERNS', [])
-                return data
-        except (json.JSONDecodeError, IOError):
-            return {
-                'LOG_PATTERNS': {},
-                'SYSTEM_COMMAND_PATTERNS': {},
-                'PENDING_PATTERNS': {},
-                'REJECTED_PATTERNS': []
-            }
-    
+        return {
+            "LOG_PATTERNS": LogPatternController.get_approved_patterns(),
+            "PENDING_PATTERNS": LogPatternController.get_pending_submissions(),
+            "REJECTED_PATTERNS": LogPatternController.get_rejected_submissions(),
+            "SYSTEM_COMMAND_PATTERNS": {},
+        }
+
     @staticmethod
-    def save_submissions(data):
-        """Save submissions to file"""
-        with open(LOG_PATTERNS_FILE, 'w') as f:
-            json.dump(data, f, indent=2)
+    def save_submissions(_data):
+        return True
     
     @staticmethod
     def validate_file_path_format(file_path):
@@ -147,7 +252,10 @@ class LogPatternController:
         file_path,
         description="",
         submitted_by_user=None,
-        is_admin=False
+        is_admin=False,
+        requested_action="add",
+        target_pattern=None,
+        change_comment="",
     ):
         """
         Submit a new log pattern validation
@@ -163,12 +271,19 @@ class LogPatternController:
         Returns:
             Tuple (success: bool, message: str, submission_id: str or None)
         """
-        # Validate pattern name
         if not pattern_name or not pattern_name.strip():
             return False, "Pattern name cannot be empty", None
 
-        # Normalize to uppercase for consistent naming
-        pattern_name = pattern_name.strip().upper()
+        pattern_name = LogPatternController._normalize_pattern_name(pattern_name)
+        target_pattern = LogPatternController._normalize_pattern_name(target_pattern or pattern_name)
+        requested_action = (requested_action or "add").strip().lower()
+        change_comment = (change_comment or "").strip()
+
+        if requested_action not in {"add", "edit", "delete"}:
+            return False, "Invalid requested action", None
+
+        if requested_action in {"edit", "delete"} and not change_comment:
+            return False, "Comment is required for edit/delete requests", None
         
         if not re.match(r'^[a-zA-Z0-9_]+$', pattern_name):
             return False, "Pattern name can only contain alphanumeric characters and underscores", None
@@ -183,47 +298,118 @@ class LogPatternController:
         if not file_valid:
             return False, file_msg, None
         
-        # Create submission
-        submission_id = f"{pattern_name}_{int(datetime.now(timezone.utc).timestamp())}"
-        
-        submissions = LogPatternController.get_all_submissions()
-        
-        # Check if pattern name already exists in approved patterns
-        if pattern_name in submissions['LOG_PATTERNS']:
-            return False, f"Pattern '{pattern_name}' already exists in approved patterns", None
-        
-        # Create submission object
-        submission = {
-            'id': submission_id,
-            'pattern_name': pattern_name,
-            'log_pattern': log_pattern,
-            'file_path': expanded_path,
-            'description': description,
-            'submitted_by': submitted_by_user or 'unknown',
-            'submitted_at': datetime.now(timezone.utc).isoformat(),
-            'is_admin_submission': is_admin
-        }
-        
-        # All submissions (admin and non-admin) go to pending for approval workflow
-        # This allows proper review and tracking of all pattern changes
-        submissions['PENDING_PATTERNS'][submission_id] = submission
-        LogPatternController.save_submissions(submissions)
-        return True, f"Pattern '{pattern_name}' submitted for admin approval", submission_id
+        session = Session()
+        try:
+            if requested_action == "add":
+                existing = (
+                    session.query(DBLogPattern)
+                    .filter_by(pattern_id=pattern_name, is_active=True)
+                    .first()
+                )
+                if existing:
+                    return False, f"Pattern '{pattern_name}' already exists", None
+            else:
+                existing = (
+                    session.query(DBLogPattern)
+                    .filter_by(pattern_id=target_pattern, is_active=True)
+                    .first()
+                )
+                if not existing:
+                    return False, f"Pattern '{target_pattern}' not found", None
+
+            submission_id = str(uuid.uuid4())
+            submission_payload = {
+                "action": requested_action,
+                "pattern_name": pattern_name,
+                "target_pattern": target_pattern,
+                "log_pattern": log_pattern,
+                "file_path": expanded_path,
+                "description": description,
+                "change_comment": change_comment,
+                "is_admin_submission": bool(is_admin),
+            }
+
+            change = StagingChange(
+                change_id=submission_id,
+                entity_type=LogPatternController.ENTITY_TYPE,
+                entity_data=submission_payload,
+                submitted_by=LogPatternController._get_user_id(session, submitted_by_user),
+                status="pending",
+            )
+            session.add(change)
+            session.commit()
+            LogPatternController._sync_json_from_db(session)
+            return True, f"Pattern request '{requested_action}' submitted for admin approval", submission_id
+        except Exception as e:
+            session.rollback()
+            return False, f"Failed to submit request: {str(e)}", None
+        finally:
+            session.close()
     
     @staticmethod
     def get_pending_submissions():
-        """Get all pending submissions awaiting admin approval"""
-        submissions = LogPatternController.get_all_submissions()
-        return submissions.get('PENDING_PATTERNS', {})
+        """Get all pending submissions awaiting admin approval."""
+        session = Session()
+        try:
+            rows = (
+                session.query(StagingChange)
+                .filter_by(entity_type=LogPatternController.ENTITY_TYPE, status="pending")
+                .order_by(StagingChange.submitted_at.desc())
+                .all()
+            )
+            return {
+                row.change_id: LogPatternController._format_submission(row, session)
+                for row in rows
+            }
+        finally:
+            session.close()
     
     @staticmethod
     def get_approved_patterns():
-        """Get all approved log patterns"""
-        submissions = LogPatternController.get_all_submissions()
-        return submissions.get('LOG_PATTERNS', {})
+        """Get all approved log patterns from database."""
+        session = Session()
+        try:
+            rows = (
+                session.query(DBLogPattern)
+                .filter_by(is_active=True)
+                .order_by(DBLogPattern.pattern_id.asc())
+                .all()
+            )
+            approved = {}
+            for row in rows:
+                approved[row.pattern_id] = {
+                    "id": row.pattern_id,
+                    "pattern_name": row.pattern_id,
+                    "log_pattern": row.regex,
+                    "regex": row.regex,
+                    "file_path": row.location or "",
+                    "description": row.description or "",
+                    "submitted_by": LogPatternController._get_username(session, row.created_by),
+                    "submitted_at": row.created_at.isoformat() if row.created_at else None,
+                    "approved_at": row.updated_at.isoformat() if row.updated_at else None,
+                    "is_admin_submission": False,
+                    "team_name": row.team_name or "",
+                }
+            return approved
+        finally:
+            session.close()
+
+    @staticmethod
+    def get_rejected_submissions():
+        session = Session()
+        try:
+            rows = (
+                session.query(StagingChange)
+                .filter_by(entity_type=LogPatternController.ENTITY_TYPE, status="rejected")
+                .order_by(StagingChange.reviewed_at.desc())
+                .all()
+            )
+            return [LogPatternController._format_submission(row, session) for row in rows]
+        finally:
+            session.close()
     
     @staticmethod
-    def approve_submission(submission_id):
+    def approve_submission(submission_id, reviewed_by_user=None):
         """
         Approve a pending submission (admin only)
         
@@ -233,64 +419,89 @@ class LogPatternController:
         Returns:
             Tuple (success: bool, message: str)
         """
-        submissions = LogPatternController.get_all_submissions()
-        pending = submissions.get('PENDING_PATTERNS', {})
-        
-        if submission_id not in pending:
-            return False, f"Submission '{submission_id}' not found in pending"
-        
-        submission = pending[submission_id]
-        pattern_name = submission['pattern_name']
-        if pattern_name:
-            pattern_name = pattern_name.strip().upper()
-            submission['pattern_name'] = pattern_name
-        
-        # Check if this is an edit submission (pattern_name ends with _EDIT)
-        is_edit_submission = pattern_name.endswith('_EDIT')
-        
-        if is_edit_submission:
-            # Extract original pattern name
-            original_pattern_name = pattern_name.rsplit('_EDIT', 1)[0]
-            original_pattern_name = original_pattern_name.strip().upper()
-            
-            # Check if original pattern exists in approved patterns OR in config
-            pattern_exists_in_approved = original_pattern_name in submissions['LOG_PATTERNS']
-            
-            # For both cases (config-based or approved), we add/update in approved patterns
-            # Approved patterns take precedence over config patterns
-            submissions['LOG_PATTERNS'][original_pattern_name] = {
-                'id': submission.get('id'),
-                'pattern_name': original_pattern_name,
-                'log_pattern': submission.get('log_pattern'),
-                'file_path': submission.get('file_path'),
-                'description': submission.get('description'),
-                'submitted_by': submission.get('submitted_by'),
-                'submitted_at': submission.get('submitted_at'),
-                'approved_at': datetime.now(timezone.utc).isoformat(),
-                'is_admin_submission': False,
-                'is_config_override': not pattern_exists_in_approved  # Mark if this overrides a config pattern
-            }
-            
-            # Remove the edit submission from pending
-            del submissions['PENDING_PATTERNS'][submission_id]
-            LogPatternController.save_submissions(submissions)
-            
-            if pattern_exists_in_approved:
-                return True, f"Edit for pattern '{original_pattern_name}' approved successfully"
+        session = Session()
+        try:
+            change = (
+                session.query(StagingChange)
+                .filter_by(
+                    change_id=submission_id,
+                    entity_type=LogPatternController.ENTITY_TYPE,
+                    status="pending",
+                )
+                .first()
+            )
+            if not change:
+                return False, f"Submission '{submission_id}' not found in pending"
+
+            payload = change.entity_data or {}
+            action = (payload.get("action") or "add").lower()
+            pattern_name = LogPatternController._normalize_pattern_name(payload.get("pattern_name"))
+            target_pattern = LogPatternController._normalize_pattern_name(
+                payload.get("target_pattern") or pattern_name
+            )
+
+            if action == "add":
+                existing = (
+                    session.query(DBLogPattern)
+                    .filter_by(pattern_id=pattern_name, is_active=True)
+                    .first()
+                )
+                if existing:
+                    return False, f"Pattern '{pattern_name}' already exists"
+
+                creator_id = change.submitted_by
+                row = DBLogPattern(
+                    pattern_id=pattern_name,
+                    name=pattern_name,
+                    regex=payload.get("log_pattern", ""),
+                    description=payload.get("description", ""),
+                    location=payload.get("file_path", ""),
+                    is_custom=True,
+                    created_by=creator_id,
+                    created_at=datetime.now(timezone.utc),
+                    updated_at=datetime.now(timezone.utc),
+                    is_active=True,
+                )
+                session.add(row)
+
+            elif action == "edit":
+                row = (
+                    session.query(DBLogPattern)
+                    .filter_by(pattern_id=target_pattern, is_active=True)
+                    .first()
+                )
+                if not row:
+                    return False, f"Pattern '{target_pattern}' not found"
+                row.regex = payload.get("log_pattern", row.regex)
+                row.description = payload.get("description", row.description)
+                row.location = payload.get("file_path", row.location)
+                row.updated_at = datetime.now(timezone.utc)
+
+            elif action == "delete":
+                row = (
+                    session.query(DBLogPattern)
+                    .filter_by(pattern_id=target_pattern, is_active=True)
+                    .first()
+                )
+                if not row:
+                    return False, f"Pattern '{target_pattern}' not found"
+                session.delete(row)
             else:
-                return True, f"Edit for config pattern '{original_pattern_name}' approved successfully (added to approved patterns)"
-        else:
-            # Regular new pattern submission
-            # Check if pattern name already exists in approved
-            if pattern_name in submissions['LOG_PATTERNS']:
-                return False, f"Pattern '{pattern_name}' already exists in approved patterns"
-            
-            # Move to approved
-            submissions['LOG_PATTERNS'][pattern_name] = submission
-            del submissions['PENDING_PATTERNS'][submission_id]
-            
-            LogPatternController.save_submissions(submissions)
-            return True, f"Submission '{pattern_name}' approved successfully"
+                return False, f"Unsupported action '{action}'"
+
+            change.status = "approved"
+            change.reviewed_by = LogPatternController._get_user_id(session, reviewed_by_user)
+            change.reviewed_at = datetime.now(timezone.utc)
+            change.approved_at = datetime.now(timezone.utc)
+
+            session.commit()
+            LogPatternController._sync_json_from_db(session)
+            return True, f"Submission '{submission_id}' approved successfully"
+        except Exception as e:
+            session.rollback()
+            return False, f"Failed to approve submission: {str(e)}"
+        finally:
+            session.close()
     
     @staticmethod
     def reject_submission(submission_id, rejection_reason=""):
@@ -304,22 +515,31 @@ class LogPatternController:
         Returns:
             Tuple (success: bool, message: str)
         """
-        submissions = LogPatternController.get_all_submissions()
-        pending = submissions.get('PENDING_PATTERNS', {})
-        
-        if submission_id not in pending:
-            return False, f"Submission '{submission_id}' not found in pending"
-        
-        submission = pending[submission_id]
-        submission['rejection_reason'] = rejection_reason
-        submission['rejected_at'] = datetime.now(timezone.utc).isoformat()
-        
-        # Move to rejected
-        submissions['REJECTED_PATTERNS'].append(submission)
-        del submissions['PENDING_PATTERNS'][submission_id]
-        
-        LogPatternController.save_submissions(submissions)
-        return True, f"Submission rejected: {rejection_reason}"
+        session = Session()
+        try:
+            change = (
+                session.query(StagingChange)
+                .filter_by(
+                    change_id=submission_id,
+                    entity_type=LogPatternController.ENTITY_TYPE,
+                    status="pending",
+                )
+                .first()
+            )
+            if not change:
+                return False, f"Submission '{submission_id}' not found in pending"
+
+            change.status = "rejected"
+            change.review_comment = (rejection_reason or "No reason provided").strip()
+            change.reviewed_at = datetime.now(timezone.utc)
+            session.commit()
+            LogPatternController._sync_json_from_db(session)
+            return True, f"Submission rejected: {change.review_comment}"
+        except Exception as e:
+            session.rollback()
+            return False, f"Failed to reject submission: {str(e)}"
+        finally:
+            session.close()
     
     @staticmethod
     def modify_approved_pattern(pattern_name, new_log_pattern, new_file_path, new_description=""):
@@ -345,20 +565,25 @@ class LogPatternController:
         if not file_valid:
             return False, file_msg
         
-        submissions = LogPatternController.get_all_submissions()
-        approved = submissions.get('LOG_PATTERNS', {})
-        
-        if pattern_name not in approved:
-            return False, f"Pattern '{pattern_name}' not found in approved patterns"
-        
-        # Update the pattern
-        approved[pattern_name]['log_pattern'] = new_log_pattern
-        approved[pattern_name]['file_path'] = expanded_path
-        approved[pattern_name]['description'] = new_description
-        approved[pattern_name]['modified_at'] = datetime.now(timezone.utc).isoformat()
-        
-        LogPatternController.save_submissions(submissions)
-        return True, f"Pattern '{pattern_name}' modified successfully"
+        session = Session()
+        try:
+            key = LogPatternController._normalize_pattern_name(pattern_name)
+            row = session.query(DBLogPattern).filter_by(pattern_id=key, is_active=True).first()
+            if not row:
+                return False, f"Pattern '{key}' not found in approved patterns"
+
+            row.regex = new_log_pattern
+            row.location = expanded_path
+            row.description = new_description
+            row.updated_at = datetime.now(timezone.utc)
+            session.commit()
+            LogPatternController._sync_json_from_db(session)
+            return True, f"Pattern '{key}' modified successfully"
+        except Exception as e:
+            session.rollback()
+            return False, f"Failed to modify pattern: {str(e)}"
+        finally:
+            session.close()
     
     @staticmethod
     def delete_approved_pattern(pattern_name):
@@ -371,15 +596,21 @@ class LogPatternController:
         Returns:
             Tuple (success: bool, message: str)
         """
-        submissions = LogPatternController.get_all_submissions()
-        approved = submissions.get('LOG_PATTERNS', {})
-        
-        if pattern_name not in approved:
-            return False, f"Pattern '{pattern_name}' not found in approved patterns"
-        
-        del approved[pattern_name]
-        LogPatternController.save_submissions(submissions)
-        return True, f"Pattern '{pattern_name}' deleted successfully"
+        session = Session()
+        try:
+            key = LogPatternController._normalize_pattern_name(pattern_name)
+            row = session.query(DBLogPattern).filter_by(pattern_id=key, is_active=True).first()
+            if not row:
+                return False, f"Pattern '{key}' not found in approved patterns"
+            session.delete(row)
+            session.commit()
+            LogPatternController._sync_json_from_db(session)
+            return True, f"Pattern '{key}' deleted successfully"
+        except Exception as e:
+            session.rollback()
+            return False, f"Failed to delete pattern: {str(e)}"
+        finally:
+            session.close()
     
     @staticmethod
     def get_pattern_summary():
@@ -389,22 +620,25 @@ class LogPatternController:
         Returns:
             Dictionary with counts and summary information
         """
-        submissions = LogPatternController.get_all_submissions()
+        approved = LogPatternController.get_approved_patterns()
+        pending = LogPatternController.get_pending_submissions()
+        rejected = LogPatternController.get_rejected_submissions()
 
         return {
-            'approved_count': len(submissions.get('LOG_PATTERNS', {})),
-            'pending_count': len(submissions.get('PENDING_PATTERNS', {})),
-            'rejected_count': len(submissions.get('REJECTED_PATTERNS', [])),
-            'approved_patterns': list(submissions.get('LOG_PATTERNS', {}).keys()),
-            'pending_patterns': [
+            "approved_count": len(approved),
+            "pending_count": len(pending),
+            "rejected_count": len(rejected),
+            "approved_patterns": list(approved.keys()),
+            "pending_patterns": [
                 {
-                    'id': pid,
-                    'name': p.get('pattern_name'),
-                    'submitted_by': p.get('submitted_by'),
-                    'submitted_at': p.get('submitted_at')
+                    "id": pid,
+                    "name": p.get("pattern_name"),
+                    "submitted_by": p.get("submitted_by"),
+                    "submitted_at": p.get("submitted_at"),
+                    "requested_action": p.get("requested_action", "add"),
                 }
-                for pid, p in submissions.get('PENDING_PATTERNS', {}).items()
-            ]
+                for pid, p in pending.items()
+            ],
         }
 
 

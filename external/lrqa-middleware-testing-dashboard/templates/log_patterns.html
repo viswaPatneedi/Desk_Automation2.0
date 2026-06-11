@@ -790,16 +790,16 @@
             </div>
         </div>
 
-        <!-- System Commands (Admin Only) -->
+        <!-- System Commands -->
         <div class="card" id="systemCommandsSection" style="display: none; padding-top: 30px; padding-bottom: 30px; margin-bottom: 30px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2 style="margin: 0;">
                     <i class="bi bi-terminal"></i>
                     System Commands
                 </h2>
-                <button class="btn btn-sm btn-success-custom" onclick="openAddCommandModal()" title="Add New System Command">
+                <button class="btn btn-sm btn-success-custom" onclick="openAddCommandModal()" title="Submit System Command">
                     <i class="bi bi-plus-circle"></i>
-                    Add Command
+                    Submit Command
                 </button>
             </div>
 
@@ -1111,11 +1111,11 @@
             loadStatistics();
             loadExistingPatterns();
             loadApprovedPatterns();
+            loadSystemCommands();
+            document.getElementById('systemCommandsSection').style.display = 'block';
             if (isAdmin) {
                 loadPendingPatterns();
-                loadSystemCommands();
                 document.getElementById('pendingSection').style.display = 'block';
-                document.getElementById('systemCommandsSection').style.display = 'block';
             }
 
             // Set up event listeners
@@ -1433,14 +1433,12 @@
                                     <button class="btn btn-sm btn-outline-info" onclick="viewPattern('${escapeHtml(name)}')" title="View Pattern">
                                         <i class="bi bi-eye-fill"></i>
                                     </button>
-                                    ${isAdmin ? `
-                                        <button class="btn btn-sm btn-success-custom" onclick="openEditExistingModal('${escapeHtml(name)}')" title="Edit this pattern">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger-custom" onclick="deleteExistingPattern('${escapeHtml(name)}')" title="Delete this pattern">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </button>
-                                    ` : ''}
+                                    <button class="btn btn-sm btn-success-custom" onclick="openEditExistingModal('${escapeHtml(name)}')" title="Edit this pattern">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger-custom" onclick="deleteExistingPattern('${escapeHtml(name)}')" title="Delete this pattern">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
                                 </div>
                             </div>
                         `).join('') +
@@ -1477,11 +1475,9 @@
                                     <button class="btn btn-sm btn-outline-info" onclick="viewApprovedPattern('${escapeHtml(name)}')" title="View Pattern">
                                         <i class="bi bi-eye-fill"></i>
                                     </button>
-                                    ${isAdmin ? `
-                                        <button class="btn btn-sm btn-success-custom" onclick="openEditModal('${escapeHtml(name)}')" title="Edit this pattern">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </button>
-                                    ` : ''}
+                                    <button class="btn btn-sm btn-success-custom" onclick="openEditModal('${escapeHtml(name)}')" title="Edit this pattern">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
                                 </div>
                             </div>
                         `).join('') +
@@ -1668,11 +1664,6 @@
         }
 
         function saveEditPattern() {
-            if (!isAdmin) {
-                showAlert('Admin access required', 'error');
-                return;
-            }
-            
             const newLogPattern = document.getElementById('editLogPattern').value.trim();
             const newFilePath = document.getElementById('editFilePath').value.trim();
             const newDescription = document.getElementById('editDescription').value.trim();
@@ -1682,13 +1673,24 @@
                 return;
             }
 
+            let changeComment = '';
+            if (!isAdmin) {
+                changeComment = prompt('Please enter comment for this edit request:') || '';
+                changeComment = changeComment.trim();
+                if (!changeComment) {
+                    showAlert('Comment is required for edit requests', 'error');
+                    return;
+                }
+            }
+
             fetch(`/api/log-patterns/${encodeURIComponent(currentEditingPattern)}/modify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     log_pattern: newLogPattern,
                     file_path: newFilePath,
-                    description: newDescription
+                    description: newDescription,
+                    change_comment: changeComment
                 })
             })
             .then(r => {
@@ -1699,10 +1701,12 @@
             })
             .then(data => {
                 if (data.success) {
-                    showAlert(data.message, 'success');
+                    const okMessage = isAdmin ? data.message : 'Edit request submitted for admin approval';
+                    showAlert(okMessage, 'success');
                     closeEditModal();
                     loadApprovedPatterns();
                     loadStatistics();
+                    if (isAdmin) loadPendingPatterns();
                 } else {
                     showAlert(data.message || 'Error saving pattern', 'error');
                 }
@@ -1715,24 +1719,33 @@
         }
 
         function deletePattern() {
-            if (!isAdmin) {
-                showAlert('Admin access required', 'error');
-                return;
-            }
-            
             if (!confirm('Are you sure you want to delete this pattern?')) return;
+
+            let changeComment = '';
+            if (!isAdmin) {
+                changeComment = prompt('Please enter comment for this delete request:') || '';
+                changeComment = changeComment.trim();
+                if (!changeComment) {
+                    showAlert('Comment is required for delete requests', 'error');
+                    return;
+                }
+            }
 
             fetch(`/api/log-patterns/${encodeURIComponent(currentEditingPattern)}/delete`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ change_comment: changeComment })
             })
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    showAlert(data.message, 'success');
+                    const okMessage = isAdmin ? data.message : 'Delete request submitted for admin approval';
+                    showAlert(okMessage, 'success');
                     closeEditModal();
                     loadApprovedPatterns();
+                    loadExistingPatterns();
                     loadStatistics();
+                    if (isAdmin) loadPendingPatterns();
                 } else {
                     showAlert(data.message || 'Error deleting pattern', 'error');
                 }
@@ -1743,24 +1756,32 @@
         }
 
         function deleteExistingPattern(patternName) {
-            if (!isAdmin) {
-                showAlert('Admin access required', 'error');
-                return;
-            }
-            
             if (!confirm(`Are you sure you want to delete the pattern "${patternName}"?\n\nThis will remove it from the approved patterns.`)) return;
+
+            let changeComment = '';
+            if (!isAdmin) {
+                changeComment = prompt('Please enter comment for this delete request:') || '';
+                changeComment = changeComment.trim();
+                if (!changeComment) {
+                    showAlert('Comment is required for delete requests', 'error');
+                    return;
+                }
+            }
 
             fetch(`/api/log-patterns/${encodeURIComponent(patternName)}/delete`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ change_comment: changeComment })
             })
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    showAlert(data.message, 'success');
+                    const okMessage = isAdmin ? data.message : 'Delete request submitted for admin approval';
+                    showAlert(okMessage, 'success');
                     loadExistingPatterns();
                     loadApprovedPatterns();
                     loadStatistics();
+                    if (isAdmin) loadPendingPatterns();
                 } else {
                     showAlert(data.message || 'Error deleting pattern', 'error');
                 }
@@ -1925,13 +1946,19 @@
                             <span><i class="bi bi-person"></i> ${escapeHtml(cmd.submitted_by || 'Unknown')}</span>
                             <span><i class="bi bi-clock"></i> ${new Date(cmd.approved_at || cmd.submitted_at).toLocaleDateString()}</span>
                         </div>
-                        ${isAdmin ? `
-                            <div class="command-actions">
+                        <div class="command-actions">
+                            <button class="btn-edit" onclick="openEditCommandModal('${escapeHtml(name)}')" title="Edit command">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn-delete" onclick="deleteCommand('${escapeHtml(name)}')" title="Delete command">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            ${isAdmin ? `
                                 <button class="btn-promote" onclick="promoteCommandToConfig('${escapeHtml(name)}')" title="Promote to config">
                                     <i class="bi bi-arrow-up"></i> Promote
                                 </button>
-                            </div>
-                        ` : ''}
+                            ` : ''}
+                        </div>
                     </div>
                 `;
             }
@@ -2120,7 +2147,7 @@
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    const commands = data.data.user_defined || {};
+                    const commands = data.data.approved || {};
                     const cmd = commands[name];
                     
                     if (cmd) {
@@ -2163,19 +2190,31 @@
                 return;
             }
 
+            let changeComment = '';
+            if (!isAdmin) {
+                changeComment = prompt('Please enter comment for this edit request:') || '';
+                changeComment = changeComment.trim();
+                if (!changeComment) {
+                    showAlert('Comment is required for edit requests', 'error');
+                    return;
+                }
+            }
+
             // Submit
             fetch(`/api/system-commands/${encodeURIComponent(currentEditingCommand)}/update`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     command_text: command,
-                    description: description
+                    description: description,
+                    change_comment: changeComment
                 })
             })
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    showAlert('Command updated successfully', 'success');
+                    const okMessage = isAdmin ? 'Command updated successfully' : 'Edit request submitted for admin approval';
+                    showAlert(okMessage, 'success');
                     closeEditCommandModal();
                     loadSystemCommands();
                 } else {
@@ -2194,14 +2233,26 @@
                 return;
             }
 
+            let changeComment = '';
+            if (!isAdmin) {
+                changeComment = prompt('Please enter comment for this delete request:') || '';
+                changeComment = changeComment.trim();
+                if (!changeComment) {
+                    showAlert('Comment is required for delete requests', 'error');
+                    return;
+                }
+            }
+
             fetch(`/api/system-commands/${encodeURIComponent(name)}/delete`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ change_comment: changeComment })
             })
             .then(r => r.json())
             .then(data => {
                 if (data.success) {
-                    showAlert('Command deleted successfully', 'success');
+                    const okMessage = isAdmin ? 'Command deleted successfully' : 'Delete request submitted for admin approval';
+                    showAlert(okMessage, 'success');
                     loadSystemCommands();
                 } else {
                     showAlert('Error: ' + (data.message || 'Unknown error'), 'error');

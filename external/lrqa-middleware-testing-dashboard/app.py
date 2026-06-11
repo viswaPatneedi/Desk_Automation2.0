@@ -3425,17 +3425,26 @@ def get_pending_patterns():
 def submit_log_pattern():
     """Submit a new log pattern for validation"""
     try:
-        data = request.json
+        data = request.get_json(silent=True) or {}
         
         pattern_name = data.get('pattern_name', '').strip()
         log_pattern = data.get('log_pattern', '').strip()
         file_path = data.get('file_path', '').strip()
         description = data.get('description', '').strip()
+        requested_action = data.get('requested_action', 'add').strip().lower()
+        target_pattern = data.get('target_pattern', '').strip() or pattern_name
+        change_comment = data.get('change_comment', '').strip()
         
         if not pattern_name or not log_pattern or not file_path:
             return jsonify({
                 'success': False,
                 'message': 'Pattern name, log pattern, and file path are required'
+            }), 400
+
+        if requested_action in {'edit', 'delete'} and not change_comment:
+            return jsonify({
+                'success': False,
+                'message': 'Comment is required for edit/delete requests'
             }), 400
         
         from controllers.log_pattern_controller import LogPatternController
@@ -3446,7 +3455,10 @@ def submit_log_pattern():
             file_path=file_path,
             description=description,
             submitted_by_user=current_user.ntid,
-            is_admin=current_user.is_admin
+            is_admin=current_user.is_admin,
+            requested_action=requested_action,
+            target_pattern=target_pattern,
+            change_comment=change_comment,
         )
         
         if success:
@@ -3491,16 +3503,16 @@ def submit_existing_edit():
         
         from controllers.log_pattern_controller import LogPatternController
         
-        # Submit as a new submission with a modified name to indicate it's an edit
-        edit_submission_name = f"{pattern_name}_EDIT"
-        
         success, message, submission_id = LogPatternController.submit_log_pattern(
-            pattern_name=edit_submission_name,
+            pattern_name=pattern_name,
             log_pattern=log_pattern,
             file_path=file_path,
-            description=f"{description}\n\n[EDIT REQUEST for '{base_pattern}']\nReason: {change_reason}",
+            description=description,
             submitted_by_user=current_user.ntid,
-            is_admin=False  # Non-admin edit requests go to approval queue
+            is_admin=current_user.is_admin,
+            requested_action='edit',
+            target_pattern=base_pattern or pattern_name,
+            change_comment=change_reason,
         )
         
         if success:
@@ -3526,36 +3538,55 @@ def submit_existing_edit():
 @app.route('/api/log-patterns/<pattern_name>/modify', methods=['POST'])
 @login_required
 def modify_log_pattern(pattern_name):
-    """Modify an approved log pattern (admin only)"""
+    """Modify an approved log pattern via approval workflow."""
     try:
-        if not current_user.is_admin:
-            return jsonify({'success': False, 'message': 'Admin access required'}), 403
-        
         data = request.get_json(silent=True) or {}
         
         new_log_pattern = data.get('log_pattern', '').strip()
         new_file_path = data.get('file_path', '').strip()
         new_description = data.get('description', '').strip()
+        change_comment = data.get('change_comment', '').strip()
         
         if not new_log_pattern or not new_file_path:
             return jsonify({
                 'success': False,
                 'message': 'Log pattern and file path are required'
             }), 400
+
+        if not current_user.is_admin and not change_comment:
+            return jsonify({
+                'success': False,
+                'message': 'Comment is required for edit requests'
+            }), 400
         
         from controllers.log_pattern_controller import LogPatternController
-        
-        success, message = LogPatternController.modify_approved_pattern(
-            pattern_name=pattern_name,
-            new_log_pattern=new_log_pattern,
-            new_file_path=new_file_path,
-            new_description=new_description
-        )
+
+        if current_user.is_admin:
+            success, message = LogPatternController.modify_approved_pattern(
+                pattern_name=pattern_name,
+                new_log_pattern=new_log_pattern,
+                new_file_path=new_file_path,
+                new_description=new_description,
+            )
+            submission_id = None
+        else:
+            success, message, submission_id = LogPatternController.submit_log_pattern(
+                pattern_name=pattern_name,
+                log_pattern=new_log_pattern,
+                file_path=new_file_path,
+                description=new_description,
+                submitted_by_user=current_user.ntid,
+                is_admin=False,
+                requested_action='edit',
+                target_pattern=pattern_name,
+                change_comment=change_comment,
+            )
         
         if success:
             return jsonify({
                 'success': True,
-                'message': message
+                'message': message,
+                'submission_id': submission_id,
             }), 200
         else:
             return jsonify({
@@ -3574,18 +3605,36 @@ def modify_log_pattern(pattern_name):
 @app.route('/api/log-patterns/<pattern_name>/delete', methods=['POST'])
 @login_required
 def delete_log_pattern(pattern_name):
-    """Delete an approved log pattern (admin only)"""
+    """Delete log pattern (admin direct, non-admin via approval request)."""
     try:
-        if not current_user.is_admin:
-            return jsonify({'success': False, 'message': 'Admin access required'}), 403
-        
+        data = request.get_json(silent=True) or {}
+        change_comment = data.get('change_comment', '').strip()
+
         from controllers.log_pattern_controller import LogPatternController
-        
-        success, message = LogPatternController.delete_approved_pattern(pattern_name)
+
+        if current_user.is_admin:
+            success, message = LogPatternController.delete_approved_pattern(pattern_name)
+            submission_id = None
+        else:
+            if not change_comment:
+                return jsonify({'success': False, 'message': 'Comment is required for delete requests'}), 400
+
+            success, message, submission_id = LogPatternController.submit_log_pattern(
+                pattern_name=pattern_name,
+                log_pattern='.*',
+                file_path='Json/log_patterns.json',
+                description='Delete request from log-patterns page',
+                submitted_by_user=current_user.ntid,
+                is_admin=False,
+                requested_action='delete',
+                target_pattern=pattern_name,
+                change_comment=change_comment,
+            )
         
         return jsonify({
             'success': success,
-            'message': message
+            'message': message,
+            'submission_id': submission_id,
         }), (200 if success else 400)
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -3600,7 +3649,7 @@ def approve_log_pattern_submission(submission_id):
         
         from controllers.log_pattern_controller import LogPatternController
         
-        success, message = LogPatternController.approve_submission(submission_id)
+        success, message = LogPatternController.approve_submission(submission_id, reviewed_by_user=current_user.ntid)
         
         if success:
             return jsonify({
@@ -3746,7 +3795,8 @@ def submit_system_command():
             command_text=command_text,
             description=description,
             submitted_by=current_user.ntid,
-            is_admin=current_user.is_admin
+            is_admin=current_user.is_admin,
+            requested_action='add',
         )
         
         return jsonify({
@@ -3786,7 +3836,10 @@ def approve_system_command(submission_id):
         
         from controllers.system_commands_controller import SystemCommandsController
         
-        success, message = SystemCommandsController.approve_submission(submission_id)
+        success, message = SystemCommandsController.approve_submission(
+            submission_id,
+            reviewed_by=current_user.ntid,
+        )
         
         return jsonify({
             'success': success,
@@ -3898,33 +3951,51 @@ def add_system_command():
 @app.route('/api/system-commands/<command_name>/update', methods=['POST'])
 @login_required
 def update_system_command(command_name):
-    """DEPRECATED: Update existing approved commands"""
+    """Update command (admin direct, non-admin via approval request)."""
     try:
-        if not current_user.is_admin:
-            return jsonify({'success': False, 'message': 'Admin access required'}), 403
-        
         data = request.get_json(silent=True) or {}
         
         command_text = data.get('command_text', '').strip()
         description = data.get('description', '').strip()
+        change_comment = data.get('change_comment', '').strip()
         
         if not command_text:
             return jsonify({
                 'success': False,
                 'message': 'Command text is required'
             }), 400
+
+        if not current_user.is_admin and not change_comment:
+            return jsonify({
+                'success': False,
+                'message': 'Comment is required for edit requests'
+            }), 400
         
         from controllers.system_commands_controller import SystemCommandsController
-        
-        success, message = SystemCommandsController.update_command(
-            command_name=command_name,
-            command_text=command_text,
-            description=description
-        )
+
+        if current_user.is_admin:
+            success, message = SystemCommandsController.update_command(
+                command_name=command_name,
+                command_text=command_text,
+                description=description,
+            )
+            submission_id = None
+        else:
+            success, message, submission_id = SystemCommandsController.submit_command(
+                command_name=command_name,
+                command_text=command_text,
+                description=description,
+                submitted_by=current_user.ntid,
+                is_admin=False,
+                requested_action='edit',
+                target_command=command_name,
+                change_comment=change_comment,
+            )
         
         return jsonify({
             'success': success,
-            'message': message
+            'message': message,
+            'submission_id': submission_id,
         }), (200 if success else 400)
     except Exception as e:
         error_msg = str(e)
@@ -3937,18 +4008,34 @@ def update_system_command(command_name):
 @app.route('/api/system-commands/<command_name>/delete', methods=['POST'])
 @login_required
 def delete_system_command(command_name):
-    """DEPRECATED: Delete existing approved commands"""
+    """Delete command (admin direct, non-admin via approval request)."""
     try:
-        if not current_user.is_admin:
-            return jsonify({'success': False, 'message': 'Admin access required'}), 403
-        
+        data = request.get_json(silent=True) or {}
+        change_comment = data.get('change_comment', '').strip()
+
         from controllers.system_commands_controller import SystemCommandsController
-        
-        success, message = SystemCommandsController.delete_command(command_name)
+
+        if current_user.is_admin:
+            success, message = SystemCommandsController.delete_command(command_name)
+            submission_id = None
+        else:
+            if not change_comment:
+                return jsonify({'success': False, 'message': 'Comment is required for delete requests'}), 400
+            success, message, submission_id = SystemCommandsController.submit_command(
+                command_name=command_name,
+                command_text='DELETE_REQUEST',
+                description='Delete request submitted from log-patterns page',
+                submitted_by=current_user.ntid,
+                is_admin=False,
+                requested_action='delete',
+                target_command=command_name,
+                change_comment=change_comment,
+            )
         
         return jsonify({
             'success': success,
-            'message': message
+            'message': message,
+            'submission_id': submission_id,
         }), (200 if success else 400)
     except Exception as e:
         error_msg = str(e)
