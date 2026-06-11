@@ -534,6 +534,137 @@ def auth_status():
         'login_url': url_for('login')
     })
 
+@app.route('/api/admin/db-grants', methods=['GET'])
+@login_required
+def get_db_grants():
+    """
+    Admin-only endpoint to view current database grants for audit visibility.
+    Returns current PostgreSQL role privileges for tables and other objects.
+    """
+    # Check if user is admin
+    if not getattr(current_user, 'is_admin', False):
+        return jsonify({
+            'error': 'Unauthorized',
+            'message': 'Only administrators can view database grants'
+        }), 403
+    
+    try:
+        from models.database import engine
+        from sqlalchemy import text
+        
+        grants_info = {
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'database': db_config.db_name,
+            'app_role': db_config.username,
+            'grants': {}
+        }
+        
+        with engine.connect() as conn:
+            # Get table privileges
+            table_grants = conn.execute(text("""
+                SELECT 
+                    grantee,
+                    table_name,
+                    string_agg(DISTINCT privilege_type, ', ') as privileges
+                FROM information_schema.role_table_grants
+                WHERE table_schema = 'public'
+                GROUP BY grantee, table_name
+                ORDER BY grantee, table_name
+            """))
+            
+            table_privs = {}
+            for row in table_grants:
+                grantee = row[0]
+                table_name = row[1]
+                privileges = row[2]
+                
+                if grantee not in table_privs:
+                    table_privs[grantee] = []
+                
+                table_privs[grantee].append({
+                    'table': table_name,
+                    'privileges': privileges.split(', ')
+                })
+            
+            grants_info['grants']['tables'] = table_privs
+            
+            # Get schema privileges
+            schema_grants = conn.execute(text("""
+                SELECT 
+                    grantee,
+                    string_agg(DISTINCT privilege_type, ', ') as privileges
+                FROM information_schema.role_usage_grants
+                WHERE object_schema = 'public'
+                GROUP BY grantee
+            """))
+            
+            schema_privs = {}
+            for row in schema_grants:
+                grantee = row[0]
+                privileges = row[1]
+                schema_privs[grantee] = privileges.split(', ')
+            
+            grants_info['grants']['schema'] = schema_privs
+            
+            # Get sequence privileges
+            seq_grants = conn.execute(text("""
+                SELECT 
+                    grantee,
+                    sequence_name,
+                    string_agg(DISTINCT privilege_type, ', ') as privileges
+                FROM information_schema.role_usage_grants
+                WHERE object_type = 'SEQUENCE'
+                GROUP BY grantee, sequence_name
+                ORDER BY grantee, sequence_name
+            """))
+            
+            seq_privs = {}
+            for row in seq_grants:
+                grantee = row[0]
+                sequence_name = row[1]
+                privileges = row[2]
+                
+                if grantee not in seq_privs:
+                    seq_privs[grantee] = []
+                
+                seq_privs[grantee].append({
+                    'sequence': sequence_name,
+                    'privileges': privileges.split(', ')
+                })
+            
+            grants_info['grants']['sequences'] = seq_privs
+            
+            # Get current role and connection info
+            current_role = conn.execute(text("SELECT current_user"))
+            current_role_value = current_role.fetchone()[0]
+            
+            role_info = conn.execute(text("""
+                SELECT rolname, usecanlogin, usesuper, usecreatedb
+                FROM pg_user
+                WHERE usename = current_user
+            """))
+            
+            role_row = role_info.fetchone()
+            if role_row:
+                grants_info['current_connection'] = {
+                    'role': current_role_value,
+                    'can_login': role_row[1],
+                    'is_superuser': role_row[2],
+                    'can_create_db': role_row[3]
+                }
+        
+        return jsonify({
+            'success': True,
+            'data': grants_info
+        })
+    
+    except Exception as e:
+        app.logger.error(f"Error fetching database grants: {e}")
+        return jsonify({
+            'error': 'Failed to fetch database grants',
+            'details': str(e)
+        }), 500
+
 # Password Reset - File-based storage for reset codes (works with multiple Gunicorn workers)
 # Structure: {ntid: {'code': '123456', 'email': 'user@comcast.com', 'expires': 'ISO8601_timestamp'}}
 RESET_CODES_FILE = 'reset_codes.json'
