@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from config.config_paths import USERS_FILE
+from models.database import Session, User as DBUser
 
 
 class User:
@@ -69,26 +70,102 @@ class User:
             is_admin=data.get('is_admin', False),
             team_name=data.get('team_name', '')
         )
+
+    @staticmethod
+    def _load_json_users():
+        if not os.path.exists(USERS_FILE):
+            return {}
+
+        try:
+            with open(USERS_FILE, 'r', encoding='utf-8') as f:
+                users_data = json.load(f)
+                return users_data if isinstance(users_data, dict) else {}
+        except (json.JSONDecodeError, IOError):
+            return {}
+
+    @staticmethod
+    def _write_json_backup(users):
+        users_data = {uid: user.to_dict() for uid, user in users.items()}
+        os.makedirs(os.path.dirname(USERS_FILE) or '.', exist_ok=True)
+        with open(USERS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(users_data, f, indent=2)
+
+    @staticmethod
+    def _from_db_row(row, backup_data=None):
+        backup_data = backup_data or {}
+        user = User(
+            ntid=row.username,
+            email=row.email,
+            name=backup_data.get('name', row.username),
+            password_hash=row.password_hash,
+            created_at=row.created_at.isoformat() if row.created_at else None,
+            user_id=backup_data.get('user_id', row.username),
+            alternate_email=backup_data.get('alternate_email', row.email or f"{row.username}@cable.comcast.com"),
+            is_admin=row.is_admin,
+            team_name=row.team_name or backup_data.get('team_name', '')
+        )
+        user.is_approved = row.is_approved
+        user.is_active = row.active
+        return user
     
     @staticmethod
     def load_users():
-        """Load all users from JSON file."""
-        if not os.path.exists(USERS_FILE):
-            return {}
-        
+        """Load all users from the database, with JSON fallback."""
+        backup_users = User._load_json_users()
+
+        session = Session()
         try:
-            with open(USERS_FILE, 'r') as f:
-                users_data = json.load(f)
-                return {uid: User.from_dict(data) for uid, data in users_data.items()}
-        except (json.JSONDecodeError, IOError):
-            return {}
+            rows = session.query(DBUser).filter_by(active=True).order_by(DBUser.username.asc()).all()
+            if rows:
+                users = {}
+                for row in rows:
+                    users[row.username] = User._from_db_row(row, backup_users.get(row.username, {}))
+
+                for uid, data in backup_users.items():
+                    if uid not in users:
+                        users[uid] = User.from_dict(data)
+
+                return users
+        except Exception:
+            pass
+        finally:
+            session.close()
+
+        return {uid: User.from_dict(data) for uid, data in backup_users.items()}
     
     @staticmethod
     def save_users(users):
-        """Save all users to JSON file."""
-        users_data = {uid: user.to_dict() for uid, user in users.items()}
-        with open(USERS_FILE, 'w') as f:
-            json.dump(users_data, f, indent=2)
+        """Save all users to the database and mirror them to JSON."""
+        session = Session()
+        try:
+            for uid, user in users.items():
+                row = session.query(DBUser).filter_by(username=user.ntid).first()
+                if row is None:
+                    row = DBUser(
+                        username=user.ntid,
+                        password_hash=user.password_hash,
+                        email=user.email,
+                        team_name=user.team_name,
+                        is_admin=user.is_admin,
+                        is_approved=getattr(user, 'is_approved', True),
+                        active=getattr(user, 'is_active', True)
+                    )
+                    session.add(row)
+                else:
+                    row.password_hash = user.password_hash
+                    row.email = user.email
+                    row.team_name = user.team_name
+                    row.is_admin = user.is_admin
+                    row.is_approved = getattr(user, 'is_approved', row.is_approved)
+                    row.active = getattr(user, 'is_active', row.active)
+
+            session.commit()
+            User._write_json_backup(users)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
     
     @staticmethod
     def create_user(ntid, email, name, password, team_name=None):

@@ -10591,6 +10591,7 @@
       {
         "method": "execute_command",
         "name": "Execute System Command",
+        "description": "Before starting the test in the current device logs please check for the UHDCANTPLAY log line",
         "params": {
           "command": "MS:EPG Show notification id.*UHDCANTPLAY.*",
           "command_text": "grep -i \"MS:EPG Show notification id.*UHDCANTPLAY.*\" /opt/logs/sky-messages.log",
@@ -10601,6 +10602,7 @@
       {
         "method": "reboot_perf_v2_optimized",
         "name": "Reboot Performance V2 - Optimized",
+        "description": "Reboot the device and check for any crashes",
         "params": {
           "auto_collect_logs": true,
           "home_screen_timeout": 180,
@@ -10641,6 +10643,7 @@
       {
         "method": "voice_command",
         "name": "Send Voice Command",
+        "description": "Send the voice command to launch channel 101",
         "params": {
           "voice_text": "channel 101"
         },
@@ -10665,6 +10668,7 @@
       {
         "method": "wait",
         "name": "Wait",
+        "description": "Nullis defined",
         "params": {
           "wait_seconds": 15
         },
@@ -10689,6 +10693,7 @@
       {
         "method": "execute_command",
         "name": "Execute System Command",
+        "description": "check in the device sky-message.log file if the UHDCANTPLAY print is there or not",
         "params": {
           "command": "MS:EPG Show notification id.*UHDCANTPLAY.*",
           "command_text": "grep -i \"MS:EPG Show notification id.*UHDCANTPLAY.*\" /opt/logs/sky-messages.log",
@@ -10716,6 +10721,7 @@
       {
         "method": "collect_device_logs",
         "name": "Collect Device Logs",
+        "description": "Collect the device logs if the above step is failed",
         "params": {},
         "condition": {
           "group_id": "group_1779827721732_5",

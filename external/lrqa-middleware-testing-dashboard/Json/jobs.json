@@ -1857,5 +1857,126 @@
     "eta_formatted": "7m 25s",
     "time_per_iteration": 445,
     "remaining_iterations": 2
+  },
+  {
+    "job_id": "ba023791-1465-466e-8409-fdd459eae734",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME",
+          "DOWN",
+          "DOWN",
+          "DOWN",
+          "UP",
+          "UP",
+          "UP",
+          "HOME"
+        ]
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-06-11T14:50:29.623076",
+    "end_time": "2026-06-11T15:02:22.218706+00:00",
+    "log_file_path": null,
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-06-11T14:50:17.698618",
+    "eta_seconds": 169,
+    "eta_formatted": "2m 49s",
+    "time_per_iteration": 169,
+    "remaining_iterations": 2
+  },
+  {
+    "job_id": "dfbb0cc1-5fab-4f39-8aa9-612939224454",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME",
+          "DOWN",
+          "DOWN",
+          "DOWN",
+          "DOWN",
+          "UP",
+          "UP",
+          "HOME"
+        ],
+        "description": "Navigating through UI on HOME SCREEN"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-06-11T15:09:10.635954",
+    "end_time": "2026-06-11T15:11:41.279587+00:00",
+    "log_file_path": null,
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-06-11T15:09:02.087835",
+    "eta_seconds": 169,
+    "eta_formatted": "2m 49s",
+    "time_per_iteration": 169,
+    "remaining_iterations": 2
+  },
+  {
+    "job_id": "a6bd2ad2-9772-4b4d-8aef-1f4c23cf10e8",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME",
+          "DOWN",
+          "DOWN",
+          "DOWN",
+          "DOWN",
+          "UP",
+          "UP",
+          "HOME"
+        ],
+        "description": "Navigating through UI on HOME SCREEN"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-06-11T15:14:16.167047",
+    "end_time": "2026-06-11T15:16:29.291051+00:00",
+    "log_file_path": "logs/jobs/a6bd2ad2-9772-4b4d-8aef-1f4c23cf10e8/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-06-11T15:14:16.167061",
+    "eta_seconds": 169,
+    "eta_formatted": "2m 49s",
+    "time_per_iteration": 169,
+    "remaining_iterations": 2
   }
 ]

@@ -8,6 +8,7 @@ import os
 from typing import List, Dict, Optional
 from config.config_deployment import get_vnc_url, get_device_connection_params, TUNNEL_MODE
 from config.config_paths import DEVICES_FILE
+from models.database import Session, Device as DBDevice
 
 class Device:
     """Device model for managing test device data"""
@@ -52,6 +53,25 @@ class Device:
             'location': self.location,
             'team_name': self.team_name
         }
+
+    def to_storage_dict(self) -> Dict:
+        """Convert device to the persisted representation used by the database and JSON backup."""
+        return {
+            'ip': self.original_ip,
+            'name': self.name,
+            'username': self.username,
+            'password': self.password,
+            'port': self.port,
+            'ir_config': self.ir_config,
+            'mac_address': self.mac_address,
+            'vnc_url': self._vnc_url or self.vnc_url,
+            'use_jump_host': self.use_jump_host,
+            'jump_host_config': self.jump_host_config,
+            'device_type': self.device_type,
+            'location': self.location,
+            'team_name': self.team_name,
+            'is_active': True
+        }
     
     @classmethod
     def from_dict(cls, data: Dict) -> 'Device':
@@ -90,7 +110,39 @@ class Device:
     
     @staticmethod
     def load_all() -> List['Device']:
-        """Load all devices from storage"""
+        """Load all devices from the database, with JSON fallback"""
+        session = Session()
+        try:
+            rows = (
+                session.query(DBDevice)
+                .filter_by(is_active=True)
+                .order_by(DBDevice.name.asc(), DBDevice.ip.asc())
+                .all()
+            )
+            if rows:
+                devices = []
+                for row in rows:
+                    devices.append(Device.from_dict({
+                        'ip': row.ip,
+                        'name': row.name,
+                        'username': row.username,
+                        'password': row.password,
+                        'port': row.port,
+                        'ir_config': row.ir_config or {},
+                        'mac_address': row.mac_address,
+                        'vnc_url': row.vnc_url,
+                        'use_jump_host': row.use_jump_host,
+                        'jump_host_config': row.jump_host_config or {},
+                        'device_type': row.device_type,
+                        'location': row.location,
+                        'team_name': row.team_name
+                    }))
+                return devices
+        except Exception:
+            pass
+        finally:
+            session.close()
+
         if os.path.exists(DEVICES_FILE):
             with open(DEVICES_FILE, 'r') as f:
                 devices_data = json.load(f)
@@ -99,17 +151,62 @@ class Device:
     
     @staticmethod
     def save_all(devices: List['Device']) -> None:
-        """Save all devices to storage"""
-        devices_data = [d.to_dict() for d in devices]
-        with open(DEVICES_FILE, 'w') as f:
-            json.dump(devices_data, f, indent=4)
+        """Save all devices to the database and mirror them to JSON"""
+        session = Session()
+        try:
+            for device in devices:
+                storage_data = device.to_storage_dict()
+                row = session.query(DBDevice).filter_by(ip=storage_data['ip']).first()
+                if row is None:
+                    row = DBDevice(
+                        ip=storage_data['ip'],
+                        name=storage_data['name'],
+                        username=storage_data['username'],
+                        password=storage_data['password'],
+                        port=storage_data['port'],
+                        device_type=storage_data['device_type'],
+                        mac_address=storage_data['mac_address'],
+                        vnc_url=storage_data['vnc_url'],
+                        location=storage_data['location'],
+                        team_name=storage_data['team_name'] or 'DEFAULT',
+                        use_jump_host=storage_data['use_jump_host'],
+                        jump_host_config=storage_data['jump_host_config'],
+                        ir_config=storage_data['ir_config'],
+                        is_active=storage_data.get('is_active', True)
+                    )
+                    session.add(row)
+                else:
+                    row.name = storage_data['name']
+                    row.username = storage_data['username']
+                    row.password = storage_data['password']
+                    row.port = storage_data['port']
+                    row.device_type = storage_data['device_type']
+                    row.mac_address = storage_data['mac_address']
+                    row.vnc_url = storage_data['vnc_url']
+                    row.location = storage_data['location']
+                    row.team_name = storage_data['team_name'] or 'DEFAULT'
+                    row.use_jump_host = storage_data['use_jump_host']
+                    row.jump_host_config = storage_data['jump_host_config']
+                    row.ir_config = storage_data['ir_config']
+                    row.is_active = storage_data.get('is_active', True)
+
+            session.commit()
+
+            devices_data = [device.to_storage_dict() for device in devices]
+            with open(DEVICES_FILE, 'w') as f:
+                json.dump(devices_data, f, indent=4)
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
     
     @staticmethod
     def find_by_ip(ip: str) -> Optional['Device']:
         """Find device by IP address"""
         devices = Device.load_all()
         for device in devices:
-            if device.ip == ip:
+            if device.ip == ip or device.original_ip == ip:
                 return device
         return None
     
@@ -127,7 +224,7 @@ class Device:
         """Add a new device"""
         devices = Device.load_all()
         # Check if device already exists
-        if any(d.ip == device.ip for d in devices):
+        if any(d.ip == device.ip or d.original_ip == device.original_ip for d in devices):
             return False
         devices.append(device)
         Device.save_all(devices)
@@ -138,7 +235,7 @@ class Device:
         """Delete a device by IP"""
         devices = Device.load_all()
         original_count = len(devices)
-        devices = [d for d in devices if d.ip != ip]
+        devices = [d for d in devices if d.ip != ip and d.original_ip != ip]
         if len(devices) < original_count:
             Device.save_all(devices)
             return True
@@ -149,7 +246,7 @@ class Device:
         """Update a device by its old IP"""
         devices = Device.load_all()
         for i, d in enumerate(devices):
-            if d.ip == old_ip:
+            if d.ip == old_ip or d.original_ip == old_ip:
                 devices[i] = device
                 Device.save_all(devices)
                 return True
@@ -239,7 +336,7 @@ class Device:
         """Update MAC address for a device"""
         devices = Device.load_all()
         for device in devices:
-            if device.ip == ip:
+            if device.ip == ip or device.original_ip == ip:
                 device.mac_address = mac_address
                 Device.save_all(devices)
                 return True

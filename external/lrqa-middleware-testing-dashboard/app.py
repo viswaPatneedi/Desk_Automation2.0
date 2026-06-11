@@ -56,6 +56,7 @@ from services.log_service import LogService
 from services.queue_service import QueueService
 from services.recovery_service import RecoveryService
 from services.execution_monitor_service import ExecutionMonitorService
+from services.periodic_data_sync_service import PeriodicDataSyncService
 
 # Import Controllers
 from controllers.device_controller import DeviceController
@@ -134,12 +135,46 @@ def add_cache_headers(response):
     response.headers['Expires'] = '0'
     return response
 
+@app.before_request
+def enforce_api_authentication():
+    """Require authenticated app users for all API access except explicit public auth probe."""
+    public_api_paths = {
+        '/api/auth/status',
+    }
+
+    if request.path.startswith('/api/') and request.path not in public_api_paths:
+        if not current_user.is_authenticated:
+            return jsonify({
+                'error': 'Unauthorized',
+                'message': 'Login required to access application data'
+            }), 401
+
 # Endpoint to get available methods for UI (moved here to ensure 'app' is defined)
 @app.route('/api/available_methods', methods=['GET'])
 @login_required
 def get_available_methods():
+    try:
+        from models.database import Session, Method as DBMethod
+
+        session = Session()
+        try:
+            method_rows = (
+                session.query(DBMethod)
+                .filter_by(is_active=True)
+                .order_by(DBMethod.name.asc())
+                .all()
+            )
+
+            methods = [row.method_id for row in method_rows if row.method_id]
+            if methods:
+                return jsonify({'methods': methods, 'source': 'database'})
+        finally:
+            session.close()
+    except Exception as e:
+        app.logger.warning(f"Falling back to config methods: {e}")
+
     from config_commands import AVAILABLE_METHODS
-    return jsonify({'methods': AVAILABLE_METHODS})
+    return jsonify({'methods': AVAILABLE_METHODS, 'source': 'config'})
 
 @app.route('/api/available_log_patterns', methods=['GET'])
 @login_required
@@ -245,6 +280,7 @@ recovery_service = RecoveryService() if RECOVERY_ENABLED else None
 test_execution_service = TestExecutionService(recovery_service)
 log_service = LogService()
 queue_service = QueueService(test_execution_service, recovery_service)
+periodic_sync_service = PeriodicDataSyncService(interval_seconds=1800)
 
 # Print deployment configuration
 print_deployment_info()
@@ -311,6 +347,10 @@ if execution_monitor_service:
     execution_monitor_service.start_monitoring()
     print("[EXECUTION MONITOR] Monitoring thread started")
 
+# Start periodic DB->JSON sync monitor (every 30 minutes)
+periodic_sync_service.start_monitoring()
+print("[SYNC MONITOR] Periodic DB->JSON sync started (every 30 minutes)")
+
 # ===== AI AGENTS FRAMEWORK REGISTRATION =====
 print("\n" + "="*60)
 print("AI AGENTS FRAMEWORK INITIALIZATION")
@@ -362,6 +402,8 @@ print("="*60 + "\n")
 def shutdown_handler(signum=None, frame=None):
     """Handle graceful shutdown"""
     print("\n🛑 Shutting down gracefully...")
+    if periodic_sync_service:
+        periodic_sync_service.stop_monitoring()
     if execution_monitor_service:
         execution_monitor_service.stop_monitoring()
     if recovery_service:
@@ -371,6 +413,8 @@ def shutdown_handler(signum=None, frame=None):
 
 def cleanup_handler():
     """Cleanup handler for atexit"""
+    if periodic_sync_service:
+        periodic_sync_service.stop_monitoring()
     if execution_monitor_service:
         execution_monitor_service.stop_monitoring()
     if recovery_service:
