@@ -62,6 +62,162 @@
             opacity: 0.7;
             cursor: not-allowed;
         }
+
+        /* AI Agent Visual Monitor */
+        .ai-agent-monitor {
+            margin-bottom: 0.9rem;
+            padding: 0.75rem;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            background: radial-gradient(circle at 10% 10%, rgba(14, 165, 233, 0.2), transparent 45%), #0b1220;
+        }
+
+        .ai-agent-monitor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.55rem;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .ai-agent-monitor-title {
+            color: #dbeafe;
+            font-size: 0.82rem;
+            letter-spacing: 0.02em;
+            margin: 0;
+        }
+
+        .ai-agent-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.18rem 0.55rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            color: #bfdbfe;
+            background: rgba(30, 64, 175, 0.35);
+            border: 1px solid rgba(147, 197, 253, 0.35);
+        }
+
+        .ai-agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 0.45rem;
+            margin-bottom: 0.55rem;
+        }
+
+        .ai-agent-card {
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #111827;
+            padding: 0.45rem;
+        }
+
+        .ai-agent-card.active {
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.25) inset;
+        }
+
+        .ai-agent-card.ready {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.2) inset;
+        }
+
+        .ai-agent-card-title {
+            font-size: 0.75rem;
+            color: #e2e8f0;
+            margin-bottom: 0.2rem;
+            display: flex;
+            justify-content: space-between;
+            gap: 0.35rem;
+        }
+
+        .ai-agent-state {
+            font-size: 0.68rem;
+            color: #93c5fd;
+            text-transform: uppercase;
+        }
+
+        .ai-agent-work {
+            color: #9ca3af;
+            font-size: 0.72rem;
+            line-height: 1.35;
+        }
+
+        .ai-report-lane {
+            border: 1px dashed #475569;
+            border-radius: 8px;
+            padding: 0.45rem;
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .ai-report-stream {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+            flex-wrap: wrap;
+            color: #cbd5e1;
+            font-size: 0.72rem;
+        }
+
+        .ai-stream-node {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.2rem;
+            padding: 0.12rem 0.35rem;
+            border-radius: 6px;
+            background: #1e293b;
+            border: 1px solid #334155;
+        }
+
+        .ai-stream-arrow {
+            color: #60a5fa;
+            animation: aiPulse 1.4s ease-in-out infinite;
+        }
+
+        @keyframes aiPulse {
+            0% { opacity: 0.35; transform: translateX(0); }
+            50% { opacity: 1; transform: translateX(2px); }
+            100% { opacity: 0.35; transform: translateX(0); }
+        }
+
+        .ai-history-wrap {
+            margin-top: 0.5rem;
+            border-top: 1px solid #334155;
+            padding-top: 0.45rem;
+        }
+
+        .ai-history-title {
+            color: #93c5fd;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.28rem;
+        }
+
+        .ai-history-list {
+            display: grid;
+            gap: 0.22rem;
+        }
+
+        .ai-history-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.7rem;
+            color: #cbd5e1;
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 0.2rem 0.35rem;
+        }
+
+        .ai-history-time {
+            color: #7dd3fc;
+            min-width: 60px;
+            font-family: monospace;
+        }
         
         /* Save Sequence Modal Styles */
         .modal-overlay {
@@ -701,6 +857,9 @@
                 <a href="/methods-index" class="btn btn-sm btn-outline-info" title="View all methods in Index page for comparison">
                     <i class="bi bi-layout-text-window-reverse"></i> Methods Index
                 </a>
+                <button type="button" class="btn btn-sm btn-outline-warning" onclick="openAiAgentsModal()" title="View AI agents activity and orchestration flow">
+                    <i class="bi bi-diagram-3-fill"></i> AI agents
+                </button>
                 <span class="text-white d-flex align-items-center gap-2">
                     <div>
                         <div style="display: flex; align-items: center; gap: 8px;">
@@ -1904,6 +2063,34 @@
         </div>
     </div>
 
+    <!-- Modal: AI Agents Activity -->
+    <div class="modal fade" id="aiAgentsModal" tabindex="-1" aria-labelledby="aiAgentsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content" style="background: #0f172a; border: 1px solid #334155; border-radius: 10px;">
+                <div class="modal-header" style="border-bottom: 1px solid #334155; margin-bottom: 0; padding-bottom: 0.75rem;">
+                    <h5 class="modal-title" id="aiAgentsModalLabel" style="color: #e2e8f0;"><i class="bi bi-diagram-3-fill"></i> AI Agents Activity</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="padding-top: 0.85rem; margin-bottom: 0;">
+                    <div class="ai-agent-monitor" id="ai-agent-monitor-panel" style="margin-bottom: 0;">
+                        <div class="ai-agent-monitor-header">
+                            <h6 class="ai-agent-monitor-title"><i class="bi bi-cpu"></i> AI Agent Activity</h6>
+                            <span class="ai-agent-pill"><span id="ai-agent-count">4</span> agents | <span id="ai-agent-active-count">0</span> active</span>
+                        </div>
+                        <div id="ai-agent-grid" class="ai-agent-grid"></div>
+                        <div class="ai-report-lane">
+                            <div class="ai-report-stream" id="ai-agent-report-stream"></div>
+                            <div class="ai-history-wrap">
+                                <div class="ai-history-title">Recent Agent Reports</div>
+                                <div class="ai-history-list" id="ai-agent-history-list"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     
@@ -1916,6 +2103,186 @@
         let latestAiUserGuidance = '';
         let aiQueueAppliedSession = null;
         let aiAvailableMethodIds = [];
+        let aiAgentLastAction = 'Idle';
+        let aiAgentActionHistory = [];
+        let aiAgentCatalog = [];
+
+        function getLocalTimeHHMMSS() {
+            const now = new Date();
+            const hh = String(now.getHours()).padStart(2, '0');
+            const mm = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+            return `${hh}:${mm}:${ss}`;
+        }
+
+        function recordAiAgentAction(actionLabel) {
+            const action = String(actionLabel || '').trim();
+            if (!action) return;
+
+            const last = aiAgentActionHistory[aiAgentActionHistory.length - 1];
+            if (last && last.action === action) {
+                last.time = getLocalTimeHHMMSS();
+                return;
+            }
+
+            aiAgentActionHistory.push({
+                time: getLocalTimeHHMMSS(),
+                action: action
+            });
+
+            if (aiAgentActionHistory.length > 5) {
+                aiAgentActionHistory = aiAgentActionHistory.slice(-5);
+            }
+        }
+
+        function getDefaultAiAgentCatalog() {
+            return [
+                { id: 'ai_sequence_builder', name: 'AI Sequence Builder Agent', state: 'ready', work: 'Transforms workflow text into executable queue plans' },
+                { id: 'planner', name: 'Planner Agent', state: 'ready', work: 'Builds actionable steps from free-text workflows' },
+                { id: 'method_mapper', name: 'Method Mapper Agent', state: 'ready', work: 'Maps steps to methods and parameter hints' },
+                { id: 'validation_guard', name: 'Validation Guard Agent', state: 'ready', work: 'Checks log-validation requirements and guardrails' },
+                { id: 'memory_learning', name: 'Memory Learning Agent', state: 'ready', work: 'Learns from checkpoints and feedback signals' },
+                { id: 'db_monitor_sync', name: 'DB Monitoring & Sync Agent', state: 'ready', work: 'Monitors DB health and periodic DB->JSON synchronization' }
+            ];
+        }
+
+        async function ensureAiAgentCatalog(refresh = false) {
+            if (!refresh && aiAgentCatalog.length > 0) return aiAgentCatalog;
+
+            try {
+                const response = await fetch('/api/ai/agents/status', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (response.ok && data && data.success && Array.isArray(data.agents) && data.agents.length > 0) {
+                    aiAgentCatalog = data.agents;
+                } else if (aiAgentCatalog.length === 0) {
+                    aiAgentCatalog = getDefaultAiAgentCatalog();
+                }
+            } catch (e) {
+                console.warn('Unable to fetch AI agent catalog:', e);
+                if (aiAgentCatalog.length === 0) {
+                    aiAgentCatalog = getDefaultAiAgentCatalog();
+                }
+            }
+
+            return aiAgentCatalog;
+        }
+
+        function deriveAiAgentState(agentId, baseState, context) {
+            const action = context.action;
+            const regeneratedCount = context.regeneratedCount;
+            const selectedMethodCount = context.selectedMethodCount;
+            const logFileHint = context.logFileHint;
+
+            if (agentId === 'ai_sequence_builder') {
+                return (action.includes('generating steps') || action.includes('generating methods') || action.includes('applying to queue') || action.includes('queue applied')) ? 'active' : ((regeneratedCount > 0 || selectedMethodCount > 0) ? 'ready' : 'idle');
+            }
+            if (agentId === 'planner') {
+                return action.includes('generating steps') ? 'active' : (regeneratedCount > 0 ? 'ready' : 'idle');
+            }
+            if (agentId === 'method_mapper') {
+                return action.includes('generating methods') ? 'active' : (selectedMethodCount > 0 ? 'ready' : 'idle');
+            }
+            if (agentId === 'validation_guard') {
+                return (action.includes('generating methods') || action.includes('log')) ? 'active' : (logFileHint ? 'ready' : 'idle');
+            }
+            if (agentId === 'memory_learning') {
+                return (action.includes('saving sequence') || action.includes('feedback') || action.includes('checkpoint')) ? 'active' : (aiQueueAppliedSession ? 'ready' : 'idle');
+            }
+            if (agentId === 'db_monitor_sync') {
+                return (action.includes('sync') || action.includes('checkpoint') || action.includes('feedback') || action.includes('saving sequence')) ? 'active' : (baseState || 'ready');
+            }
+            if (agentId === 'orchestrator') {
+                return action.includes('idle') ? (baseState || 'ready') : 'active';
+            }
+
+            return baseState || 'ready';
+        }
+
+        function updateAiAgentVisualStatus(actionLabel = 'Idle') {
+            const grid = document.getElementById('ai-agent-grid');
+            const reportStream = document.getElementById('ai-agent-report-stream');
+            const historyList = document.getElementById('ai-agent-history-list');
+            const activeCountEl = document.getElementById('ai-agent-active-count');
+            const totalCountEl = document.getElementById('ai-agent-count');
+            if (!grid || !reportStream || !historyList || !activeCountEl || !totalCountEl) return;
+
+            aiAgentLastAction = actionLabel || aiAgentLastAction || 'Idle';
+            recordAiAgentAction(aiAgentLastAction);
+
+            const regeneratedCount = (latestAiRegeneratedSteps || []).length;
+            const selectedMethodCount = (latestAiSequenceSuggestion?.selected_methods || []).length;
+            const queueCount = (latestAiSequenceSuggestion?.queue_data || []).length;
+            const logFileHint = (document.getElementById('ai-log-file-input')?.value || '').trim();
+
+            const action = String(aiAgentLastAction || '').toLowerCase();
+            const context = {
+                action,
+                regeneratedCount,
+                selectedMethodCount,
+                logFileHint
+            };
+
+            const sourceAgents = (aiAgentCatalog && aiAgentCatalog.length > 0) ? aiAgentCatalog : getDefaultAiAgentCatalog();
+            const agents = sourceAgents.map(agent => {
+                const agentId = String(agent.id || '').trim().toLowerCase();
+                const derivedState = deriveAiAgentState(agentId, String(agent.state || 'ready').toLowerCase(), context);
+
+                let dynamicWork = String(agent.work || agent.description || 'Monitoring application workflows');
+                if (agentId === 'ai_sequence_builder') {
+                    dynamicWork = selectedMethodCount > 0 ? `Driving ${selectedMethodCount} mapped action(s) from regenerated steps` : dynamicWork;
+                } else if (agentId === 'planner') {
+                    dynamicWork = regeneratedCount > 0 ? `${regeneratedCount} regenerated step(s) prepared` : dynamicWork;
+                } else if (agentId === 'method_mapper') {
+                    dynamicWork = selectedMethodCount > 0 ? `${selectedMethodCount} method mapping(s) created` : dynamicWork;
+                } else if (agentId === 'validation_guard') {
+                    dynamicWork = logFileHint ? `Monitoring validations in ${logFileHint}` : dynamicWork;
+                } else if (agentId === 'memory_learning') {
+                    dynamicWork = aiQueueAppliedSession ? 'Tracking queue + feedback checkpoints' : dynamicWork;
+                }
+
+                return {
+                    name: String(agent.name || 'Agent'),
+                    state: derivedState,
+                    work: dynamicWork
+                };
+            });
+
+            const activeCount = agents.filter(a => a.state === 'active').length;
+            activeCountEl.textContent = String(activeCount);
+            totalCountEl.textContent = String(agents.length);
+
+            grid.innerHTML = agents.map(agent => `
+                <div class="ai-agent-card ${agent.state}">
+                    <div class="ai-agent-card-title">
+                        <span>${escapeHtmlUnsafe(agent.name)}</span>
+                        <span class="ai-agent-state">${escapeHtmlUnsafe(agent.state)}</span>
+                    </div>
+                    <div class="ai-agent-work">${escapeHtmlUnsafe(agent.work)}</div>
+                </div>
+            `).join('');
+
+            reportStream.innerHTML = `
+                <span class="ai-stream-node"><i class="bi bi-diagram-3"></i> Worker Agents</span>
+                <span class="ai-stream-arrow"><i class="bi bi-arrow-right"></i></span>
+                <span class="ai-stream-node"><i class="bi bi-cpu-fill"></i> Parent AI Orchestrator</span>
+                <span class="ai-stream-arrow"><i class="bi bi-arrow-right"></i></span>
+                <span class="ai-stream-node"><i class="bi bi-journal-check"></i> Queue Plan (${queueCount})</span>
+                <span style="color:#93c5fd; font-size:0.7rem; margin-left:0.2rem;">Now: ${escapeHtmlUnsafe(aiAgentLastAction)}</span>
+            `;
+
+            historyList.innerHTML = aiAgentActionHistory
+                .slice()
+                .reverse()
+                .map(item => `
+                    <div class="ai-history-item">
+                        <span class="ai-history-time">${escapeHtmlUnsafe(item.time)}</span>
+                        <span><i class="bi bi-dot"></i> ${escapeHtmlUnsafe(item.action)}</span>
+                    </div>
+                `)
+                .join('');
+        }
 
         function escapeHtmlUnsafe(str) {
             return String(str || '')
@@ -2116,6 +2483,7 @@
             const aiPanel = document.getElementById('ai-sequence-builder-panel');
             if (aiPanel) aiPanel.style.display = 'block';
             ensureAiMethodCatalog();
+            updateAiAgentVisualStatus('Modal opened');
 
             const trackingBadge = document.getElementById('ai-tracking-badge');
             if (trackingBadge) {
@@ -2126,6 +2494,15 @@
             }
 
             const modalEl = document.getElementById('aiBuilderModal');
+            if (!modalEl || typeof bootstrap === 'undefined') return;
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+
+        async function openAiAgentsModal() {
+            await ensureAiAgentCatalog(true);
+            updateAiAgentVisualStatus('AI agents modal opened');
+            const modalEl = document.getElementById('aiAgentsModal');
             if (!modalEl || typeof bootstrap === 'undefined') return;
             const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
             modal.show();
@@ -2143,6 +2520,7 @@
 
             generateBtn.disabled = true;
             generateBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
+            updateAiAgentVisualStatus('Generating steps');
 
             try {
                 clearAiSequenceSuggestion(false);
@@ -2173,9 +2551,11 @@
                     throw new Error('No actionable regenerated steps found');
                 }
 
+                updateAiAgentVisualStatus('Steps generated');
                 showNotification('✅ Regenerated steps ready. Review/edit and click Generate Methods.', 'success');
             } catch (error) {
                 console.error('AI generation error:', error);
+                updateAiAgentVisualStatus('Generate steps failed');
                 showNotification(`❌ ${error.message}`, 'error');
             } finally {
                 generateBtn.disabled = false;
@@ -2387,6 +2767,7 @@
 
             methodsBtn.disabled = true;
             methodsBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
+            updateAiAgentVisualStatus('Generating methods');
 
             try {
                 latestAiUserGuidance = guidanceText;
@@ -2426,9 +2807,11 @@
                 renderAiSequencePreview(data);
                 document.getElementById('ai-apply-sequence-btn').disabled = false;
                 document.getElementById('ai-save-sequence-btn').disabled = false;
+                updateAiAgentVisualStatus('Methods generated');
                 showNotification(`✅ AI selected ${data.queue_data.length} step(s)`, 'success');
             } catch (error) {
                 console.error('AI generation error:', error);
+                updateAiAgentVisualStatus('Generate methods failed');
                 showNotification(`❌ ${error.message}`, 'error');
             } finally {
                 methodsBtn.disabled = false;
@@ -2569,6 +2952,7 @@
                 trackingBadge.style.background = '#065f46';
                 trackingBadge.style.color = '#d1fae5';
             }
+            updateAiAgentVisualStatus('Applying to queue');
             renderQueue();
 
             saveAiSequenceCheckpoint({
@@ -2588,6 +2972,7 @@
                 if (modal) modal.hide();
             }
 
+            updateAiAgentVisualStatus('Queue applied');
             showNotification('✅ AI sequence applied to queue. Review and edit as needed.', 'success');
         }
 
@@ -2641,6 +3026,7 @@
                 saveBtn.disabled = true;
                 saveBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Saving...';
             }
+            updateAiAgentVisualStatus('Saving sequence');
 
             try {
                 const response = await fetch('/api/sequences/save', {
@@ -2666,9 +3052,11 @@
                 await submitAiSequenceFeedback(sequenceName.trim(), queueData, methodRationaleMeta);
                 loadSavedSequences();
                 const storageText = data.save_storage === 'json_fallback' ? 'JSON fallback' : (data.save_storage === 'database' ? 'database' : 'storage');
+                updateAiAgentVisualStatus('Sequence saved + feedback submitted');
                 showNotification(`✅ AI-generated sequence saved: ${sequenceName.trim()} (${storageText})`, 'success');
             } catch (error) {
                 console.error('AI save sequence error:', error);
+                updateAiAgentVisualStatus('Save sequence failed');
                 showNotification(`❌ ${error.message}`, 'error');
             } finally {
                 if (saveBtn) {
@@ -2713,6 +3101,7 @@
                 const input = document.getElementById('ai-sequence-workflow-input');
                 if (input) input.value = '';
             }
+            updateAiAgentVisualStatus('Builder cleared');
         }
 
         function buildAiSequenceMetadata() {
@@ -2764,8 +3153,10 @@
                         review_notes: aiMeta.review_notes || ''
                     })
                 });
+                updateAiAgentVisualStatus('Feedback submitted to memory');
             } catch (feedbackError) {
                 console.warn('AI feedback save warning:', feedbackError);
+                updateAiAgentVisualStatus('Feedback submit warning');
             }
         }
 
@@ -2782,8 +3173,10 @@
                     credentials: 'include',
                     body: JSON.stringify(payload)
                 });
+                updateAiAgentVisualStatus('Checkpoint saved to memory');
             } catch (checkpointError) {
                 console.warn('AI checkpoint save warning:', checkpointError);
+                updateAiAgentVisualStatus('Checkpoint warning');
             }
         }
         

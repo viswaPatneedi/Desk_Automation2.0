@@ -73,6 +73,7 @@ from controllers.results_controller import ResultsController
 
 # Import AI Agent Routes
 from controllers.agents_routes import register_agents_blueprint
+from agents.orchestrator_agent import start_orchestrator
 
 # Import Phase 3 Modal Routes
 from controllers.modal_routes import register_modal_routes
@@ -1650,6 +1651,112 @@ def save_ai_sequence_checkpoint():
         app.logger.exception('AI sequence checkpoint save failed')
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+@app.route('/api/ai/agents/status', methods=['GET'])
+@login_required
+def get_ai_agents_status():
+    """Return AI/automation agents used by this application for UI visualization."""
+    try:
+        sync_running = bool(getattr(periodic_sync_service, '_running', False)) if 'periodic_sync_service' in globals() else False
+
+        agents = [
+            {
+                'id': 'orchestrator',
+                'name': 'Parent AI Orchestrator',
+                'category': 'core',
+                'state': 'ready',
+                'work': 'Coordinates worker agents and application workflows'
+            },
+            {
+                'id': 'ai_sequence_builder',
+                'name': 'AI Sequence Builder Agent',
+                'category': 'sequence',
+                'state': 'ready',
+                'work': 'Transforms workflow text into executable queue plans'
+            },
+            {
+                'id': 'memory_learning',
+                'name': 'Memory Learning Agent',
+                'category': 'sequence',
+                'state': 'ready',
+                'work': 'Learns from checkpoints, feedback, methods, and descriptions'
+            },
+            {
+                'id': 'db_monitor_sync',
+                'name': 'DB Monitoring & Sync Agent',
+                'category': 'sync',
+                'state': 'active' if sync_running else 'ready',
+                'work': 'Monitors DB health and periodic DB->JSON synchronization'
+            },
+            {
+                'id': 'job_orchestrator',
+                'name': 'Job Orchestrator Agent',
+                'category': 'execution',
+                'state': 'ready',
+                'work': 'Schedules and coordinates test job execution lifecycle'
+            },
+            {
+                'id': 'eta_device_lock',
+                'name': 'ETA & Device Lock Agent',
+                'category': 'execution',
+                'state': 'ready',
+                'work': 'Manages device lock control and ETA predictions'
+            },
+            {
+                'id': 'screen_analyzer',
+                'name': 'Screen Analyzer Agent',
+                'category': 'validation',
+                'state': 'ready',
+                'work': 'Performs screen validation and analysis workflows'
+            },
+            {
+                'id': 'recovery',
+                'name': 'Recovery Agent',
+                'category': 'reliability',
+                'state': 'ready',
+                'work': 'Handles retries, recovery policies, and failure mitigation'
+            },
+            {
+                'id': 'distributed_sync',
+                'name': 'Distributed Sync Agent',
+                'category': 'sync',
+                'state': 'ready',
+                'work': 'Supports multi-location data sync and reconciliation'
+            },
+            {
+                'id': 'github_sync',
+                'name': 'GitHub Sync Agent',
+                'category': 'sync',
+                'state': 'ready',
+                'work': 'Coordinates repository sync operations and audit trails'
+            },
+            {
+                'id': 'pyarmor_encryption',
+                'name': 'PyArmor Encryption Agent',
+                'category': 'security',
+                'state': 'ready',
+                'work': 'Applies code-protection and obfuscation workflows'
+            },
+            {
+                'id': 'docker_signing',
+                'name': 'Docker Signing Agent',
+                'category': 'security',
+                'state': 'ready',
+                'work': 'Signs and verifies container artifacts for secure release'
+            }
+        ]
+
+        return jsonify({
+            'success': True,
+            'agents': agents,
+            'total_agents': len(agents),
+            'active_agents': len([a for a in agents if a.get('state') == 'active']),
+            'generated_at_utc': datetime.now(timezone.utc).isoformat()
+        })
+    except Exception as exc:
+        app.logger.exception('AI agents status endpoint failed')
+        return jsonify({'success': False, 'error': str(exc)}), 500
+
 @app.route('/api/available_log_patterns', methods=['GET'])
 @login_required
 def get_available_log_patterns():
@@ -1841,6 +1948,20 @@ except Exception as e:
     print(f"⚠️  AI Agents Framework: Registration error - {e}")
     import traceback
     traceback.print_exc()
+
+# Auto-start orchestrator and enabled sub-agents on boot (default: enabled)
+try:
+    orchestrator_autostart = str(os.environ.get('AI_ORCHESTRATOR_AUTOSTART', 'true')).strip().lower() in ('1', 'true', 'yes', 'on')
+    if orchestrator_autostart:
+        orchestrator = start_orchestrator()
+        if orchestrator and getattr(orchestrator, 'is_running', False):
+            print("✅ AI Orchestrator: AUTO-STARTED")
+        else:
+            print("⚠️  AI Orchestrator: Auto-start requested but orchestrator did not enter running state")
+    else:
+        print("ℹ️  AI Orchestrator: Auto-start disabled via AI_ORCHESTRATOR_AUTOSTART")
+except Exception as e:
+    print(f"⚠️  AI Orchestrator: Auto-start error - {e}")
 print("="*60 + "\n")
 
 # ===== PHASE 3 MODAL UI SYSTEM REGISTRATION =====

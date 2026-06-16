@@ -16,6 +16,22 @@ from agents.memory_monitor_agent import (
     start_memory_monitor,
     stop_memory_monitor
 )
+from agents.eta_device_lock_agent import (
+    start_eta_device_lock_agent,
+    stop_eta_device_lock_agent,
+)
+from agents.screen_analyzer_agent import (
+    start_screen_analyzer_agent,
+    stop_screen_analyzer_agent,
+)
+from agents.job_orchestrator_agent import (
+    start_job_orchestrator_agent,
+    stop_job_orchestrator_agent,
+)
+from agents.recovery_agent import (
+    start_recovery_agent,
+    stop_recovery_agent,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -93,7 +109,8 @@ class OrchestratorAgent:
             'enable_screen_analyzer': True,
             'enable_job_orchestrator': True,
             'enable_recovery': True,
-            'enable_audit_logger': True,
+            # Audit logger agent implementation is not available in this repo yet.
+            'enable_audit_logger': False,
             'scan_interval': 300,  # 5 minutes
             'health_check_interval': 60,  # 1 minute
             'log_level': 'INFO'
@@ -198,23 +215,27 @@ class OrchestratorAgent:
                 return True
             
             elif agent_id == 'eta_device_lock':
-                logger.info(f"🔄 Agent-ETA-DeviceLock initialization pending (Phase 2)")
-                self.agent_status['eta_device_lock'] = AgentStatus.IDLE
+                self.agents['eta_device_lock'] = start_eta_device_lock_agent()
+                self.agent_status['eta_device_lock'] = AgentStatus.RUNNING
+                logger.info(f"✅ Started Agent-ETA-DeviceLock")
                 return True
             
             elif agent_id == 'screen_analyzer':
-                logger.info(f"🔄 Agent-ScreenAnalyzer initialization pending (Phase 2)")
-                self.agent_status['screen_analyzer'] = AgentStatus.IDLE
+                self.agents['screen_analyzer'] = start_screen_analyzer_agent()
+                self.agent_status['screen_analyzer'] = AgentStatus.RUNNING
+                logger.info(f"✅ Started Agent-ScreenAnalyzer")
                 return True
             
             elif agent_id == 'job_orchestrator':
-                logger.info(f"🔄 Agent-JobOrchestrator initialization pending (Phase 2)")
-                self.agent_status['job_orchestrator'] = AgentStatus.IDLE
+                self.agents['job_orchestrator'] = start_job_orchestrator_agent()
+                self.agent_status['job_orchestrator'] = AgentStatus.RUNNING
+                logger.info(f"✅ Started Agent-JobOrchestrator")
                 return True
             
             elif agent_id == 'recovery':
-                logger.info(f"🔄 Agent-Recovery initialization pending (Phase 3)")
-                self.agent_status['recovery'] = AgentStatus.IDLE
+                self.agents['recovery'] = start_recovery_agent()
+                self.agent_status['recovery'] = AgentStatus.RUNNING
+                logger.info(f"✅ Started Agent-Recovery")
                 return True
             
             elif agent_id == 'audit_logger':
@@ -239,6 +260,34 @@ class OrchestratorAgent:
                 self.agents['memory_monitor'] = None
                 self.agent_status['memory_monitor'] = AgentStatus.STOPPED
                 logger.info(f"✅ Stopped Agent-MemoryMonitor")
+                return True
+
+            elif agent_id == 'eta_device_lock':
+                stop_eta_device_lock_agent()
+                self.agents['eta_device_lock'] = None
+                self.agent_status['eta_device_lock'] = AgentStatus.STOPPED
+                logger.info(f"✅ Stopped Agent-ETA-DeviceLock")
+                return True
+
+            elif agent_id == 'screen_analyzer':
+                stop_screen_analyzer_agent()
+                self.agents['screen_analyzer'] = None
+                self.agent_status['screen_analyzer'] = AgentStatus.STOPPED
+                logger.info(f"✅ Stopped Agent-ScreenAnalyzer")
+                return True
+
+            elif agent_id == 'job_orchestrator':
+                stop_job_orchestrator_agent()
+                self.agents['job_orchestrator'] = None
+                self.agent_status['job_orchestrator'] = AgentStatus.STOPPED
+                logger.info(f"✅ Stopped Agent-JobOrchestrator")
+                return True
+
+            elif agent_id == 'recovery':
+                stop_recovery_agent()
+                self.agents['recovery'] = None
+                self.agent_status['recovery'] = AgentStatus.STOPPED
+                logger.info(f"✅ Stopped Agent-Recovery")
                 return True
             
             else:
