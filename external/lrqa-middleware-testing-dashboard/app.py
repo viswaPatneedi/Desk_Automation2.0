@@ -364,6 +364,30 @@ def _save_ai_rule_memory(rule_memory):
         json.dump(payload, memory_file, indent=2)
 
 
+def _learn_text_to_methods(token_method_preferences, text, method_ids):
+    if not isinstance(token_method_preferences, dict):
+        token_method_preferences = {}
+
+    normalized_text = str(text or '').strip()
+    normalized_method_ids = [str(method_id).strip() for method_id in (method_ids or []) if str(method_id or '').strip()]
+    if not normalized_text or not normalized_method_ids:
+        return token_method_preferences
+
+    tokens = set(_tokenize_text(normalized_text))
+    if not tokens:
+        return token_method_preferences
+
+    for token in tokens:
+        method_counts = token_method_preferences.get(token) or {}
+        if not isinstance(method_counts, dict):
+            method_counts = {}
+        for method_id in normalized_method_ids:
+            method_counts[method_id] = int(method_counts.get(method_id, 0)) + 1
+        token_method_preferences[token] = method_counts
+
+    return token_method_preferences
+
+
 def _update_ai_rule_memory_from_checkpoint(rule_memory, checkpoint):
     payload = dict(rule_memory or _default_ai_rule_memory())
 
@@ -374,6 +398,11 @@ def _update_ai_rule_memory_from_checkpoint(rule_memory, checkpoint):
     prompt = str(checkpoint.get('prompt') or '').strip()
     corrected_steps = [str(step).strip() for step in (checkpoint.get('corrected_steps') or []) if str(step).strip()]
     queue_data = checkpoint.get('queue_data') or []
+    queue_descriptions = [
+        str(item.get('description') or item.get('ai_step_text') or '').strip()
+        for item in queue_data
+        if isinstance(item, dict) and str(item.get('description') or item.get('ai_step_text') or '').strip()
+    ]
     applied_method_ids = [
         str(item.get('method')).strip()
         for item in queue_data
@@ -389,6 +418,7 @@ def _update_ai_rule_memory_from_checkpoint(rule_memory, checkpoint):
         'event_type': event_type,
         'prompt': prompt,
         'corrected_steps': corrected_steps[:MAX_AI_SEQUENCE_STEPS],
+        'queue_descriptions': queue_descriptions[:MAX_AI_SEQUENCE_STEPS],
         'generated_method_ids': generated_method_ids[:MAX_AI_SEQUENCE_STEPS],
         'applied_method_ids': applied_method_ids[:MAX_AI_SEQUENCE_STEPS],
         'log_file_hint': _normalize_log_file_hint(checkpoint.get('log_file_hint')),
@@ -404,14 +434,16 @@ def _update_ai_rule_memory_from_checkpoint(rule_memory, checkpoint):
             token_method_preferences = {}
 
         for step in corrected_steps:
-            tokens = set(_tokenize_text(step))
-            for token in tokens:
-                method_counts = token_method_preferences.get(token) or {}
-                if not isinstance(method_counts, dict):
-                    method_counts = {}
-                for method_id in applied_method_ids:
-                    method_counts[method_id] = int(method_counts.get(method_id, 0)) + 1
-                token_method_preferences[token] = method_counts
+            token_method_preferences = _learn_text_to_methods(token_method_preferences, step, applied_method_ids)
+
+        for queue_item in queue_data:
+            if not isinstance(queue_item, dict):
+                continue
+            description_text = str(queue_item.get('description') or queue_item.get('ai_step_text') or '').strip()
+            queue_method_id = str(queue_item.get('method') or '').strip()
+            if not description_text or not queue_method_id:
+                continue
+            token_method_preferences = _learn_text_to_methods(token_method_preferences, description_text, [queue_method_id])
 
         payload['token_method_preferences'] = token_method_preferences
 
@@ -596,22 +628,30 @@ def _update_ai_rule_memory_from_feedback(rule_memory, feedback_entry):
 
     corrected_method_ids = [str(m) for m in (feedback_entry.get('corrected_method_ids') or []) if m]
     corrected_steps = [str(step) for step in (feedback_entry.get('corrected_steps') or []) if str(step).strip()]
+    corrected_queue_data = feedback_entry.get('corrected_queue_data') or []
+    queue_descriptions = [
+        str(item.get('description') or item.get('ai_step_text') or '').strip()
+        for item in corrected_queue_data
+        if isinstance(item, dict) and str(item.get('description') or item.get('ai_step_text') or '').strip()
+    ]
 
     learning_text = ' '.join([
         str(feedback_entry.get('prompt', '') or ''),
         str(feedback_entry.get('review_notes', '') or ''),
         str(feedback_entry.get('user_guidance', '') or ''),
-        ' '.join(corrected_steps)
+        ' '.join(corrected_steps),
+        ' '.join(queue_descriptions)
     ])
-    tokens = set(_tokenize_text(learning_text))
+    token_method_preferences = _learn_text_to_methods(token_method_preferences, learning_text, corrected_method_ids)
 
-    for token in tokens:
-        method_counts = token_method_preferences.get(token) or {}
-        if not isinstance(method_counts, dict):
-            method_counts = {}
-        for method_id in corrected_method_ids:
-            method_counts[method_id] = int(method_counts.get(method_id, 0)) + 1
-        token_method_preferences[token] = method_counts
+    for queue_item in corrected_queue_data:
+        if not isinstance(queue_item, dict):
+            continue
+        description_text = str(queue_item.get('description') or queue_item.get('ai_step_text') or '').strip()
+        queue_method_id = str(queue_item.get('method') or '').strip()
+        if not description_text or not queue_method_id:
+            continue
+        token_method_preferences = _learn_text_to_methods(token_method_preferences, description_text, [queue_method_id])
 
     payload['token_method_preferences'] = token_method_preferences
 
@@ -1539,6 +1579,15 @@ def save_ai_sequence_feedback():
             'generated_method_ids': generated_method_ids,
             'corrected_method_ids': corrected_method_ids,
             'corrected_steps': data.get('corrected_steps') or [],
+            'corrected_queue_data': [
+                {
+                    'method': item.get('method'),
+                    'description': item.get('description') or '',
+                    'ai_step_text': item.get('ai_step_text') or ''
+                }
+                for item in corrected_queue_data
+                if isinstance(item, dict)
+            ],
             'user_guidance': data.get('user_guidance') or '',
             'reviewed': bool(data.get('reviewed')),
             'tested': bool(data.get('tested')),
