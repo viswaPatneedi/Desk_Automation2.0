@@ -209,7 +209,7 @@
         
         /* Column 1 specific styling for Available Methods - 700px max height */
         .three-column-grid > div:first-child .card-body-custom {
-            max-height: 88rem;
+            max-height: 66rem;
             overflow-y: auto;
         }
         
@@ -221,7 +221,7 @@
         
         /* Column 3: Saved Sequences - flexible */
         .three-column-grid > div:nth-child(3) .card-body-custom {
-            max-height: 88rem;
+            max-height: 66rem;
             overflow-y: auto;
         }
         
@@ -1126,6 +1126,9 @@
                                 </span>
                             </div>
                             <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-sm btn-primary" id="open-ai-builder-modal-btn" onclick="openAiBuilderModal()" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                                    <i class="bi bi-magic"></i> AI Suggested Builder
+                                </button>
                                 <button class="btn btn-sm btn-success" id="save-sequence-btn" onclick="saveQueueAsSequence()" disabled style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">
                                     <i class="bi bi-bookmark-star"></i> Save Queue
                                 </button>
@@ -1155,7 +1158,7 @@
                             </div>
                         </div>
 
-                        <div style="margin-bottom: 1.5rem; padding: 1rem; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 10px; border: 1px solid #334155;">
+                        <div id="ai-sequence-builder-panel" style="display: none; margin-bottom: 1.5rem; padding: 1rem; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 10px; border: 1px solid #334155;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                                 <h6 style="margin: 0; color: #e2e8f0;"><i class="bi bi-magic"></i> AI Sequence Builder</h6>
                                 <small style="color: #94a3b8;">Text workflow to queue steps</small>
@@ -1164,6 +1167,9 @@
                             <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
                                 <button class="btn btn-sm btn-primary" id="ai-generate-sequence-btn" onclick="generateAiSequenceFromWorkflow()" style="padding: 0.35rem 0.7rem;">
                                     <i class="bi bi-stars"></i> Generate
+                                </button>
+                                <button class="btn btn-sm btn-info" id="ai-generate-methods-btn" onclick="generateAiMethodsFromReviewedSteps()" disabled style="padding: 0.35rem 0.7rem;">
+                                    <i class="bi bi-diagram-3"></i> Generate Methods
                                 </button>
                                 <button class="btn btn-sm btn-success" id="ai-apply-sequence-btn" onclick="applyAiSequenceToQueue()" disabled style="padding: 0.35rem 0.7rem;">
                                     <i class="bi bi-list-check"></i> Apply to Queue
@@ -1175,6 +1181,15 @@
                                     <i class="bi bi-x-circle"></i> Clear
                                 </button>
                             </div>
+                            <input id="ai-sequence-guidance-input" class="form-control" placeholder="Optional guidance for AI (e.g., prefer execute_command for validations, keep explicit waits)" style="background: #0b1220; color: #e2e8f0; border: 1px solid #475569; margin-bottom: 0.75rem;" />
+                            <input id="ai-log-file-input" class="form-control" placeholder="Log file for validation (required when steps include log checks). Example: sky-messages.log or /opt/logs/sky-messages.log" style="background: #0b1220; color: #e2e8f0; border: 1px solid #475569; margin-bottom: 0.75rem;" />
+                            <div id="ai-regenerated-editor-container" style="display: none; margin-bottom: 0.75rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                                    <div style="color: #cbd5e1; font-size: 0.82rem;">Regenerated steps (editable):</div>
+                                    <div style="color: #94a3b8; font-size: 0.72rem;">One step per line</div>
+                                </div>
+                                <textarea id="ai-regenerated-steps-editor" class="form-control" rows="6" style="background: #0b1220; color: #e2e8f0; border: 1px solid #475569;"></textarea>
+                            </div>
                             <div style="display: flex; gap: 1rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
                                 <label style="display: flex; align-items: center; gap: 0.35rem; color: #cbd5e1; font-size: 0.85rem;">
                                     <input type="checkbox" id="ai-sequence-reviewed-checkbox"> Reviewed
@@ -1185,6 +1200,7 @@
                             </div>
                             <input id="ai-sequence-review-notes" class="form-control" placeholder="Optional review/test notes" style="background: #0b1220; color: #e2e8f0; border: 1px solid #475569; margin-bottom: 0.75rem;" />
                             <div style="color: #94a3b8; font-size: 0.76rem; margin-bottom: 0.65rem;">Use `Save as Sequence` to store the AI-generated flow directly in Saved Sequences.</div>
+                            <div id="ai-stage-methods-preview" style="display: none; max-height: 220px; overflow-y: auto; border: 1px dashed #475569; border-radius: 8px; padding: 0.75rem; background: #0b1220; margin-bottom: 0.65rem;"></div>
                             <div id="ai-sequence-preview" style="display: none; max-height: 220px; overflow-y: auto; border: 1px dashed #475569; border-radius: 8px; padding: 0.75rem; background: #0b1220;"></div>
                         </div>
 
@@ -1874,6 +1890,20 @@
         </div>
     </div>
 
+    <!-- Modal: AI Sequence Builder -->
+    <div class="modal fade" id="aiBuilderModal" tabindex="-1" aria-labelledby="aiBuilderModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content" style="background: #0f172a; border: 1px solid #334155; border-radius: 10px;">
+                <div class="modal-header" style="border-bottom: 1px solid #334155;">
+                    <h5 class="modal-title" id="aiBuilderModalLabel" style="color: #e2e8f0;"><i class="bi bi-magic"></i> AI Sequence Builder</h5>
+                    <span id="ai-tracking-badge" style="margin-left: 0.75rem; padding: 0.2rem 0.55rem; background: #374151; color: #d1d5db; border-radius: 999px; font-size: 0.72rem;">Tracking: Off</span>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="ai-builder-modal-host" style="padding: 1rem 1rem 0.5rem 1rem;"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
     
@@ -1883,6 +1913,9 @@
         let selectedSequences = []; // Store selected sequences for batch operations
         let latestAiSequenceSuggestion = null;
         let latestAiRegeneratedSteps = [];
+        let latestAiUserGuidance = '';
+        let aiQueueAppliedSession = null;
+        let aiAvailableMethodIds = [];
 
         function escapeHtmlUnsafe(str) {
             return String(str || '')
@@ -2064,12 +2097,38 @@
             
             setupDeviceFormHandler();
             setupTeamFilter();
+
+            // Mount AI builder panel into modal host and keep it there.
+            const aiPanel = document.getElementById('ai-sequence-builder-panel');
+            const aiModalHost = document.getElementById('ai-builder-modal-host');
+            if (aiPanel && aiModalHost && aiPanel.parentElement !== aiModalHost) {
+                aiModalHost.appendChild(aiPanel);
+            }
             
             // Auto-refresh executions every 5 seconds
             setInterval(loadCurrentExecutions, 5000);
             
             // ✅ MANUAL DEVICE STATUS REFRESH: Click "Refresh Status" button to check all devices
             // (Removed auto-refresh - users can now click the button to check device status on-demand)
+        }
+
+        function openAiBuilderModal() {
+            const aiPanel = document.getElementById('ai-sequence-builder-panel');
+            if (aiPanel) aiPanel.style.display = 'block';
+            ensureAiMethodCatalog();
+
+            const trackingBadge = document.getElementById('ai-tracking-badge');
+            if (trackingBadge) {
+                const isTracking = !!aiQueueAppliedSession;
+                trackingBadge.textContent = isTracking ? 'Tracking: On' : 'Tracking: Off';
+                trackingBadge.style.background = isTracking ? '#065f46' : '#374151';
+                trackingBadge.style.color = isTracking ? '#d1fae5' : '#d1d5db';
+            }
+
+            const modalEl = document.getElementById('aiBuilderModal');
+            if (!modalEl || typeof bootstrap === 'undefined') return;
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
         }
 
         async function generateAiSequenceFromWorkflow() {
@@ -2086,6 +2145,8 @@
             generateBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
 
             try {
+                clearAiSequenceSuggestion(false);
+
                 const previewResponse = await fetch('/api/ai/sequences/generate', {
                     method: 'POST',
                     headers: {
@@ -2105,36 +2166,14 @@
 
                 const regeneratedSteps = previewData.regenerated_steps || previewData.parsed_steps || [];
                 latestAiRegeneratedSteps = regeneratedSteps;
+                renderAiRegeneratedStepsEditor(regeneratedSteps);
+                document.getElementById('ai-generate-methods-btn').disabled = regeneratedSteps.length === 0;
 
-                const confirmText = regeneratedSteps.map((step, index) => `${index + 1}. ${step}`).join('\n');
-                const approved = confirm(`AI re-generated steps for confirmation:\n\n${confirmText}\n\nClick OK to proceed with method suggestion, or Cancel to edit workflow text.`);
-                if (!approved) {
-                    showNotification('⚠️ AI generation cancelled. Please edit workflow and try again.', 'warning');
-                    return;
+                if (regeneratedSteps.length === 0) {
+                    throw new Error('No actionable regenerated steps found');
                 }
 
-                const response = await fetch('/api/ai/sequences/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        workflow_text: workflowText,
-                        confirmed_steps: regeneratedSteps
-                    })
-                });
-
-                const data = await response.json();
-                if (!response.ok || !data.success) {
-                    throw new Error(data.error || 'Failed to generate sequence');
-                }
-
-                latestAiSequenceSuggestion = data;
-                renderAiSequencePreview(data);
-                document.getElementById('ai-apply-sequence-btn').disabled = false;
-                document.getElementById('ai-save-sequence-btn').disabled = false;
-                showNotification(`✅ AI selected ${data.queue_data.length} step(s)`, 'success');
+                showNotification('✅ Regenerated steps ready. Review/edit and click Generate Methods.', 'success');
             } catch (error) {
                 console.error('AI generation error:', error);
                 showNotification(`❌ ${error.message}`, 'error');
@@ -2144,14 +2183,323 @@
             }
         }
 
+        function renderAiRegeneratedStepsEditor(steps) {
+            const container = document.getElementById('ai-regenerated-editor-container');
+            const editor = document.getElementById('ai-regenerated-steps-editor');
+            if (!container || !editor) return;
+
+            const sanitized = expandRepeatInstructionClientSide(steps || []);
+            editor.value = sanitized.join('\n');
+            container.style.display = 'block';
+        }
+
+        function extractAppsFromRepeatInstructionClient(stepText) {
+            const text = String(stepText || '');
+            const apps = [];
+
+            const parenMatch = text.match(/\((.*?)\)/);
+            let segment = parenMatch ? parenMatch[1] : text;
+            segment = segment.replace(/\be\.g\.?,?\s*/gi, '').replace(/\betc\.?\s*/gi, '');
+
+            segment.split(/,|\/|\band\b/i).forEach(part => {
+                const value = String(part || '').trim().replace(/^[\s.-]+|[\s.-]+$/g, '');
+                if (!value) return;
+                const lower = value.toLowerCase();
+                if (lower.includes('repeat step') || lower.includes('launch') || lower.includes('wake') || lower.includes('device')) return;
+                apps.push(value);
+            });
+
+            return Array.from(new Set(apps.map(a => a.toUpperCase())));
+        }
+
+        function replaceAppNameInStepClient(stepText, appName) {
+            let updated = String(stepText || '');
+            ['XUMO PLAY', 'YOUTUBE', 'NETFLIX', 'DISNEY+', 'APPLE TV'].forEach(base => {
+                const rx = new RegExp(base.replace(/[+]/g, '\\+'), 'ig');
+                updated = updated.replace(rx, appName.toUpperCase());
+            });
+            return updated;
+        }
+
+        function expandRepeatInstructionClientSide(steps) {
+            const expanded = [];
+            (steps || []).forEach(raw => {
+                const stepText = String(raw || '').trim();
+                if (!stepText) return;
+
+                const m = stepText.toLowerCase().match(/repeat\s+steps?\s+(\d+)\s*-\s*(\d+)/i);
+                if (!m) {
+                    expanded.push(stepText);
+                    return;
+                }
+
+                const startIdx = Number(m[1]);
+                const endIdx = Number(m[2]);
+                if (!startIdx || !endIdx || startIdx < 1 || endIdx < startIdx || endIdx > expanded.length) {
+                    return;
+                }
+
+                const sliceToRepeat = expanded.slice(startIdx - 1, endIdx);
+                if (!sliceToRepeat.length) return;
+
+                const apps = extractAppsFromRepeatInstructionClient(stepText);
+                if (apps.length > 0) {
+                    apps.forEach(app => {
+                        sliceToRepeat.forEach(baseStep => expanded.push(replaceAppNameInStepClient(baseStep, app)));
+                    });
+                } else {
+                    sliceToRepeat.forEach(s => expanded.push(s));
+                }
+            });
+
+            return expanded.slice(0, 80);
+        }
+
+        function getEditedRegeneratedSteps() {
+            const editor = document.getElementById('ai-regenerated-steps-editor');
+            const rawText = (editor?.value || '').trim();
+            if (!rawText) return [];
+            const normalized = rawText
+                .split('\n')
+                .map(line => line.trim())
+                .map(line => line.replace(/^\d+[.)-]\s+/, ''))
+                .map(line => line.replace(/^[-*]\s+/, ''))
+                .filter(line => line.length > 0);
+
+            return expandRepeatInstructionClientSide(normalized);
+        }
+
+        function requiresLogFileInput(steps) {
+            return (steps || []).some(step => {
+                const lowered = String(step || '').toLowerCase();
+                return ['log', 'logs', 'grep', 'ip_aamp_tunetime', 'aamp', 'crash', 'hang', 'unexpected issue'].some(token => lowered.includes(token));
+            });
+        }
+
+        function normalizeLogFileInput(rawValue) {
+            const value = (rawValue || '').trim();
+            if (!value) return '';
+            if (value.includes('/')) return value;
+            return `/opt/logs/${value}`;
+        }
+
+        function stepHasExplicitLogTarget(stepText) {
+            const text = String(stepText || '').toLowerCase();
+            if (text.includes('/opt/logs/') || text.includes('*.log') || text.includes('all logs') || text.includes('current logs')) return true;
+            return /\b[\w.-]+\.log(?:\.\d+)?\b/.test(text);
+        }
+
+        async function ensureAiMethodCatalog() {
+            if (aiAvailableMethodIds.length > 0) return aiAvailableMethodIds;
+            try {
+                const response = await fetch('/api/available_methods', { credentials: 'include' });
+                const data = await response.json();
+                if (response.ok && data && Array.isArray(data.methods)) {
+                    aiAvailableMethodIds = data.methods.map(item => String(item || '').trim()).filter(Boolean);
+                }
+            } catch (e) {
+                console.warn('Unable to fetch AI method catalog:', e);
+            }
+            return aiAvailableMethodIds;
+        }
+
+        function getAiEditorMethodCatalog() {
+            const methods = new Set(aiAvailableMethodIds || []);
+            (latestAiSequenceSuggestion?.selected_methods || []).forEach(item => {
+                const methodId = String(item?.method_id || '').trim();
+                if (methodId) methods.add(methodId);
+            });
+            (latestAiSequenceSuggestion?.queue_data || []).forEach(item => {
+                const methodId = String(item?.method || '').trim();
+                if (methodId) methods.add(methodId);
+            });
+            return Array.from(methods).sort();
+        }
+
+        function handleAiMethodChange(actionIndex, methodId) {
+            if (!latestAiSequenceSuggestion) return;
+            const queueItem = latestAiSequenceSuggestion?.queue_data?.[actionIndex];
+            const selectedItem = latestAiSequenceSuggestion?.selected_methods?.[actionIndex];
+            if (!queueItem || !selectedItem) return;
+
+            queueItem.method = methodId;
+            queueItem.name = getMethodName(methodId);
+            selectedItem.method_id = methodId;
+            selectedItem.method_name = getMethodName(methodId);
+            selectedItem.reason = 'edited by user in stage mapping';
+            renderAiSequencePreview(latestAiSequenceSuggestion);
+        }
+
+        function handleAiParamsChange(actionIndex, rawJson) {
+            if (!latestAiSequenceSuggestion) return;
+            const queueItem = latestAiSequenceSuggestion?.queue_data?.[actionIndex];
+            const selectedItem = latestAiSequenceSuggestion?.selected_methods?.[actionIndex];
+            if (!queueItem || !selectedItem) return;
+
+            let parsed = {};
+            const text = String(rawJson || '').trim();
+            if (text) {
+                try {
+                    parsed = JSON.parse(text);
+                } catch (e) {
+                    showNotification(`⚠️ Invalid JSON for action ${actionIndex + 1}. Keeping previous params.`, 'warning');
+                    return;
+                }
+            }
+
+            queueItem.params = parsed;
+            selectedItem.params = parsed;
+            selectedItem.reason = 'edited by user in stage mapping';
+        }
+
+        async function generateAiMethodsFromReviewedSteps() {
+            const workflowText = (document.getElementById('ai-sequence-workflow-input')?.value || '').trim();
+            const guidanceText = (document.getElementById('ai-sequence-guidance-input')?.value || '').trim();
+            const logFileInput = document.getElementById('ai-log-file-input');
+            const confirmedSteps = getEditedRegeneratedSteps();
+            const methodsBtn = document.getElementById('ai-generate-methods-btn');
+
+            if (!workflowText) {
+                showNotification('⚠️ Enter a workflow description first', 'warning');
+                return;
+            }
+
+            if (confirmedSteps.length === 0) {
+                showNotification('⚠️ Add or edit regenerated steps before generating methods', 'warning');
+                return;
+            }
+
+            const needsLogFile = requiresLogFileInput(confirmedSteps);
+            const hasInlineLogTarget = confirmedSteps.some(step => stepHasExplicitLogTarget(step));
+            let logFileHint = normalizeLogFileInput(logFileInput?.value || '');
+
+            if (needsLogFile && !hasInlineLogTarget && !logFileHint) {
+                const prompted = window.prompt('Log validation detected. Enter log file name/path (example: sky-messages.log or /opt/logs/sky-messages.log):', 'sky-messages.log');
+                logFileHint = normalizeLogFileInput(prompted || '');
+                if (logFileInput) logFileInput.value = logFileHint;
+            }
+
+            if (needsLogFile && !hasInlineLogTarget && !logFileHint) {
+                showNotification('⚠️ Log file is required for log-validation steps', 'warning');
+                if (logFileInput) logFileInput.focus();
+                return;
+            }
+
+            methodsBtn.disabled = true;
+            methodsBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generating...';
+
+            try {
+                latestAiUserGuidance = guidanceText;
+
+                await saveAiSequenceCheckpoint({
+                    event_type: 'generate_methods_clicked',
+                    prompt: workflowText,
+                    corrected_steps: confirmedSteps,
+                    generated_method_ids: [],
+                    selected_methods: latestAiSequenceSuggestion?.selected_methods || [],
+                    queue_data: [],
+                    log_file_hint: logFileHint,
+                    user_guidance: guidanceText
+                });
+
+                const response = await fetch('/api/ai/sequences/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        workflow_text: workflowText,
+                        confirmed_steps: confirmedSteps,
+                        user_guidance: guidanceText,
+                        log_file_hint: logFileHint
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Failed to generate sequence');
+                }
+
+                latestAiSequenceSuggestion = data;
+                await ensureAiMethodCatalog();
+                renderAiSequencePreview(data);
+                document.getElementById('ai-apply-sequence-btn').disabled = false;
+                document.getElementById('ai-save-sequence-btn').disabled = false;
+                showNotification(`✅ AI selected ${data.queue_data.length} step(s)`, 'success');
+            } catch (error) {
+                console.error('AI generation error:', error);
+                showNotification(`❌ ${error.message}`, 'error');
+            } finally {
+                methodsBtn.disabled = false;
+                methodsBtn.innerHTML = '<i class="bi bi-diagram-3"></i> Generate Methods';
+            }
+        }
+
         function renderAiSequencePreview(aiData) {
             const preview = document.getElementById('ai-sequence-preview');
+            const stagePreview = document.getElementById('ai-stage-methods-preview');
             if (!preview) return;
 
             if (!aiData || !aiData.selected_methods || aiData.selected_methods.length === 0) {
                 preview.style.display = 'none';
                 preview.innerHTML = '';
+                if (stagePreview) {
+                    stagePreview.style.display = 'none';
+                    stagePreview.innerHTML = '';
+                }
                 return;
+            }
+
+            if (stagePreview) {
+                const methodOptions = getAiEditorMethodCatalog();
+                let stageHtml = '<div style="margin-bottom: 0.6rem; color: #cbd5e1; font-size: 0.82rem;">Stage to method mapping (editable):</div>';
+                const stageGroups = new Map();
+                aiData.selected_methods.forEach((item, actionIdx) => {
+                    const stageNumber = Number(item.source_step_index || item.step || 0);
+                    if (!stageGroups.has(stageNumber)) {
+                        stageGroups.set(stageNumber, {
+                            stepText: item.step_text || '',
+                            methods: []
+                        });
+                    }
+                    stageGroups.get(stageNumber).methods.push({
+                        actionIdx,
+                        method_name: item.method_name || item.method_id || 'unknown',
+                        method_id: item.method_id || '',
+                        action_number: item.step,
+                        reason: item.reason || 'match',
+                        params: item.params || {}
+                    });
+                });
+
+                Array.from(stageGroups.entries())
+                    .sort((a, b) => a[0] - b[0])
+                    .forEach(([stageNumber, group]) => {
+                        const rows = group.methods.map(method => {
+                            const options = methodOptions.map(opt => `<option value="${escapeHtmlUnsafe(opt)}" ${opt === method.method_id ? 'selected' : ''}>${escapeHtmlUnsafe(getMethodName(opt))} (${escapeHtmlUnsafe(opt)})</option>`).join('');
+                            const paramsJson = JSON.stringify(method.params || {}, null, 2);
+                            return `
+                                <div style="margin-top: 0.45rem; padding: 0.45rem; border: 1px solid #334155; border-radius: 6px; background: #111827;">
+                                    <div style="color: #93c5fd; font-size: 0.78rem; margin-bottom: 0.25rem;">Action ${escapeHtmlUnsafe(method.action_number)} (${escapeHtmlUnsafe(method.method_name)})</div>
+                                    <select class="form-select form-select-sm" onchange="handleAiMethodChange(${method.actionIdx}, this.value)" style="background:#0b1220;color:#e2e8f0;border:1px solid #475569;">
+                                        ${options}
+                                    </select>
+                                    <textarea class="form-control" rows="3" onblur="handleAiParamsChange(${method.actionIdx}, this.value)" style="margin-top:0.35rem;background:#0b1220;color:#e2e8f0;border:1px solid #475569;font-family: monospace; font-size: 0.75rem;">${escapeHtmlUnsafe(paramsJson)}</textarea>
+                                    <div style="color:#94a3b8;font-size:0.72rem;margin-top:0.2rem;">${escapeHtmlUnsafe(method.reason)}</div>
+                                </div>
+                            `;
+                        }).join('');
+                    stageHtml += `
+                        <div style="padding: 0.42rem; border: 1px solid #334155; border-radius: 6px; margin-bottom: 0.35rem; background: #0f172a;">
+                            <div style="color: #93c5fd; font-size: 0.8rem;"><strong>Stage ${escapeHtmlUnsafe(stageNumber)}</strong></div>
+                            <div style="color: #cbd5e1; font-size: 0.75rem; margin-top: 0.15rem;">${escapeHtmlUnsafe(group.stepText || '')}</div>
+                            ${rows}
+                        </div>
+                    `;
+                });
+                stagePreview.innerHTML = stageHtml;
+                stagePreview.style.display = 'block';
             }
 
             let html = '<div style="margin-bottom: 0.6rem; color: #cbd5e1; font-size: 0.82rem;">Suggested methods:</div>';
@@ -2164,10 +2512,11 @@
 
             aiData.selected_methods.forEach(item => {
                 const confidencePct = Math.round((Number(item.confidence) || 0) * 100);
+                const stageNumber = Number(item.source_step_index || item.step || 0);
                 html += `
                     <div style="padding: 0.5rem; border: 1px solid #334155; border-radius: 6px; margin-bottom: 0.45rem; background: #111827;">
                         <div style="display: flex; justify-content: space-between; gap: 0.5rem; align-items: center;">
-                            <strong style="color: #93c5fd; font-size: 0.85rem;">${escapeHtmlUnsafe(item.step)}. ${escapeHtmlUnsafe(item.method_name || item.method_id)}</strong>
+                            <strong style="color: #93c5fd; font-size: 0.85rem;">S${escapeHtmlUnsafe(stageNumber)} • A${escapeHtmlUnsafe(item.step)}: ${escapeHtmlUnsafe(item.method_name || item.method_id)}</strong>
                             <span style="font-size: 0.72rem; padding: 0.15rem 0.45rem; border-radius: 12px; background: #1d4ed8; color: #dbeafe;">${confidencePct}%</span>
                         </div>
                         <div style="color: #e5e7eb; font-size: 0.8rem; margin-top: 0.2rem;">${escapeHtmlUnsafe(item.step_text)}</div>
@@ -2204,8 +2553,67 @@
             }
 
             executionQueue = buildAiGeneratedQueueItems();
+            aiQueueAppliedSession = {
+                workflow_text: latestAiSequenceSuggestion?.workflow_text || '',
+                parsed_steps: latestAiSequenceSuggestion?.parsed_steps || [],
+                regenerated_steps: getEditedRegeneratedSteps(),
+                generated_method_ids: (latestAiSequenceSuggestion?.selected_methods || []).map(item => item.method_id),
+                user_guidance: (document.getElementById('ai-sequence-guidance-input')?.value || '').trim(),
+                log_file_hint: normalizeLogFileInput(document.getElementById('ai-log-file-input')?.value || ''),
+                generated_at_utc: latestAiSequenceSuggestion?.generated_at_utc || null
+            };
+
+            const trackingBadge = document.getElementById('ai-tracking-badge');
+            if (trackingBadge) {
+                trackingBadge.textContent = 'Tracking: On';
+                trackingBadge.style.background = '#065f46';
+                trackingBadge.style.color = '#d1fae5';
+            }
             renderQueue();
+
+            saveAiSequenceCheckpoint({
+                event_type: 'apply_to_queue',
+                prompt: aiQueueAppliedSession.workflow_text || '',
+                corrected_steps: getEditedRegeneratedSteps().length > 0 ? getEditedRegeneratedSteps() : (aiQueueAppliedSession.regenerated_steps || []),
+                generated_method_ids: aiQueueAppliedSession.generated_method_ids || [],
+                selected_methods: latestAiSequenceSuggestion?.selected_methods || [],
+                queue_data: latestAiSequenceSuggestion?.queue_data || [],
+                log_file_hint: aiQueueAppliedSession.log_file_hint || '',
+                user_guidance: aiQueueAppliedSession.user_guidance || ''
+            });
+
+            const modalEl = document.getElementById('aiBuilderModal');
+            if (modalEl && typeof bootstrap !== 'undefined') {
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+            }
+
             showNotification('✅ AI sequence applied to queue. Review and edit as needed.', 'success');
+        }
+
+        function buildAiSequenceMetadataFromAppliedSession() {
+            if (!aiQueueAppliedSession || !aiQueueAppliedSession.workflow_text) {
+                return null;
+            }
+
+            const reviewed = document.getElementById('ai-sequence-reviewed-checkbox')?.checked || false;
+            const tested = document.getElementById('ai-sequence-tested-checkbox')?.checked || false;
+            const reviewNotes = (document.getElementById('ai-sequence-review-notes')?.value || '').trim();
+
+            return {
+                ai_sequence_builder: {
+                    prompt: aiQueueAppliedSession.workflow_text,
+                    parsed_steps: aiQueueAppliedSession.parsed_steps || [],
+                    regenerated_steps: getEditedRegeneratedSteps().length > 0 ? getEditedRegeneratedSteps() : (aiQueueAppliedSession.regenerated_steps || []),
+                    log_file_hint: normalizeLogFileInput(document.getElementById('ai-log-file-input')?.value || aiQueueAppliedSession.log_file_hint || ''),
+                    generated_method_ids: aiQueueAppliedSession.generated_method_ids || [],
+                    user_guidance: (document.getElementById('ai-sequence-guidance-input')?.value || aiQueueAppliedSession.user_guidance || '').trim(),
+                    reviewed: reviewed,
+                    tested: tested,
+                    review_notes: reviewNotes,
+                    generated_at_utc: aiQueueAppliedSession.generated_at_utc || null
+                }
+            };
         }
 
         async function saveAiGeneratedSequence() {
@@ -2225,7 +2633,7 @@
                 description: item.description,
                 params: item.params || {}
             }));
-            const methodRationaleMeta = buildAiSequenceMetadata();
+            const methodRationaleMeta = buildAiSequenceMetadata() || buildAiSequenceMetadataFromAppliedSession();
             const saveBtn = document.getElementById('ai-save-sequence-btn');
             const originalHtml = saveBtn ? saveBtn.innerHTML : '';
 
@@ -2257,7 +2665,8 @@
                 renderQueue();
                 await submitAiSequenceFeedback(sequenceName.trim(), queueData, methodRationaleMeta);
                 loadSavedSequences();
-                showNotification(`✅ AI-generated sequence saved: ${sequenceName.trim()}`, 'success');
+                const storageText = data.save_storage === 'json_fallback' ? 'JSON fallback' : (data.save_storage === 'database' ? 'database' : 'storage');
+                showNotification(`✅ AI-generated sequence saved: ${sequenceName.trim()} (${storageText})`, 'success');
             } catch (error) {
                 console.error('AI save sequence error:', error);
                 showNotification(`❌ ${error.message}`, 'error');
@@ -2271,6 +2680,9 @@
 
         function clearAiSequenceSuggestion(clearWorkflowText = true) {
             latestAiSequenceSuggestion = null;
+            latestAiRegeneratedSteps = [];
+            latestAiUserGuidance = '';
+            document.getElementById('ai-generate-methods-btn').disabled = true;
             document.getElementById('ai-apply-sequence-btn').disabled = true;
             document.getElementById('ai-save-sequence-btn').disabled = true;
 
@@ -2279,6 +2691,23 @@
                 preview.style.display = 'none';
                 preview.innerHTML = '';
             }
+
+            const stagePreview = document.getElementById('ai-stage-methods-preview');
+            if (stagePreview) {
+                stagePreview.style.display = 'none';
+                stagePreview.innerHTML = '';
+            }
+
+            const editorContainer = document.getElementById('ai-regenerated-editor-container');
+            const editor = document.getElementById('ai-regenerated-steps-editor');
+            if (editorContainer) editorContainer.style.display = 'none';
+            if (editor) editor.value = '';
+
+            const guidanceInput = document.getElementById('ai-sequence-guidance-input');
+            if (guidanceInput) guidanceInput.value = '';
+
+            const logFileInput = document.getElementById('ai-log-file-input');
+            if (logFileInput) logFileInput.value = '';
 
             if (clearWorkflowText) {
                 const input = document.getElementById('ai-sequence-workflow-input');
@@ -2299,7 +2728,10 @@
                 ai_sequence_builder: {
                     prompt: latestAiSequenceSuggestion?.workflow_text || '',
                     parsed_steps: latestAiSequenceSuggestion?.parsed_steps || [],
+                    regenerated_steps: getEditedRegeneratedSteps(),
+                    log_file_hint: normalizeLogFileInput(document.getElementById('ai-log-file-input')?.value || ''),
                     generated_method_ids: (latestAiSequenceSuggestion?.selected_methods || []).map(item => item.method_id),
+                    user_guidance: (document.getElementById('ai-sequence-guidance-input')?.value || '').trim(),
                     reviewed: reviewed,
                     tested: tested,
                     review_notes: reviewNotes,
@@ -2324,6 +2756,9 @@
                         prompt: aiMeta.prompt,
                         generated_method_ids: aiMeta.generated_method_ids || [],
                         corrected_queue_data: queueData || [],
+                        corrected_steps: aiMeta.regenerated_steps || [],
+                        user_guidance: aiMeta.user_guidance || '',
+                        log_file_hint: aiMeta.log_file_hint || '',
                         reviewed: !!aiMeta.reviewed,
                         tested: !!aiMeta.tested,
                         review_notes: aiMeta.review_notes || ''
@@ -2331,6 +2766,24 @@
                 });
             } catch (feedbackError) {
                 console.warn('AI feedback save warning:', feedbackError);
+            }
+        }
+
+        async function saveAiSequenceCheckpoint(payload) {
+            try {
+                if (!payload || (!payload.prompt && (!payload.corrected_steps || payload.corrected_steps.length === 0))) {
+                    return;
+                }
+                await fetch('/api/ai/sequences/checkpoint', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+            } catch (checkpointError) {
+                console.warn('AI checkpoint save warning:', checkpointError);
             }
         }
         
@@ -8041,7 +8494,7 @@
                 });
                 
                 console.log('📋 Final queue data to save:', queueData);
-                const methodRationaleMeta = buildAiSequenceMetadata();
+                const methodRationaleMeta = buildAiSequenceMetadata() || buildAiSequenceMetadataFromAppliedSession();
                 
                 const endpoint = updateMode ? `/api/sequences/${sequenceId}` : '/api/sequences/save';
                 const method = updateMode ? 'PUT' : 'POST';
@@ -8051,6 +8504,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
+                    credentials: 'include',
                     body: JSON.stringify({
                         name: sequenceName,
                         queue_data: queueData,
@@ -8061,7 +8515,8 @@
                 .then(data => {
                     if (data.success) {
                         const action = updateMode ? 'updated' : 'saved';
-                        showNotification(`✅ Sequence ${action}: ${sequenceName}`, 'success');
+                        const storageText = data.save_storage === 'json_fallback' ? 'JSON fallback' : (data.save_storage === 'database' ? 'database' : 'storage');
+                        showNotification(`✅ Sequence ${action}: ${sequenceName} (${storageText})`, 'success');
                         submitAiSequenceFeedback(sequenceName, queueData, methodRationaleMeta);
 
                         // Invalidate local sequence cache so next edit fetches fresh data,
@@ -8090,7 +8545,7 @@
                         clearAiSequenceSuggestion(false);
                         console.log('✅ Queue cleared after saving');
                     } else {
-                        showNotification(`❌ Error: ${data.message || 'Unknown error'}`, 'error');
+                        showNotification(`❌ Error: ${data.error || data.message || 'Unknown error'}`, 'error');
                     }
                 })
                 .catch(error => {

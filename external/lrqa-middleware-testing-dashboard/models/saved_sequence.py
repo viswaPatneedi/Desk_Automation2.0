@@ -12,6 +12,7 @@ from models.database import Session, SavedSequence as DBSavedSequence
 
 class SavedSequence:
     """Model for saved method sequences"""
+    _last_save_storage = 'unknown'
     
     def __init__(self, name: str, queue_data: List[Dict[str, any]] = None, methods: List[str] = None,
                  user_inputs: Dict[str, any] = None, sequence_id: str = None, created_at: str = None,
@@ -161,6 +162,23 @@ class SavedSequence:
         except Exception as exc:
             print(f"[SAVE] WARNING: JSON backup sync failed: {exc}")
             return False
+
+    @classmethod
+    def _write_json_from_sequences(cls, sequences: List['SavedSequence']) -> bool:
+        """Write provided sequence objects directly to JSON fallback storage."""
+        try:
+            payload = [seq.to_dict() for seq in (sequences or [])]
+            os.makedirs(os.path.dirname(SAVED_SEQUENCES_FILE) or '.', exist_ok=True)
+            with open(SAVED_SEQUENCES_FILE, 'w', encoding='utf-8') as f:
+                json.dump(payload, f, indent=2)
+            return True
+        except Exception as exc:
+            print(f"[SAVE] ERROR: JSON direct write failed: {exc}")
+            return False
+
+    @classmethod
+    def get_last_save_storage(cls) -> str:
+        return str(getattr(cls, '_last_save_storage', 'unknown') or 'unknown')
     
     @classmethod
     def load_all(cls) -> List['SavedSequence']:
@@ -222,12 +240,23 @@ class SavedSequence:
             backup_synced = cls._write_json_backup(session)
             if not backup_synced:
                 print(f"[SAVE] Database saved, but JSON backup sync failed for {len(sequences)} sequences")
+                cls._last_save_storage = 'database'
             else:
                 print("[SAVE] Sequences synced to database and JSON backup")
+                cls._last_save_storage = 'database'
             return True
         except Exception as e:
             session.rollback()
             print(f"[SAVE] ERROR: Unexpected error saving sequences to database: {str(e)}")
+
+            # Fallback path: persist to JSON so UI can still list saved sequences
+            json_saved = cls._write_json_from_sequences(sequences)
+            if json_saved:
+                print("[SAVE] Fallback succeeded: sequences saved to JSON storage")
+                cls._last_save_storage = 'json_fallback'
+                return True
+
+            cls._last_save_storage = 'failed'
             return False
         finally:
             session.close()
@@ -249,7 +278,9 @@ class SavedSequence:
             method_rationale=method_rationale
         )
         sequences.append(new_sequence)
-        cls.save_all(sequences)
+        saved = cls.save_all(sequences)
+        if not saved:
+            raise RuntimeError('Failed to persist saved sequence')
         return new_sequence
     
     @classmethod

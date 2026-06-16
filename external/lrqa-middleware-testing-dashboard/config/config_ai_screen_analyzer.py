@@ -9,13 +9,13 @@ import os
 # Enable/Disable AI Screen Analyzer
 AI_SCREEN_ANALYZER_ENABLED = os.environ.get('AI_SCREEN_ANALYZER_ENABLED', 'true').lower() == 'true'
 
-# Anthropic API Configuration
-ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
+# Google Gemini API Configuration
+GOOGLE_API_KEY = os.environ.get('GOOGLE_API_KEY', '')
 
-# Claude Model to use for screen analysis
-# Recommended: claude-3-5-sonnet-20241022 (fastest, cost-effective)
-# Options: claude-3-opus, claude-3-sonnet, claude-3-haiku
-AI_VISION_MODEL = os.environ.get('AI_VISION_MODEL', 'claude-3-5-sonnet-20241022')
+# Gemini model to use for screen analysis
+# Recommended: gemini-2.0-flash (fast, cost-effective)
+# Options: gemini-2.0-flash, gemini-1.5-flash, gemini-1.5-pro
+AI_VISION_MODEL = os.environ.get('AI_VISION_MODEL', 'gemini-2.0-flash')
 
 # Confidence threshold for screen matching (0.0 - 1.0)
 # Higher values require more confidence in the AI's assessment
@@ -75,17 +75,17 @@ ANALYSIS_DETAIL_LEVEL = os.environ.get('ANALYSIS_DETAIL_LEVEL', 'standard')
 """
 To enable AI Screen Analyzer, set the following environment variables:
 
-1. Get Anthropic API Key:
-   - Go to https://console.anthropic.com
-   - Create new API key
+1. Get Google Gemini API Key:
+    - Go to https://makersuite.google.com/app/apikey
+    - Create new API key
    - Copy the key
 
 2. Set environment variable:
-   export ANTHROPIC_API_KEY='sk-ant-...'
+    export GOOGLE_API_KEY='your-google-key'
 
 3. Optional configuration:
    export AI_SCREEN_ANALYZER_ENABLED='true'
-   export AI_VISION_MODEL='claude-3-5-sonnet-20241022'
+    export AI_VISION_MODEL='gemini-2.0-flash'
    export AI_CONFIDENCE_THRESHOLD='0.7'
    export AI_FALLBACK_TO_LEGACY='true'
    export AI_DEBUG_LOGGING='true'
@@ -144,9 +144,9 @@ Result format from AI Screen Analyzer:
 
 """
 API Costs:
-- Claude 3.5 Sonnet: $3 per 1M input tokens, $15 per 1M output tokens
-- Typical screenshot analysis: ~2,000-5,000 tokens per image
-- Cost per screenshot: ~$0.01-0.02
+- Gemini free tier availability depends on region and current quota.
+- Typical screenshot analysis uses a small number of multimodal tokens.
+- Cost/limits can change; verify in Google AI Studio billing/quota dashboard.
 
 Optimization:
 - Use caching to avoid repeated analyses of same screenshot

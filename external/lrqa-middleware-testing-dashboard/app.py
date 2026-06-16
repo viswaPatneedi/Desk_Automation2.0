@@ -27,6 +27,11 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timezone, timedelta
 
+try:
+    import google.generativeai as genai
+except ImportError:
+    genai = None
+
 # Suppress Paramiko verbose logging
 logging.getLogger("paramiko").setLevel(logging.CRITICAL)
 logging.getLogger("paramiko.transport").setLevel(logging.CRITICAL)
@@ -82,6 +87,8 @@ import config.config_email  # Loads Gmail SMTP settings from .env
 from config.config_paths import get_data_file_path
 
 AI_SEQUENCE_LEARNING_FILE = get_data_file_path('ai_sequence_learning.json')
+AI_SEQUENCE_RULE_MEMORY_FILE = get_data_file_path('ai_sequence_rule_memory.json')
+MAX_AI_SEQUENCE_STEPS = 80
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -102,29 +109,29 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True  # Reload templates on file changes
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable static file caching
 
 # ===== AI SCREEN ANALYZER INITIALIZATION =====
-# Set ANTHROPIC_API_KEY from environment variables if available
-# Priority order: ANTROPIC_API_KEY env var → config file → fallback to None
-ai_api_key = os.environ.get('ANTHROPIC_API_KEY')
+# Set GOOGLE_API_KEY from environment variables if available
+# Priority order: GOOGLE_API_KEY env var -> config file -> fallback to None
+ai_api_key = os.environ.get('GOOGLE_API_KEY')
 if not ai_api_key:
     try:
         # Try to load from config file
         with open('.env', 'r') as f:
             for line in f:
-                if line.startswith('ANTHROPIC_API_KEY'):
+                if line.startswith('GOOGLE_API_KEY'):
                     key_value = line.split('=', 1)[1].strip().strip("'\"")
-                    os.environ['ANTHROPIC_API_KEY'] = key_value
+                    os.environ['GOOGLE_API_KEY'] = key_value
                     ai_api_key = key_value
-                    print(f"✓ Loaded ANTHROPIC_API_KEY from .env file")
+                    print("✓ Loaded GOOGLE_API_KEY from .env file")
                     break
     except:
         pass
 
 if ai_api_key:
-    print(f"✓ AI Screen Analyzer: ANTHROPIC_API_KEY is configured (key: {ai_api_key[:10]}...)")
+    print(f"✓ AI Screen Analyzer: GOOGLE_API_KEY is configured (key: {ai_api_key[:10]}...)")
 else:
-    print("⚠ AI Screen Analyzer: ANTHROPIC_API_KEY not found - AI validation will return 'Unknown'")
-    print("  To enable AI features, set: export ANTHROPIC_API_KEY='sk-ant-xxxxx'")
-    print("  Get key from: https://console.anthropic.com/account/keys")
+    print("⚠ AI Screen Analyzer: GOOGLE_API_KEY not found - AI validation will return 'Unknown'")
+    print("  To enable AI features, set: export GOOGLE_API_KEY='your-google-key'")
+    print("  Get key from: https://makersuite.google.com/app/apikey")
 # ===== END AI INITIALIZATION =====
 
 # Set the server name for hostname-based access
@@ -250,11 +257,584 @@ def _save_ai_learning_entries(entries):
         json.dump(entries, learning_file, indent=2)
 
 
+def _default_ai_rule_memory():
+    return {
+        'version': 1,
+        'updated_at_utc': datetime.now(timezone.utc).isoformat(),
+        'token_method_preferences': {},
+        'step_method_rules': [
+            {
+                'name': 'rule_wait_step',
+                'contains_any': ['wait', 'seconds', 'minute', 'minutes'],
+                'method': 'wait',
+                'reason': 'rule-memory default: wait semantics',
+                'confidence': 0.92,
+                'params_template': {
+                    'wait_seconds': '60'
+                }
+            },
+            {
+                'name': 'rule_launch_step',
+                'contains_any': ['launch', 'open', 'start'],
+                'method': 'voice_command',
+                'reason': 'rule-memory default: launch semantics',
+                'confidence': 0.9,
+                'params_template': {
+                    'voice_text': '{{step_text}}'
+                }
+            },
+            {
+                'name': 'rule_validation_step',
+                'contains_any': ['verify', 'validate', 'check', 'confirm', 'log', 'querypowerstate'],
+                'method': 'execute_command',
+                'reason': 'rule-memory default: validation semantics',
+                'confidence': 0.9,
+                'params_template': {
+                    'command_text': 'grep -i "{{step_text}}" {{log_file}} | tail -1',
+                    'validation_type': 'contains',
+                    'expected_output': '{{step_text}}'
+                }
+            }
+        ],
+        'log_preferences': {
+            'preferred_log_file': '/opt/logs/sky-messages.log',
+            'last_used_log_file': ''
+        },
+        'step_regeneration_rules': [
+            {
+                'name': 'regen_home_press',
+                'contains_any': ['home button', 'press home'],
+                'outputs': ['Press HOME button', 'Verify Home screen log']
+            },
+            {
+                'name': 'regen_linear_playback',
+                'contains_any': ['linear channel', 'xumo play'],
+                'outputs': ['Launch XUMO PLAY', 'Wait 15 seconds', 'Verify IP_AAMP_TUNETIME log']
+            },
+            {
+                'name': 'regen_standby_flow',
+                'contains_any': ['standby'],
+                'outputs': ['Send IR POWER for standby', 'Verify QueryPowerState=STANDBY', 'Wait 300 seconds']
+            },
+            {
+                'name': 'regen_wakeup_launch',
+                'contains_all': ['wake', 'launch'],
+                'outputs': ['Send IR POWER for wakeup', 'Verify QueryPowerState is ON', 'Verify Home screen log', 'Launch {{app_name}}']
+            },
+            {
+                'name': 'regen_av_health_combo',
+                'contains_all': ['verify av playback', 'crash'],
+                'outputs': ['Verify AV playback', 'Confirm no crashes, hangs, or unexpected issues in logs']
+            }
+        ],
+        'flow_examples': []
+    }
+
+
+def _load_ai_rule_memory():
+    if not os.path.exists(AI_SEQUENCE_RULE_MEMORY_FILE):
+        return _default_ai_rule_memory()
+    try:
+        with open(AI_SEQUENCE_RULE_MEMORY_FILE, 'r', encoding='utf-8') as memory_file:
+            data = json.load(memory_file)
+        if isinstance(data, dict):
+            defaults = _default_ai_rule_memory()
+            defaults.update(data)
+            if not isinstance(defaults.get('token_method_preferences'), dict):
+                defaults['token_method_preferences'] = {}
+            if not isinstance(defaults.get('step_method_rules'), list):
+                defaults['step_method_rules'] = _default_ai_rule_memory()['step_method_rules']
+            if not isinstance(defaults.get('log_preferences'), dict):
+                defaults['log_preferences'] = _default_ai_rule_memory()['log_preferences']
+            if not isinstance(defaults.get('flow_examples'), list):
+                defaults['flow_examples'] = []
+            if not isinstance(defaults.get('step_regeneration_rules'), list):
+                defaults['step_regeneration_rules'] = _default_ai_rule_memory()['step_regeneration_rules']
+            return defaults
+    except Exception as load_err:
+        app.logger.warning(f"Unable to load AI rule memory file: {load_err}")
+    return _default_ai_rule_memory()
+
+
+def _save_ai_rule_memory(rule_memory):
+    payload = dict(rule_memory or {})
+    payload['updated_at_utc'] = datetime.now(timezone.utc).isoformat()
+    os.makedirs(os.path.dirname(AI_SEQUENCE_RULE_MEMORY_FILE), exist_ok=True)
+    with open(AI_SEQUENCE_RULE_MEMORY_FILE, 'w', encoding='utf-8') as memory_file:
+        json.dump(payload, memory_file, indent=2)
+
+
+def _update_ai_rule_memory_from_checkpoint(rule_memory, checkpoint):
+    payload = dict(rule_memory or _default_ai_rule_memory())
+
+    flow_examples = payload.get('flow_examples') or []
+    if not isinstance(flow_examples, list):
+        flow_examples = []
+
+    prompt = str(checkpoint.get('prompt') or '').strip()
+    corrected_steps = [str(step).strip() for step in (checkpoint.get('corrected_steps') or []) if str(step).strip()]
+    queue_data = checkpoint.get('queue_data') or []
+    applied_method_ids = [
+        str(item.get('method')).strip()
+        for item in queue_data
+        if isinstance(item, dict) and str(item.get('method') or '').strip()
+    ]
+    generated_method_ids = [str(m).strip() for m in (checkpoint.get('generated_method_ids') or []) if str(m).strip()]
+    selected_methods = checkpoint.get('selected_methods') or []
+
+    event_type = str(checkpoint.get('event_type') or 'checkpoint').strip() or 'checkpoint'
+
+    flow_examples.append({
+        'created_at_utc': datetime.now(timezone.utc).isoformat(),
+        'event_type': event_type,
+        'prompt': prompt,
+        'corrected_steps': corrected_steps[:MAX_AI_SEQUENCE_STEPS],
+        'generated_method_ids': generated_method_ids[:MAX_AI_SEQUENCE_STEPS],
+        'applied_method_ids': applied_method_ids[:MAX_AI_SEQUENCE_STEPS],
+        'log_file_hint': _normalize_log_file_hint(checkpoint.get('log_file_hint')),
+        'user_guidance': str(checkpoint.get('user_guidance') or '').strip()
+    })
+    if len(flow_examples) > 500:
+        flow_examples = flow_examples[-500:]
+    payload['flow_examples'] = flow_examples
+
+    if corrected_steps and applied_method_ids:
+        token_method_preferences = payload.get('token_method_preferences') or {}
+        if not isinstance(token_method_preferences, dict):
+            token_method_preferences = {}
+
+        for step in corrected_steps:
+            tokens = set(_tokenize_text(step))
+            for token in tokens:
+                method_counts = token_method_preferences.get(token) or {}
+                if not isinstance(method_counts, dict):
+                    method_counts = {}
+                for method_id in applied_method_ids:
+                    method_counts[method_id] = int(method_counts.get(method_id, 0)) + 1
+                token_method_preferences[token] = method_counts
+
+        payload['token_method_preferences'] = token_method_preferences
+
+    if isinstance(selected_methods, list):
+        for item in selected_methods:
+            if not isinstance(item, dict):
+                continue
+            step_text = str(item.get('step_text') or '').strip()
+            method_id = str(item.get('method_id') or item.get('method') or '').strip()
+            params = item.get('params') if isinstance(item.get('params'), dict) else {}
+            if not step_text or not method_id:
+                continue
+            payload = _upsert_step_method_rule(payload, step_text, method_id, params, confidence=0.99)
+
+    return payload
+
+
+def _build_rule_memory_token_map(rule_memory):
+    token_map = defaultdict(Counter)
+    token_method_preferences = (rule_memory or {}).get('token_method_preferences') or {}
+    if not isinstance(token_method_preferences, dict):
+        return token_map
+
+    for token, method_counts in token_method_preferences.items():
+        if not isinstance(method_counts, dict):
+            continue
+        normalized_token = str(token or '').strip().lower()
+        if not normalized_token:
+            continue
+        for method_id, count in method_counts.items():
+            try:
+                parsed_count = int(count)
+            except (TypeError, ValueError):
+                parsed_count = 0
+            if parsed_count > 0 and method_id:
+                token_map[normalized_token][str(method_id)] += parsed_count
+    return token_map
+
+
+def _merge_token_learning_maps(base_map, overlay_map):
+    merged = defaultdict(Counter)
+
+    for token, method_counts in (base_map or {}).items():
+        for method_id, count in (method_counts or {}).items():
+            merged[token][method_id] += count
+
+    for token, method_counts in (overlay_map or {}).items():
+        for method_id, count in (method_counts or {}).items():
+            merged[token][method_id] += count
+
+    return merged
+
+
+def _extract_log_target_from_text(text):
+    content = str(text or '')
+    opt_log_match = re.search(r'(/opt/logs/[^\s"\']+)', content, re.IGNORECASE)
+    if opt_log_match:
+        return _normalize_log_file_hint(opt_log_match.group(1))
+
+    file_match = re.search(r'\b([\w.-]+\.log(?:\.\d+)?)\b', content, re.IGNORECASE)
+    if file_match:
+        return _normalize_log_file_hint(file_match.group(1))
+
+    return ''
+
+
+def _fill_rule_template(value, lowered_step_text, log_file):
+    filled = str(value or '')
+    normalized_step_text = str(lowered_step_text or '').lower()
+    power_state = ''
+    if 'standby' in normalized_step_text:
+        power_state = 'STANDBY'
+    elif ' on' in normalized_step_text or normalized_step_text.endswith('on'):
+        power_state = 'ON'
+
+    filled = filled.replace('{{power_state}}', power_state)
+    filled = filled.replace('{{log_file}}', _normalize_log_file_hint(log_file) or '/opt/logs/sky-messages.log')
+    filled = filled.replace('{{step_text}}', str(lowered_step_text or '').strip())
+    return filled
+
+
+def _upsert_step_method_rule(rule_memory, step_text, method_id, method_params=None, confidence=0.99):
+    payload = dict(rule_memory or _default_ai_rule_memory())
+    rules = payload.get('step_method_rules') or []
+    if not isinstance(rules, list):
+        rules = []
+
+    tokens = [token for token in _tokenize_text(step_text) if len(token) >= 4]
+    signature_tokens = sorted(set(tokens))[:5]
+    if not signature_tokens:
+        return payload
+
+    method_id = str(method_id or '').strip()
+    if not method_id:
+        return payload
+
+    rule_name = f"learned_{method_id}_{'_'.join(signature_tokens[:2])}"[:80]
+
+    for existing in rules:
+        if not isinstance(existing, dict):
+            continue
+        same_method = str(existing.get('method') or '').strip() == method_id
+        same_contains = sorted([str(x) for x in (existing.get('contains_all') or [])]) == signature_tokens
+        if same_method and same_contains:
+            existing['confidence'] = round(min(0.995, float(existing.get('confidence') or 0.9) + 0.01), 3)
+            existing['reason'] = 'rule-memory learned from user-edited stage mapping'
+            if isinstance(method_params, dict) and method_params:
+                existing['params_template'] = method_params
+            payload['step_method_rules'] = rules
+            return payload
+
+    new_rule = {
+        'name': rule_name,
+        'contains_all': signature_tokens,
+        'contains_any': [],
+        'method': method_id,
+        'reason': 'rule-memory learned from user-edited stage mapping',
+        'confidence': round(float(confidence), 3)
+    }
+    if isinstance(method_params, dict) and method_params:
+        new_rule['params_template'] = method_params
+
+    rules.insert(0, new_rule)
+    if len(rules) > 800:
+        rules = rules[:800]
+    payload['step_method_rules'] = rules
+    return payload
+
+
+def _generate_from_rule_memory(step_text, methods_catalog, step_index, log_file_hint, rule_memory):
+    original_step_text = str(step_text or '').strip()
+    lowered = original_step_text.lower()
+    step_rules = (rule_memory or {}).get('step_method_rules') or []
+    if not isinstance(step_rules, list):
+        return []
+
+    for rule in step_rules:
+        if not isinstance(rule, dict):
+            continue
+
+        contains_all = [str(x).lower() for x in (rule.get('contains_all') or []) if str(x).strip()]
+        contains_any = [str(x).lower() for x in (rule.get('contains_any') or []) if str(x).strip()]
+
+        if contains_all and not all(token in lowered for token in contains_all):
+            continue
+        if contains_any and not any(token in lowered for token in contains_any):
+            continue
+
+        method_id = str(rule.get('method') or '').strip()
+        if not method_id:
+            continue
+
+        method_info = _find_method_info(methods_catalog, method_id)
+        params = {}
+        params_template = rule.get('params_template') or {}
+        if isinstance(params_template, dict):
+            for k, v in params_template.items():
+                params[k] = _fill_rule_template(v, original_step_text, log_file_hint)
+
+        reason = str(rule.get('reason') or 'rule-memory match')
+        confidence = float(rule.get('confidence') or 0.96)
+
+        return [
+            _build_ai_queue_item(
+                method_info,
+                f"AI step {step_index + 1}: {step_text}",
+                step_text,
+                reason,
+                confidence,
+                params=params
+            )
+        ]
+
+    return []
+
+
+def _update_ai_rule_memory_from_feedback(rule_memory, feedback_entry):
+    payload = dict(rule_memory or _default_ai_rule_memory())
+    token_method_preferences = payload.get('token_method_preferences') or {}
+    if not isinstance(token_method_preferences, dict):
+        token_method_preferences = {}
+
+    corrected_method_ids = [str(m) for m in (feedback_entry.get('corrected_method_ids') or []) if m]
+    corrected_steps = [str(step) for step in (feedback_entry.get('corrected_steps') or []) if str(step).strip()]
+
+    learning_text = ' '.join([
+        str(feedback_entry.get('prompt', '') or ''),
+        str(feedback_entry.get('review_notes', '') or ''),
+        str(feedback_entry.get('user_guidance', '') or ''),
+        ' '.join(corrected_steps)
+    ])
+    tokens = set(_tokenize_text(learning_text))
+
+    for token in tokens:
+        method_counts = token_method_preferences.get(token) or {}
+        if not isinstance(method_counts, dict):
+            method_counts = {}
+        for method_id in corrected_method_ids:
+            method_counts[method_id] = int(method_counts.get(method_id, 0)) + 1
+        token_method_preferences[token] = method_counts
+
+    payload['token_method_preferences'] = token_method_preferences
+
+    log_preferences = payload.get('log_preferences') or {}
+    if not isinstance(log_preferences, dict):
+        log_preferences = {}
+
+    explicit_log_target = _normalize_log_file_hint(feedback_entry.get('log_file_hint'))
+    if not explicit_log_target:
+        explicit_log_target = _extract_log_target_from_text(learning_text)
+
+    if explicit_log_target:
+        log_preferences['last_used_log_file'] = explicit_log_target
+        log_preferences['preferred_log_file'] = explicit_log_target
+
+    if not log_preferences.get('preferred_log_file'):
+        log_preferences['preferred_log_file'] = '/opt/logs/sky-messages.log'
+
+    payload['log_preferences'] = log_preferences
+    return payload
+
+
+def _build_memory_guidance_snippets(rule_memory, learning_entries, limit=8):
+    snippets = []
+
+    token_method_preferences = (rule_memory or {}).get('token_method_preferences') or {}
+    if isinstance(token_method_preferences, dict):
+        ranked_tokens = sorted(
+            token_method_preferences.items(),
+            key=lambda item: sum((item[1] or {}).values()) if isinstance(item[1], dict) else 0,
+            reverse=True
+        )
+        for token, method_counts in ranked_tokens[:4]:
+            if not isinstance(method_counts, dict) or not method_counts:
+                continue
+            best_method = max(method_counts.items(), key=lambda kv: kv[1])[0]
+            snippets.append(f"token='{token}' -> prefer method '{best_method}'")
+
+    for entry in (learning_entries or [])[-4:]:
+        prompt = str(entry.get('prompt', '') or '').strip()
+        corrected_steps = [str(s).strip() for s in (entry.get('corrected_steps') or []) if str(s).strip()]
+        corrected_methods = [str(m).strip() for m in (entry.get('corrected_method_ids') or []) if str(m).strip()]
+        if not prompt or not corrected_steps:
+            continue
+        snippet = {
+            'prompt': prompt[:240],
+            'corrected_steps': corrected_steps[:10],
+            'corrected_methods': corrected_methods[:10]
+        }
+        snippets.append(json.dumps(snippet, ensure_ascii=True))
+
+    return snippets[:limit]
+
+
+def _parse_regenerated_lines_from_ai_text(raw_text):
+    lines = []
+    for line in str(raw_text or '').splitlines():
+        cleaned = line.strip()
+        cleaned = re.sub(r'^\d+[.)-]\s+', '', cleaned)
+        cleaned = re.sub(r'^[-*]\s+', '', cleaned)
+        if cleaned:
+            lines.append(cleaned)
+    return lines[:MAX_AI_SEQUENCE_STEPS]
+
+
+def _contains_repeat_reference(steps):
+    for step in (steps or []):
+        lowered = str(step or '').lower()
+        if 'repeat step' in lowered or re.search(r'\brepeat\s+steps?\b', lowered):
+            return True
+    return False
+
+
+def _verify_and_expand_steps_with_google_ai(model, workflow_text, regenerated_steps, preferred_log_file, memory_snippets):
+    if not regenerated_steps:
+        return []
+
+    steps_block = '\n'.join([f"- {step}" for step in regenerated_steps])
+    guidance_block = '\n'.join([f"- {item}" for item in memory_snippets]) if memory_snippets else '- none'
+
+    verify_prompt = (
+        'You are validating generated QA steps for execution readiness.\\n'
+        'Return ONLY a JSON array of strings.\\n'
+        'Requirements:\\n'
+        '1) Expand any repeat instruction into explicit executable steps.\\n'
+        '2) Do not keep lines like "Repeat Steps X-Y" in output.\\n'
+        '3) Keep one action/verification per line and preserve original order intent.\\n'
+        '4) Keep explicit waits as separate lines.\\n'
+        '5) Keep max 25 lines.\\n'
+        f'Preferred log file: {preferred_log_file or "/opt/logs/sky-messages.log"}\\n\\n'
+        'Original workflow:\\n'
+        f'{workflow_text}\\n\\n'
+        'Candidate regenerated steps:\\n'
+        f'{steps_block}\\n\\n'
+        'Memory guidance from past user corrections:\\n'
+        f'{guidance_block}\\n\\n'
+        'Output format example: ["Step 1", "Step 2"]\\n'
+        'Do not include markdown or prose.'
+    )
+
+    try:
+        candidate_steps = list(regenerated_steps[:MAX_AI_SEQUENCE_STEPS])
+
+        for _ in range(2):
+            verify_response = model.generate_content(verify_prompt)
+            verify_raw = (getattr(verify_response, 'text', '') or '').strip()
+            if not verify_raw:
+                break
+
+            parsed_steps = []
+            try:
+                parsed = json.loads(verify_raw)
+                if isinstance(parsed, list):
+                    parsed_steps = [str(item).strip() for item in parsed if str(item).strip()][:MAX_AI_SEQUENCE_STEPS]
+            except Exception:
+                parsed_steps = _parse_regenerated_lines_from_ai_text(verify_raw)
+
+            if parsed_steps:
+                candidate_steps = parsed_steps
+                if not _contains_repeat_reference(candidate_steps):
+                    return candidate_steps[:MAX_AI_SEQUENCE_STEPS]
+
+        # Guaranteed fallback: if Gemini still keeps literal repeat text, expand it with generic parser.
+        if _contains_repeat_reference(candidate_steps):
+            return _expand_repeat_instruction_steps(candidate_steps)
+
+        return candidate_steps[:MAX_AI_SEQUENCE_STEPS]
+    except Exception as verify_err:
+        app.logger.warning(f"Google AI verification pass failed; using first-pass regenerated steps: {verify_err}")
+        if _contains_repeat_reference(regenerated_steps):
+            return _expand_repeat_instruction_steps(regenerated_steps)
+        return regenerated_steps[:MAX_AI_SEQUENCE_STEPS]
+
+
+def _regenerate_steps_with_google_ai(workflow_text, parsed_steps, rule_memory, learning_entries):
+    if genai is None:
+        return []
+
+    api_key = os.environ.get('GOOGLE_API_KEY', '').strip()
+    if not api_key:
+        return []
+
+    try:
+        model_name = os.environ.get('AI_SEQUENCE_TEXT_MODEL', 'gemini-2.0-flash')
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(model_name)
+
+        preferred_log = _normalize_log_file_hint((rule_memory.get('log_preferences') or {}).get('preferred_log_file'))
+        memory_snippets = _build_memory_guidance_snippets(rule_memory, learning_entries)
+
+        guidance_block = '\n'.join([f"- {item}" for item in memory_snippets]) if memory_snippets else '- none'
+        parsed_block = '\n'.join([f"- {step}" for step in (parsed_steps or [])])
+
+        prompt = (
+            'You are generating executable QA test steps for a device automation system.\\n'
+            'Return ONLY a JSON array of strings.\\n'
+            'Hard constraints:\\n'
+            '1) One action per step (atomic).\\n'
+            '2) Keep explicit wait steps separate.\\n'
+            '3) Keep command and verification in separate steps.\\n'
+            '4) Preserve order and intent from the input.\\n'
+            '5) If log verification is required and no file is named in step text, use preferred log file.\\n'
+            f'Preferred log file: {preferred_log or "/opt/logs/sky-messages.log"}\\n\\n'
+            'Input workflow text:\\n'
+            f'{workflow_text}\\n\\n'
+            'Parsed steps:\\n'
+            f'{parsed_block}\\n\\n'
+            'Memory guidance from past user corrections:\\n'
+            f'{guidance_block}\\n\\n'
+            'Output format example: ["Step 1", "Step 2"]\\n'
+            'Do not include markdown or prose.'
+        )
+
+        response = model.generate_content(prompt)
+        raw = (getattr(response, 'text', '') or '').strip()
+        if not raw:
+            return []
+
+        try:
+            data = json.loads(raw)
+            if isinstance(data, list):
+                result = [str(item).strip() for item in data if str(item).strip()]
+                result = result[:MAX_AI_SEQUENCE_STEPS]
+                if _contains_repeat_reference(result):
+                    return _verify_and_expand_steps_with_google_ai(
+                        model,
+                        workflow_text,
+                        result,
+                        preferred_log,
+                        memory_snippets
+                    )
+                return result
+        except Exception:
+            pass
+
+        parsed_lines = _parse_regenerated_lines_from_ai_text(raw)
+        if _contains_repeat_reference(parsed_lines):
+            return _verify_and_expand_steps_with_google_ai(
+                model,
+                workflow_text,
+                parsed_lines,
+                preferred_log,
+                memory_snippets
+            )
+        return parsed_lines
+    except Exception as ai_err:
+        app.logger.warning(f"Google AI step regeneration fallback to rules: {ai_err}")
+        return []
+
+
 def _build_learning_token_map(entries):
     """Map prompt tokens to methods users actually kept/corrected in saved results."""
     token_map = defaultdict(Counter)
     for entry in entries[-300:]:
-        prompt_tokens = set(_tokenize_text(entry.get('prompt', '')))
+        corrected_steps = entry.get('corrected_steps') or []
+        corrected_steps_text = ' '.join([str(step) for step in corrected_steps if str(step).strip()])
+        combined_text = ' '.join([
+            str(entry.get('prompt', '') or ''),
+            str(entry.get('review_notes', '') or ''),
+            str(entry.get('user_guidance', '') or ''),
+            corrected_steps_text
+        ])
+        prompt_tokens = set(_tokenize_text(combined_text))
         corrected_methods = entry.get('corrected_method_ids') or []
         for token in prompt_tokens:
             for method_id in corrected_methods:
@@ -341,39 +921,226 @@ def _split_workflow_steps(workflow_text):
         raw_lines = re.split(r'\s*(?:then|->|=>|;|\.|, then| and then )\s*', raw_lines[0], flags=re.IGNORECASE)
 
     steps = [step.strip(" -•\t") for step in raw_lines if step and step.strip(" -•\t")]
-    return steps[:25]
+    return steps[:MAX_AI_SEQUENCE_STEPS]
 
 
-def _regenerate_steps_for_confirmation(parsed_steps):
+def _normalize_log_file_hint(log_file_hint):
+    hint = str(log_file_hint or '').strip()
+    if not hint:
+        return ''
+    hint = hint.strip('"\' ')
+    if '/opt/logs/' in hint:
+        return hint
+    if '/' in hint:
+        return hint
+    return f"/opt/logs/{hint}"
+
+
+def _step_has_log_validation_intent(step_text):
+    lowered = str(step_text or '').lower()
+    return any(token in lowered for token in [
+        'log', 'logs', 'grep', 'ip_aamp_tunetime', 'aamp', 'crash', 'hang', 'unexpected issue'
+    ])
+
+
+def _step_has_explicit_log_target(step_text):
+    text = str(step_text or '')
+    lowered = text.lower()
+    if '/opt/logs/' in lowered or '*.log' in lowered:
+        return True
+    if re.search(r'\b[\w.-]+\.log(?:\.\d+)?\b', lowered):
+        return True
+    if 'all logs' in lowered or 'current logs' in lowered:
+        return True
+    return False
+
+
+def _extract_apps_from_repeat_instruction(step_text):
+    text = str(step_text or '')
+    apps = []
+
+    paren_match = re.search(r'\((.*?)\)', text)
+    if paren_match:
+        segment = paren_match.group(1)
+    else:
+        segment = text
+
+    segment = re.sub(r'\be\.g\.?,?\s*', '', segment, flags=re.IGNORECASE)
+    segment = re.sub(r'\betc\.?\s*', '', segment, flags=re.IGNORECASE)
+    parts = re.split(r',|/|\band\b', segment, flags=re.IGNORECASE)
+    for part in parts:
+        value = part.strip(' .')
+        if not value:
+            continue
+        if any(token in value.lower() for token in ['repeat step', 'launch', 'wake', 'device']):
+            continue
+        apps.append(value)
+
+    deduped = []
+    for app in apps:
+        if app.lower() not in [a.lower() for a in deduped]:
+            deduped.append(app)
+    return deduped
+
+
+def _replace_step_app_name(step_text, app_name):
+    updated = str(step_text or '')
+    patterns = [
+        r'\bXUMO\s+PLAY\b',
+        r'\bYOUTUBE\b',
+        r'\bNETFLIX\b',
+        r'\bDISNEY\+\b',
+        r'\bAPPLE\s+TV\b'
+    ]
+    for pattern in patterns:
+        updated = re.sub(pattern, app_name.upper(), updated, flags=re.IGNORECASE)
+    return updated
+
+
+def _regenerate_step_from_rule_memory(step_text, rule_memory, app_override=''):
+    step_text = str(step_text or '').strip()
+    lowered = step_text.lower()
+    if not step_text:
+        return []
+
+    regen_rules = (rule_memory or {}).get('step_regeneration_rules') or []
+    if not isinstance(regen_rules, list):
+        return []
+
+    for rule in regen_rules:
+        if not isinstance(rule, dict):
+            continue
+
+        contains_all = [str(x).lower().strip() for x in (rule.get('contains_all') or []) if str(x).strip()]
+        contains_any = [str(x).lower().strip() for x in (rule.get('contains_any') or []) if str(x).strip()]
+
+        if contains_all and not all(token in lowered for token in contains_all):
+            continue
+        if contains_any and not any(token in lowered for token in contains_any):
+            continue
+
+        outputs = [str(x).strip() for x in (rule.get('outputs') or []) if str(x).strip()]
+        if not outputs:
+            continue
+
+        app_name = app_override or 'YouTube'
+        generated = []
+        for output in outputs:
+            updated = output.replace('{{app_name}}', app_name)
+            updated = _replace_step_app_name(updated, app_name) if app_override else updated
+            generated.append(updated)
+        return generated
+
+    return []
+
+
+def _expand_repeat_instruction_steps(steps):
+    expanded = []
+    for step in (steps or []):
+        step_text = str(step or '').strip()
+        lowered = step_text.lower()
+
+        if not step_text:
+            continue
+
+        repeat_match = re.search(r'repeat\s+steps?\s+(\d+)\s*-\s*(\d+)', lowered)
+        if not repeat_match:
+            expanded.append(step_text)
+            continue
+
+        start_idx = int(repeat_match.group(1))
+        end_idx = int(repeat_match.group(2))
+        if start_idx < 1 or end_idx < start_idx or end_idx > len(expanded):
+            continue
+
+        slice_to_repeat = expanded[start_idx - 1:end_idx]
+        if not slice_to_repeat:
+            continue
+
+        app_names = _extract_apps_from_repeat_instruction(step_text)
+        if app_names:
+            for app_name in app_names:
+                for base_step in slice_to_repeat:
+                    expanded.append(_replace_step_app_name(base_step, app_name))
+        else:
+            expanded.extend(slice_to_repeat)
+
+    return expanded[:MAX_AI_SEQUENCE_STEPS]
+
+
+def _regenerate_single_step_for_confirmation(raw_step, app_override='', rule_memory=None):
+    regenerated = []
+
+    def _append(text):
+        normalized = str(text or '').strip().strip('.')
+        if normalized:
+            regenerated.append(normalized)
+
+    def _apply_app_override(text):
+        updated = str(text or '')
+        if app_override:
+            updated = _replace_step_app_name(updated, app_override)
+            launch_match = re.search(r'\b(launch|open|start)\b', updated, re.IGNORECASE)
+            if launch_match and any(app in updated.upper() for app in ['XUMO PLAY', 'YOUTUBE', 'NETFLIX', 'DISNEY+', 'APPLE TV']):
+                updated = re.sub(r'\b(launch|open|start)\s+.+$', f"Launch {app_override}", updated, flags=re.IGNORECASE)
+        return updated
+
+    def _append_split_clauses(step_text):
+        text = str(step_text or '').strip().rstrip('.').strip()
+        if not text:
+            return
+        action_split = re.split(
+            r'\s+and\s+(?=(?:verify|confirm|launch|open|play|put|wake|keep|wait|check|ensure|press)\b)',
+            text,
+            flags=re.IGNORECASE
+        )
+        for part in action_split:
+            normalized = part.strip(' .')
+            if normalized:
+                _append(_apply_app_override(normalized))
+
+    step = str(raw_step or '').strip().rstrip('.').strip()
+    if not step:
+        return regenerated
+
+    memory_generated = _regenerate_step_from_rule_memory(step, rule_memory, app_override=app_override)
+    if memory_generated:
+        return memory_generated
+
+    _append_split_clauses(step)
+    return regenerated
+
+
+def _regenerate_steps_for_confirmation(parsed_steps, rule_memory=None):
     """Return cleaner, actionable step text for user confirmation before method suggestion."""
     regenerated = []
-    for raw_step in parsed_steps:
+
+    for idx, raw_step in enumerate(parsed_steps, start=1):
         step = str(raw_step or '').strip().rstrip('.').strip()
         lowered = step.lower()
 
         if not step:
             continue
 
-        if 'home button' in lowered or ('press' in lowered and 'home' in lowered):
-            regenerated.append('Press HOME button and verify Home screen log')
+        repeat_match = re.search(r'repeat\s+steps?\s+(\d+)\s*-\s*(\d+)', lowered)
+        if repeat_match:
+            start_idx = int(repeat_match.group(1))
+            end_idx = int(repeat_match.group(2))
+            if start_idx >= 1 and end_idx >= start_idx and end_idx <= len(parsed_steps):
+                source_raw_steps = parsed_steps[start_idx - 1:end_idx]
+                app_names = _extract_apps_from_repeat_instruction(step)
+                if app_names:
+                    for app_name in app_names:
+                        for source_step in source_raw_steps:
+                            regenerated.extend(_regenerate_single_step_for_confirmation(source_step, app_override=app_name, rule_memory=rule_memory))
+                else:
+                    for source_step in source_raw_steps:
+                        regenerated.extend(_regenerate_single_step_for_confirmation(source_step, rule_memory=rule_memory))
             continue
 
-        if any(keyword in lowered for keyword in ['xumo play', 'linear channel', 'launch xumo']):
-            regenerated.append('Launch XUMO PLAY, wait 15 seconds, verify IP_AAMP_TUNETIME log')
-            continue
+        regenerated.extend(_regenerate_single_step_for_confirmation(step, rule_memory=rule_memory))
 
-        if any(keyword in lowered for keyword in ['standby', 'setpowerstare standby', 'set power state standby', 'power state standby']):
-            wait_seconds = _extract_wait_seconds(step) or 300
-            regenerated.append(f'Send IR POWER for standby, verify QueryPowerState=STANDBY, wait {wait_seconds} seconds')
-            continue
-
-        if ('wake up' in lowered or 'wakeup' in lowered) and 'youtube' in lowered:
-            regenerated.append('Send IR POWER for wakeup, verify QueryPowerState=ON, verify Home log, launch YouTube')
-            continue
-
-        regenerated.append(step)
-
-    return regenerated[:25]
+    return regenerated[:MAX_AI_SEQUENCE_STEPS]
 
 
 def _find_method_info(methods_catalog, method_id):
@@ -472,195 +1239,17 @@ def _build_execute_command_queue_item(methods_catalog, step_index, step_text, co
     )
 
 
-def _generate_queue_items_for_step(step_text, methods_catalog, token_learning_map, sequence_intelligence, step_index, previous_method_id):
-    lowered = step_text.lower()
-    generated_items = []
-
-    def _push(item):
-        generated_items.append(item)
-
-    # Point 1 style: press HOME + validate Home screen log line
-    if ('home button' in lowered or ('press' in lowered and 'home' in lowered)):
-        send_keys_method = _find_method_info(methods_catalog, 'send_remote_keys')
-        _push(_build_ai_queue_item(
-            send_keys_method,
-            f"AI step {step_index + 1}: Send HOME remote key",
-            step_text,
-            'explicit HOME keypress detected; mapped to send_remote_keys',
-            0.98,
-            params={'remote_keys': 'HOME'}
-        ))
-
-        _push(_build_execute_command_queue_item(
-            methods_catalog,
-            step_index,
-            step_text,
-            'grep -i "home" /opt/logs/sky-messages.log | tail -1',
-            expected_output='home',
-            validation_type='contains',
-            reason='home screen verification requested; added execute_command log check',
-            confidence=0.97
-        ))
-        return generated_items
-
-    # Point 2 style: launch linear/Xumo and verify AV playback (AAMP tunetime)
-    if any(keyword in lowered for keyword in ['xumo play', 'linear channel', 'launch xumo', 'play a linear channel']):
-        voice_method = _find_method_info(methods_catalog, 'voice_command')
-        wait_method = _find_method_info(methods_catalog, 'wait')
-        voice_text = _infer_voice_command_text(step_text) or 'Launch XUMO PLAY'
-
-        _push(_build_ai_queue_item(
-            voice_method,
-            f"AI step {step_index + 1}: Launch linear channel app",
-            step_text,
-            'linear/Xumo launch intent detected; using voice_command',
-            0.98,
-            params={'voice_text': voice_text}
-        ))
-        _push(_build_ai_queue_item(
-            wait_method,
-            f"AI step {step_index + 1}: Wait for playback start",
-            step_text,
-            'added wait for app launch and stream startup',
-            0.96,
-            params={'wait_seconds': 15}
-        ))
-        _push(_build_execute_command_queue_item(
-            methods_catalog,
-            step_index,
-            step_text,
-            'grep -i "IP_AAMP_TUNETIME" /opt/logs/sky-messages.log | tail -1',
-            expected_output='IP_AAMP_TUNETIME',
-            validation_type='contains',
-            reason='playback verification requested; validating latest AAMP tunetime log line',
-            confidence=0.97
-        ))
-        return generated_items
-
-    # Point 3 style: standby + QueryPowerState + wait
-    if any(keyword in lowered for keyword in ['standby', 'setpowerstare standby', 'set power state standby', 'power state standby']):
-        ir_method = _find_method_info(methods_catalog, 'ir_test')
-        wait_method = _find_method_info(methods_catalog, 'wait')
-
-        _push(_build_ai_queue_item(
-            ir_method,
-            f"AI step {step_index + 1}: Send IR POWER key for standby",
-            step_text,
-            'standby intent detected; using IR POWER key with auto remote type selection',
-            0.98,
-            params={'ir_keys': ['POWER'], 'remote_type': 'auto'}
-        ))
-        _push(_build_execute_command_queue_item(
-            methods_catalog,
-            step_index,
-            step_text,
-            'QueryPowerState',
-            expected_output='STANDBY',
-            validation_type='contains',
-            reason='confirming standby power state after IR POWER key',
-            confidence=0.97
-        ))
-
-        wait_seconds = _extract_wait_seconds(step_text) or 300
-        _push(_build_ai_queue_item(
-            wait_method,
-            f"AI step {step_index + 1}: Wait in standby",
-            step_text,
-            'converted idle duration to wait_seconds for standby hold',
-            0.97,
-            params={'wait_seconds': wait_seconds}
-        ))
-        return generated_items
-
-    # Point 4 style: wakeup + QueryPowerState ON + home log + launch YouTube
-    if ('wake up' in lowered or 'wakeup' in lowered) and 'youtube' in lowered:
-        ir_method = _find_method_info(methods_catalog, 'ir_test')
-        voice_method = _find_method_info(methods_catalog, 'voice_command')
-
-        _push(_build_ai_queue_item(
-            ir_method,
-            f"AI step {step_index + 1}: Send IR POWER key for wakeup",
-            step_text,
-            'wake-up intent detected; using IR POWER key with auto remote type selection',
-            0.98,
-            params={'ir_keys': ['POWER'], 'remote_type': 'auto'}
-        ))
-        _push(_build_execute_command_queue_item(
-            methods_catalog,
-            step_index,
-            step_text,
-            'QueryPowerState',
-            expected_output='ON',
-            validation_type='contains',
-            reason='confirming device wake-up state is ON',
-            confidence=0.97
-        ))
-        _push(_build_execute_command_queue_item(
-            methods_catalog,
-            step_index,
-            step_text,
-            'grep -i "home" /opt/logs/sky-messages.log | tail -1',
-            expected_output='home',
-            validation_type='contains',
-            reason='post-wakeup home screen log validation requested',
-            confidence=0.95
-        ))
-        _push(_build_ai_queue_item(
-            voice_method,
-            f"AI step {step_index + 1}: Launch YouTube",
-            step_text,
-            'launch YouTube intent detected; mapped to voice_command',
-            0.97,
-            params={'voice_text': 'Launch YOUTUBE'}
-        ))
-        return generated_items
-
-    # Combined action: launch/open app and wait N seconds -> voice_command + wait
-    if any(keyword in lowered for keyword in ['launch ', 'open ', 'start ']) and 'wait' in lowered:
-        voice_text = _infer_voice_command_text(step_text)
-        wait_seconds = _extract_wait_seconds(step_text)
-
-        if voice_text:
-            voice_method = _find_method_info(methods_catalog, 'voice_command')
-            generated_items.append(_build_ai_queue_item(
-                voice_method,
-                f"AI step {step_index + 1}: Launch app using voice command",
-                step_text,
-                'split combined app-launch step into voice command action',
-                0.94,
-                params={'voice_text': voice_text}
-            ))
-            previous_method_id = 'voice_command'
-
-        if wait_seconds:
-            wait_method = _find_method_info(methods_catalog, 'wait')
-            generated_items.append(_build_ai_queue_item(
-                wait_method,
-                f"AI step {step_index + 1}: Wait for app to finish loading",
-                step_text,
-                'split combined app-launch step into wait action',
-                0.95,
-                params={'wait_seconds': wait_seconds}
-            ))
-
-        if generated_items:
-            return generated_items
-
-    # Validation of log token in a file -> execute_command with inferred grep params
-    if 'validate' in lowered and ('/opt/logs/' in lowered or 'log' in lowered):
-        exec_params = _infer_execute_command_params(step_text)
-        if exec_params:
-            exec_method = _find_method_info(methods_catalog, 'execute_command')
-            return [
-                _build_ai_queue_item(
-                    exec_method,
-                    f"AI step {step_index + 1}: Validate expected token in logs",
-                    step_text,
-                    'inferred execute command and validation inputs from log assertion',
-                    0.96,
-                    params=exec_params
-                )
-            ]
+def _generate_queue_items_for_step(step_text, methods_catalog, token_learning_map, sequence_intelligence, step_index, previous_method_id, log_file_hint='', rule_memory=None):
+    # Memory-driven step mapping rules (portable across deployments).
+    memory_rule_items = _generate_from_rule_memory(
+        step_text,
+        methods_catalog,
+        step_index,
+        log_file_hint,
+        rule_memory
+    )
+    if memory_rule_items:
+        return memory_rule_items
 
     # Default single-method selection using scored ranking
     scored = []
@@ -712,28 +1301,6 @@ def _score_method_for_step(step_text, method_info, token_learning_map, seq_model
     if overlap:
         score += min(4.0, len(overlap) * 1.2)
         reason_bits.append(f"token overlap: {', '.join(sorted(list(overlap))[:4])}")
-
-    phrase_hints = {
-        'reboot': ['reboot', 'restart', 'boot'],
-        'deepsleep': ['deep sleep', 'sleep wake', 'wakeup', 'wake up'],
-        'screen_validation': ['screen', 'validate screen', 'home screen', 'verification'],
-        'check_logs': ['check logs', 'error logs', 'grep', 'log pattern'],
-        'execute_command': ['run command', 'execute command', 'terminal'],
-        'capture_current_screen': ['capture screen', 'screenshot'],
-        'capture_base_image': ['base image', 'reference image'],
-        'voice_command': ['voice command', 'say', 'speak'],
-        'send_remote_keys': ['remote key', 'press key', 'key sequence'],
-        'wait': ['wait', 'delay', 'pause', 'hold'],
-        'navigate_to_tiles': ['navigate', 'tile', 'apps row']
-    }
-
-    for hint_method, phrases in phrase_hints.items():
-        if hint_method in method_id.lower():
-            for phrase in phrases:
-                if phrase in normalized_step:
-                    score += 3.5
-                    reason_bits.append(f"matched phrase '{phrase}'")
-                    break
 
     learned_boost = 0.0
     for token in step_tokens:
@@ -796,6 +1363,8 @@ def generate_ai_sequence_plan():
         workflow_text = (data.get('workflow_text') or '').strip()
         preview_only = bool(data.get('preview_only'))
         confirmed_steps = data.get('confirmed_steps') or []
+        user_guidance = (data.get('user_guidance') or '').strip()
+        log_file_hint = _normalize_log_file_hint(data.get('log_file_hint'))
 
         if not workflow_text and not confirmed_steps:
             return jsonify({'success': False, 'error': 'workflow_text is required'}), 400
@@ -805,14 +1374,58 @@ def generate_ai_sequence_plan():
             return jsonify({'success': False, 'error': 'No methods available for mapping'}), 500
 
         learning_entries = _load_ai_learning_entries()
-        token_learning_map = _build_learning_token_map(learning_entries)
+        rule_memory = _load_ai_rule_memory()
+        historical_learning_map = _build_learning_token_map(learning_entries)
+        memory_learning_map = _build_rule_memory_token_map(rule_memory)
+        token_learning_map = _merge_token_learning_maps(historical_learning_map, memory_learning_map)
         sequence_intelligence = _build_sequence_intelligence_model(learning_entries)
 
-        parsed_steps = [str(step).strip() for step in confirmed_steps if str(step).strip()] if confirmed_steps else _split_workflow_steps(workflow_text)
+        if not log_file_hint:
+            preferred_log = _normalize_log_file_hint((rule_memory.get('log_preferences') or {}).get('preferred_log_file'))
+            if preferred_log:
+                log_file_hint = preferred_log
+
+        confirmed_steps_clean = [str(step).strip() for step in confirmed_steps if str(step).strip()]
+        parsed_steps = confirmed_steps_clean if confirmed_steps_clean else _split_workflow_steps(workflow_text)
         if not parsed_steps:
             return jsonify({'success': False, 'error': 'Unable to parse workflow into actionable steps'}), 400
 
-        regenerated_steps = _regenerate_steps_for_confirmation(parsed_steps)
+        if confirmed_steps_clean:
+            rule_memory = _update_ai_rule_memory_from_checkpoint(rule_memory, {
+                'event_type': 'generate_methods_confirmed_steps',
+                'prompt': workflow_text,
+                'corrected_steps': confirmed_steps_clean,
+                'generated_method_ids': [],
+                'queue_data': [],
+                'log_file_hint': log_file_hint,
+                'user_guidance': user_guidance
+            })
+            _save_ai_rule_memory(rule_memory)
+
+        ai_generation_provider = 'rule_memory'
+
+        # Preserve explicitly edited/confirmed steps; only regenerate when parsing from free text.
+        if confirmed_steps_clean:
+            regenerated_steps = parsed_steps
+        else:
+            strategy = str(os.environ.get('AI_SEQUENCE_REGEN_STRATEGY', 'memory_then_ai') or 'memory_then_ai').strip().lower()
+            memory_regenerated = _expand_repeat_instruction_steps(_regenerate_steps_for_confirmation(parsed_steps, rule_memory=rule_memory))
+
+            if strategy == 'memory_only':
+                regenerated_steps = memory_regenerated
+                ai_generation_provider = 'rule_memory'
+            else:
+                ai_regenerated = _regenerate_steps_with_google_ai(
+                    workflow_text,
+                    parsed_steps,
+                    rule_memory,
+                    learning_entries
+                )
+                if ai_regenerated:
+                    regenerated_steps = ai_regenerated
+                    ai_generation_provider = 'google_gemini'
+                else:
+                    regenerated_steps = memory_regenerated
 
         if preview_only:
             return jsonify({
@@ -821,10 +1434,20 @@ def generate_ai_sequence_plan():
                 'generated_at_utc': datetime.now(timezone.utc).isoformat(),
                 'parsed_steps': parsed_steps,
                 'regenerated_steps': regenerated_steps,
+                'ai_generation_provider': ai_generation_provider,
+                'ai_generation_note': 'memory_rule_regeneration' if ai_generation_provider != 'google_gemini' else 'generated_by_google_gemini',
                 'requires_confirmation': True
             })
 
-        steps_for_generation = regenerated_steps if regenerated_steps else parsed_steps
+        log_validation_detected = any(_step_has_log_validation_intent(step) for step in parsed_steps)
+        explicit_log_target_present = any(_step_has_explicit_log_target(step) for step in parsed_steps)
+        if log_validation_detected and not explicit_log_target_present and not log_file_hint:
+            return jsonify({
+                'success': False,
+                'error': 'Log validation detected. Please provide the log file name/path to check (for example: sky-messages.log).'
+            }), 400
+
+        steps_for_generation = parsed_steps if confirmed_steps_clean else (regenerated_steps if regenerated_steps else parsed_steps)
 
         queue_data = []
         selected_methods = []
@@ -832,19 +1455,26 @@ def generate_ai_sequence_plan():
         previous_method_id = None
         generated_step_number = 1
         for idx, step_text in enumerate(steps_for_generation, start=1):
+            generation_step_text = step_text
+            if user_guidance:
+                generation_step_text = f"{step_text}. Guidance: {user_guidance}"
+
             generated_items = _generate_queue_items_for_step(
-                step_text,
+                generation_step_text,
                 methods_catalog,
                 token_learning_map,
                 sequence_intelligence,
                 generated_step_number - 1,
-                previous_method_id
+                previous_method_id,
+                log_file_hint=log_file_hint,
+                rule_memory=rule_memory
             )
 
             for generated_item in generated_items:
                 queue_data.append(generated_item)
                 selected_methods.append({
                     'step': generated_step_number,
+                    'source_step_index': idx,
                     'step_text': step_text,
                     'method_id': generated_item['method'],
                     'method_name': generated_item.get('name') or generated_item['method'],
@@ -864,12 +1494,16 @@ def generate_ai_sequence_plan():
         return jsonify({
             'success': True,
             'workflow_text': workflow_text,
+            'user_guidance': user_guidance,
+            'log_file_hint': log_file_hint,
             'generated_at_utc': datetime.now(timezone.utc).isoformat(),
+            'ai_generation_provider': ai_generation_provider,
             'parsed_steps': parsed_steps,
             'regenerated_steps': regenerated_steps,
             'selected_methods': selected_methods,
             'queue_data': queue_data,
             'learning_samples': len(learning_entries),
+            'rule_memory_samples': len((rule_memory.get('token_method_preferences') or {})),
             'sequence_intelligence': {
                 'historical_sequences_analyzed': int(sum(sequence_intelligence.get('start_method_frequency', Counter()).values())),
                 'top_historical_methods': top_historical_methods
@@ -904,9 +1538,12 @@ def save_ai_sequence_feedback():
             'prompt': prompt,
             'generated_method_ids': generated_method_ids,
             'corrected_method_ids': corrected_method_ids,
+            'corrected_steps': data.get('corrected_steps') or [],
+            'user_guidance': data.get('user_guidance') or '',
             'reviewed': bool(data.get('reviewed')),
             'tested': bool(data.get('tested')),
-            'review_notes': data.get('review_notes') or ''
+            'review_notes': data.get('review_notes') or '',
+            'log_file_hint': _normalize_log_file_hint(data.get('log_file_hint'))
         }
 
         entries = _load_ai_learning_entries()
@@ -915,13 +1552,53 @@ def save_ai_sequence_feedback():
             entries = entries[-500:]
         _save_ai_learning_entries(entries)
 
+        rule_memory = _load_ai_rule_memory()
+        updated_rule_memory = _update_ai_rule_memory_from_feedback(rule_memory, feedback_entry)
+        _save_ai_rule_memory(updated_rule_memory)
+
         return jsonify({
             'success': True,
             'message': 'Feedback stored for future AI suggestions',
-            'total_learning_entries': len(entries)
+            'total_learning_entries': len(entries),
+            'rule_memory_tokens': len((updated_rule_memory.get('token_method_preferences') or {}))
         })
     except Exception as e:
         app.logger.exception('AI sequence feedback save failed')
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/ai/sequences/checkpoint', methods=['POST'])
+@login_required
+def save_ai_sequence_checkpoint():
+    """Persist intermediate AI-builder state so learning happens at Generate Methods and Apply to Queue time."""
+    try:
+        data = request.json or {}
+        prompt = (data.get('prompt') or '').strip()
+        corrected_steps = [str(step).strip() for step in (data.get('corrected_steps') or []) if str(step).strip()]
+        if not prompt and not corrected_steps:
+            return jsonify({'success': False, 'error': 'prompt or corrected_steps is required'}), 400
+
+        rule_memory = _load_ai_rule_memory()
+        updated_rule_memory = _update_ai_rule_memory_from_checkpoint(rule_memory, {
+            'event_type': data.get('event_type') or 'checkpoint',
+            'prompt': prompt,
+            'corrected_steps': corrected_steps,
+            'generated_method_ids': data.get('generated_method_ids') or [],
+            'selected_methods': data.get('selected_methods') or [],
+            'queue_data': data.get('queue_data') or [],
+            'log_file_hint': _normalize_log_file_hint(data.get('log_file_hint')),
+            'user_guidance': data.get('user_guidance') or ''
+        })
+        _save_ai_rule_memory(updated_rule_memory)
+
+        return jsonify({
+            'success': True,
+            'message': 'Checkpoint saved',
+            'rule_memory_tokens': len((updated_rule_memory.get('token_method_preferences') or {})),
+            'flow_examples': len(updated_rule_memory.get('flow_examples') or [])
+        })
+    except Exception as e:
+        app.logger.exception('AI sequence checkpoint save failed')
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/available_log_patterns', methods=['GET'])
@@ -2627,7 +3304,13 @@ def save_sequence():
             description=description,
             method_rationale=method_rationale
         )
-        return jsonify({'success': True, 'sequence': sequence.to_dict()})
+        save_storage = SavedSequence.get_last_save_storage()
+        return jsonify({
+            'success': True,
+            'sequence': sequence.to_dict(),
+            'save_storage': save_storage,
+            'save_message': 'Saved to database' if save_storage == 'database' else ('Saved to JSON fallback' if save_storage == 'json_fallback' else 'Saved')
+        })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
