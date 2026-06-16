@@ -2,6 +2,7 @@
   {
     "sequence_id": "seq_20260107_164207_977993",
     "name": "XUMOTV-FSR_ACTIVATION",
+    "description": "",
     "queue_data": [
       {
         "method": "send_remote_keys",
@@ -624,11 +625,19 @@
     "user_inputs": {},
     "created_at": "2026-01-07T16:42:07.978021",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260107_164316_708294",
     "name": "REBOOT-PERF-NETFLIX-APPLAUNCH-ES1",
+    "description": "",
     "queue_data": [
       {
         "method": "reboot_performance",
@@ -761,11 +770,19 @@
     "user_inputs": {},
     "created_at": "2026-01-07T16:43:16.708324",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260107_164346_901288",
     "name": "REBOOT-DEEPSLEEP-NETFLIX-APPLAUNCH",
+    "description": "",
     "queue_data": [
       {
         "method": "reboot",
@@ -817,11 +834,19 @@
     "user_inputs": {},
     "created_at": "2026-01-07T16:43:46.901316",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260209_140545_285963",
     "name": "XIONE-STREAM-MULTI-APP-LAUCH-TOP-CMD-CHECK",
+    "description": "",
     "queue_data": [
       {
         "method": "reboot_perf_v2_optimized",
@@ -1253,11 +1278,19 @@
     "user_inputs": {},
     "created_at": "2026-02-09T14:05:45.286010",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260219_200402_844470",
     "name": "INPUT_ROW_CHECK_XUMO-TV",
+    "description": "",
     "queue_data": [
       {
         "method": "reboot_perf_v2_optimized",
@@ -1517,11 +1550,19 @@
     "user_inputs": {},
     "created_at": "2026-02-19T20:04:02.844502",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260302_171927_304925",
     "name": "RDKEMW-14822-XUMO-INITIAL-SETUP-1-5-STEPS",
+    "description": "",
     "queue_data": [
       {
         "method": "reboot_perf_v2_optimized",
@@ -1637,11 +1678,19 @@
     "user_inputs": {},
     "created_at": "2026-03-02T17:19:27.304975",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260303_100117_662507",
     "name": "RDKEMW-14822-XUMOPLAY",
+    "description": "",
     "queue_data": [
       {
         "method": "send_remote_keys",
@@ -1770,11 +1819,19 @@
     "user_inputs": {},
     "created_at": "2026-03-03T10:01:17.662535",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260304_113657_227029",
     "name": "MULTIPLE-APPS-LAUNCH-NO-PLAYBACK",
+    "description": "",
     "queue_data": [
       {
         "command": "",
@@ -2057,11 +2114,19 @@
     "user_inputs": {},
     "created_at": "2026-03-04T11:36:57.227059",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260305_171346_667668",
     "name": "INPUTROW_CHECK_XUMO",
+    "description": "",
     "queue_data": [
       {
         "method": "reboot_perf_v2_optimized",
@@ -2136,11 +2201,19 @@
     "user_inputs": {},
     "created_at": "2026-03-05T17:13:46.667705",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260309_155421_355219",
     "name": "ES1-3181-YOUTUBE_CRASHES",
+    "description": "",
     "queue_data": [
       {
         "method": "send_remote_keys",
@@ -2377,11 +2450,19 @@
     "user_inputs": {},
     "created_at": "2026-03-09T15:54:21.355251",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260310_112929_147714",
     "name": "ES1-3179-Spectrum-crash",
+    "description": "",
     "queue_data": [
       {
         "method": "send_remote_keys",
@@ -2604,11 +2685,19 @@
     "user_inputs": {},
     "created_at": "2026-03-10T11:29:29.147743",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260318_161403_356015",
     "name": "XIONE-18416",
+    "description": "",
     "queue_data": [
       {
         "method": "send_remote_keys",
@@ -3097,11 +3186,19 @@
     "user_inputs": {},
     "created_at": "2026-03-18T16:14:03.356045",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260325_162747_826604",
     "name": "DEEPSLEEP-WAKEUP",
+    "description": "",
     "queue_data": [
       {
         "method": "deepsleep",
@@ -3136,11 +3233,19 @@
     "user_inputs": {},
     "created_at": "2026-03-25T16:27:47.826634",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260330_132433_574782",
     "name": "SERXIONE-8444-copy",
+    "description": "",
     "queue_data": [
       {
         "method": "wait",
@@ -5327,11 +5432,19 @@
     "user_inputs": {},
     "created_at": "2026-03-30T13:24:33.574818",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260403_163939_786549",
     "name": "CELLO_DEEPSLEEP_WAKEUP",
+    "description": "",
     "queue_data": [
       {
         "method": "deepsleep",
@@ -5353,11 +5466,19 @@
     "user_inputs": {},
     "created_at": "2026-04-03T16:39:39.786590",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260407_223542_052600",
     "name": "BCM-XOE-LONG_RUN",
+    "description": "",
     "queue_data": [
       {
         "method": "send_remote_keys",
@@ -5462,11 +5583,19 @@
     "user_inputs": {},
     "created_at": "2026-04-07T22:35:42.052635",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260410_162417_061218",
     "name": "RDKEMW-16594-PDRI-CHECK",
+    "description": "",
     "queue_data": [
       {
         "method": "send_remote_keys",
@@ -5534,11 +5663,19 @@
     "user_inputs": {},
     "created_at": "2026-04-10T16:24:17.061248",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260424_142951_357940",
     "name": "MULTIPLE-APPS-LAUNCH-WITH-PLAYBACK (APPS : NETFLIX,YT,PRIME,D+,APPLE TV+)",
+    "description": "",
     "queue_data": [
       {
         "method": "execute_command",
@@ -7651,11 +7788,19 @@
     "user_inputs": {},
     "created_at": "2026-04-24T14:29:51.358021",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260428_112751_564356",
     "name": "Raghav",
+    "description": "",
     "queue_data": [
       {
         "method": "reboot",
@@ -9781,11 +9926,19 @@
     "user_inputs": {},
     "created_at": "2026-04-28T11:27:51.564482",
     "created_by": "bsatya541",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_196f4ab0",
     "name": "MAINTENANCE_DS-WAKEUP-OTTPENDING-CHECK",
+    "description": "",
     "queue_data": [
       {
         "method": "execute_command",
@@ -10033,11 +10186,19 @@
     "user_inputs": {},
     "created_at": "2026-05-19T22:01:41.245865",
     "created_by": "vpatne290",
-    "team_name": ""
+    "team_name": "",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260519_215316_560931",
     "name": "REBOOT-DS-WAKEUP-OTTPENDING-CHECK(DS before each tune)",
+    "description": "",
     "queue_data": [
       {
         "method": "execute_command",
@@ -10336,11 +10497,19 @@
     "user_inputs": {},
     "created_at": "2026-05-19T21:53:16.561009",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260520_231522_836234",
     "name": "REBOOT-DS-WAKEUP-OTTPENDING-CHECK(DS after Reboot only)",
+    "description": "",
     "queue_data": [
       {
         "method": "execute_command",
@@ -10582,11 +10751,19 @@
     "user_inputs": {},
     "created_at": "2026-05-20T23:15:22.836362",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   },
   {
     "sequence_id": "seq_20260526_163544_506825",
     "name": "XIONE-18759",
+    "description": "",
     "queue_data": [
       {
         "method": "execute_command",
@@ -10743,6 +10920,395 @@
     "user_inputs": {},
     "created_at": "2026-05-26T16:35:44.506925",
     "created_by": "vpatne290",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
+  },
+  {
+    "sequence_id": "seq_20260615_221848_701716",
+    "name": "A1-Seq-2",
+    "description": "",
+    "queue_data": [
+      {
+        "method": "send_remote_keys",
+        "name": "send_remote_keys",
+        "description": "AI step 1: Rule-memory mapped method",
+        "params": {
+          "remote_keys": "HOME",
+          "ai_step_text": "Press HOME button",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "execute_command",
+        "name": "execute_command",
+        "description": "AI step 2: Rule-memory mapped method",
+        "params": {
+          "command_text": "grep -i \".*HOME_.*load.*complete\" /opt/logs/sky-messages.log | tail -1",
+          "expected_output": "HOME",
+          "validation_type": "contains",
+          "ai_step_text": "Verify Home screen log",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "voice_command",
+        "name": "voice_command",
+        "description": "AI step 3: Rule-memory mapped method",
+        "params": {
+          "command_text": "Launch XUMO PLAY",
+          "voice_text": "Launch XUMO PLAY",
+          "ai_step_text": "Launch XUMO PLAY",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "wait",
+        "name": "wait",
+        "description": "AI step 4: Rule-memory mapped method",
+        "params": {
+          "wait_seconds": 15,
+          "ai_step_text": "Wait 15 seconds",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "execute_command",
+        "name": "execute_command",
+        "description": "AI step 5: Rule-memory mapped method",
+        "params": {
+          "command_text": "grep -i \".*IP_AAMP_TUNETIME.*\" /opt/logs/sky-messages.log | tail -1",
+          "expected_output": "IP_AAMP_TUNETIME",
+          "validation_type": "contains",
+          "ai_step_text": "Verify IP_AAMP_TUNETIME in /opt/logs/sky-messages.log",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "ir_test",
+        "name": "ir_test",
+        "description": "AI step 6: Rule-memory mapped method",
+        "params": {
+          "ir_keys": [
+            "POWER"
+          ],
+          "remote_type": "XUMO_PR3",
+          "ai_step_text": "Send IR POWER for standby",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "execute_command",
+        "name": "execute_command",
+        "description": "AI step 7: Rule-memory mapped method",
+        "params": {
+          "command_text": "QueryPowerState",
+          "expected_output": "on",
+          "validation_type": "contains",
+          "ai_step_text": "Verify QueryPowerState=STANDBY",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "wait",
+        "name": "wait",
+        "description": "AI step 8: Rule-memory mapped method",
+        "params": {
+          "wait_seconds": 5,
+          "ai_step_text": "Wait 300 seconds",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "ir_test",
+        "name": "ir_test",
+        "description": "AI step 9: Rule-memory mapped method",
+        "params": {
+          "ir_keys": [
+            "POWER"
+          ],
+          "remote_type": "XUMO_PR3",
+          "ai_step_text": "Send IR POWER for wakeup",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "execute_command",
+        "name": "execute_command",
+        "description": "AI step 10: Rule-memory mapped method",
+        "params": {
+          "command_text": "QueryPowerState",
+          "expected_output": "on",
+          "validation_type": "contains",
+          "ai_step_text": "Verify QueryPowerState is ON",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "execute_command",
+        "name": "execute_command",
+        "description": "AI step 11: Rule-memory mapped method",
+        "params": {
+          "command_text": "grep -i \".*HOME_.*load.*complete\" /opt/logs/sky-messages.log | tail -1",
+          "expected_output": "HOME",
+          "validation_type": "contains",
+          "ai_step_text": "Verify Home screen in /opt/logs/sky-messages.log",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "voice_command",
+        "name": "voice_command",
+        "description": "AI step 12: Rule-memory mapped method",
+        "params": {
+          "voice_text": "Launch Youtube",
+          "ai_step_text": "Launch YouTube",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      }
+    ],
+    "methods": [],
+    "user_inputs": {},
+    "created_at": "2026-06-15T22:18:48.701751",
+    "created_by": "vpatne290",
+    "team_name": "LRQA",
+    "method_rationale": {
+      "ai_sequence_builder": {
+        "prompt": "Press the Home button and ensure the EPG UI is launched successfully.\nPlay a linear channel and verify AV playback.\nPut the device into standby mode and keep it idle for 5 minutes.\nWake up the device and launch YouTube.",
+        "parsed_steps": [
+          "Press HOME button",
+          "Verify Home screen log",
+          "Launch XUMO PLAY",
+          "Wait 15 seconds",
+          "Verify IP_AAMP_TUNETIME in /opt/logs/sky-messages.log",
+          "Send IR POWER for standby",
+          "Verify QueryPowerState=STANDBY",
+          "Wait 300 seconds",
+          "Send IR POWER for wakeup",
+          "Verify QueryPowerState is ON",
+          "Verify Home screen in /opt/logs/sky-messages.log",
+          "Launch YouTube"
+        ],
+        "regenerated_steps": [
+          "Press HOME button",
+          "Verify Home screen log",
+          "Launch XUMO PLAY",
+          "Wait 15 seconds",
+          "Verify IP_AAMP_TUNETIME in /opt/logs/sky-messages.log",
+          "Send IR POWER for standby",
+          "Verify QueryPowerState=STANDBY",
+          "Wait 300 seconds",
+          "Send IR POWER for wakeup",
+          "Verify QueryPowerState is ON",
+          "Verify Home screen in /opt/logs/sky-messages.log",
+          "Launch YouTube"
+        ],
+        "log_file_hint": "",
+        "generated_method_ids": [
+          "send_remote_keys",
+          "execute_command",
+          "voice_command",
+          "wait",
+          "execute_command",
+          "ir_test",
+          "execute_command",
+          "wait",
+          "ir_test",
+          "execute_command",
+          "execute_command",
+          "voice_command"
+        ],
+        "user_guidance": "",
+        "reviewed": false,
+        "tested": false,
+        "review_notes": "",
+        "generated_at_utc": "2026-06-16T02:08:54.895051+00:00"
+      }
+    },
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
+  },
+  {
+    "sequence_id": "seq_20260615_224813_798297",
+    "name": "AI-Seq-3",
+    "description": "",
+    "queue_data": [
+      {
+        "method": "ir_test",
+        "name": "ir_test",
+        "description": "AI step 1: Send IR POWER for standby",
+        "params": {
+          "ir_keys": [
+            "POWER"
+          ],
+          "remote_type": "XUMO_PR3",
+          "ai_step_text": "Send IR POWER for standby",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "execute_command",
+        "name": "execute_command",
+        "description": "AI step 2: Verify QueryPowerState=STANDBY",
+        "params": {
+          "command_text": "QueryPowerState",
+          "expected_output": "on",
+          "validation_type": "contains",
+          "ai_step_text": "Verify QueryPowerState=STANDBY",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "wait",
+        "name": "wait",
+        "description": "AI step 3: Wait 300 seconds",
+        "params": {
+          "wait_seconds": 300,
+          "ai_step_text": "Wait 300 seconds",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "ir_test",
+        "name": "ir_test",
+        "description": "AI step 4: then wake up the device",
+        "params": {
+          "ir_keys": [
+            "POWER"
+          ],
+          "remote_type": "XUMO_PR3",
+          "ai_step_text": "then wake up the device",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "voice_command",
+        "name": "voice_command",
+        "description": "AI step 5: launch YouTube App",
+        "params": {
+          "command_text": "Launch Youtube App",
+          "voice_text": "Launch Youtube",
+          "ai_step_text": "launch YouTube App",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "execute_command",
+        "name": "Execute_Command",
+        "description": "AI step 6: verify YouTube is launched from logs",
+        "params": {
+          "command_text": "grep -i 'App.*Youtube.*sucessful.*' /opt/logs/sky-messages.log",
+          "expected_output": "on",
+          "validation_type": "contains",
+          "ai_step_text": "verify YouTube is launched from logs",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "execute_command",
+        "name": "Execute_Command",
+        "description": "AI step 7: focuses app is there in foreground with command [appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}']",
+        "params": {
+          "command_text": "appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}'",
+          "expected_output": "YouTube",
+          "validation_type": "contains",
+          "ai_step_text": "focuses app is there in foreground with command [appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}']",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      },
+      {
+        "method": "execute_command",
+        "name": "execute_command",
+        "description": "AI step 8: check any crashes are there in core-log.txt in /opt/logs/",
+        "params": {
+          "command_text": "grep -i '.*process crash.*' /opt/logs/core-log.txt",
+          "expected_output": "process crashed",
+          "validation_type": "contains",
+          "ai_step_text": "check any crashes are there in core-log.txt in /opt/logs/",
+          "ai_reason": "rule-memory learned from user-edited stage mapping",
+          "ai_confidence": 0.99
+        }
+      }
+    ],
+    "methods": [],
+    "user_inputs": {},
+    "created_at": "2026-06-15T22:48:13.798332",
+    "created_by": "vpatne290",
+    "team_name": "LRQA",
+    "method_rationale": {
+      "ai_sequence_builder": {
+        "prompt": "1. Keep device in STANDBY \n2. Wait for 5 minutes\n3. then wake up the device\n4. launch YouTube App\n5. verify YouTube is launched from logs\n6. focuses app is there in foreground with command [appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}'] \n7. check any crashes are there in core-log.txt in /opt/logs/",
+        "parsed_steps": [
+          "Send IR POWER for standby",
+          "Verify QueryPowerState=STANDBY",
+          "Wait 300 seconds",
+          "then wake up the device",
+          "launch YouTube App",
+          "verify YouTube is launched from logs",
+          "focuses app is there in foreground with command [appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}']",
+          "check any crashes are there in core-log.txt in /opt/logs/"
+        ],
+        "regenerated_steps": [
+          "Send IR POWER for standby",
+          "Verify QueryPowerState=STANDBY",
+          "Wait 300 seconds",
+          "then wake up the device",
+          "launch YouTube App",
+          "verify YouTube is launched from logs",
+          "focuses app is there in foreground with command [appsservicectl dumpsys RunTimeManager | grep -i Visible | awk '{print $1}']",
+          "check any crashes are there in core-log.txt in /opt/logs/"
+        ],
+        "log_file_hint": "",
+        "generated_method_ids": [
+          "ir_test",
+          "execute_command",
+          "wait",
+          "ir_test",
+          "voice_command",
+          "execute_command",
+          "execute_command",
+          "execute_command"
+        ],
+        "user_guidance": "",
+        "reviewed": false,
+        "tested": false,
+        "review_notes": "",
+        "generated_at_utc": "2026-06-16T02:41:15.227216+00:00"
+      }
+    },
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null
   }
 ]
