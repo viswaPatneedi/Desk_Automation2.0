@@ -292,11 +292,13 @@ def check_and_collect_logs_for_patterns(ssh, device_ip, device_name, iteration, 
     
     try:
         log_message_func(f"\n[PATTERN SEARCH] Searching for {len(log_patterns)} pattern(s) in device logs...")
+        log_message_func(f"   Search location: /opt/logs/core_log.txt")
         
         # Search for patterns in device logs
         patterns_found = []
         
-        for pattern in log_patterns:
+        for idx, pattern in enumerate(log_patterns, 1):
+            log_message_func(f"\n  Pattern {idx}/{len(log_patterns)}: '{pattern}'")
             pattern_safe = pattern.replace("'", "\\'")
             
             # Search in core_log.txt and other log files
@@ -308,21 +310,32 @@ def check_and_collect_logs_for_patterns(ssh, device_ip, device_name, iteration, 
                 stdout.channel.close()
                 
                 if search_output:
-                    log_message_func(f"  ✓ Pattern FOUND: '{pattern}'")
-                    for line in search_output.split('\n')[:3]:
-                        log_message_func(f"     {line[:150]}")
+                    log_message_func(f"  ✓ MATCH FOUND: Pattern '{pattern}' detected in logs!")
+                    log_message_func(f"     Matched lines (up to 5):")
+                    for line in search_output.split('\n')[:5]:
+                        if line.strip():
+                            log_message_func(f"       • {line[:150]}")
                     patterns_found.append(pattern)
                     result['matched_lines'].append({
                         'pattern': pattern,
                         'samples': search_output.split('\n')[:3]
                     })
+                else:
+                    log_message_func(f"  ⊘ No match: Pattern not found in logs")
             except Exception as e:
                 log_message_func(f"  ⚠ Error searching pattern '{pattern}': {e}")
+        
+        # Log summary
+        log_message_func(f"\n[PATTERN SEARCH SUMMARY]")
+        log_message_func(f"  Total patterns searched: {len(log_patterns)}")
+        log_message_func(f"  Patterns matched: {len(patterns_found)}")
         
         # If any patterns found, collect logs
         if patterns_found:
             result['found_patterns'] = patterns_found
-            log_message_func(f"\n[LOG COLLECTION] Found {len(patterns_found)} pattern(s) - Collecting device logs...")
+            log_message_func(f"\n[LOG COLLECTION] Found {len(patterns_found)} pattern(s) - Collecting device logs for diagnostics...")
+            patterns_str = ", ".join([f"'{p}'" for p in patterns_found])
+            log_message_func(f"  Patterns that triggered collection: {patterns_str}")
             
             # Collect logs to /media/apps
             collected_log_path = collect_device_logs_to_media_app(
@@ -333,7 +346,7 @@ def check_and_collect_logs_for_patterns(ssh, device_ip, device_name, iteration, 
                 log_message_func(f"✓ Logs collected: {collected_log_path}")
                 result['log_paths'].append(collected_log_path)
         else:
-            log_message_func(f"  ℹ No patterns found - skipping log collection")
+            log_message_func(f"  ℹ No patterns matched - No issue-based log collection (normal pass)")
         
         return result
     
@@ -989,6 +1002,7 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
             # STEP 5.5: SMART LOG COLLECTION - ONLY for detected issues (not for successful HOME reaches)
             collected_log_path = None
             pattern_search_result = None
+            logs_already_collected = False  # ✅ NEW: Track if logs already collected to prevent duplicates
             
             # Priority 1: Search for user-specified log patterns (if configured)
             if log_search_patterns and len(log_search_patterns) > 0:
@@ -999,10 +1013,15 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                 if pattern_search_result.get('log_paths'):
                     logs_list.extend(pattern_search_result['log_paths'])
                     collected_log_path = pattern_search_result['log_paths'][0]
+                    logs_already_collected = True  # ✅ Set flag: logs collected from pattern match
+                    log_message(f"✓ Step 5.5: Logs collected from pattern match: {len(pattern_search_result['log_paths'])} file(s)")
+                else:
+                    log_message(f"✓ Step 5.5: Pattern search complete - No issues detected, no logs collected from patterns")
             else:
                 # ✅ CORRECTED: Do NOT auto-collect logs just because HOME was reached
                 # Logs should only be collected if issues are detected in STEP 7 post-reboot checks
-                log_message("\n[STEP 5.5] Device reached HOME - Log collection deferred to post-reboot validation checks")
+                log_message("\n[STEP 5.5] No search patterns configured - Log collection deferred to post-reboot validation checks")
+                log_message("   (Device reached HOME successfully)")
             
             log_message("\n[STEP 6] Calculating reboot performance time...")
             
@@ -1145,31 +1164,43 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                     for detection in check_results['detections']:
                         log_message(f"  • {detection['description']}: {detection.get('pattern_found', 'DETECTED')}")
                     
-                    log_message(f"[AUTO-COLLECT] Automatically collecting device logs due to detected issues...")
-                    collected_log_path = collect_device_logs_to_media_app(
-                        ssh, device_ip, device_name, iteration, log_message
-                    )
-                    if collected_log_path:
-                        log_message(f"✓ Logs collected and available at: {collected_log_path}")
-                        logs_list.append(collected_log_path)
-                        check_results['detection_triggered_logs'] = collected_log_path
+                    # ✅ NEW: Only collect if not already collected
+                    if logs_already_collected:
+                        log_message(f"[INFO] Logs already collected in STEP 5.5 - Skipping duplicate collection")
+                        check_results['detection_would_trigger_collection'] = True
                     else:
-                        log_message(f"⚠ Failed to collect logs despite detected issues")
+                        log_message(f"[AUTO-COLLECT] Automatically collecting device logs due to detected issues...")
+                        collected_log_path = collect_device_logs_to_media_app(
+                            ssh, device_ip, device_name, iteration, log_message
+                        )
+                        if collected_log_path:
+                            log_message(f"✓ Logs collected and available at: {collected_log_path}")
+                            logs_list.append(collected_log_path)
+                            logs_already_collected = True  # ✅ Set flag
+                            check_results['detection_triggered_logs'] = collected_log_path
+                        else:
+                            log_message(f"⚠ Failed to collect logs despite detected issues")
                 
                 # ✅ NEW: AUTO-COLLECT LOGS IF PERFORMANCE TIME EXCEEDED THRESHOLD (if configured)
                 elif performance_threshold_exceeded and auto_collect_logs:
                     log_message(f"\n[PERFORMANCE-BASED LOG COLLECTION] Reboot time exceeded threshold - Collecting device logs for diagnostics...")
                     log_message(f"   Reboot Time: {reboot_duration:.2f}s | Threshold: {max_performance_time}s")
                     
-                    collected_log_path = collect_device_logs_to_media_app(
-                        ssh, device_ip, device_name, iteration, log_message
-                    )
-                    if collected_log_path:
-                        log_message(f"✓ Logs collected and available at: {collected_log_path}")
-                        logs_list.append(collected_log_path)
-                        check_results['performance_exceeded_logs'] = collected_log_path
+                    # ✅ NEW: Only collect if not already collected
+                    if logs_already_collected:
+                        log_message(f"[INFO] Logs already collected in STEP 5.5 - Skipping duplicate collection")
+                        check_results['performance_would_trigger_collection'] = True
                     else:
-                        log_message(f"⚠ Failed to collect logs despite performance threshold exceeded")
+                        collected_log_path = collect_device_logs_to_media_app(
+                            ssh, device_ip, device_name, iteration, log_message
+                        )
+                        if collected_log_path:
+                            log_message(f"✓ Logs collected and available at: {collected_log_path}")
+                            logs_list.append(collected_log_path)
+                            logs_already_collected = True  # ✅ Set flag
+                            check_results['performance_exceeded_logs'] = collected_log_path
+                        else:
+                            log_message(f"⚠ Failed to collect logs despite performance threshold exceeded")
                 else:
                     log_message("\n[LOG COLLECTION] No issues detected - logs not collected (normal pass)")
             else:
@@ -1187,15 +1218,35 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                     log_message(f"\n[PERFORMANCE-BASED LOG COLLECTION] Reboot time exceeded threshold - Collecting device logs for diagnostics...")
                     log_message(f"   Reboot Time: {reboot_duration:.2f}s | Threshold: {max_performance_time}s")
                     
-                    collected_log_path = collect_device_logs_to_media_app(
-                        ssh, device_ip, device_name, iteration, log_message
-                    )
-                    if collected_log_path:
-                        log_message(f"✓ Logs collected and available at: {collected_log_path}")
-                        logs_list.append(collected_log_path)
-                        check_results['performance_exceeded_logs'] = collected_log_path
+                    # ✅ NEW: Only collect if not already collected
+                    if logs_already_collected:
+                        log_message(f"[INFO] Logs already collected in STEP 5.5 - Skipping duplicate collection")
+                        check_results['performance_would_trigger_collection'] = True
                     else:
-                        log_message(f"⚠ Failed to collect logs despite performance threshold exceeded")
+                        collected_log_path = collect_device_logs_to_media_app(
+                            ssh, device_ip, device_name, iteration, log_message
+                        )
+                        if collected_log_path:
+                            log_message(f"✓ Logs collected and available at: {collected_log_path}")
+                            logs_list.append(collected_log_path)
+                            logs_already_collected = True  # ✅ Set flag
+                            check_results['performance_exceeded_logs'] = collected_log_path
+                        else:
+                            log_message(f"⚠ Failed to collect logs despite performance threshold exceeded")
+            
+            # ✅ NEW: Log collection summary
+            if logs_already_collected:
+                log_message("\n[LOG COLLECTION SUMMARY]")
+                log_message(f"  ✓ Logs collected: 1 time (at earliest trigger point)")
+                additional_triggers = []
+                if check_results.get('detection_would_trigger_collection'):
+                    additional_triggers.append("Issue detection in checks")
+                if check_results.get('performance_would_trigger_collection'):
+                    additional_triggers.append("Performance threshold exceeded")
+                if additional_triggers:
+                    log_message(f"  ℹ Additional triggers detected but NOT collected (logs already collected):")
+                    for trigger in additional_triggers:
+                        log_message(f"     • {trigger}")
             
             ssh.close()
             

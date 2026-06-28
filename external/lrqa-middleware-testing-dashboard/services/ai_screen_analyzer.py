@@ -43,6 +43,14 @@ class AIScreenAnalyzer:
         self.analysis_cache = {}
         self.lock = threading.Lock()
         
+        # Debug: Show API key status
+        if self.api_key:
+            key_preview = self.api_key[:10] + "..." + self.api_key[-10:] if len(self.api_key) > 20 else "***"
+            print(f"📍 [DEBUG] GOOGLE_API_KEY found: {key_preview}")
+        else:
+            print(f"📍 [DEBUG] GOOGLE_API_KEY status: {os.environ.get('GOOGLE_API_KEY', 'NOT SET')}")
+            print(f"📍 [DEBUG] Available env vars containing 'GOOGLE': {[k for k in os.environ if 'GOOGLE' in k]}")
+        
         if not self.api_key:
             print("⚠️  Warning: GOOGLE_API_KEY not configured")
             print("   Get free API key from: https://makersuite.google.com/app/apikey")

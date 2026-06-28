@@ -7,8 +7,8 @@ import paramiko
 import json
 import time
 import os
-from utils.screenshot_utils import take_and_analyze_screenshot
-from tools.screen.screenshot_utils_vnc import take_vnc_screenshot_with_fallback, normalize_screenshot_path
+from utils.screenshot_utils import take_and_analyze_screenshot, normalize_screenshot_path
+from tools.screen.screenshot_utils_vnc import take_vnc_screenshot_with_fallback
 from datetime import datetime, timezone
 from config.config_commands import power_key_command, home_key_command, enter_key_command, down_key_command, right_key_command
 

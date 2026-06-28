@@ -20,7 +20,7 @@ except ImportError as e:
 
 # Import lightweight validator as fallback
 try:
-    from screen_validator_lightweight import LightweightScreenValidator
+    from tools.screen.screen_validator_lightweight import LightweightScreenValidator
     from config.config_screen_validation import (
         get_screen_config, 
         get_expected_screen_for_method,

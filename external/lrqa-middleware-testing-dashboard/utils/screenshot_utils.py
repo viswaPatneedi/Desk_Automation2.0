@@ -759,7 +759,7 @@ def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screensh
                     log(f"⚠ AI validation failed: {ai_result.get('error', 'Unknown error')}")
                     log(f"  Falling back to lightweight validation...")
                     
-                    from screen_validator_lightweight import LightweightScreenValidator
+                    from tools.screen.screen_validator_lightweight import LightweightScreenValidator
                     validator = LightweightScreenValidator(excluded_folders=['FactoryReset-XUMO-TV'])
                     validation_result = validator.find_best_match(local_path)
                     
@@ -778,7 +778,7 @@ def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screensh
             
             except ImportError:
                 log(f"⚠ AI analyzer not available, using lightweight validation...")
-                from screen_validator_lightweight import LightweightScreenValidator
+                from tools.screen.screen_validator_lightweight import LightweightScreenValidator
                 
                 validator = LightweightScreenValidator(excluded_folders=['FactoryReset-XUMO-TV'])
                 validation_result = validator.find_best_match(local_path)
