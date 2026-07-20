@@ -19,7 +19,7 @@ from methods.method_utils import log_message, create_execution_log_path
 # Import IR utilities
 from config.config_ir_blaster import get_ir_config_for_device, generate_ir_code, send_ir_command
 
-def execute_ir_test_process(device_ip, port, username, password, iteration=1, device_name="Device", selected_keys=None, combined_method_name=None, remote_type_override=None):
+def execute_ir_test_process(device_ip, port, username, password, iteration=1, device_name="Device", selected_keys=None, combined_method_name=None, remote_type_override=None, device_type=None):
     """
     Execute IR Command Test Process:
     Step 1: Send IR command(s) blindly using device-specific IR configuration (no SSH needed)
@@ -33,6 +33,7 @@ def execute_ir_test_process(device_ip, port, username, password, iteration=1, de
         device_name: Device name for IR port selection and logging
         selected_keys: List of IR keys to test (e.g., ['HOME', 'POWER'])
         remote_type_override: Optional remote type to use instead of device default
+        device_type: Optional device type for automatic remote type detection (e.g., 'XUMO', 'SKY STREAM')
     """
     # Default to both keys if none specified
     if not selected_keys:
@@ -72,10 +73,26 @@ def execute_ir_test_process(device_ip, port, username, password, iteration=1, de
         log_message(f"[IR CONFIG] IR Port: {ir_config['ir_port']}")
         log_message(f"[IR CONFIG] Selected Keys: {', '.join(selected_keys)}")
         
-        ir_test_success = False
+        ir_test_success = True  # Track if ALL keys sent successfully
+        failed_keys = []  # Track which keys failed
         
-        # Resolve remote type (default to XUMO_PR3, fallback SKY_LC103 for SKY devices)
-        remote_type = remote_type_override or ir_config.get('remote_type') or ('SKY_LC103' if 'SKY' in device_name.upper() else 'XUMO_PR3')
+        # Resolve remote type with priority: override → device_type mapping → ir_config → device_name pattern
+        remote_type = remote_type_override
+        
+        if not remote_type and device_type:
+            # Try to get remote type from device_type
+            try:
+                from config.config_ir_blaster import get_remote_type_for_device_type
+                remote_type = get_remote_type_for_device_type(device_type)
+                if remote_type:
+                    log_message(f"[IR CONFIG] Auto-detected remote type from device_type '{device_type}': {remote_type}")
+            except Exception as e:
+                log_message(f"⚠ Error auto-detecting remote type from device_type: {e}")
+        
+        if not remote_type:
+            # Fallback to ir_config or device_name pattern
+            remote_type = ir_config.get('remote_type') or ('SKY_LC103' if 'SKY' in device_name.upper() else 'XUMO_PR3')
+        
         log_message(f"[IR CONFIG] Remote Type: {remote_type}")
 
         # Send IR commands and validate logs for each key
@@ -90,14 +107,17 @@ def execute_ir_test_process(device_ip, port, username, password, iteration=1, de
                 log_message(f"[IR CODE] Generated {key} code: {ir_code[:50]}...")
                 if send_ir_command(ir_code, ir_config['itach_ip'], ir_config['itach_port'], log_message):
                     log_message(f"✓ IR {key} command sent successfully (blind)")
-                    ir_test_success = True
                 else:
                     log_message(f"❌ Failed to send IR {key} command")
+                    ir_test_success = False  # Mark as failed if any key fails
+                    failed_keys.append(key)
                     from app import add_html_result
                     add_html_result(iteration, f"IR-{key}", "FAILED", f"IR {key} command transmission failed", "", "", 
                                   device_ip=device_ip, method="ir_test")
             else:
                 log_message(f"❌ Failed to generate IR {key} code")
+                ir_test_success = False  # Mark as failed if code generation fails
+                failed_keys.append(key)
             # Wait 3 seconds before checking logs
             log_message("[WAIT] Waiting 3 seconds before log validation...")
             time.sleep(3)
@@ -177,26 +197,37 @@ def execute_ir_test_process(device_ip, port, username, password, iteration=1, de
         # Create single IR-Test result entry with detailed per-key results
         result_details = []
         for key in selected_keys:
-            result_details.append(f"{key}: sent successfully")
+            if key in failed_keys:
+                result_details.append(f"{key}: FAILED")
+            else:
+                result_details.append(f"{key}: sent successfully")
         
         result_msg = "Keys: " + " | ".join(result_details) + f" | Device {home_screen_status}"
         
         # Build phase name based on keys sent (not hardcoded HOME)
         keys_str = ", ".join(selected_keys)
         
-        # Determine status based on whether device is accessible and on HOME screen
-        if "on HOME screen" in home_screen_status:
+        # Determine status based on key transmission success AND device state
+        # FAILED if any keys failed to send
+        if failed_keys:
+            phase_name = f"IR-Test ({keys_str})"
+            result_status = "FAILED"
+            ir_test_success = False
+        # PASSED if all keys sent AND device is on HOME screen
+        elif "on HOME screen" in home_screen_status:
             phase_name = f"IR-Test ({keys_str})"
             result_status = "PASSED"
             ir_test_success = True
+        # WARNING if all keys sent BUT device not on HOME screen
         elif "NOT on HOME screen" in home_screen_status:
             phase_name = f"IR-Test ({keys_str})"
             result_status = "WARNING"
-            ir_test_success = True
+            ir_test_success = False  # Not fully successful if not on expected screen
+        # WARNING if SSH not available but keys sent (blind send only)
         else:
             phase_name = f"IR-Test ({keys_str})"
             result_status = "WARNING"
-            ir_test_success = True
+            ir_test_success = True  # Keys were sent, but we can't verify
         
         from app import add_html_result
         add_html_result(iteration, phase_name, result_status, result_msg, "", "", 

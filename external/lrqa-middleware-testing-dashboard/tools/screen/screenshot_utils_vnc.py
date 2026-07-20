@@ -210,19 +210,20 @@ def take_vnc_screenshot(
                 dimensions = image.size
                 log(f"✓ Image validation: {dimensions[0]}x{dimensions[1]} pixels")
                 
-                # Perform AI-based screen validation (V2.0 implementation)
+                # Perform AI-based screen validation (V2.0 implementation - using Ollama default)
                 try:
-                    from services.ai_screen_analyzer import AIScreenAnalyzer
+                    from services.unified_screen_validator import UnifiedScreenValidator
                     
-                    log(f"🔍 Performing AI-based screen validation...")
-                    ai_analyzer = AIScreenAnalyzer()
+                    log(f"🔍 Performing AI-based screen validation (provider: auto-detected)...")
+                    validator = UnifiedScreenValidator(debug=False)
+                    provider_info = validator.get_provider_info()
+                    log(f"   Using provider: {provider_info.get('actual', 'unknown')}")
                     
-                    # Call AI analyzer with expected screen context
-                    ai_result = ai_analyzer.analyze_screenshot(
+                    # Call unified validator with expected screen context
+                    ai_result = validator.validate_screen_detailed(
                         screenshot_path=local_path,
                         expected_screen=None,  # Will be auto-detected by AI
-                        device_name=device_name,
-                        detailed=True
+                        device_name=device_name
                     )
                     
                     if ai_result.get('success', False):

@@ -276,6 +276,18 @@ class EmailService:
                     
                     {iteration_status_html}
                     
+                    <!-- ✅ ENHANCEMENT 3: Performance Metrics -->
+                    {self.generate_performance_metrics_html(job_data)}
+                    
+                    <!-- ✅ ENHANCEMENT 1: AI Analysis Section -->
+                    {self._generate_ai_analysis_html(job_data)}
+                    
+                    <!-- ✅ ENHANCEMENT 2: Validation Warnings -->
+                    {self._generate_validation_warnings_html(job_data)}
+                    
+                    <!-- ✅ ENHANCEMENT 5: Progress Timeline -->
+                    {self._generate_progress_timeline_html(job_data)}
+                    
                     <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;">
                       <p style="margin: 0; color: #1e40af;">
                         <strong>📋 Note:</strong> Detailed execution logs are attached to this email.
@@ -411,3 +423,458 @@ This email was sent automatically after execution completed.
         except Exception as e:
             print(f"Error sending custom email: {e}")
             return False, str(e)
+    
+    # ============================================================
+    # ENHANCEMENT 1: AI-POWERED FAILURE ANALYSIS
+    # ============================================================
+    def analyze_execution_failure_with_ai(self, job_data: dict, log_content: str = "") -> dict:
+        """
+        Use Claude/Gemini API to analyze failed executions and generate insights
+        
+        Returns:
+          {
+            'root_cause': 'Most likely cause of failure',
+            'recommendations': ['Action 1', 'Action 2'],
+            'severity': 'critical|warning|info',
+            'error_pattern': 'Common pattern if detected'
+          }
+        """
+        try:
+            import google.generativeai as genai
+        except ImportError:
+            genai = None
+        
+        if not genai:
+            return {'error': 'AI analysis not available'}
+        
+        try:
+            # Prepare failure context
+            failure_context = f"""
+Execution Analysis Request:
+
+Device: {job_data.get('device_name', 'Unknown')}
+Status: {job_data.get('status', 'unknown')}
+Methods: {', '.join(job_data.get('methods', []))}
+Failed Iterations: {job_data.get('failed_iterations', 'N/A')}
+Error Message: {job_data.get('error_message', 'No error details')}
+
+Recent Logs:
+{log_content[:1000] if log_content else 'No logs available'}
+
+Please provide:
+1. Root cause analysis (1-2 sentences)
+2. 3 recommended actions to fix this
+3. Severity level (critical/warning/info)
+4. Any error patterns detected
+            """
+            
+            # Call Gemini API
+            genai.configure(api_key=os.environ.get('GOOGLE_API_KEY', ''))
+            model = genai.GenerativeModel("gemini-pro")
+            response = model.generate_content(failure_context)
+            
+            # Parse response
+            analysis_text = response.text
+            
+            # Extract structured data
+            result = {
+                'root_cause': self._extract_section(analysis_text, 'Root cause', 'analysis'),
+                'recommendations': self._extract_list(analysis_text, 'recommended'),
+                'severity': 'warning',  # Default
+                'error_pattern': self._extract_section(analysis_text, 'pattern', 'analysis')
+            }
+            
+            return result
+        except Exception as e:
+            print(f"[AI ANALYSIS] Error analyzing failure: {e}")
+            return {'error': str(e)}
+    
+    def _extract_section(self, text: str, keyword: str, context_type: str = "line") -> str:
+        """Extract relevant section from AI analysis"""
+        lines = text.split('\n')
+        for line in lines:
+            if keyword.lower() in line.lower():
+                return line.strip()
+        return "Unable to extract analysis"
+    
+    def _extract_list(self, text: str, keyword: str) -> list:
+        """Extract list items from AI analysis"""
+        lines = text.split('\n')
+        items = []
+        capture = False
+        for line in lines:
+            if keyword.lower() in line.lower():
+                capture = True
+                continue
+            if capture:
+                if line.strip().startswith(('1.', '2.', '3.', '-', '•')):
+                    items.append(line.strip().lstrip('12345.-• '))
+                elif line.strip() == '':
+                    break
+        return items[:3]  # Return top 3
+    
+    # ============================================================
+    # ENHANCEMENT 2: EXECUTION VALIDATION
+    # ============================================================
+    def validate_execution_before_email(self, job_data: dict) -> dict:
+        """
+        Validate execution outcomes before sending email
+        
+        Returns:
+          {
+            'is_valid': bool,
+            'validation_checks': {...},
+            'warnings': [],
+            'data_integrity': 'healthy|degraded|corrupted'
+          }
+        """
+        validation_result = {
+            'is_valid': True,
+            'validation_checks': {},
+            'warnings': [],
+            'data_integrity': 'healthy'
+        }
+        
+        try:
+            # Check 1: Data completeness
+            required_fields = ['job_id', 'device_name', 'status', 'start_time', 'end_time']
+            missing_fields = [f for f in required_fields if not job_data.get(f)]
+            validation_result['validation_checks']['data_completeness'] = len(missing_fields) == 0
+            if missing_fields:
+                validation_result['warnings'].append(f"Missing fields: {', '.join(missing_fields)}")
+            
+            # Check 2: Status validity
+            valid_statuses = ['completed', 'failed', 'cancelled', 'interrupted']
+            status_valid = job_data.get('status') in valid_statuses
+            validation_result['validation_checks']['status_valid'] = status_valid
+            if not status_valid:
+                validation_result['warnings'].append(f"Unknown status: {job_data.get('status')}")
+            
+            # Check 3: Iterations consistency
+            total_iterations = job_data.get('iterations', 0)
+            completed_iterations = job_data.get('iterations_completed', 0)
+            consistency_ok = completed_iterations <= total_iterations
+            validation_result['validation_checks']['iteration_consistency'] = consistency_ok
+            if not consistency_ok:
+                validation_result['warnings'].append("Iteration count inconsistency detected")
+                validation_result['data_integrity'] = 'degraded'
+            
+            # Check 4: Timestamp validity
+            try:
+                from datetime import datetime
+                start = datetime.fromisoformat(job_data.get('start_time', '').replace('Z', '+00:00'))
+                end = datetime.fromisoformat(job_data.get('end_time', '').replace('Z', '+00:00'))
+                timestamp_valid = end >= start
+                validation_result['validation_checks']['timestamp_valid'] = timestamp_valid
+                if not timestamp_valid:
+                    validation_result['warnings'].append("End time before start time")
+            except:
+                validation_result['validation_checks']['timestamp_valid'] = False
+                validation_result['warnings'].append("Invalid timestamp format")
+            
+            # Overall decision
+            validation_result['is_valid'] = all(validation_result['validation_checks'].values())
+            
+            if validation_result['warnings']:
+                print(f"[VALIDATION] {len(validation_result['warnings'])} warnings: {validation_result['warnings']}")
+            
+            return validation_result
+        except Exception as e:
+            validation_result['is_valid'] = False
+            validation_result['data_integrity'] = 'corrupted'
+            validation_result['warnings'].append(f"Validation error: {str(e)}")
+            return validation_result
+    
+    # ============================================================
+    # ENHANCEMENT 3: PERFORMANCE METRICS & FORMATTING
+    # ============================================================
+    def generate_performance_metrics_html(self, job_data: dict) -> str:
+        """
+        Generate visual performance metrics for email
+        Include ASCII charts and progress indicators
+        """
+        try:
+            iterations = job_data.get('iterations', 0)
+            completed = job_data.get('iterations_completed', 0)
+            passed = job_data.get('passed_count', 0)
+            failed = job_data.get('failed_count', 0)
+            
+            # Calculate percentages
+            completion_pct = (completed / iterations * 100) if iterations > 0 else 0
+            success_pct = (passed / completed * 100) if completed > 0 else 0
+            
+            # Build progress bar
+            bar_length = 30
+            filled = int(bar_length * completion_pct / 100)
+            progress_bar = '█' * filled + '░' * (bar_length - filled)
+            
+            # Build success bar
+            success_filled = int(bar_length * success_pct / 100)
+            success_bar = '✓' * success_filled + '✗' * (bar_length - success_filled)
+            
+            html = f"""
+            <h3 style="color: #4b5563; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-top: 30px;">
+              📈 Performance Metrics
+            </h3>
+            
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+              <tr>
+                <td style="padding: 15px; background: #f3f4f6; border: 1px solid #e5e7eb; font-weight: bold; width: 40%;">
+                  ⏳ Completion Rate
+                </td>
+                <td style="padding: 15px; border: 1px solid #e5e7eb;">
+                  <div style="background: #e5e7eb; border-radius: 20px; padding: 5px; overflow: hidden;">
+                    <div style="background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%); width: {completion_pct}%; height: 25px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">
+                      {completion_pct:.1f}%
+                    </div>
+                  </div>
+                  <span style="font-size: 12px; color: #6b7280;">{completed} / {iterations} iterations</span>
+                </td>
+              </tr>
+              
+              <tr>
+                <td style="padding: 15px; background: #f3f4f6; border: 1px solid #e5e7eb; font-weight: bold;">
+                  ✅ Success Rate
+                </td>
+                <td style="padding: 15px; border: 1px solid #e5e7eb;">
+                  <div style="background: #e5e7eb; border-radius: 20px; padding: 5px; overflow: hidden;">
+                    <div style="background: linear-gradient(90deg, #10b981 0%, #059669 100%); width: {success_pct}%; height: 25px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px;">
+                      {success_pct:.1f}%
+                    </div>
+                  </div>
+                  <span style="font-size: 12px; color: #6b7280;">{passed} passed, {failed} failed</span>
+                </td>
+              </tr>
+            </table>
+            
+            <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0; font-family: monospace; font-size: 12px; line-height: 1.8;">
+              <div><strong>Completion:</strong> {progress_bar} {completion_pct:.0f}%</div>
+              <div><strong>Success:</strong> {success_bar} {success_pct:.0f}%</div>
+            </div>
+            """
+            
+            return html
+        except Exception as e:
+            print(f"[METRICS] Error generating metrics: {e}")
+            return ""
+    
+    # ============================================================
+    # ENHANCEMENT 4: SMART NOTIFICATION FILTERING
+    # ============================================================
+    def should_send_notification(self, job_data: dict, config: dict = None) -> tuple:
+        """
+        Determine if email should be sent based on execution type and configured rules
+        
+        Returns: (should_send: bool, reason: str)
+        
+        Default rules:
+        - Always send on failures
+        - Send on completion only if EMAIL_ON_COMPLETION enabled
+        - Skip routine tests if SUPPRESS_ROUTINE_NOTIFICATIONS enabled
+        - Track as important event if involved device is frequently failing
+        """
+        config = config or {}
+        should_send = True
+        reason = ""
+        
+        status = job_data.get('status', 'unknown')
+        
+        # Rule 1: Always send on failure
+        if status == 'failed':
+            reason = "Sent automatically - execution failed"
+            return True, reason
+        
+        # Rule 2: Check completion notification setting
+        from config.config_email import EMAIL_ON_COMPLETION
+        if status == 'completed' and not EMAIL_ON_COMPLETION:
+            reason = "Notification skipped - EMAIL_ON_COMPLETION disabled"
+            return False, reason
+        
+        # Rule 3: Suppress routine tests (optional)
+        suppress_routine = config.get('SUPPRESS_ROUTINE', False)
+        if suppress_routine and job_data.get('is_routine_test', False):
+            reason = "Notification skipped - routine test suppression enabled"
+            return False, reason
+        
+        # Rule 4: Mark important if high failure rate on device
+        device_name = job_data.get('device_name', '')
+        failed_count = job_data.get('failed_count', 0)
+        total_iterations = job_data.get('iterations', 1)
+        failure_rate = (failed_count / total_iterations) if total_iterations > 0 else 0
+        
+        if failure_rate > 0.5:  # >50% failure rate = important
+            job_data['is_important_event'] = True
+            reason += " [⚠️ HIGH FAILURE RATE on " + device_name + "]"
+        
+        return should_send, reason
+    
+    # ============================================================
+    # ENHANCEMENT 5: ADVANCED PROGRESS TRACKING
+    # ============================================================
+    def track_execution_progress(self, job_data: dict, tracking_history: dict = None) -> dict:
+        """
+        Track execution progress over time for real-time monitoring
+        
+        Returns progress timeline with:
+        - Iteration-by-iteration results
+        - Time elapsed
+        - Estimated time remaining
+        - Performance trend
+        """
+        tracking_history = tracking_history or {}
+        
+        try:
+            job_id = job_data.get('job_id', 'unknown')
+            current_iteration = job_data.get('current_iteration', 0)
+            total_iterations = job_data.get('iterations', 0)
+            start_time = job_data.get('start_time', '')
+            current_time = datetime.now(datetime.timezone.utc).isoformat()
+            
+            # Calculate time metrics
+            try:
+                from datetime import datetime as dt, timezone
+                start_dt = dt.fromisoformat(start_time.replace('Z', '+00:00'))
+                current_dt = dt.fromisoformat(current_time.replace('Z', '+00:00'))
+                elapsed = (current_dt - start_dt).total_seconds()
+                
+                # Estimate remaining time
+                if current_iteration > 0:
+                    avg_per_iteration = elapsed / current_iteration
+                    remaining = avg_per_iteration * (total_iterations - current_iteration)
+                else:
+                    remaining = 0
+                    
+            except:
+                elapsed = 0
+                remaining = 0
+            
+            progress_snapshot = {
+                'timestamp': current_time,
+                'iteration': f"{current_iteration}/{total_iterations}",
+                'elapsed_seconds': elapsed,
+                'estimated_remaining_seconds': remaining,
+                'iteration_results': job_data.get('iteration_results', {})
+            }
+            
+            # Store in history
+            if job_id not in tracking_history:
+                tracking_history[job_id] = []
+            tracking_history[job_id].append(progress_snapshot)
+            
+            return {
+                'current_progress': progress_snapshot,
+                'progress_history': tracking_history.get(job_id, [])
+            }
+        except Exception as e:
+            print(f"[PROGRESS TRACKING] Error: {e}")
+            return {'error': str(e)}
+    
+    # ============================================================
+    # HELPER METHODS FOR EMAIL HTML GENERATION
+    # ============================================================
+    def _generate_ai_analysis_html(self, job_data: dict) -> str:
+        """Generate AI analysis section for email"""
+        try:
+            ai_analysis = job_data.get('ai_analysis', {})
+            if not ai_analysis or 'error' in ai_analysis:
+                return ""
+            
+            recommendations = ai_analysis.get('recommendations', [])
+            if not recommendations:
+                return ""
+            
+            rec_html = "".join([f"<li style=\"margin: 8px 0; color: #374151;\">{rec}</li>" for rec in recommendations[:3]])
+            
+            html = f"""
+            <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 4px;">
+              <h3 style="color: #92400e; margin-top: 0; font-size: 16px;">🤖 AI-Powered Analysis</h3>
+              <p style="color: #78350f; margin: 10px 0;"><strong>Root Cause:</strong> {ai_analysis.get('root_cause', 'Analysis unavailable')}</p>
+              <p style="color: #78350f; margin: 10px 0;"><strong>Recommendations:</strong></p>
+              <ul style="color: #78350f; margin: 10px 0;">{rec_html}</ul>
+            </div>
+            """
+            return html
+        except Exception as e:
+            print(f"[EMAIL] Error generating AI analysis HTML: {e}")
+            return ""
+    
+    def _generate_validation_warnings_html(self, job_data: dict) -> str:
+        """Generate validation warnings section"""
+        try:
+            validation = self.validate_execution_before_email(job_data)
+            warnings = validation.get('warnings', [])
+            
+            if not warnings:
+                return ""
+            
+            warning_items = "".join([f"<li style=\"margin: 5px 0; color: #dc2626;\">⚠️ {w}</li>" for w in warnings])
+            
+            html = f"""
+            <div style="background: #fee2e2; border-left: 4px solid #dc2626; padding: 15px; margin: 20px 0; border-radius: 4px;">
+              <h3 style="color: #7f1d1d; margin-top: 0; font-size: 16px;">⚠️ Data Integrity Warnings</h3>
+              <p style="color: #7f1d1d; font-size: 13px; margin: 0;"><strong>Status:</strong> {validation.get('data_integrity', 'unknown').upper()}</p>
+              <ul style="color: #7f1d1d; margin: 10px 0; font-size: 13px;">{warning_items}</ul>
+            </div>
+            """
+            return html
+        except Exception as e:
+            print(f"[EMAIL] Error generating warnings HTML: {e}")
+            return ""
+    
+    def _generate_progress_timeline_html(self, job_data: dict) -> str:
+        """Generate progress timeline section"""
+        try:
+            progress_info = job_data.get('progress_info', {})
+            if 'error' in progress_info or not progress_info:
+                return ""
+            
+            current_progress = progress_info.get('current_progress', {})
+            elapsed = current_progress.get('elapsed_seconds', 0)
+            remaining = current_progress.get('estimated_remaining_seconds', 0)
+            
+            elapsed_str = self._format_duration(elapsed)
+            remaining_str = self._format_duration(remaining)
+            
+            html = f"""
+            <h3 style="color: #4b5563; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-top: 30px;">
+              ⏱️ Execution Timeline
+            </h3>
+            <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+              <tr>
+                <td style="padding: 12px; background: #f3f4f6; border: 1px solid #e5e7eb; font-weight: bold; width: 35%;">
+                  ⏱️ Time Elapsed
+                </td>
+                <td style="padding: 12px; border: 1px solid #e5e7eb;">
+                  <strong>{elapsed_str}</strong>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 12px; background: #f3f4f6; border: 1px solid #e5e7eb; font-weight: bold;">
+                  🕐 Est. Remaining
+                </td>
+                <td style="padding: 12px; border: 1px solid #e5e7eb;">
+                  <strong>{remaining_str}</strong>
+                </td>
+              </tr>
+            </table>
+            """
+            return html
+        except Exception as e:
+            print(f"[EMAIL] Error generating progress HTML: {e}")
+            return ""
+    
+    def _format_duration(self, seconds: float) -> str:
+        """Format duration in seconds to human-readable format"""
+        try:
+            if seconds < 60:
+                return f"{int(seconds)}s"
+            elif seconds < 3600:
+                minutes = int(seconds / 60)
+                secs = int(seconds % 60)
+                return f"{minutes}m {secs}s"
+            else:
+                hours = int(seconds / 3600)
+                minutes = int((seconds % 3600) / 60)
+                return f"{hours}h {minutes}m"
+        except:
+            return "N/A"

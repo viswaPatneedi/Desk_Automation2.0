@@ -19,9 +19,9 @@ try:
 except ImportError:
     SFTP_UTILS_AVAILABLE = False
 
-# Screen validation imports - AI-based (V2.0)
+# Screen validation imports - AI-based (V2.0) using unified validator (Ollama default)
 try:
-    from services.ai_screen_analyzer import AIScreenAnalyzer
+    from services.unified_screen_validator import UnifiedScreenValidator
     AI_VALIDATOR_AVAILABLE = True
 except ImportError:
     AI_VALIDATOR_AVAILABLE = False
@@ -41,19 +41,18 @@ def validate_input_tile_with_reference(screenshot_path, input_name, reference_di
     
     Uses AIScreenAnalyzer (AI Vision) for comparison with fallback to LightweightScreenValidator.
     """
-    # Try AI-based validation first
+    # Try AI-based validation first (using unified validator: Ollama default)
     if AI_VALIDATOR_AVAILABLE:
         try:
-            ai_analyzer = AIScreenAnalyzer()
-            result = ai_analyzer.analyze_screenshot(
+            validator = UnifiedScreenValidator(debug=False)
+            result = validator.validate_screen_detailed(
                 screenshot_path=screenshot_path,
-                device_name=None,
-                detailed=True
+                device_name=None
             )
             
-            if result.get('success', False):
+            if result.get('match', False) or 'error' not in result:
                 detected_screen = result.get('detected_screen', 'Unknown')
-                confidence = result.get('confidence', 0.0)
+                confidence = result.get('confidence', 0.0) / 100.0 if result.get('confidence', 0) > 1 else result.get('confidence', 0.0)
                 log_func(f"   ✓ {input_name} - AI Detected: {detected_screen} ({confidence:.2%})")
                 return confidence >= 0.70  # Accept if confidence >= 70%
         except Exception as e:

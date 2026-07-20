@@ -792,6 +792,119 @@
             display: none !important;
         }
 
+        /* Modern Search Icon & Input Styling */
+        #methods-search-input::-webkit-input-placeholder,
+        #sequences-search-input::-webkit-input-placeholder {
+            color: #9ca3af;
+        }
+
+        #methods-search-input,
+        #sequences-search-input {
+            transition: all 0.3s ease;
+        }
+
+        #methods-search-input:focus,
+        #sequences-search-input:focus {
+            outline: none;
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+        }
+
+        /* Smooth animation for search input appearance */
+        #methods-search-input[style*="display: block"],
+        #sequences-search-input[style*="display: block"] {
+            animation: slideInSearchInput 0.3s ease;
+        }
+
+        @keyframes slideInSearchInput {
+            from {
+                opacity: 0;
+                width: 0;
+            }
+            to {
+                opacity: 1;
+                width: 100%;
+            }
+        }
+
+        /* Search button/link styling */
+        #methods-search-icon:hover,
+        #sequences-search-icon:hover,
+        #methods-search-clear:hover,
+        #sequences-search-clear:hover {
+            color: #93c5fd !important;
+            transition: color 0.2s ease;
+        }
+
+        /* Pill-Shaped Search Bar Design */
+        .search-bar-pill {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 1rem;
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            border: 1.5px solid #374151;
+            border-radius: 9999px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0px rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .search-bar-pill:focus-within {
+            border-color: #60a5fa;
+            box-shadow: 0 6px 16px rgba(96, 165, 250, 0.2), inset 0 1px 0px rgba(255, 255, 255, 0.08);
+            background: linear-gradient(135deg, #0f172a 0%, #1f2937 100%);
+        }
+
+        .search-bar-pill i {
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .search-input-pill {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: #e5e7eb;
+            font-size: 0.9rem;
+            padding: 0;
+            outline: none;
+        }
+
+        .search-input-pill::placeholder {
+            color: #9ca3af;
+        }
+
+        .search-input-pill:focus {
+            outline: none;
+        }
+
+        .search-clear-pill {
+            background: none;
+            border: none;
+            color: #60a5fa;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .search-clear-pill:hover {
+            background: rgba(96, 165, 250, 0.1);
+            color: #93c5fd;
+        }
+
+        .search-clear-pill i {
+            font-size: 1rem;
+        }
+
+
         /* 1-column layout for mobile (below 768px) */
         @media (max-width: 768px) {
             .three-column-grid {
@@ -872,10 +985,18 @@
                             </div>
                         </div>
                     </div>
-                    {% if current_user.is_admin %}
+                    {% if current_user.is_super_admin or current_user.is_admin %}
                     <span class="badge bg-danger">♔ Admin</span>
                     {% endif %}
                 </span>
+                {% if current_user.is_super_admin %}
+                <a href="/admin/teams" class="btn btn-sm btn-warning" title="Manage Teams">
+                    <i class="bi bi-people-fill"></i> Teams
+                </a>
+                {% endif %}
+                <a href="/change-password" class="btn btn-sm btn-info" title="Change Password">
+                    <i class="bi bi-key"></i> Change Password
+                </a>
                 <a href="/logout" class="btn btn-sm btn-danger">
                     <i class="bi bi-box-arrow-right"></i> Logout
                 </a>
@@ -908,10 +1029,11 @@
                         <span class="badge bg-light text-dark ms-2" id="available-methods-count">0</span>
                     </div>
                     <div class="card-body-custom">
-                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                            <input type="text" id="methods-search-input" class="form-control" placeholder="Search methods..." style="font-size: 0.9rem;">
-                            <button class="btn btn-sm btn-secondary" onclick="clearMethodsSearch()" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; white-space: nowrap;">
-                                <i class="bi bi-x-circle"></i> Clear
+                        <div class="search-bar-pill">
+                            <i class="bi bi-search" style="color: #60a5fa;"></i>
+                            <input type="text" id="methods-search-input" class="search-input-pill" placeholder="Search methods..." onkeyup="onMethodsSearchInput()">
+                            <button id="methods-search-clear" class="search-clear-pill" onclick="clearMethodsSearch()" style="display: none;">
+                                <i class="bi bi-x"></i>
                             </button>
                         </div>
                         <div class="form-text mb-3">
@@ -1394,10 +1516,11 @@
                         <span class="badge bg-light text-dark ms-2" id="saved-sequences-count">0</span>
                     </div>
                     <div class="card-body-custom">
-                        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
-                            <input type="text" id="sequences-search-input" class="form-control" placeholder="Search sequences..." style="font-size: 0.9rem;">
-                            <button class="btn btn-sm btn-secondary" onclick="clearSequencesSearch()" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; white-space: nowrap;">
-                                <i class="bi bi-x-circle"></i> Clear
+                        <div class="search-bar-pill">
+                            <i class="bi bi-search" style="color: #60a5fa;"></i>
+                            <input type="text" id="sequences-search-input" class="search-input-pill" placeholder="Search sequences..." onkeyup="onSequencesSearchInput()">
+                            <button id="sequences-search-clear" class="search-clear-pill" onclick="clearSequencesSearch()" style="display: none;">
+                                <i class="bi bi-x"></i>
                             </button>
                         </div>
                         <div id="saved-sequences-list">
@@ -1751,6 +1874,16 @@
                     <textarea class="form-control" id="logPatternsInput" placeholder="e.g., process crashed, ERROR, FATAL" rows="4" style="font-family: monospace; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563;"></textarea>
                     
                     <small style="color: #9ca3af; display: block; margin-top: 0.5rem;">📂 Search location: /opt/logs/core_log.txt</small>
+                    
+                    <!-- Phase 22: Add Custom Patterns Button -->
+                    <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #4b5563;">
+                        <p style="margin-bottom: 0.75rem; color: #9ca3af; font-size: 0.9rem;">
+                            <i class="bi bi-lightbulb"></i> <strong>Optional:</strong> Add custom grep patterns with contains/not-contains logic
+                        </p>
+                        <button type="button" class="btn btn-sm" onclick="openCustomLogPatternsModal()" style="background: #6366f1; color: white; border: none;">
+                            <i class="bi bi-plus-circle"></i> Add Custom Patterns
+                        </button>
+                    </div>
                 </div>
                 <div class="modal-footer" style="background: #111827; border-top: 1px solid #1f2937;">
                     <button type="button" class="btn" onclick="backToHomeTimeout()" style="background: #4b5563; color: white; border: none;">Back</button>
@@ -3378,7 +3511,25 @@
         // Clear method search
         function clearMethodsSearch() {
             const searchInput = document.getElementById('methods-search-input');
+            const clearBtn = document.getElementById('methods-search-clear');
+            
             searchInput.value = '';
+            clearBtn.style.display = 'none';
+            filterMethods();
+        }
+        
+        // Handle methods search input
+        function onMethodsSearchInput() {
+            const searchInput = document.getElementById('methods-search-input');
+            const clearBtn = document.getElementById('methods-search-clear');
+            
+            // Show clear button only when there's text
+            if (searchInput.value.length > 0) {
+                clearBtn.style.display = 'flex';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+            
             filterMethods();
         }
         
@@ -3420,7 +3571,25 @@
         // Clear sequence search
         function clearSequencesSearch() {
             const searchInput = document.getElementById('sequences-search-input');
+            const clearBtn = document.getElementById('sequences-search-clear');
+            
             searchInput.value = '';
+            clearBtn.style.display = 'none';
+            filterSequences();
+        }
+        
+        // Handle sequences search input
+        function onSequencesSearchInput() {
+            const searchInput = document.getElementById('sequences-search-input');
+            const clearBtn = document.getElementById('sequences-search-clear');
+            
+            // Show clear button only when there's text
+            if (searchInput.value.length > 0) {
+                clearBtn.style.display = 'flex';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+            
             filterSequences();
         }
         
@@ -3484,17 +3653,36 @@
                             deviceRow.setAttribute('data-device-ip', device.ip);
                             deviceRow.style.cssText = 'display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; margin-bottom: 0.5rem; border: 1px solid #475569;';
                             
+                            // Phase 21: Determine status badge content
+                            let statusBadgeContent = '<i class="bi bi-hourglass-split"></i> Checking...';
+                            let statusBadgeStyle = 'background: #6b7280;';
+                            let deviceInfoExtra = '';
+                            
+                            // Show BUSY status with executing user if available
+                            if (device.status === 'BUSY' && device.executing_user) {
+                                statusBadgeContent = `<i class="bi bi-exclamation-circle-fill"></i> BUSY`;
+                                statusBadgeStyle = 'background: #dc2626; color: #fff;';
+                                deviceInfoExtra = `<span style="color: #fca5a5; font-size: 0.8rem;"><i class="bi bi-person"></i> ${device.executing_user}</span>`;
+                                if (device.current_iteration && device.total_iterations) {
+                                    deviceInfoExtra += ` <span style="color: #fca5a5; font-size: 0.8rem;">ITR ${device.current_iteration}/${device.total_iterations}</span>`;
+                                }
+                            } else if (device.status === 'AVAILABLE') {
+                                statusBadgeContent = '<i class="bi bi-check-circle"></i> Available';
+                                statusBadgeStyle = 'background: #10b981;';
+                            }
+                            
                             deviceRow.innerHTML = `
-                                <input type="checkbox" class="form-check-input device-checkbox" id="device-${device.ip}" value="${device.ip}" data-device-name="${device.name}" data-device-mac="${device.mac_address || 'N/A'}" style="margin-right: 1rem; width: 18px; height: 18px; cursor: pointer;">
+                                <input type="checkbox" class="form-check-input device-checkbox" id="device-${device.ip}" value="${device.ip}" data-device-name="${device.name}" data-device-mac="${device.mac_address || 'N/A'}" style="margin-right: 1rem; width: 18px; height: 18px; cursor: pointer;" ${device.status === 'BUSY' ? 'disabled' : ''}>
                                 <div style="flex: 1;">
                                     <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">${device.name} • <span style="color: #9ca3af; font-size: 0.85rem;">${device.ip} • <span class="device-mac-display">${device.mac_address || 'N/A'}</span></span> </div>
+                                    ${deviceInfoExtra ? `<div style="margin-top: 0.25rem;">${deviceInfoExtra}</div>` : ''}
                                 </div>
-                                <span class="device-status-badge" style="background: #6b7280; color: #fff; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; min-width: 75px; text-align: center;">
-                                    <i class="bi bi-hourglass-split"></i> Checking...
+                                <span class="device-status-badge" style="${statusBadgeStyle} color: #fff; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; min-width: 75px; text-align: center;">
+                                    ${statusBadgeContent}
                                 </span>
                             `;
                             deviceSelector.appendChild(deviceRow);
-                            console.log(`  ✅ Added device: ${device.name} (${device.ip})`);
+                            console.log(`  ✅ Added device: ${device.name} (${device.ip}) - Status: ${device.status}`);
                         });
                         console.log('✅ Device selector populated successfully');
                     } else {
@@ -4144,15 +4332,21 @@
             console.log(`🔔 Method ${methodId} requires parameters. Showing prompts...`);
             
             if (methodId === 'ir_test') {
-                // Prompt for IR keys and remote type
-                const selection = await promptForIrKeysAsync();
-                if (selection === null) {
+                // IR Test - Show modal to select keys
+                console.log('🔧 IR Test method selected - showing key selection modal');
+                
+                const selectedKeys = await showIrTestModal();
+                if (selectedKeys === null) {
                     console.log('❌ User cancelled IR test parameters');
                     return null;
                 }
-                params.ir_keys = selection.keys || [];
-                params.remote_type = selection.remoteType || '';
+                
+                params.ir_keys = selectedKeys;
+                params.remote_type = 'auto-detect';  // Auto-detect based on device type
+                
                 console.log('✅ IR Test Parameters:', params);
+                console.log('   ├─ IR Keys:', selectedKeys.join(', '));
+                console.log('   └─ Remote Type: auto-detect (based on device type at execution)');
             } else if (methodId === 'navigate_to_tiles') {
                 // Prompt for section and tile to navigate
                 const section = prompt('Enter section to navigate to (e.g., "Apps", "Movies", "Music"):');
@@ -4869,9 +5063,46 @@
                     .filter(p => p.length > 0);
             }
             
+            // Phase 22: Merge custom patterns from modal if available
+            if (window.customLogPatterns && window.customLogPatterns.length > 0) {
+                console.log(`✅ [PHASE 22] Merging ${window.customLogPatterns.length} custom patterns into log_search_patterns`);
+                window.customLogPatterns.forEach(customPattern => {
+                    // Convert to grep format with NOT prefix for negation
+                    let formattedPattern = customPattern.pattern;
+                    if (customPattern.type === 'not_contains') {
+                        // Mark as NOT pattern using ! prefix for backend processing
+                        formattedPattern = `!${customPattern.pattern}`;
+                    }
+                    logPatterns.push(formattedPattern);
+                    console.log(`   📌 Added: ${formattedPattern} (type: ${customPattern.type})`);
+                });
+            }
+            
             globalLogPatterns = logPatterns;
             closeLogPatternsModal();
             showAutoCollectModal(logPatterns.length);
+        }
+        
+        // Phase 22: Open custom patterns modal from log patterns flow
+        function openCustomLogPatternsModal() {
+            console.log('🔧 [PHASE 22] Opening custom log patterns modal from logPatternsModal');
+            // Reset custom patterns for fresh input
+            const container = document.getElementById('customLogPatterns');
+            if (container) {
+                container.innerHTML = '';
+                customLogPatternCount = 0;
+            }
+            // Close the log patterns modal temporarily
+            closeLogPatternsModal();
+            // Open custom patterns modal
+            const modal = new bootstrap.Modal(document.getElementById('rebootPerfCustomLogsModal'));
+            modal.show();
+            // Set up a handler to re-open log patterns modal when custom patterns modal closes
+            document.getElementById('rebootPerfCustomLogsModal').addEventListener('hidden.bs.modal', function() {
+                console.log('🔧 [PHASE 22] Custom patterns modal closed, re-opening log patterns modal');
+                const logModal = new bootstrap.Modal(document.getElementById('logPatternsModal'));
+                logModal.show();
+            }, { once: true });
         }
 
         function showAutoCollectModal(patternCount) {
@@ -5808,6 +6039,232 @@
             }); // close new Promise
         } // close promptForDeepSleepParams
 
+        // Modal to select IR test keys with custom sequence building
+        async function showIrTestModal() {
+            return new Promise((resolve) => {
+                console.log('🔧 Showing IR Test key selection modal with sequence builder...');
+                
+                // Create modal HTML
+                const modalHTML = `
+                    <div class="modal fade" id="irTestModal" tabindex="-1" aria-labelledby="irTestModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" style="max-width: 1000px;">
+                            <div class="modal-content" style="background: #1f2937; border: 2px solid #4b5563; color: #e5e7eb;">
+                                <div class="modal-header" style="border-bottom: 1px solid #4b5563;">
+                                    <h5 class="modal-title" id="irTestModalLabel">
+                                        <i class="bi bi-broadcast"></i> IR Command Test - Build Sequence
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body" style="padding: 1.5rem;">
+                                    <div style="background: #0f172a; padding: 12px; border-radius: 6px; border-left: 4px solid #10b981; margin-bottom: 1.5rem;">
+                                        <small style="color: #9ca3af;">
+                                            <strong style="color: #10b981;">ℹ️ How to Use:</strong><br>
+                                            Click on any key to add it to your sequence. Build your sequence in the right panel below. You can add the same key multiple times in any order.
+                                        </small>
+                                    </div>
+                                    
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                                        <!-- Left: Available Keys -->
+                                        <div>
+                                            <h6 style="color: #3b82f6; margin-bottom: 12px; font-weight: 600;">
+                                                <i class="bi bi-collection"></i> Available Keys
+                                            </h6>
+                                            <div id="ir-keys-container" style="max-height: 400px; overflow-y: auto;">
+                                                <!-- Remote types and keys will be populated here -->
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Right: Sequence Builder -->
+                                        <div style="display: flex; flex-direction: column;">
+                                            <h6 style="color: #10b981; margin-bottom: 12px; font-weight: 600;">
+                                                <i class="bi bi-arrow-left-right"></i> Your Sequence
+                                            </h6>
+                                            <div id="ir-sequence-builder" style="flex: 1; background: #111827; border: 2px dashed #4b5563; border-radius: 6px; padding: 12px; display: flex; flex-wrap: wrap; align-items: flex-start; align-content: flex-start; gap: 8px; overflow-y: auto; min-height: 300px;">
+                                                <div style="width: 100%; text-align: center; color: #6b7280; display: flex; align-items: center; justify-content: center; height: 100%; font-size: 0.9rem;">
+                                                    👇 Click keys on the left to add them here
+                                                </div>
+                                            </div>
+                                            <div style="margin-top: 12px; display: flex; gap: 8px;">
+                                                <button id="ir-seq-clear" style="flex: 1; padding: 8px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+                                                    <i class="bi bi-trash"></i> Clear
+                                                </button>
+                                                <button id="ir-seq-undo" style="flex: 1; padding: 8px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+                                                    <i class="bi bi-arrow-counterclockwise"></i> Undo
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer" style="border-top: 1px solid #4b5563; padding: 1.5rem;">
+                                    <button type="button" class="btn" style="background: #4b5563; color: #e5e7eb;" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="ir-test-confirm" style="background: #10b981; border-color: #10b981;">
+                                        <i class="bi bi-check-circle"></i> Confirm Sequence
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Remove existing modal if present
+                const existingModal = document.getElementById('irTestModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+                
+                // Add modal to DOM
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                
+                // Get cache or prepare default remotes
+                const remotes = irRemotesCache || {
+                    'XUMO_PR3': { keys: ['POWER', 'HOME', 'BACK', 'MUTE', 'VOL_UP', 'VOL_DOWN', 'SELECT'] },
+                    'SKY_LC103': { keys: ['POWER', 'HOME', 'BACK', 'MUTE', 'VOL_UP', 'VOL_DOWN', 'SELECT'] }
+                };
+                
+                console.log('📡 Available IR Remotes:', remotes);
+                
+                // State to track the sequence
+                let sequenceStack = [];
+                
+                // Populate available keys
+                const keysContainer = document.getElementById('ir-keys-container');
+                let keysHTML = '';
+                
+                Object.keys(remotes).forEach((remoteType) => {
+                    const remote = remotes[remoteType];
+                    const keys = remote.keys || [];
+                    
+                    keysHTML += `
+                        <div style="margin-bottom: 1.5rem;">
+                            <h6 style="color: #10b981; margin-bottom: 10px; font-weight: 600; font-size: 0.9rem;">
+                                <i class="bi bi-broadcast"></i> ${remoteType}
+                            </h6>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px;">
+                    `;
+                    
+                    keys.forEach(key => {
+                        keysHTML += `
+                            <button class="ir-key-btn" data-key="${key}" style="padding: 10px; background: #0f172a; color: #e5e7eb; border: 2px solid #4b5563; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; text-align: center;">
+                                ${key}
+                            </button>
+                        `;
+                    });
+                    
+                    keysHTML += `
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                keysContainer.innerHTML = keysHTML;
+                
+                // Get modal elements
+                const modalElement = document.getElementById('irTestModal');
+                const sequenceBuilder = document.getElementById('ir-sequence-builder');
+                const confirmBtn = document.getElementById('ir-test-confirm');
+                const clearBtn = document.getElementById('ir-seq-clear');
+                const undoBtn = document.getElementById('ir-seq-undo');
+                
+                // Function to render the sequence
+                function renderSequence() {
+                    if (sequenceStack.length === 0) {
+                        sequenceBuilder.innerHTML = `
+                            <div style="width: 100%; text-align: center; color: #6b7280; display: flex; align-items: center; justify-content: center; height: 100%; font-size: 0.9rem;">
+                                👇 Click keys on the left to add them here
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    let html = '';
+                    sequenceStack.forEach((key, index) => {
+                        html += `
+                            <div style="position: relative; display: flex; align-items: center; justify-content: center;">
+                                <div style="padding: 8px 12px; background: #10b981; color: #0f172a; border-radius: 4px; font-weight: 600; font-size: 0.85rem; min-width: 50px; text-align: center;">
+                                    ${key}
+                                </div>
+                                <button class="ir-seq-remove-btn" data-index="${index}" style="position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; padding: 0; background: #dc2626; color: white; border: none; border-radius: 50%; cursor: pointer; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; line-height: 1;">
+                                    ✕
+                                </button>
+                            </div>
+                        `;
+                    });
+                    sequenceBuilder.innerHTML = html;
+                    
+                    // Add event listeners to remove buttons
+                    document.querySelectorAll('.ir-seq-remove-btn').forEach(btn => {
+                        btn.addEventListener('click', (e) => {
+                            const index = parseInt(e.target.getAttribute('data-index'));
+                            sequenceStack.splice(index, 1);
+                            renderSequence();
+                        });
+                    });
+                }
+                
+                // Add key to sequence when clicked
+                document.querySelectorAll('.ir-key-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const key = btn.getAttribute('data-key');
+                        sequenceStack.push(key);
+                        console.log(`➕ Added ${key} to sequence. Current: [${sequenceStack.join(', ')}]`);
+                        renderSequence();
+                    });
+                });
+                
+                // Clear button
+                clearBtn.addEventListener('click', () => {
+                    if (sequenceStack.length > 0 && confirm('Clear entire sequence?')) {
+                        sequenceStack = [];
+                        renderSequence();
+                    }
+                });
+                
+                // Undo button
+                undoBtn.addEventListener('click', () => {
+                    if (sequenceStack.length > 0) {
+                        const removed = sequenceStack.pop();
+                        console.log(`⬅️ Removed ${removed} from sequence. Current: [${sequenceStack.join(', ')}]`);
+                        renderSequence();
+                    }
+                });
+                
+                // Confirm button handler
+                confirmBtn.addEventListener('click', () => {
+                    if (sequenceStack.length === 0) {
+                        alert('⚠️ Please add at least one key to your sequence.');
+                        return;
+                    }
+                    
+                    console.log('✅ IR Test sequence confirmed:', sequenceStack);
+                    
+                    // Close modal and resolve with sequence
+                    const bsModal = bootstrap.Modal.getInstance(modalElement);
+                    if (bsModal) bsModal.hide();
+                    
+                    // Clean up DOM after modal closes
+                    modalElement.addEventListener('hidden.bs.modal', () => {
+                        modalElement.remove();
+                    }, { once: true });
+                    
+                    resolve(sequenceStack);
+                });
+                
+                // Cancel handler
+                modalElement.addEventListener('hidden.bs.modal', () => {
+                    const isConfirmed = document.activeElement === confirmBtn;
+                    if (!isConfirmed) {
+                        console.log('❌ User cancelled IR test key selection');
+                        modalElement.remove();
+                        resolve(null);
+                    }
+                }, { once: true });
+                
+                // Show modal
+                const bsModal = new bootstrap.Modal(modalElement);
+                bsModal.show();
+            });
+        }
+
         async function getMethodParameters(methodId, methodName) {
             let params = {};
             switch(methodId) {
@@ -6125,7 +6582,12 @@
                         const remoteType = getParam(queueItem, 'remote_type', 'remoteType') || '';
                         if (irKeys && (Array.isArray(irKeys) ? irKeys.length > 0 : true)) {
                             const irKeysDisplay = Array.isArray(irKeys) ? irKeys.join(', ') : irKeys;
-                            const remoteText = remoteType ? `<br><small style="color: #f59e0b;"><i class="bi bi-broadcast"></i> Remote: ${remoteType}</small>` : '';
+                            let remoteText = '';
+                            if (remoteType === 'auto-detect') {
+                                remoteText = `<br><small style="color: #10b981;"><i class="bi bi-robot"></i> Remote: Auto-Detect (based on device type)</small>`;
+                            } else if (remoteType) {
+                                remoteText = `<br><small style="color: #f59e0b;"><i class="bi bi-broadcast"></i> Remote: ${remoteType}</small>`;
+                            }
                             inputsHtml = `<div style="margin-top: 4px;"><small style="color: #10b981;"><i class="bi bi-broadcast"></i> IR Keys: ${irKeysDisplay}</small>${remoteText}</div>`;
                         }
                     } else if (queueItem.method === 'voice_command') {
@@ -6450,20 +6912,20 @@
             const queueItem = executionQueue[index];
             const methodInfo = getMethodInfo(queueItem.method);
             
-            // Special handling for ir_test: use the async promptForIrKeys function
+            // Special handling for ir_test: use modal to select keys
             if (queueItem.method === 'ir_test') {
                 (async () => {
-                    const currentKeys = queueItem.ir_keys || queueItem.params?.ir_keys || [];
-                    const currentRemoteType = queueItem.remote_type || queueItem.params?.remote_type || '';
-                    const selection = await promptForIrKeysAsync(currentRemoteType, currentKeys);
-                    if (selection !== null) {
-                        queueItem.ir_keys = selection.keys || [];
-                        queueItem.remote_type = selection.remoteType || '';
+                    const selectedKeys = await showIrTestModal();
+                    if (selectedKeys !== null) {
+                        queueItem.ir_keys = selectedKeys;
+                        queueItem.remote_type = 'auto-detect';  // Always auto-detect
                         queueItem.params = queueItem.params || {};
                         queueItem.params.ir_keys = queueItem.ir_keys;
                         queueItem.params.remote_type = queueItem.remote_type;
                         renderQueue();
                         showNotification('✅ IR Command Test parameters updated', 'success');
+                    } else {
+                        console.log('❌ User cancelled IR test parameter edit');
                     }
                 })();
                 return;
@@ -6490,28 +6952,27 @@
             
             // Build form fields based on method type
             if (queueItem.method === 'ir_test') {
-                const irKeys = getParam(queueItem, 'ir_keys', 'irKeys') || [];
-                const remoteType = getParam(queueItem, 'remote_type', 'remoteType') || '';
+                const irKeys = getParam(queueItem, 'ir_keys', 'irKeys') || ['HOME', 'POWER'];
                 formHtml += `
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;">IR Keys:</label>
                         <input type="text" id="edit-ir-keys" value="${Array.isArray(irKeys) ? irKeys.join(', ') : irKeys}" 
                                style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;" 
-                               placeholder="e.g., POWER, MUTE, VOL_UP" readonly>
-                        <small style="color: #9ca3af; margin-top: 5px; display: block;">Click 'Edit' to change via dropdown selection</small>
+                               placeholder="e.g., POWER, MUTE, VOL_UP">
+                        <small style="color: #9ca3af; margin-top: 5px; display: block;">Comma-separated (e.g., HOME,POWER)</small>
                     </div>
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;">Remote Type:</label>
-                        <select id="edit-remote-type" style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;">
-                            <option value="" ${!remoteType ? 'selected' : ''}>-- Select Remote --</option>
-                            <option value="XUMO_PR3" ${remoteType === 'XUMO_PR3' ? 'selected' : ''}>XUMO_PR3</option>
-                            <option value="SKY_LC103" ${remoteType === 'SKY_LC103' ? 'selected' : ''}>SKY_LC103</option>
-                        </select>
-                    </div>
-                    <div style="background: #0f172a; border-radius: 4px; padding: 10px; margin-top: 15px;">
-                        <p style="color: #f59e0b; font-size: 0.85rem; margin: 0;"><i class="bi bi-info-circle"></i> <strong>To change IR keys:</strong> Click the Edit button above and use the dropdown selection interface</p>
-                    </div>
-                `;
+                    <div style="background: #0f172a; border-radius: 8px; padding: 12px; margin-top: 15px; border-left: 4px solid #10b981;">
+                        <p style="color: #10b981; font-size: 0.9rem; margin: 0; font-weight: 600;">
+                            <i class="bi bi-robot"></i> 🤖 Auto-Detection Enabled
+                        </p>
+                        <p style="color: #9ca3af; font-size: 0.85rem; margin: 8px 0 0 0;">
+                            Remote type will be automatically detected based on the device type you select during execution:
+                        </p>
+                        <ul style="color: #9ca3af; font-size: 0.85rem; margin: 8px 0 0 1.5rem; padding: 0;">
+                            <li>XUMO device → XUMO_PR3</li>
+                            <li>SKY STREAM device → SKY_LC103</li>
+                        </ul>
+                    </div>`;
             } else if (queueItem.method === 'voice_command') {
                 const voiceText = getParam(queueItem, 'voice_text', 'voiceText') || '';
                 formHtml += `
@@ -7062,9 +7523,12 @@
             
             // Save based on method type
             if (queueItem.method === 'ir_test') {
-                const remoteType = document.getElementById('edit-remote-type')?.value || '';
-                queueItem.remote_type = remoteType;
-                queueItem.params.remote_type = remoteType;
+                const irKeysText = document.getElementById('edit-ir-keys')?.value || 'HOME,POWER';
+                const irKeys = irKeysText.split(',').map(k => k.trim().toUpperCase()).filter(Boolean);
+                queueItem.ir_keys = irKeys.length > 0 ? irKeys : ['HOME', 'POWER'];
+                queueItem.remote_type = 'auto-detect';  // Always auto-detect based on device type
+                queueItem.params.ir_keys = queueItem.ir_keys;
+                queueItem.params.remote_type = queueItem.remote_type;
             } else if (queueItem.method === 'voice_command') {
                 const voiceText = document.getElementById('edit-voice-text')?.value || '';
                 queueItem.voice_text = voiceText;
@@ -8081,8 +8545,7 @@
                     `;
                     container.innerHTML = emptyState;
                 });
-        }
-        
+        }        
         function createPaginationControls(status, totalJobs, jobsPerPage, currentPage = 1) {
             const totalPages = Math.ceil(totalJobs / jobsPerPage);
             return `
@@ -10140,6 +10603,9 @@
             }
         }
     </style>
+
+    <!-- Phase 22: Custom Log Filtering Modal for Reboot Performance v2 -->
+    {% include 'modals/reboot_perf_custom_logs.html' %}
 
 </body>
 </html>

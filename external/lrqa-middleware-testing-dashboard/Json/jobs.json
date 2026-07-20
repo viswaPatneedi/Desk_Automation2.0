@@ -2013,5 +2013,458 @@
     "eta_formatted": "43s",
     "time_per_iteration": 43,
     "remaining_iterations": 2
+  },
+  {
+    "job_id": "78aa00c9-81a7-4a15-a5f8-33c4920eb516",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME"
+        ],
+        "description": "Waking UP the device"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-06-23T18:11:36.388495",
+    "end_time": "2026-06-23T18:11:58.336029+00:00",
+    "log_file_path": "logs/jobs/78aa00c9-81a7-4a15-a5f8-33c4920eb516/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-06-23T18:11:36.388519",
+    "eta_seconds": 43,
+    "eta_formatted": "43s",
+    "time_per_iteration": 43,
+    "remaining_iterations": 2
+  },
+  {
+    "job_id": "e1fc4402-ca10-48cb-91bf-bc2e3b510c4f",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "POWER",
+          "HOME"
+        ],
+        "description": "wake up the device"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-06-28T06:27:14.861975",
+    "end_time": "2026-06-28T06:27:54.719900+00:00",
+    "log_file_path": "logs/jobs/e1fc4402-ca10-48cb-91bf-bc2e3b510c4f/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-06-28T06:27:14.861992",
+    "eta_seconds": 61,
+    "eta_formatted": "1m 1s",
+    "time_per_iteration": 61,
+    "remaining_iterations": 2
+  },
+  {
+    "job_id": "a58f7c17-28d5-476c-9031-fa6fe5f9dee5",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME",
+          "DOWN",
+          "DOWN",
+          "DOWN",
+          "LEFT",
+          "LEFT",
+          "LEFT",
+          "UP",
+          "HOME"
+        ],
+        "description": "key sequence check"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-06-28T08:12:14.146017",
+    "end_time": "2026-06-28T08:14:58.575991+00:00",
+    "log_file_path": "logs/jobs/a58f7c17-28d5-476c-9031-fa6fe5f9dee5/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-06-28T08:12:14.146036",
+    "eta_seconds": 187,
+    "eta_formatted": "3m 7s",
+    "time_per_iteration": 187,
+    "remaining_iterations": 2
+  },
+  {
+    "job_id": "89aa7e3b-2b8b-4bc5-9f5f-f9b0ecf5fb47",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME",
+          "DOWN",
+          "DOWN",
+          "DOWN",
+          "LEFT",
+          "LEFT",
+          "LEFT",
+          "RIGHT",
+          "UP",
+          "UP",
+          "HOME"
+        ],
+        "description": "key sequence check"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-06-28T08:22:31.893801",
+    "end_time": "2026-06-28T08:25:51.815834+00:00",
+    "log_file_path": "logs/jobs/89aa7e3b-2b8b-4bc5-9f5f-f9b0ecf5fb47/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-06-28T08:22:31.893820",
+    "eta_seconds": 223,
+    "eta_formatted": "3m 43s",
+    "time_per_iteration": 223,
+    "remaining_iterations": 2
+  },
+  {
+    "job_id": "ef917ec5-2233-4d69-87da-d6378e3f8e95",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME",
+          "DOWN",
+          "DOWN",
+          "UP",
+          "LEFT",
+          "RIGHT"
+        ]
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-06-28T08:47:08.116686",
+    "end_time": "2026-06-28T08:48:58.560010+00:00",
+    "log_file_path": "logs/jobs/ef917ec5-2233-4d69-87da-d6378e3f8e95/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-06-28T08:47:08.116706",
+    "eta_seconds": 133,
+    "eta_formatted": "2m 13s",
+    "time_per_iteration": 133,
+    "remaining_iterations": 2
+  },
+  {
+    "job_id": "4068d44a-c1b3-48a1-8e12-f9f5b8479e00",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          ".*process crash.*"
+        ],
+        "auto_collect_logs": true
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-06-28T09:17:20.811038",
+    "end_time": "2026-06-28T09:19:30.440194+00:00",
+    "log_file_path": "logs/jobs/4068d44a-c1b3-48a1-8e12-f9f5b8479e00/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-06-28T09:17:20.811058",
+    "eta_seconds": 205,
+    "eta_formatted": "3m 25s",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2
+  },
+  {
+    "job_id": "61d1c3b4-8bef-4579-8e75-54cfc510f6dd",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "navigate_inputs_xumo"
+    ],
+    "execution_queue": [
+      {
+        "method": "navigate_inputs_xumo",
+        "description": "check all the Inputs are available in the XUMO device"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-06-28T09:43:32.878864",
+    "end_time": "2026-06-28T09:43:33.281275+00:00",
+    "log_file_path": "logs/jobs/61d1c3b4-8bef-4579-8e75-54cfc510f6dd/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-06-28T09:43:32.878884",
+    "eta_seconds": 205,
+    "eta_formatted": "3m 25s",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2
+  },
+  {
+    "job_id": "4b119699-afbe-41a2-978b-0ebc0af0c9eb",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "navigate_inputs_xumo"
+    ],
+    "execution_queue": [
+      {
+        "method": "navigate_inputs_xumo",
+        "description": "CHeck for all the inputs tiles in the xumo device"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-06-28T09:48:48.609235",
+    "end_time": "2026-06-28T09:53:58.929095+00:00",
+    "log_file_path": "logs/jobs/4b119699-afbe-41a2-978b-0ebc0af0c9eb/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-06-28T09:48:48.609256",
+    "eta_seconds": 205,
+    "eta_formatted": "3m 25s",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2
+  },
+  {
+    "job_id": "5d2696fe-3381-46fa-b404-30132bca14f7",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "POWER",
+          "HOME"
+        ]
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-06-29T20:48:25.750812",
+    "end_time": "2026-06-29T20:49:05.544144+00:00",
+    "log_file_path": "logs/jobs/5d2696fe-3381-46fa-b404-30132bca14f7/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-06-29T20:48:25.750831",
+    "eta_seconds": 61,
+    "eta_formatted": "1m 1s",
+    "time_per_iteration": 61,
+    "remaining_iterations": 2
+  },
+  {
+    "job_id": "fb0dc7ff-e676-4ea0-aa41-60cf06c308d0",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          ".*process crash.*"
+        ],
+        "auto_collect_logs": true
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-06-29T20:55:31.683815",
+    "end_time": "2026-06-29T20:57:38.840319+00:00",
+    "log_file_path": "logs/jobs/fb0dc7ff-e676-4ea0-aa41-60cf06c308d0/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-06-29T20:55:31.683833",
+    "eta_seconds": 205,
+    "eta_formatted": "3m 25s",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2
+  },
+  {
+    "job_id": "f0b12456-4c54-4fc8-a6e6-cc3da93cd4af",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "POWER",
+          "HOME"
+        ],
+        "description": "Device Wakeup"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-07-20T04:10:43.024561",
+    "end_time": "2026-07-20T04:11:22.968659+00:00",
+    "log_file_path": "logs/jobs/f0b12456-4c54-4fc8-a6e6-cc3da93cd4af/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-07-20T04:10:43.024581",
+    "eta_seconds": 61,
+    "eta_formatted": "1m 1s",
+    "time_per_iteration": 61,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-07-20T04:10:43.024587",
+    "queue_position": null
+  },
+  {
+    "job_id": "2d84b483-99d6-4eca-8d4d-fce9a772a397",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "POWER",
+          "HOME"
+        ],
+        "description": "waking up the device"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-07-20T15:08:52.140002",
+    "end_time": "2026-07-20T15:09:31.656142+00:00",
+    "log_file_path": "logs/jobs/2d84b483-99d6-4eca-8d4d-fce9a772a397/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-07-20T15:08:52.140018",
+    "eta_seconds": 61,
+    "eta_formatted": "1m 1s",
+    "time_per_iteration": 61,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-07-20T15:08:52.140023",
+    "queue_position": null
   }
 ]

@@ -721,38 +721,37 @@ def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screensh
                     'error': error_msg
                 }
             
-            # Verify image using AI-based validation (V2.0) with fallback
+            # Verify image using AI-based validation (V2.0) with automatic provider selection
             try:
-                from services.ai_screen_analyzer import AIScreenAnalyzer
+                # Use unified screen validator (Ollama by default, Gemini optional)
+                from services.unified_screen_validator import UnifiedScreenValidator
                 
-                log(f"🔍 Performing AI-based screen validation...")
-                ai_analyzer = AIScreenAnalyzer()
+                log(f"🔍 Performing AI-based screen validation (provider: auto-detected)...")
+                validator = UnifiedScreenValidator(debug=False)
+                provider_info = validator.get_provider_info()
+                log(f"   Using provider: {provider_info.get('actual', 'unknown')}")
                 
-                # Call AI analyzer
-                ai_result = ai_analyzer.analyze_screenshot(
+                # Call unified validator
+                ai_result = validator.validate_screen_detailed(
                     screenshot_path=local_path,
                     expected_screen=None,
-                    device_name=None,
-                    detailed=True
+                    device_name=None
                 )
                 
-                if ai_result.get('success', False):
+                if ai_result.get('match', False) or 'error' not in ai_result:
                     screen_detected = ai_result.get('detected_screen', 'Unknown')
-                    confidence = ai_result.get('confidence', 0.0)
+                    confidence = ai_result.get('confidence', 0.0) / 100.0 if ai_result.get('confidence', 0) > 1 else ai_result.get('confidence', 0.0)
                     
                     log(f"✓ Screen detected: {screen_detected} ({confidence:.2%})")
-                    if ai_result.get('focus_elements'):
-                        log(f"  Focus elements: {', '.join(ai_result.get('focus_elements', []))}")
                     
                     screen_state = {
                         'screen_detected': screen_detected,
                         'confidence': confidence,
-                        'device_matched': ai_result.get('device_matched', False),
+                        'device_matched': ai_result.get('match', False),
                         'validation_details': {
-                            'focus_elements': ai_result.get('focus_elements', []),
-                            'ui_elements': ai_result.get('ui_elements', []),
-                            'anomalies': ai_result.get('anomalies', []),
-                            'analysis_method': 'AI_VISION'
+                            'analysis': ai_result.get('analysis', ''),
+                            'provider': ai_result.get('provider', 'unknown'),
+                            'analysis_method': 'AI_UNIFIED'
                         }
                     }
                 else:
@@ -760,13 +759,13 @@ def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screensh
                     log(f"  Falling back to lightweight validation...")
                     
                     from tools.screen.screen_validator_lightweight import LightweightScreenValidator
-                    validator = LightweightScreenValidator(excluded_folders=['FactoryReset-XUMO-TV'])
-                    validation_result = validator.find_best_match(local_path)
+                    lightweight_validator = LightweightScreenValidator(excluded_folders=['FactoryReset-XUMO-TV'])
+                    validation_result = lightweight_validator.find_best_match(local_path)
                     
                     screen_detected = validation_result.get('best_match', 'Unknown')
                     confidence = validation_result.get('confidence', 0.0)
                     
-                    log(f"✓ Screen detected (fallback): {screen_detected} ({confidence:.2%})")
+                    log(f"✓ Screen detected (fallback to pixel-matching): {screen_detected} ({confidence:.2%})")
                     screen_state = {
                         'screen_detected': screen_detected,
                         'confidence': confidence,
@@ -776,12 +775,12 @@ def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screensh
                         }
                     }
             
-            except ImportError:
-                log(f"⚠ AI analyzer not available, using lightweight validation...")
+            except ImportError as ie:
+                log(f"⚠ Unified validator not available: {ie}, using lightweight validation...")
                 from tools.screen.screen_validator_lightweight import LightweightScreenValidator
                 
-                validator = LightweightScreenValidator(excluded_folders=['FactoryReset-XUMO-TV'])
-                validation_result = validator.find_best_match(local_path)
+                lightweight_validator = LightweightScreenValidator(excluded_folders=['FactoryReset-XUMO-TV'])
+                validation_result = lightweight_validator.find_best_match(local_path)
                 
                 screen_detected = validation_result.get('best_match', 'Unknown')
                 confidence = validation_result.get('confidence', 0.0)

@@ -1,11 +1,13 @@
 """Job model for tracking test executions and their status."""
 import json
 import os
+import sys
 import uuid
 from datetime import datetime, timezone, timedelta
 from utils.file_lock import FileLockManager
 from config.config_eta import calculate_eta, format_eta
 from config.config_paths import JOBS_FILE
+from models.database import Session, Job as DBJob
 
 
 class Job:
@@ -14,7 +16,8 @@ class Job:
     def __init__(self, job_id, user_id, device_ip, device_name, methods, iterations, 
                  status='pending', start_time=None, end_time=None, log_file_path=None,
                  execution_queue=None, sequence_name=None, current_step=0, current_iteration=0,
-                 iteration_results=None, created_at=None, execution_type=None):
+                 iteration_results=None, created_at=None, execution_type=None, 
+                 executing_user=None, triggered_at=None, queue_position=None):
         self.job_id = job_id
         self.user_id = user_id
         self.device_ip = device_ip
@@ -22,7 +25,7 @@ class Job:
         self.methods = methods  # List of method names (legacy)
         self.execution_queue = execution_queue or []  # New format: [{method, irKeys, voiceText}]
         self.iterations = iterations
-        self.status = status  # pending, running, completed, failed, cancelled
+        self.status = status  # pending, running, completed, failed, cancelled, queued
         self.start_time = start_time or datetime.utcnow().isoformat()
         self.end_time = end_time
         self.log_file_path = log_file_path
@@ -35,11 +38,17 @@ class Job:
         # FIX: Preserve created_at from JSON when loading existing jobs (don't reset to current time)
         self.created_at = created_at or datetime.utcnow().isoformat()
         
+        # Phase 21: Execution tracking fields
+        self.executing_user = executing_user or user_id  # NTID of user who triggered execution
+        self.triggered_at = triggered_at or datetime.utcnow().isoformat()  # When execution was started
+        self.queue_position = queue_position or None  # Position in device queue (for PENDING/QUEUED jobs)
+        
         # Log job creation for diagnostics
         print(f"✅ [JOB] Job created: {self.job_id} on device {self.device_ip}")
         print(f"✅ [JOB]   status: {self.status}")
         print(f"✅ [JOB]   start_time: {self.start_time}")
         print(f"✅ [JOB]   created_at: {self.created_at}")
+        print(f"✅ [JOB]   executing_user: {self.executing_user}")
         print(f"✅ [JOB]   methods: {self.methods}")
     
     def to_dict(self):
@@ -68,7 +77,11 @@ class Job:
             'eta_seconds': eta_data['eta_seconds'],
             'eta_formatted': eta_data['eta_formatted'],
             'time_per_iteration': eta_data['time_per_iteration'],
-            'remaining_iterations': eta_data['remaining_iterations']
+            'remaining_iterations': eta_data['remaining_iterations'],
+            # Phase 21: Add execution tracking fields
+            'executing_user': getattr(self, 'executing_user', self.user_id),
+            'triggered_at': getattr(self, 'triggered_at', self.start_time),
+            'queue_position': getattr(self, 'queue_position', None)
         }
     
     def _calculate_eta(self):
@@ -142,12 +155,57 @@ class Job:
             current_iteration=data.get('current_iteration', 1),
             iteration_results=data.get('iteration_results', {}),
             created_at=data.get('created_at'),  # FIX: Preserve original created_at from JSON
-            execution_type=execution_type
+            execution_type=execution_type,
+            # Phase 21: Load execution tracking fields
+            executing_user=data.get('executing_user', data.get('user_id')),
+            triggered_at=data.get('triggered_at'),
+            queue_position=data.get('queue_position')
         )
     
     @staticmethod
     def load_all():
-        """Load all jobs from JSON file."""
+        """Load all jobs from PostgreSQL with JSON fallback."""
+        session = Session()
+        try:
+            # Try PostgreSQL first
+            rows = (
+                session.query(DBJob)
+                .order_by(DBJob.created_at.desc())
+                .all()
+            )
+            
+            if rows:
+                jobs = []
+                for row in rows:
+                    job_data = {
+                        'job_id': row.job_id,
+                        'user_id': row.user_id,
+                        'device_ip': row.device_ip,
+                        'device_name': row.device_name,
+                        'methods': json.loads(row.methods) if row.methods else [],
+                        'iterations': row.iterations,
+                        'status': row.status,
+                        'start_time': row.start_time.isoformat() if row.start_time else None,
+                        'end_time': row.end_time.isoformat() if row.end_time else None,
+                        'log_file_path': row.log_file_path,
+                        'sequence_name': row.sequence_name,
+                        'execution_type': row.execution_type,
+                        'execution_queue': row.execution_queue or [],
+                        'current_step': row.current_step or 0,
+                        'current_iteration': row.current_iteration or 0,
+                        'iteration_results': row.iteration_results or {},
+                        'created_at': row.created_at.isoformat() if row.created_at else None
+                    }
+                    jobs.append(Job.from_dict(job_data))
+                
+                print(f"✅ [JOB] Loaded {len(jobs)} jobs from PostgreSQL", file=sys.stderr)
+                return jobs
+        except Exception as e:
+            print(f"⚠️  [JOB] PostgreSQL load failed: {e}. Falling back to JSON.", file=sys.stderr)
+        finally:
+            session.close()
+        
+        # JSON fallback
         if not os.path.exists(JOBS_FILE):
             return []
         
@@ -155,24 +213,84 @@ class Job:
             jobs_data = FileLockManager.safe_json_read(JOBS_FILE, default=[])
             if not isinstance(jobs_data, list):
                 return []
+            print(f"✅ [JOB] Loaded {len(jobs_data)} jobs from JSON fallback", file=sys.stderr)
             return [Job.from_dict(data) for data in jobs_data]
         except (json.JSONDecodeError, IOError):
+            print(f"❌ [JOB] Failed to load jobs from JSON", file=sys.stderr)
             return []
     
     @staticmethod
     def save_all(jobs):
-        """Save all jobs to JSON file with atomic write and error handling."""
-        jobs_data = [job.to_dict() for job in jobs]
+        """Save all jobs to PostgreSQL and JSON backup."""
+        # Save to PostgreSQL with transaction handling
+        def _save_batch_to_db(session):
+            for job in jobs:
+                db_job = session.query(DBJob).filter_by(job_id=job.job_id).first()
+                
+                if db_job is None:
+                    # Create new job record
+                    db_job = DBJob(
+                        job_id=job.job_id,
+                        user_id=job.user_id,
+                        device_ip=job.device_ip,
+                        device_name=job.device_name,
+                        execution_queue=job.execution_queue,
+                        methods=json.dumps(job.methods) if job.methods else None,
+                        iterations=job.iterations,
+                        sequence_name=job.sequence_name,
+                        execution_type=job.execution_type,
+                        status=job.status,
+                        current_step=getattr(job, 'current_step', 0),
+                        current_iteration=getattr(job, 'current_iteration', 0),
+                        iteration_results=getattr(job, 'iteration_results', {}),
+                        start_time=job.start_time if isinstance(job.start_time, datetime) else None,
+                        end_time=job.end_time if isinstance(job.end_time, datetime) else None,
+                        log_file_path=job.log_file_path,
+                        created_at=datetime.now(timezone.utc),
+                        updated_at=datetime.now(timezone.utc)
+                    )
+                    session.add(db_job)
+                else:
+                    # Update existing job record
+                    db_job.status = job.status
+                    db_job.current_step = getattr(job, 'current_step', 0)
+                    db_job.current_iteration = getattr(job, 'current_iteration', 0)
+                    db_job.iteration_results = getattr(job, 'iteration_results', {})
+                    db_job.start_time = job.start_time if isinstance(job.start_time, datetime) else None
+                    db_job.end_time = job.end_time if isinstance(job.end_time, datetime) else None
+                    db_job.log_file_path = job.log_file_path
+                    db_job.updated_at = datetime.now(timezone.utc)
+            
+            return len(jobs)
+        
+        # Execute batch operation with transaction handling
+        db_success, record_count, db_error = TransactionRollbackHandler.execute_with_rollback(
+            _save_batch_to_db,
+            'save_all_jobs',
+            'job_batch',
+            f'batch_{len(jobs)}_jobs'
+        )
+        
+        if db_success:
+            print(f"✅ [JOB] Saved {record_count} jobs to PostgreSQL", file=sys.stderr)
+        else:
+            print(f"⚠️  [JOB] PostgreSQL batch save failed: {db_error}", file=sys.stderr)
+        
+        # Always save to JSON as backup
         try:
+            jobs_data = [job.to_dict() for job in jobs]
             FileLockManager.safe_json_write(JOBS_FILE, jobs_data, indent=2)
+            print(f"✅ [JOB] Saved {len(jobs)} jobs to JSON backup", file=sys.stderr)
         except Exception as e:
-            print(f"❌ Error saving jobs: {e}")
+            print(f"❌ [JOB] JSON backup save failed: {e}", file=sys.stderr)
             raise
     
     @staticmethod
     def create_job(user_id, device_ip, device_name, methods, iterations, 
                    execution_queue=None, sequence_name=None):
-        """Create a new job."""
+        """Create a new job in both PostgreSQL and JSON."""
+        from services.audit_logging_service import AuditLoggingService, TransactionRollbackHandler
+        
         job_id = str(uuid.uuid4())
         job = Job(
             job_id=job_id,
@@ -185,11 +303,59 @@ class Job:
             sequence_name=sequence_name
         )
         
-        def _append_job(data):
-            data_list = data if isinstance(data, list) else []
-            data_list.append(job.to_dict())
-            return data_list
-        FileLockManager.atomic_json_update(JOBS_FILE, _append_job)
+        # Save to PostgreSQL with transaction rollback on error
+        def _save_to_db(session):
+            db_job = DBJob(
+                job_id=job_id,
+                user_id=user_id,
+                device_ip=device_ip,
+                device_name=device_name,
+                execution_queue=execution_queue or [],
+                methods=json.dumps(methods) if methods else None,
+                iterations=iterations,
+                sequence_name=sequence_name,
+                execution_type=job.execution_type,
+                status='pending',
+                current_step=0,
+                current_iteration=0,
+                iteration_results={},
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc)
+            )
+            session.add(db_job)
+            return db_job
+        
+        # Execute with transaction handling
+        db_success, db_result, db_error = TransactionRollbackHandler.execute_with_rollback(
+            _save_to_db,
+            'create_job',
+            'job',
+            job_id
+        )
+        
+        if db_success:
+            print(f"✅ [JOB] Created in PostgreSQL: {job_id}", file=sys.stderr)
+            # Log to audit trail
+            AuditLoggingService.log_action(
+                'create',
+                'job',
+                job_id,
+                new_values=job.to_dict(),
+                reason='Job created for execution'
+            )
+        else:
+            print(f"⚠️  [JOB] PostgreSQL save failed, using JSON fallback: {db_error}", file=sys.stderr)
+        
+        # Always save to JSON as backup
+        try:
+            def _append_job(data):
+                data_list = data if isinstance(data, list) else []
+                data_list.append(job.to_dict())
+                return data_list
+            FileLockManager.atomic_json_update(JOBS_FILE, _append_job)
+            print(f"✅ [JOB] Created in JSON backup: {job_id}", file=sys.stderr)
+        except Exception as e:
+            print(f"❌ [JOB] JSON backup failed: {e}", file=sys.stderr)
         
         # Create job log directory
         job_log_dir = os.path.join('logs', 'jobs', job_id)
@@ -208,7 +374,48 @@ class Job:
     
     @staticmethod
     def update_job_status(job_id, status, end_time=None, log_file_path=None):
-        """Update job status with error handling and logging."""
+        """Update job status with database transaction handling."""
+        from services.audit_logging_service import AuditLoggingService, TransactionRollbackHandler
+        
+        # Save to PostgreSQL with transaction rollback on error
+        def _update_db_status(session):
+            db_job = session.query(DBJob).filter_by(job_id=job_id).first()
+            if not db_job:
+                raise ValueError(f"Job {job_id} not found in database")
+            
+            old_status = db_job.status
+            db_job.status = status
+            if end_time:
+                db_job.end_time = end_time
+            if log_file_path:
+                db_job.log_file_path = log_file_path
+            db_job.updated_at = datetime.now(timezone.utc)
+            
+            return {'old_status': old_status, 'new_status': status}
+        
+        # Execute with transaction handling
+        db_success, db_result, db_error = TransactionRollbackHandler.execute_with_rollback(
+            _update_db_status,
+            'update_job_status',
+            'job',
+            job_id
+        )
+        
+        if db_success:
+            print(f"✅ [JOB] Status updated in PostgreSQL: {job_id} ({db_result['old_status']} → {db_result['new_status']})", file=sys.stderr)
+            # Log to audit trail
+            AuditLoggingService.log_action(
+                'update',
+                'job',
+                job_id,
+                old_values={'status': db_result['old_status']},
+                new_values={'status': db_result['new_status']},
+                reason=f'Job status changed to {status}'
+            )
+        else:
+            print(f"⚠️  [JOB] PostgreSQL update failed: {db_error}", file=sys.stderr)
+        
+        # Also update JSON for fallback consistency
         try:
             job_found = {'value': False}
 
@@ -217,64 +424,129 @@ class Job:
                 for job in data_list:
                     if job.get('job_id') == job_id:
                         job_found['value'] = True
-                        old_status = job.get('status')
                         job['status'] = status
                         if end_time:
                             job['end_time'] = end_time
                         if log_file_path:
                             job['log_file_path'] = log_file_path
-                        print(f"[JOB] Updating job {job_id}: {old_status} -> {status}")
                         break
                 return data_list
 
             FileLockManager.atomic_json_update(JOBS_FILE, _update)
 
             if job_found['value']:
-                print(f"[JOB] ✅ Successfully updated job {job_id} to {status}")
+                print(f"✅ [JOB] Status updated in JSON backup: {job_id} → {status}", file=sys.stderr)
                 return True
-
-            print(f"[JOB] ⚠️  Job {job_id} not found in jobs list")
-            return False
-            
+            else:
+                print(f"⚠️  [JOB] Job {job_id} not found in JSON file", file=sys.stderr)
+                return db_success
         except Exception as e:
-            print(f"[JOB] ❌ Critical error in update_job_status: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
+            print(f"⚠️  [JOB] JSON update failed (DB success={db_success}): {e}", file=sys.stderr)
+            return db_success
     
     @staticmethod
     def update_job_progress(job_id, current_step, current_iteration=None):
-        """Update job progress (current step and iteration)."""
-        def _update(data):
-            data_list = data if isinstance(data, list) else []
-            updated = False
-            for job in data_list:
-                if job.get('job_id') == job_id:
-                    job['current_step'] = current_step
-                    if current_iteration is not None:
-                        job['current_iteration'] = current_iteration
-                    updated = True
-                    break
-            return data_list if updated else data_list
+        """Update job progress with database transaction handling."""
+        # Save to PostgreSQL with transaction rollback on error
+        def _update_db_progress(session):
+            db_job = session.query(DBJob).filter_by(job_id=job_id).first()
+            if not db_job:
+                raise ValueError(f"Job {job_id} not found in database")
+            
+            db_job.current_step = current_step
+            if current_iteration is not None:
+                db_job.current_iteration = current_iteration
+            db_job.updated_at = datetime.now(timezone.utc)
+            
+            return {'current_step': current_step, 'current_iteration': current_iteration}
+        
+        # Execute with transaction handling
+        db_success, db_result, db_error = TransactionRollbackHandler.execute_with_rollback(
+            _update_db_progress,
+            'update_job_progress',
+            'job',
+            job_id
+        )
+        
+        if db_success:
+            print(
+                f"✅ [JOB] Progress updated in PostgreSQL: {job_id} "
+                f"(step={current_step}, iteration={current_iteration})",
+                file=sys.stderr
+            )
+        else:
+            print(f"⚠️  [JOB] PostgreSQL progress update failed: {db_error}", file=sys.stderr)
+        
+        # Also update JSON for consistency
+        try:
+            def _update(data):
+                data_list = data if isinstance(data, list) else []
+                updated = False
+                for job in data_list:
+                    if job.get('job_id') == job_id:
+                        job['current_step'] = current_step
+                        if current_iteration is not None:
+                            job['current_iteration'] = current_iteration
+                        updated = True
+                        break
+                return data_list if updated else data_list
 
-        FileLockManager.atomic_json_update(JOBS_FILE, _update)
-        return True
+            FileLockManager.atomic_json_update(JOBS_FILE, _update)
+        except Exception as e:
+            print(f"⚠️  [JOB] JSON progress update failed: {e}", file=sys.stderr)
+        
+        return db_success
     
     @staticmethod
     def update_iteration_result(job_id, iteration_num, result):
-        """Update result for a specific iteration (passed/failed)."""
-        def _update(data):
-            data_list = data if isinstance(data, list) else []
-            for job in data_list:
-                if job.get('job_id') == job_id:
-                    iteration_results = job.get('iteration_results') or {}
-                    iteration_results[str(iteration_num)] = result
-                    job['iteration_results'] = iteration_results
-                    break
-            return data_list
+        """Update result for a specific iteration with database transaction handling."""
+        # Save to PostgreSQL with transaction rollback on error
+        def _update_db_iteration(session):
+            db_job = session.query(DBJob).filter_by(job_id=job_id).first()
+            if not db_job:
+                raise ValueError(f"Job {job_id} not found in database")
+            
+            iteration_results = db_job.iteration_results or {}
+            iteration_results[str(iteration_num)] = result
+            db_job.iteration_results = iteration_results
+            db_job.updated_at = datetime.now(timezone.utc)
+            
+            return iteration_results
+        
+        # Execute with transaction handling
+        db_success, db_result, db_error = TransactionRollbackHandler.execute_with_rollback(
+            _update_db_iteration,
+            'update_iteration_result',
+            'job',
+            job_id
+        )
+        
+        if db_success:
+            print(
+                f"✅ [JOB] Iteration result updated in PostgreSQL: "
+                f"{job_id}#iteration_{iteration_num}={result}",
+                file=sys.stderr
+            )
+        else:
+            print(f"⚠️  [JOB] PostgreSQL iteration update failed: {db_error}", file=sys.stderr)
+        
+        # Also update JSON for consistency
+        try:
+            def _update(data):
+                data_list = data if isinstance(data, list) else []
+                for job in data_list:
+                    if job.get('job_id') == job_id:
+                        iteration_results = job.get('iteration_results') or {}
+                        iteration_results[str(iteration_num)] = result
+                        job['iteration_results'] = iteration_results
+                        break
+                return data_list
 
-        FileLockManager.atomic_json_update(JOBS_FILE, _update)
-        return True
+            FileLockManager.atomic_json_update(JOBS_FILE, _update)
+        except Exception as e:
+            print(f"⚠️  [JOB] JSON iteration update failed: {e}", file=sys.stderr)
+        
+        return db_success
     
     @staticmethod
     def get_running_jobs():

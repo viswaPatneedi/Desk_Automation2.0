@@ -52,7 +52,7 @@ class QueueService:
                 username: str, password: str, port: int = 10022,
                 selected_ir_keys: Optional[List[str]] = None, voice_text: str = '', 
                 remote_keys: str = '', expected_screen: str = '', execution_queue: Optional[List] = None,
-                sequence_name: Optional[str] = None) -> Dict:
+                sequence_name: Optional[str] = None, executing_user: Optional[str] = None) -> Dict:
         """Add a job to the device queue or start immediately if free"""
         import time
         job_id = f"{device_ip}_{method}_{int(time.time())}"
@@ -73,7 +73,9 @@ class QueueService:
             'execution_queue': execution_queue or [],
             'sequence_name': sequence_name,
             'queued_at': datetime.now(timezone.utc).isoformat(),
-            'status': 'queued'
+            'triggered_at': datetime.now(timezone.utc).isoformat(),  # Phase 21: Execution timestamp
+            'status': 'queued',
+            'executing_user': executing_user  # Phase 21: Track who triggered execution
         }
 
         # Check if device is busy (has running/pending job)
@@ -86,7 +88,7 @@ class QueueService:
             self.device_job_queue[device_ip].append(job)
             self._save_device_job_queue()
             position = len(self.device_job_queue[device_ip])
-            return {'job_id': job_id, 'position': position, 'queued': True}
+            return {'job_id': job_id, 'position': position, 'queued': True, 'executing_user': executing_user}
         else:
             # Device free, start job immediately
             with self.queue_lock:
@@ -95,7 +97,7 @@ class QueueService:
             if self.recovery_service:
                 self.recovery_service.save_queue_state(self.queued_jobs)
             self.start_processor()
-            return {'job_id': job_id, 'position': 1, 'queued': False}
+            return {'job_id': job_id, 'position': 1, 'queued': False, 'executing_user': executing_user}
     
     def start_processor(self):
         """Start the queue processor thread"""

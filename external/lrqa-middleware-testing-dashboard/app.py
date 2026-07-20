@@ -10,11 +10,15 @@ Architecture:
 - Services: Business logic (services/*.py)
 """
 
+# Load environment variables FIRST before any other imports
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
 from flask import Flask, render_template, request, jsonify, Response, send_from_directory, send_file, redirect, url_for, flash, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 import logging
 import warnings
-import os
 import sys
 import json
 import re
@@ -103,35 +107,48 @@ print("✓ Database initialized for Flask")
 
 app.secret_key = os.environ.get('SECRET_KEY', 'rdke-qa-dashboard-secret-key-change-in-production')
 app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True if using HTTPS
-app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allow cookies on same-site requests
+app.config['SESSION_COOKIE_SECURE'] = False  # False for HTTP, True for HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JS access to session cookie
+app.config['SESSION_COOKIE_DOMAIN'] = None  # No domain restriction - works with any IP/hostname
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # Reload templates on file changes
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable static file caching
 
 # ===== AI SCREEN ANALYZER INITIALIZATION =====
-# Set GOOGLE_API_KEY from environment variables if available
-# Priority order: GOOGLE_API_KEY env var -> config file -> fallback to None
-ai_api_key = os.environ.get('GOOGLE_API_KEY')
-if not ai_api_key:
-    try:
-        # Try to load from config file
-        with open('.env', 'r') as f:
-            for line in f:
-                if line.startswith('GOOGLE_API_KEY'):
-                    key_value = line.split('=', 1)[1].strip().strip("'\"")
-                    os.environ['GOOGLE_API_KEY'] = key_value
-                    ai_api_key = key_value
-                    print("✓ Loaded GOOGLE_API_KEY from .env file")
-                    break
-    except:
-        pass
+# Check which screen validation provider is configured
+screen_validation_provider = os.environ.get('SCREEN_VALIDATION_PROVIDER', 'ollama')
 
-if ai_api_key:
-    print(f"✓ AI Screen Analyzer: GOOGLE_API_KEY is configured (key: {ai_api_key[:10]}...)")
+# Set GOOGLE_API_KEY from environment IF using Gemini provider
+# Priority order: GOOGLE_API_KEY env var -> config file -> fallback to None
+ai_api_key = None
+skip_gemini_init = screen_validation_provider == 'ollama'
+
+if not skip_gemini_init and screen_validation_provider in ['gemini', 'hybrid']:
+    ai_api_key = os.environ.get('GOOGLE_API_KEY')
+    if not ai_api_key:
+        try:
+            # Try to load from config file
+            with open('.env', 'r') as f:
+                for line in f:
+                    if line.startswith('GOOGLE_API_KEY'):
+                        key_value = line.split('=', 1)[1].strip().strip("'\"")
+                        os.environ['GOOGLE_API_KEY'] = key_value
+                        ai_api_key = key_value
+                        print("✓ Loaded GOOGLE_API_KEY from .env file")
+                        break
+        except:
+            pass
+
+if skip_gemini_init:
+    print("✓ Screen Validation: Using OLLAMA (local, independent, no API key needed)")
+    print(f"  Provider: Ollama (LLaVA vision model)")
+    print(f"  Location: http://localhost:11434")
+    print(f"  Status: Start with: ollama serve")
+elif ai_api_key:
+    print(f"✓ Screen Validation: Using GEMINI (key: {ai_api_key[:10]}...)")
 else:
-    print("⚠ AI Screen Analyzer: GOOGLE_API_KEY not found - AI validation will return 'Unknown'")
-    print("  To enable AI features, set: export GOOGLE_API_KEY='your-google-key'")
+    print("⚠ Screen Validation: GOOGLE_API_KEY not found - using OLLAMA fallback")
+    print("  To use Gemini, set: export GOOGLE_API_KEY='your-google-key'")
     print("  Get key from: https://makersuite.google.com/app/apikey")
 # ===== END AI INITIALIZATION =====
 
@@ -1852,7 +1869,35 @@ login_manager.login_message_category = 'info'
 @login_manager.user_loader
 def load_user(user_id):
     """Load user by ID for Flask-Login."""
-    return User.get_user_by_id(user_id)
+    import sys
+    print(f"\n[USER_LOADER] Loading user: {user_id}", file=sys.stderr)
+    user = User.get_user_by_id(user_id)
+    print(f"[USER_LOADER] Result: {user}", file=sys.stderr)
+    if user:
+        print(f"[USER_LOADER] ✅ User loaded: {user.ntid}", file=sys.stderr)
+    else:
+        print(f"[USER_LOADER] ❌ User not found for ID: {user_id}", file=sys.stderr)
+    return user
+
+# Debug every request
+@app.before_request
+def debug_request():
+    """Debug session and authentication on each request"""
+    import sys
+    if '/api/' in request.path:
+        # Only log API requests to reduce noise
+        user_id = session.get('_user_id')
+        has_session = '_user_id' in session
+        is_authenticated = current_user.is_authenticated if hasattr(current_user, 'is_authenticated') else False
+        
+        print(f"\n[REQUEST] {request.method} {request.path}", file=sys.stderr)
+        print(f"  Session _user_id: {user_id}", file=sys.stderr)
+        print(f"  Has _user_id in session: {has_session}", file=sys.stderr)
+        print(f"  current_user: {current_user}", file=sys.stderr)
+        print(f"  is_authenticated: {is_authenticated}", file=sys.stderr)
+        print(f"  Session cookie received: {'session' in request.cookies}", file=sys.stderr)
+        if 'session' in request.cookies:
+            print(f"  Session cookie preview: {request.cookies['session'][:30]}...", file=sys.stderr)
 
 # Initialize Services (Business Logic Layer)
 # Recovery is ENABLED for automatic job resumption on app restart
@@ -2048,6 +2093,7 @@ def add_html_result(iteration, phase, status, details, screenshots="", logs="", 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """Handle user login"""
+    import sys
     if current_user.is_authenticated:
         return redirect(url_for('index'))
     
@@ -2056,18 +2102,45 @@ def login():
         password = request.form.get('password', '')
         remember = request.form.get('remember') == 'on'
         
+        print(f"\n{'='*60}", file=sys.stderr)
+        print(f"🔍 [LOGIN] Attempting authentication", file=sys.stderr)
+        print(f"   Identifier: {identifier}", file=sys.stderr)
+        print(f"   Password length: {len(password)}", file=sys.stderr)
+        
         if not identifier or not password:
+            print(f"❌ [LOGIN] Missing identifier or password", file=sys.stderr)
             return render_template('login.html', error='Please provide both NTID/Email and password')
+        
+        print(f"🔍 [LOGIN] Loading users from database...", file=sys.stderr)
+        try:
+            users = User.load_users()
+            print(f"✅ [LOGIN] Loaded {len(users)} users", file=sys.stderr)
+            print(f"   Available users: {list(users.keys())[:5]}...", file=sys.stderr)
+        except Exception as e:
+            print(f"❌ [LOGIN] Error loading users: {e}", file=sys.stderr)
+            users = {}
         
         user = User.authenticate(identifier, password)
         
+        print(f"🔍 [LOGIN] User.authenticate() returned: {user}", file=sys.stderr)
         if user:
-            login_user(user, remember=remember)
-            if remember:
-                session.permanent = True
+            print(f"✅ [LOGIN] Authentication successful for {user.ntid}", file=sys.stderr)
+            print(f"   User ID: {user.get_id()}", file=sys.stderr)
+            
+            # Ensure session is permanent so it persists across requests
+            session.permanent = True
+            login_user(user, remember=remember, duration=timedelta(days=1))
+            
+            print(f"✅ [LOGIN] Session set and user logged in", file=sys.stderr)
+            print(f"   Session ID: {session.get('_id', 'N/A')}", file=sys.stderr)
+            print(f"   Session data: _user_id={session.get('_user_id', 'N/A')}", file=sys.stderr)
+            
             next_page = request.args.get('next')
+            print(f"{'='*60}\n", file=sys.stderr)
             return redirect(next_page or url_for('index'))
         else:
+            print(f"❌ [LOGIN] Authentication failed for {identifier}", file=sys.stderr)
+            print(f"{'='*60}\n", file=sys.stderr)
             return render_template('login.html', error='Invalid NTID/Email or password')
     
     return render_template('login.html')
@@ -2126,8 +2199,57 @@ def auth_status():
         'authenticated': current_user.is_authenticated,
         'user_id': current_user.get_id() if current_user.is_authenticated else None,
         'username': current_user.name if current_user.is_authenticated else None,
+        'is_super_admin': getattr(current_user, 'is_super_admin', False) if current_user.is_authenticated else False,
+        'is_team_admin': getattr(current_user, 'is_team_admin', False) if current_user.is_authenticated else False,
+        'team_name': getattr(current_user, 'team_name', '') if current_user.is_authenticated else None,
         'login_url': url_for('login')
     })
+
+# =============================================================================
+# TEAM MANAGEMENT ENDPOINTS (Super Admin Only)
+# =============================================================================
+
+@app.route('/api/teams', methods=['GET'])
+@login_required
+def list_teams():
+    """List all teams - Super admin only"""
+    from controllers.team_controller import TeamController
+    return TeamController.list_teams()
+
+@app.route('/api/teams', methods=['POST'])
+@login_required
+def create_team():
+    """Create a new team with members - Super admin only"""
+    from controllers.team_controller import TeamController
+    return TeamController.create_team()
+
+@app.route('/api/teams/members', methods=['POST'])
+@login_required
+def add_team_member():
+    """Add a member to a team - Super admin only"""
+    from controllers.team_controller import TeamController
+    return TeamController.add_team_member()
+
+@app.route('/api/teams/members', methods=['PUT'])
+@login_required
+def update_team_member():
+    """Update team member role - Super admin only"""
+    from controllers.team_controller import TeamController
+    return TeamController.update_team_member()
+
+@app.route('/api/teams/members', methods=['DELETE'])
+@login_required
+def delete_team_member():
+    """Remove member from team - Super admin only"""
+    from controllers.team_controller import TeamController
+    return TeamController.delete_team_member()
+
+@app.route('/api/teams/stats', methods=['GET'])
+@login_required
+def get_team_stats():
+    """Get team statistics"""
+    from controllers.team_controller import TeamController
+    return TeamController.get_team_stats()
 
 @app.route('/api/admin/db-grants', methods=['GET'])
 @login_required
@@ -2462,20 +2584,180 @@ def reset_password():
         user = User.get_user_by_id(ntid)
         
         if user:
-            user.set_password(new_password)
-            user.save()
-            
-            # Clean up - delete reset code from file-based storage
-            delete_reset_code(ntid)
-            session.pop('reset_email', None)
-            session.pop('reset_ntid', None)
-            session.pop('code_verified', None)
-            
-            return render_template('login.html', success='Password reset successful! Please login with your new password.')
+            try:
+                user.set_password(new_password)
+                # Save directly to JSON to bypass database issues
+                users = User.load_users()
+                users[user.user_id] = user
+                User._write_json_backup(users)
+                
+                # Clean up - delete reset code from file-based storage
+                delete_reset_code(ntid)
+                session.pop('reset_email', None)
+                session.pop('reset_ntid', None)
+                session.pop('code_verified', None)
+                
+                return render_template('login.html', success='Password reset successful! Please login with your new password.')
+            except Exception as e:
+                import sys
+                print(f"❌ [RESET_PASSWORD] Error saving password: {e}", file=sys.stderr)
+                return render_template('reset_password.html', error=f'Error resetting password: {str(e)}. Please try again.')
         else:
             return render_template('reset_password.html', error='User not found. Please try again.')
     
     return render_template('reset_password.html')
+
+# Change Password Routes (for logged-in users)
+@app.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    """Request password change - validate current password and send OTP"""
+    if request.method == 'POST':
+        current_password = request.form.get('current_password', '')
+        
+        if not current_password:
+            return render_template('change_password.html', error='Please enter your current password')
+        
+        # Verify current password
+        user = current_user
+        if not user.check_password(current_password):
+            return render_template('change_password.html', error='Current password is incorrect')
+        
+        # Generate 6-digit OTP code
+        code = ''.join([str(random.randint(0, 9)) for _ in range(6)])
+        
+        # Store code with expiration (10 minutes)
+        expires = datetime.now() + timedelta(minutes=10)
+        add_reset_code(user.ntid, code, user.email, expires)
+        
+        # Send email with OTP
+        success, message = send_reset_email(user.email, code, user.name)
+        
+        if success:
+            # Store user info in session for verification
+            session['change_password_ntid'] = user.ntid
+            session['change_password_verified'] = False
+            return redirect(url_for('verify_change_password_code'))
+        else:
+            return render_template('change_password.html', error='Failed to send verification code. Please try again.')
+    
+    return render_template('change_password.html')
+
+@app.route('/verify-change-password-code', methods=['GET', 'POST'])
+@login_required
+def verify_change_password_code():
+    """Verify the 6-digit OTP for password change"""
+    # Check if user initiated change password flow
+    if 'change_password_ntid' not in session:
+        return redirect(url_for('change_password'))
+    
+    ntid = session.get('change_password_ntid')
+    user = current_user
+    
+    # Security check - ensure session ntid matches current user
+    if user.ntid != ntid:
+        session.clear()
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        code = request.form.get('code', '').strip()
+        
+        if not code:
+            return render_template('verify_change_password_code.html', error='Please enter the verification code')
+        
+        # Get stored reset code
+        reset_data = get_reset_code(ntid)
+        
+        if not reset_data:
+            return render_template('verify_change_password_code.html', 
+                                 error='Verification code expired or not found. Please request a new one.')
+        
+        # Check expiration
+        expires = datetime.fromisoformat(reset_data['expires'])
+        if datetime.now() > expires:
+            delete_reset_code(ntid)
+            return render_template('verify_change_password_code.html', 
+                                 error='Verification code expired. Please request a new one.')
+        
+        # Verify code
+        if code != reset_data['code']:
+            return render_template('verify_change_password_code.html', 
+                                 error='Invalid verification code. Please try again.')
+        
+        # Code is valid - proceed to password reset
+        session['change_password_verified'] = True
+        return redirect(url_for('update_password'))
+    
+    return render_template('verify_change_password_code.html')
+
+@app.route('/update-password', methods=['GET', 'POST'])
+@login_required
+def update_password():
+    """Update password after OTP verification"""
+    # Check if OTP was verified
+    if not session.get('change_password_verified') or 'change_password_ntid' not in session:
+        return redirect(url_for('change_password'))
+    
+    ntid = session.get('change_password_ntid')
+    user = current_user
+    
+    # Security check
+    if user.ntid != ntid:
+        session.clear()
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        new_password = request.form.get('new_password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        
+        # Validation
+        if not new_password or not confirm_password:
+            return render_template('update_password.html', error='Please fill in all fields')
+        
+        if new_password != confirm_password:
+            return render_template('update_password.html', error='Passwords do not match')
+        
+        if len(new_password) < 8:
+            return render_template('update_password.html', error='Password must be at least 8 characters long')
+        
+        # Cannot use same password as current
+        if user.check_password(new_password):
+            return render_template('update_password.html', error='New password must be different from current password')
+        
+        # Update password
+        try:
+            user.set_password(new_password)
+            # Save to both database and JSON
+            users = User.load_users()
+            users[user.user_id] = user
+            User._write_json_backup(users)
+            
+            # Try to save to database
+            from models.database import Session as DBSession, User as DBUser
+            db_session = DBSession()
+            try:
+                db_user = db_session.query(DBUser).filter_by(username=user.ntid).first()
+                if db_user:
+                    db_user.password_hash = user.password_hash
+                    db_session.commit()
+                    print(f"✅ [PASSWORD] Updated in PostgreSQL for {ntid}")
+            except Exception as db_error:
+                print(f"⚠️  [PASSWORD] PostgreSQL update failed: {db_error} - using JSON backup")
+            finally:
+                db_session.close()
+            
+            # Clean up session
+            delete_reset_code(ntid)
+            session.pop('change_password_ntid', None)
+            session.pop('change_password_verified', None)
+            
+            return render_template('login.html', success='Password changed successfully! Please login with your new password.', show_logout=True)
+        except Exception as e:
+            import sys
+            print(f"❌ [CHANGE_PASSWORD] Error saving password: {e}", file=sys.stderr)
+            return render_template('update_password.html', error=f'Error updating password: {str(e)}. Please try again.')
+    
+    return render_template('update_password.html')
 
 # Dashboard Routes
 @app.route('/')
@@ -2540,6 +2822,17 @@ def methods_index():
         device_list.append(device.to_dict())
     
     return render_template('index2.html', devices=device_list, user=current_user)
+
+@app.route('/admin/teams')
+@login_required
+def team_management():
+    """Super admin team management page"""
+    is_super_admin = getattr(current_user, 'is_super_admin', False)
+    
+    if not is_super_admin:
+        return "Access Denied. Only super admin can access this page.", 403
+    
+    return render_template('team_management.html', user=current_user)
 
 @app.route('/results')
 @login_required
@@ -2772,7 +3065,14 @@ def delete_device():
 @app.route('/api/devices', methods=['PUT'])
 @login_required
 def update_device():
-    return DeviceController.update_device()
+    try:
+        return DeviceController.update_device()
+    except Exception as e:
+        import traceback
+        error_msg = str(e)
+        print(f"❌ [ERROR] Device update failed: {error_msg}")
+        traceback.print_exc()
+        return jsonify({'error': f'Error processing device: {error_msg}'}), 500
 
 @app.route('/api/device/<device_ip>', methods=['GET'])
 @login_required
@@ -3406,6 +3706,69 @@ def get_ir_remotes():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/ir-remote-for-device/<device_type>', methods=['GET'])
+@login_required
+def get_ir_remote_for_device_type(device_type):
+    """
+    Get the remote type and available keys for a device type.
+    
+    Args:
+        device_type: Device type (e.g., 'XUMO', 'SKY STREAM')
+    
+    Returns:
+        {
+            'success': bool,
+            'device_type': str,
+            'remote_type': str,
+            'default_keys': list,
+            'available_keys': list
+        }
+    """
+    try:
+        from config.config_ir_blaster import get_remote_type_for_device_type, get_default_keys_for_device_type
+        import json
+        
+        # Get remote type for this device type
+        remote_type = get_remote_type_for_device_type(device_type)
+        
+        if not remote_type:
+            return jsonify({
+                'success': False,
+                'error': f'Unknown device type: {device_type}',
+                'device_type': device_type,
+                'remote_type': None,
+                'default_keys': [],
+                'available_keys': []
+            }), 404
+        
+        # Get default keys for this device type
+        default_keys = get_default_keys_for_device_type(device_type)
+        
+        # Get all available keys for this remote type
+        available_keys = []
+        try:
+            keycodes_path = os.path.join(os.path.dirname(__file__), 'Json', 'ir_keycodes.json')
+            if os.path.exists(keycodes_path):
+                with open(keycodes_path, 'r') as f:
+                    data = json.load(f)
+                
+                remotes = data.get('remotes', {})
+                if remote_type in remotes:
+                    available_keys = list((remotes[remote_type].get('keycodes', {})).keys())
+        except:
+            pass
+        
+        return jsonify({
+            'success': True,
+            'device_type': device_type,
+            'remote_type': remote_type,
+            'default_keys': default_keys,
+            'available_keys': available_keys
+        })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 # =============================================================================
 # RECOVERY ENDPOINTS
 # =============================================================================
@@ -3529,23 +3892,44 @@ def get_sequence(sequence_id):
 @app.route('/api/sequences/<sequence_id>', methods=['DELETE'])
 @login_required
 def delete_sequence(sequence_id):
-    """Delete a saved sequence - Only creator or admin can delete"""
+    """Delete a saved sequence - Only creator, team admin, or super admin can delete"""
+    import sys
     try:
         # Check permissions
         sequence = SavedSequence.find_by_id(sequence_id)
         if not sequence:
+            print(f"❌ [DELETE_SEQUENCE] Sequence not found: {sequence_id}", file=sys.stderr)
             return jsonify({'success': False, 'error': 'Sequence not found'}), 404
         
-        # Allow deletion only if user is creator or admin
-        if sequence.created_by != current_user.ntid and not current_user.is_admin:
-            return jsonify({'success': False, 'error': 'Permission denied. Only creator or admin can delete this sequence.'}), 403
+        # Check if user is authorized to delete
+        is_creator = sequence.created_by == current_user.ntid
+        is_super_admin = getattr(current_user, 'is_super_admin', False)
+        is_team_admin = getattr(current_user, 'is_team_admin', False)
+        same_team = getattr(sequence, 'team_name', '') == getattr(current_user, 'team_name', '')
+        
+        is_authorized = is_creator or is_super_admin or (is_team_admin and same_team)
+        
+        print(f"[DELETE_SEQUENCE] User: {current_user.ntid}, Sequence: {sequence_id}", file=sys.stderr)
+        print(f"  Creator: {is_creator}, SuperAdmin: {is_super_admin}, TeamAdmin: {is_team_admin}, SameTeam: {same_team}", file=sys.stderr)
+        
+        if not is_authorized:
+            error_msg = f'Permission denied. Only creator, team admin, or super admin can delete this sequence.'
+            print(f"❌ [DELETE_SEQUENCE] {error_msg}", file=sys.stderr)
+            return jsonify({'success': False, 'error': error_msg}), 403
         
         success = SavedSequence.delete_sequence(sequence_id)
         if success:
-            return jsonify({'success': True})
+            print(f"✅ [DELETE_SEQUENCE] Deleted by {current_user.ntid}", file=sys.stderr)
+            return jsonify({
+                'success': True,
+                'deleted_by': current_user.ntid,
+                'timestamp': datetime.utcnow().isoformat()
+            })
         else:
+            print(f"❌ [DELETE_SEQUENCE] Failed to delete {sequence_id}", file=sys.stderr)
             return jsonify({'success': False, 'error': 'Failed to delete sequence'}), 500
     except Exception as e:
+        print(f"❌ [DELETE_SEQUENCE] Exception: {str(e)}", file=sys.stderr)
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/sequences/<sequence_id>', methods=['PUT'])

@@ -11,22 +11,35 @@ from sqlalchemy.pool import NullPool, QueuePool
 from datetime import datetime, timezone
 import logging
 
+# Load environment variables from .env file
+from dotenv import load_dotenv
+load_dotenv()
+
 # Logger
 logger = logging.getLogger(__name__)
 
-# Database URL from environment or config
+# Database URL construction from environment variables
+DB_HOST = os.environ.get('DB_HOST', 'localhost')
+DB_PORT = os.environ.get('DB_PORT', '5432')
+DB_NAME = os.environ.get('DB_NAME', 'desk_automation_v2')
+DB_USER = os.environ.get('DB_USER', 'postgres')
+DB_PASSWORD = os.environ.get('DB_PASSWORD', 'postgres')
+
+# Build DATABASE_URL from individual components OR use provided DATABASE_URL
 DATABASE_URL = os.environ.get(
     'DATABASE_URL',
-    'postgresql://user:password@localhost:5432/desk_automation_v2'
+    f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 )
+
+print(f"✅ [Database] Connecting to: postgresql://{DB_USER}:***@{DB_HOST}:{DB_PORT}/{DB_NAME}")
 
 # SQLAlchemy setup
 engine = create_engine(
     DATABASE_URL,
     poolclass=QueuePool,
-    pool_size=20,
-    max_overflow=40,
-    pool_pre_ping=True,  # Verify connections before using
+    pool_size=int(os.environ.get('DB_POOL_SIZE', 20)),
+    max_overflow=int(os.environ.get('DB_MAX_OVERFLOW', 40)),
+    pool_pre_ping=os.environ.get('DB_POOL_PRE_PING', 'true').lower() == 'true',  # Verify connections before using
     echo=os.environ.get('SQL_DEBUG', 'false').lower() == 'true'
 )
 

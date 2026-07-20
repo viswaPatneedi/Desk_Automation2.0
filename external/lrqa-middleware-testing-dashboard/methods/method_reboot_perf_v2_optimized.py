@@ -271,6 +271,7 @@ def check_and_collect_logs_for_patterns(ssh, device_ip, device_name, iteration, 
         device_name: Device name for filename
         iteration: Current iteration number
         log_patterns: List of patterns to search for, e.g., ["process crashed", "ERROR", "CRASH"]
+                     Phase 22: Supports negation prefix "!" for NOT matching, e.g., ["!INFO", "ERROR"]
         log_message_func: logging function
     
     Returns: dict with:
@@ -279,6 +280,7 @@ def check_and_collect_logs_for_patterns(ssh, device_ip, device_name, iteration, 
         - 'matched_lines': Sample of matched log lines
     """
     import os
+    import re
     
     result = {
         'found_patterns': [],
@@ -291,62 +293,91 @@ def check_and_collect_logs_for_patterns(ssh, device_ip, device_name, iteration, 
         return result
     
     try:
-        log_message_func(f"\n[PATTERN SEARCH] Searching for {len(log_patterns)} pattern(s) in device logs...")
+        log_message_func(f"\n[PATTERN SEARCH] ✨ Phase 22: Searching for {len(log_patterns)} pattern(s) in device logs...")
         log_message_func(f"   Search location: /opt/logs/core_log.txt")
+        
+        # Separate regular patterns from negation patterns
+        regular_patterns = []
+        negation_patterns = []
+        
+        for pattern in log_patterns:
+            if pattern.startswith('!'):
+                # Negation pattern (NOT containing)
+                negation_patterns.append(pattern[1:])  # Remove the ! prefix
+                log_message_func(f"   📌 NOT pattern: {pattern[1:]}")
+            else:
+                # Regular pattern (contains)
+                regular_patterns.append(pattern)
+                log_message_func(f"   📌 Contains pattern: {pattern}")
         
         # Search for patterns in device logs
         patterns_found = []
         
-        for idx, pattern in enumerate(log_patterns, 1):
-            log_message_func(f"\n  Pattern {idx}/{len(log_patterns)}: '{pattern}'")
-            pattern_safe = pattern.replace("'", "\\'")
-            
-            # Search in core_log.txt and other log files
-            search_cmd = f"grep -E '{pattern_safe}' /opt/logs/core_log.txt 2>/dev/null | head -5"
-            
+        # Phase 22: Handle regular (contains) patterns
+        for idx, pattern in enumerate(regular_patterns, 1):
+            log_message_func(f"\n  [PATTERN {idx}/{len(regular_patterns)}] Searching for: {pattern}")
             try:
-                stdin, stdout, stderr = ssh.exec_command(search_cmd, timeout=15)
-                search_output = stdout.read().decode('utf-8', errors='ignore').strip()
-                stdout.channel.close()
+                # Use grep to search for the pattern (case-insensitive)
+                grep_cmd = f"grep -i -E '{pattern}' /opt/logs/core_log.txt | head -1"
+                import socket
+                stdin, stdout, stderr = ssh.exec_command(grep_cmd, timeout=20)
+                stdout.channel.settimeout(20.0)
+                try:
+                    log_output = stdout.read(1024).decode('utf-8', errors='ignore').strip()
+                except socket.timeout:
+                    log_output = ""
+                finally:
+                    stdout.channel.close()
                 
-                if search_output:
-                    log_message_func(f"  ✓ MATCH FOUND: Pattern '{pattern}' detected in logs!")
-                    log_message_func(f"     Matched lines (up to 5):")
-                    for line in search_output.split('\n')[:5]:
-                        if line.strip():
-                            log_message_func(f"       • {line[:150]}")
+                if log_output:
                     patterns_found.append(pattern)
-                    result['matched_lines'].append({
-                        'pattern': pattern,
-                        'samples': search_output.split('\n')[:3]
-                    })
+                    log_message_func(f"    ✅ FOUND! Sample: {log_output[:100]}")
                 else:
-                    log_message_func(f"  ⊘ No match: Pattern not found in logs")
+                    log_message_func(f"    ⚠ Pattern not found in core_log.txt")
             except Exception as e:
-                log_message_func(f"  ⚠ Error searching pattern '{pattern}': {e}")
+                log_message_func(f"    ❌ Error searching for pattern: {str(e)[:100]}")
         
-        # Log summary
-        log_message_func(f"\n[PATTERN SEARCH SUMMARY]")
-        log_message_func(f"  Total patterns searched: {len(log_patterns)}")
-        log_message_func(f"  Patterns matched: {len(patterns_found)}")
+        # Phase 22: Handle negation (NOT contains) patterns
+        for idx, pattern in enumerate(negation_patterns, 1):
+            log_message_func(f"\n  [NOT PATTERN {idx}/{len(negation_patterns)}] Searching for absence of: {pattern}")
+            try:
+                # Use grep -v to search for lines that DON'T contain the pattern
+                grep_cmd = f"grep -v -i -E '{pattern}' /opt/logs/core_log.txt | grep -v '^$' | head -1"
+                import socket
+                stdin, stdout, stderr = ssh.exec_command(grep_cmd, timeout=20)
+                stdout.channel.settimeout(20.0)
+                try:
+                    log_output = stdout.read(1024).decode('utf-8', errors='ignore').strip()
+                except socket.timeout:
+                    log_output = ""
+                finally:
+                    stdout.channel.close()
+                
+                if log_output:
+                    # For NOT patterns, "found" means we found lines that DON'T match
+                    # This triggers log collection as configured
+                    patterns_found.append(f"NOT:{pattern}")
+                    log_message_func(f"    ✅ FOUND lines NOT containing pattern! Sample: {log_output[:100]}")
+                else:
+                    log_message_func(f"    ⚠ No lines found that exclude this pattern (pattern matches everything)")
+            except Exception as e:
+                log_message_func(f"    ❌ Error searching for NOT pattern: {str(e)[:100]}")
         
-        # If any patterns found, collect logs
+        # If any patterns were matched, collect logs
         if patterns_found:
+            log_message_func(f"\n  ✅ Pattern match(es) detected: {', '.join(patterns_found)}")
             result['found_patterns'] = patterns_found
-            log_message_func(f"\n[LOG COLLECTION] Found {len(patterns_found)} pattern(s) - Collecting device logs for diagnostics...")
-            patterns_str = ", ".join([f"'{p}'" for p in patterns_found])
-            log_message_func(f"  Patterns that triggered collection: {patterns_str}")
             
-            # Collect logs to /media/apps
-            collected_log_path = collect_device_logs_to_media_app(
-                ssh, device_ip, device_name, iteration, log_message_func
-            )
-            
-            if collected_log_path:
-                log_message_func(f"✓ Logs collected: {collected_log_path}")
-                result['log_paths'].append(collected_log_path)
+            # Collect logs to tar.gz
+            log_message_func(f"  📋 Collecting device logs...")
+            collected_path = collect_device_logs_to_media_app(ssh, device_ip, device_name, iteration, log_message_func)
+            if collected_path:
+                result['log_paths'].append(collected_path)
+                log_message_func(f"  ✅ Logs collected: {collected_path}")
+            else:
+                log_message_func(f"  ❌ Failed to collect logs")
         else:
-            log_message_func(f"  ℹ No patterns matched - No issue-based log collection (normal pass)")
+            log_message_func(f"\n  ⚠ No pattern matches found - logs not collected")
         
         return result
     

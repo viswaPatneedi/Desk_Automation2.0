@@ -10,14 +10,16 @@ from models.database import Session, User as DBUser
 class User:
     """User model for storing user information and authentication."""
     
-    def __init__(self, ntid, email, name, password_hash, created_at=None, user_id=None, alternate_email=None, is_admin=False, team_name=None):
+    def __init__(self, ntid, email, name, password_hash, created_at=None, user_id=None, alternate_email=None, is_admin=False, team_name=None, is_super_admin=False, is_team_admin=False):
         self.user_id = user_id or ntid  # Use NTID as user_id if not provided
         self.ntid = ntid
         self.email = email
         self.alternate_email = alternate_email or f"{ntid}@cable.comcast.com"  # Auto-generate alternate email
         self.name = name
         self.password_hash = password_hash
-        self.is_admin = is_admin  # Admin flag
+        self.is_admin = is_admin  # Deprecated: use is_super_admin or is_team_admin instead
+        self.is_super_admin = is_super_admin or is_admin  # Super admin - controls everything
+        self.is_team_admin = is_team_admin  # Team admin - controls own team only
         self.created_at = created_at or datetime.utcnow().isoformat()
         self.is_authenticated = True
         self.is_active = True
@@ -52,7 +54,9 @@ class User:
             'name': self.name,
             'password_hash': self.password_hash,
             'created_at': self.created_at,
-            'is_admin': self.is_admin,
+            'is_admin': self.is_admin,  # Legacy field
+            'is_super_admin': self.is_super_admin,  # NEW: Super admin controls everything
+            'is_team_admin': self.is_team_admin,  # NEW: Team admin controls own team
             'team_name': self.team_name
         }
     
@@ -67,7 +71,9 @@ class User:
             created_at=data.get('created_at'),
             user_id=data.get('user_id'),
             alternate_email=data.get('alternate_email'),
-            is_admin=data.get('is_admin', False),
+            is_admin=data.get('is_admin', False),  # Legacy
+            is_super_admin=data.get('is_super_admin', data.get('is_admin', False)),  # NEW
+            is_team_admin=data.get('is_team_admin', False),  # NEW
             team_name=data.get('team_name', '')
         )
 
@@ -136,6 +142,9 @@ class User:
     @staticmethod
     def save_users(users):
         """Save all users to the database and mirror them to JSON."""
+        db_success = False
+        
+        # Try to save to database
         session = Session()
         try:
             for uid, user in users.items():
@@ -160,12 +169,25 @@ class User:
                     row.active = getattr(user, 'is_active', row.active)
 
             session.commit()
-            User._write_json_backup(users)
-        except Exception:
+            db_success = True
+        except Exception as e:
+            import sys
+            print(f"⚠️  [USER.save_users] Database save failed (will use JSON fallback): {e}", file=sys.stderr)
             session.rollback()
-            raise
         finally:
             session.close()
+        
+        # Always save JSON backup regardless of database success
+        try:
+            User._write_json_backup(users)
+            if db_success:
+                print(f"✅ [USER.save_users] Saved {len(users)} users to DB and JSON", file=sys.stderr)
+            else:
+                print(f"⚠️  [USER.save_users] Saved {len(users)} users to JSON only (DB failed)", file=sys.stderr)
+        except Exception as e:
+            import sys
+            print(f"❌ [USER.save_users] Failed to save JSON backup: {e}", file=sys.stderr)
+            raise
     
     @staticmethod
     def create_user(ntid, email, name, password, team_name=None):
@@ -208,15 +230,29 @@ class User:
     @staticmethod
     def authenticate(identifier, password):
         """Authenticate user by NTID or email (primary/alternate) and password."""
+        import sys
+        print(f"\n[AUTHENTICATE] Starting authentication for: {identifier}", file=sys.stderr)
+        
         # Try to find user by NTID first
         user = User.get_user_by_ntid(identifier)
+        print(f"[AUTHENTICATE] get_user_by_ntid('{identifier}'): {user}", file=sys.stderr)
         
         # If not found, try by email (checks both primary and alternate)
         if not user:
             user = User.get_user_by_email(identifier)
+            print(f"[AUTHENTICATE] get_user_by_email('{identifier}'): {user}", file=sys.stderr)
         
-        # Verify password
-        if user and user.check_password(password):
-            return user
+        if user:
+            print(f"[AUTHENTICATE] User found: {user.ntid}, checking password...", file=sys.stderr)
+            # Verify password
+            password_match = user.check_password(password)
+            print(f"[AUTHENTICATE] check_password(): {password_match}", file=sys.stderr)
+            if password_match:
+                print(f"[AUTHENTICATE] ✅ Password verified!", file=sys.stderr)
+                return user
+            else:
+                print(f"[AUTHENTICATE] ❌ Password verification failed!", file=sys.stderr)
+        else:
+            print(f"[AUTHENTICATE] ❌ User not found for identifier: {identifier}", file=sys.stderr)
         
         return None

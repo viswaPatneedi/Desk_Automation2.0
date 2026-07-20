@@ -16,7 +16,8 @@
         "jump_host_config": {},
         "device_type": "XUMO",
         "location": "US",
-        "team_name": "LRQA"
+        "team_name": "LRQA",
+        "is_active": true
     },
     {
         "ip": "10.0.0.233",
@@ -35,7 +36,8 @@
         "jump_host_config": {},
         "device_type": "XUMO",
         "location": "US",
-        "team_name": "LRQA"
+        "team_name": "LRQA",
+        "is_active": true
     },
     {
         "ip": "10.0.0.95",
@@ -54,7 +56,8 @@
         "jump_host_config": {},
         "device_type": "SKY STREAM",
         "location": "US",
-        "team_name": "LRQA"
+        "team_name": "LRQA",
+        "is_active": true
     },
     {
         "ip": "10.0.0.28",
@@ -73,7 +76,8 @@
         "jump_host_config": {},
         "device_type": "XUMO",
         "location": "US",
-        "team_name": "LRQA"
+        "team_name": "LRQA",
+        "is_active": true
     },
     {
         "ip": "10.0.0.61",
@@ -92,7 +96,8 @@
         "jump_host_config": {},
         "device_type": "XUMO",
         "location": "US",
-        "team_name": "LRQA"
+        "team_name": "LRQA",
+        "is_active": true
     },
     {
         "ip": "10.0.0.166",
@@ -111,7 +116,8 @@
         "jump_host_config": {},
         "device_type": "SKY STREAM",
         "location": "US",
-        "team_name": "LRQA"
+        "team_name": "LRQA",
+        "is_active": true
     },
     {
         "ip": "10.0.0.230",
@@ -130,7 +136,8 @@
         "jump_host_config": {},
         "device_type": "SKY STREAM",
         "location": "US",
-        "team_name": "LRQA"
+        "team_name": "LRQA",
+        "is_active": true
     },
     {
         "ip": "10.0.0.148",
@@ -149,7 +156,8 @@
         "jump_host_config": {},
         "device_type": "SKY STREAM",
         "location": "US",
-        "team_name": "LRQA"
+        "team_name": "LRQA",
+        "is_active": true
     },
     {
         "ip": "10.0.0.250",
@@ -160,7 +168,7 @@
         "ir_config": {
             "itach_ip": "10.0.0.50",
             "itach_port": 4998,
-            "ir_port": "1"
+            "ir_port": "3"
         },
         "mac_address": "1C:2F:A2:30:35:B6",
         "vnc_url": "http://10.0.0.250:5800/",
@@ -168,7 +176,8 @@
         "jump_host_config": {},
         "device_type": "XUMO",
         "location": "US",
-        "team_name": "LRQA"
+        "team_name": "LRQA",
+        "is_active": true
     },
     {
         "ip": "10.0.0.141",
@@ -187,7 +196,8 @@
         "jump_host_config": {},
         "device_type": "SKY STREAM",
         "location": "US",
-        "team_name": "LRQA"
+        "team_name": "LRQA",
+        "is_active": true
     },
     {
         "ip": "10.0.0.252",
@@ -206,7 +216,8 @@
         "jump_host_config": {},
         "device_type": "SKY STREAM",
         "location": "US",
-        "team_name": "LRQA"
+        "team_name": "LRQA",
+        "is_active": true
     },
     {
         "ip": "10.0.0.75",
@@ -221,7 +232,8 @@
         "jump_host_config": {},
         "device_type": "SKY STREAM",
         "location": "US",
-        "team_name": "LRQA"
+        "team_name": "LRQA",
+        "is_active": true
     },
     {
         "ip": "10.0.0.91",
@@ -236,7 +248,8 @@
         "jump_host_config": {},
         "device_type": "XUMO",
         "location": "US",
-        "team_name": "LRQA"
+        "team_name": "LRQA",
+        "is_active": true
     },
     {
         "ip": "10.0.0.156",
@@ -255,6 +268,7 @@
         "jump_host_config": {},
         "device_type": "XUMO",
         "location": "US",
-        "team_name": "LRQA"
+        "team_name": "LRQA",
+        "is_active": true
     }
 ]

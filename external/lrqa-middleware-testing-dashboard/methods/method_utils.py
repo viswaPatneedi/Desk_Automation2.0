@@ -505,9 +505,9 @@ def check_network_and_realtek_errors(ssh, log_callback=None):
         log(f"❌ Error checking for network/Realtek errors: {e}")
         return has_errors
 
-def capture_device_logs_sftp(ssh, log_filename, log_callback=None, iteration=None, device_ip=None):
+def capture_device_logs_sftp(ssh, log_filename, log_callback=None, iteration=None, device_ip=None, job_id=None):
     """
-    Capture device logs and download them via SFTP to device-specific folder structure
+    Capture device logs and download them via SFTP to Lexar USB structure
     
     Args:
         ssh: SSH connection object
@@ -515,8 +515,10 @@ def capture_device_logs_sftp(ssh, log_filename, log_callback=None, iteration=Non
         log_callback: Optional callback for logging
         iteration: Current iteration number
         device_ip: Device IP address for folder organization
+        job_id: Optional job ID for execution tracking
     
-    Folder structure: device_logs/<device_ip>/ITR-<iteration>/
+    Folder structure: /media/lrqa/Lexar/Enhancement_output/EXECUTION_LOGS/{device_ip}/ITR-{iteration}/
+    Fallback: device_logs/<device_ip>/ITR-<iteration>/ (if Lexar not available)
     """
     def log(message):
         log_message(message, log_callback=log_callback)
@@ -527,50 +529,84 @@ def capture_device_logs_sftp(ssh, log_filename, log_callback=None, iteration=Non
         # Always use .tgz extension
         if not log_filename.endswith('.tgz'):
             log_filename = log_filename.replace('.tar.gz', '.tgz').replace('.tar', '.tgz')
-        remote_log_path = f"/media/apps/{log_filename}"
+        
+        # Use Lexar path for remote storage (Phase 23 improvement)
+        lexar_base = get_lexar_base_path()
+        if lexar_base and lexar_base != 'Enhancement_output':
+            # Use full Lexar path: /media/lrqa/Lexar/Enhancement_output/EXECUTION_LOGS/...
+            remote_log_path = f"{lexar_base}/EXECUTION_LOGS/{device_ip}/ITR-{iteration}/{log_filename}" if iteration and device_ip else f"{lexar_base}/EXECUTION_LOGS/{log_filename}"
+        else:
+            # Fallback to /media/apps/ if Lexar not available
+            remote_log_path = f"/media/apps/{log_filename}"
+            log(f"⚠️  Lexar not available, falling back to /media/apps/")
 
         # Verify SSH connection is active
         if not ssh.get_transport() or not ssh.get_transport().is_active():
             log("⚠ SSH connection is not active, skipping log capture")
             return None
 
-        # Use thread-local device logs directory if available, with device-specific subfolder
-        device_logs_dir = getattr(thread_local, 'device_logs_dir', current_device_logs_dir)
-        if device_logs_dir and os.path.exists(device_logs_dir):
-            # Create device-specific folder structure
+        # Use Lexar path for local storage (Phase 23 improvement)
+        lexar_base = get_lexar_base_path()
+        if lexar_base and lexar_base != 'Enhancement_output' and os.path.exists(os.path.dirname(lexar_base)):
+            # Create Lexar-based local directory structure
+            lexar_logs_dir = os.path.join(lexar_base, 'EXECUTION_LOGS')
             if device_ip:
-                device_folder = os.path.join(device_logs_dir, device_ip)
+                device_folder = os.path.join(lexar_logs_dir, device_ip)
                 if not os.path.exists(device_folder):
-                    os.makedirs(device_folder)
+                    os.makedirs(device_folder, exist_ok=True)
                 if iteration:
                     local_dir = os.path.join(device_folder, f"ITR-{iteration}")
                     if not os.path.exists(local_dir):
-                        os.makedirs(local_dir)
+                        os.makedirs(local_dir, exist_ok=True)
                 else:
                     local_dir = device_folder
             elif iteration:
-                local_dir = os.path.join(device_logs_dir, f"ITR-{iteration}")
+                local_dir = os.path.join(lexar_logs_dir, f"ITR-{iteration}")
                 if not os.path.exists(local_dir):
-                    os.makedirs(local_dir)
+                    os.makedirs(local_dir, exist_ok=True)
             else:
-                local_dir = device_logs_dir
+                local_dir = lexar_logs_dir
+                if not os.path.exists(local_dir):
+                    os.makedirs(local_dir, exist_ok=True)
+            log(f"📁 Using Lexar storage: {local_dir}")
         else:
-            # Fallback: create device_logs with device-specific subfolder
-            logs_dir = 'device_logs'
-            if not os.path.exists(logs_dir):
-                os.makedirs(logs_dir)
-            if device_ip:
-                device_folder = os.path.join(logs_dir, device_ip)
-                if not os.path.exists(device_folder):
-                    os.makedirs(device_folder)
-                if iteration:
-                    local_dir = os.path.join(device_folder, f"ITR-{iteration}")
+            # Fallback: Use thread-local device logs directory if available
+            device_logs_dir = getattr(thread_local, 'device_logs_dir', current_device_logs_dir)
+            if device_logs_dir and os.path.exists(device_logs_dir):
+                # Create device-specific folder structure
+                if device_ip:
+                    device_folder = os.path.join(device_logs_dir, device_ip)
+                    if not os.path.exists(device_folder):
+                        os.makedirs(device_folder)
+                    if iteration:
+                        local_dir = os.path.join(device_folder, f"ITR-{iteration}")
+                        if not os.path.exists(local_dir):
+                            os.makedirs(local_dir)
+                    else:
+                        local_dir = device_folder
+                elif iteration:
+                    local_dir = os.path.join(device_logs_dir, f"ITR-{iteration}")
                     if not os.path.exists(local_dir):
                         os.makedirs(local_dir)
                 else:
-                    local_dir = device_folder
+                    local_dir = device_logs_dir
             else:
-                local_dir = logs_dir
+                # Fallback: create device_logs locally
+                logs_dir = 'device_logs'
+                if not os.path.exists(logs_dir):
+                    os.makedirs(logs_dir)
+                if device_ip:
+                    device_folder = os.path.join(logs_dir, device_ip)
+                    if not os.path.exists(device_folder):
+                        os.makedirs(device_folder)
+                    if iteration:
+                        local_dir = os.path.join(device_folder, f"ITR-{iteration}")
+                        if not os.path.exists(local_dir):
+                            os.makedirs(local_dir)
+                    else:
+                        local_dir = device_folder
+                else:
+                    local_dir = logs_dir
 
         log(f"Capturing device logs to {remote_log_path}...")
 

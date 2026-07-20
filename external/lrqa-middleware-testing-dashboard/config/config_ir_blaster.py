@@ -152,3 +152,68 @@ def send_ir_command(ir_code, itach_ip='10.0.0.12', itach_port=4998, log_callback
                 sock.close()
             except:
                 pass  # Ignore errors during cleanup
+
+
+# ============================================================
+# DEVICE TYPE TO REMOTE TYPE MAPPING
+# ============================================================
+
+# Mapping of device types to their corresponding remote control types
+DEVICE_TYPE_TO_REMOTE_TYPE = {
+    'XUMO': 'XUMO_PR3',
+    'xumo': 'XUMO_PR3',
+    'SKY STREAM': 'SKY_LC103',
+    'sky stream': 'SKY_LC103',
+    'SKY_STREAM': 'SKY_LC103',
+    'sky_stream': 'SKY_LC103',
+    'SKY': 'SKY_LC103',
+    'sky': 'SKY_LC103'
+}
+
+# Default keys for each remote type (if user doesn't specify)
+DEFAULT_IR_KEYS = {
+    'XUMO_PR3': ['HOME', 'POWER'],
+    'SKY_LC103': ['HOME', 'POWER']
+}
+
+
+def get_remote_type_for_device_type(device_type):
+    """
+    Get the remote type based on device type.
+    
+    Args:
+        device_type: Device type (e.g., 'XUMO', 'SKY STREAM')
+    
+    Returns:
+        Remote type (e.g., 'XUMO_PR3', 'SKY_LC103') or None if not found
+    """
+    if not device_type:
+        return None
+    
+    # Try direct mapping first
+    if device_type in DEVICE_TYPE_TO_REMOTE_TYPE:
+        return DEVICE_TYPE_TO_REMOTE_TYPE[device_type]
+    
+    # Try case-insensitive mapping
+    device_type_lower = device_type.lower().strip()
+    for key, value in DEVICE_TYPE_TO_REMOTE_TYPE.items():
+        if key.lower() == device_type_lower:
+            return value
+    
+    return None
+
+
+def get_default_keys_for_device_type(device_type):
+    """
+    Get the default IR keys for a device type.
+    
+    Args:
+        device_type: Device type (e.g., 'XUMO', 'SKY STREAM')
+    
+    Returns:
+        List of default keys or empty list if not found
+    """
+    remote_type = get_remote_type_for_device_type(device_type)
+    if remote_type and remote_type in DEFAULT_IR_KEYS:
+        return DEFAULT_IR_KEYS[remote_type]
+    return []

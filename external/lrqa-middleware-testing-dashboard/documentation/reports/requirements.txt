@@ -27,5 +27,11 @@ PyGithub==2.1.1
 # v2.0 Monitoring & Logging (NEW)
 python-dotenv==1.0.0
 
-# v2.0 AI Vision (FREE TIER)
-google-generativeai==0.3.0
+# v2.0 AI Vision - OLLAMA RECOMMENDED (Local, Free, Independent)
+# If using cloud Gemini API instead, uncomment:
+# google-generativeai==0.3.0
+
+# For local AI vision (RECOMMENDED - no API key needed):
+# Install Ollama from: https://ollama.ai
+# Pull model: ollama pull llava
+# Start server: ollama serve

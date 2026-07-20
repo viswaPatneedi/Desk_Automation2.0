@@ -43,6 +43,13 @@ class AIScreenAnalyzer:
         self.analysis_cache = {}
         self.lock = threading.Lock()
         
+        # Check if genai module is available
+        if genai is None:
+            print("⚠️  Warning: google-generativeai module not installed")
+            print("   Install with: pip install google-generativeai")
+            print("   Or use Ollama instead: export SCREEN_VALIDATION_PROVIDER='ollama'")
+            return
+        
         # Debug: Show API key status
         if self.api_key:
             key_preview = self.api_key[:10] + "..." + self.api_key[-10:] if len(self.api_key) > 20 else "***"

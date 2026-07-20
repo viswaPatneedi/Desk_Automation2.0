@@ -307,13 +307,55 @@ class ExecutionMonitorService:
             # Prepare job data for email
             job_data = job.to_dict()
             job_data['iterations_completed'] = len(getattr(job, 'iteration_results', {}))
+            iteration_results = getattr(job, 'iteration_results', {})
+            job_data['passed_count'] = sum(1 for r in iteration_results.values() if r == 'passed')
+            job_data['failed_count'] = sum(1 for r in iteration_results.values() if r == 'failed')
+            
+            # ✅ ENHANCEMENT 2: Validate execution before sending
+            validation_result = self.email_service.validate_execution_before_email(job_data)
+            if not validation_result['is_valid']:
+                print(f"[EXECUTION MONITOR] ⚠️  Execution data validation failed: {validation_result['warnings']}")
+            else:
+                print(f"[EXECUTION MONITOR] ✓ Execution data validation passed")
+            
+            # ✅ ENHANCEMENT 4: Smart notification filtering
+            should_send, send_reason = self.email_service.should_send_notification(job_data)
+            print(f"[EXECUTION MONITOR] {send_reason}")
+            
+            if not should_send:
+                print(f"[EXECUTION MONITOR] Notification suppressed based on rules")
+                return
+            
+            # ✅ ENHANCEMENT 1: AI analysis for failures
+            ai_analysis = {}
+            if job_data.get('status') == 'failed':
+                print(f"[EXECUTION MONITOR] Running AI analysis on failed execution...")
+                log_content = ""
+                if job.log_file_path and os.path.exists(job.log_file_path):
+                    try:
+                        with open(job.log_file_path, 'r') as f:
+                            log_content = f.read()[-2000:]  # Last 2000 chars
+                    except:
+                        pass
+                job_data['error_message'] = getattr(job, 'error_message', 'Execution failed')
+                ai_analysis = self.email_service.analyze_execution_failure_with_ai(job_data, log_content)
+                if 'error' not in ai_analysis:
+                    print(f"[EXECUTION MONITOR] AI Analysis: Root Cause = {ai_analysis.get('root_cause', 'Unknown')}")
+                    job_data['ai_analysis'] = ai_analysis
+            
+            # ✅ ENHANCEMENT 3 & 5: Add performance metrics and progress tracking
+            job_data['performance_metrics'] = True  # Flag to include in email
+            progress_info = self.email_service.track_execution_progress(job_data)
+            if 'error' not in progress_info:
+                job_data['progress_info'] = progress_info
+                print(f"[EXECUTION MONITOR] Progress tracked: {progress_info['current_progress']['iteration']}")
             
             # Get log files
             log_files = []
             if job.log_file_path and os.path.exists(job.log_file_path):
                 log_files.append(job.log_file_path)
             
-            # Send email
+            # Send email with all enhancements
             success, message = self.email_service.send_execution_results_email(
                 recipient_email=user.email,
                 job_data=job_data,
@@ -322,6 +364,10 @@ class ExecutionMonitorService:
             
             if success:
                 print(f"[EXECUTION MONITOR] ✓ Sent completion report to {user.email}")
+                if ai_analysis and 'error' not in ai_analysis:
+                    print(f"[EXECUTION MONITOR] ✓ Included AI analysis and recommendations")
+                if progress_info and 'error' not in progress_info:
+                    print(f"[EXECUTION MONITOR] ✓ Included performance metrics")
             else:
                 print(f"[EXECUTION MONITOR] ✗ Failed to send email: {message}")
         except Exception as e:

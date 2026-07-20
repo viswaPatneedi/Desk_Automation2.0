@@ -21,9 +21,29 @@ class TestController:
     def execute_test(self):
         """POST /api/execute - Execute test on device"""
         try:
+            # Debug: Check authentication status
+            import sys
+            print(f"\n{'='*60}", file=sys.stderr)
+            print(f"🔍 [DEBUG /api/execute] Request headers:", file=sys.stderr)
+            print(f"   Cookie: {request.headers.get('Cookie', 'NO COOKIE')}", file=sys.stderr)
+            print(f"   User-Agent: {request.headers.get('User-Agent', 'N/A')[:50]}", file=sys.stderr)
+            print(f"   Host: {request.host}", file=sys.stderr)
+            print(f"   Request path: {request.path}", file=sys.stderr)
+            print(f"🔍 [DEBUG] current_user object: {current_user}", file=sys.stderr)
+            print(f"🔍 [DEBUG] is_authenticated: {current_user.is_authenticated}", file=sys.stderr)
+            if hasattr(current_user, 'ntid'):
+                print(f"🔍 [DEBUG] User NTID: {current_user.ntid}", file=sys.stderr)
+            print(f"{'='*60}\n", file=sys.stderr)
+            
             # Verify user is authenticated
             if not current_user.is_authenticated:
-                return jsonify({'error': 'Authentication required'}), 401
+                print(f"❌ [DEBUG] User not authenticated - returning 401", file=sys.stderr)
+                # Still try to get more info
+                user_id = request.cookies.get('session')
+                print(f"   Session cookie value (partial): {user_id[:20] if user_id else 'NO SESSION COOKIE'}...", file=sys.stderr)
+                return jsonify({'error': 'Authentication required', 'debug': 'Not authenticated. Check session cookie.'}), 401
+            
+            print(f"✅ [DEBUG] User authenticated: {current_user.ntid if hasattr(current_user, 'ntid') else 'UNKNOWN'}", file=sys.stderr)
             
             data = request.json
             if not data:

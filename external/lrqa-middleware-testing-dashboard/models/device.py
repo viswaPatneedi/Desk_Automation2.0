@@ -152,7 +152,10 @@ class Device:
     @staticmethod
     def save_all(devices: List['Device']) -> None:
         """Save all devices to the database and mirror them to JSON"""
+        from sqlalchemy.exc import OperationalError, IntegrityError
         session = Session()
+        database_available = False
+        
         try:
             for device in devices:
                 storage_data = device.to_storage_dict()
@@ -191,15 +194,36 @@ class Device:
                     row.is_active = storage_data.get('is_active', True)
 
             session.commit()
+            database_available = True
+            print("✅ [Database] Devices saved to PostgreSQL")
+        except OperationalError as e:
+            session.rollback()
+            print(f"⚠️  [Database] Connection error - falling back to JSON: {str(e)}")
+            database_available = False
+        except IntegrityError as e:
+            session.rollback()
+            print(f"⚠️  [Database] Integrity error - falling back to JSON: {str(e)}")
+            database_available = False
+        except Exception as e:
+            session.rollback()
+            print(f"⚠️  [Database] Error - falling back to JSON: {str(e)}")
+            database_available = False
+        finally:
+            session.close()
 
+        # Always save to JSON file as backup/fallback
+        try:
             devices_data = [device.to_storage_dict() for device in devices]
             with open(DEVICES_FILE, 'w') as f:
                 json.dump(devices_data, f, indent=4)
-        except Exception:
-            session.rollback()
-            raise
-        finally:
-            session.close()
+            if not database_available:
+                print("✅ [JSON] Devices saved to JSON file (database unavailable)")
+            else:
+                print("✅ [JSON] Devices synced to JSON file")
+        except Exception as e:
+            print(f"❌ [ERROR] Failed to save to JSON file: {str(e)}")
+            if not database_available:
+                raise Exception(f"Failed to save devices - both database and JSON failed: {str(e)}") from e
     
     @staticmethod
     def find_by_ip(ip: str) -> Optional['Device']:
