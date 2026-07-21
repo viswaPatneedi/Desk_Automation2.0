@@ -2805,7 +2805,7 @@ def dashboard():
 @app.route('/methods-index')
 @login_required
 def methods_index():
-    """Render methods index page - uses index2.html"""
+    """Render methods index page - uses No_use_index.html"""
     from models.device_lock import DeviceLock
     
     devices = Device.load_all()
@@ -2821,7 +2821,7 @@ def methods_index():
             continue
         device_list.append(device.to_dict())
     
-    return render_template('index2.html', devices=device_list, user=current_user)
+    return render_template('No_use_index.html', devices=device_list, user=current_user)
 
 @app.route('/admin/teams')
 @login_required
