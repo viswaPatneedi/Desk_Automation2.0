@@ -2319,5 +2319,44 @@
     "executing_user": "vpatne290",
     "triggered_at": "2026-07-21T16:31:56.131944",
     "queue_position": null
+  },
+  {
+    "job_id": "432ecf00-12cb-46e7-8730-39cbae811588",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME",
+          "HOME",
+          "HOME",
+          "HOME"
+        ],
+        "description": "asdf"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-07-21T16:45:59.761097",
+    "end_time": "2026-07-21T16:47:14.339234+00:00",
+    "log_file_path": "logs/jobs/432ecf00-12cb-46e7-8730-39cbae811588/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-07-21T16:45:59.761114",
+    "eta_seconds": 97,
+    "eta_formatted": "1m 37s",
+    "time_per_iteration": 97,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-07-21T16:45:59.761119",
+    "queue_position": null
   }
 ]

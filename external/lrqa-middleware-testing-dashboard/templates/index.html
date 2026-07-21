@@ -6595,6 +6595,7 @@
                     
                     if (queueItem.method === 'ir_test') {
                         const irKeys = getParam(queueItem, 'ir_keys', 'irKeys');
+                        const irDelay = getParam(queueItem, 'ir_key_delay', 'irKeyDelay') || 0.5;
                         const remoteType = getParam(queueItem, 'remote_type', 'remoteType') || '';
                         if (irKeys && (Array.isArray(irKeys) ? irKeys.length > 0 : true)) {
                             const irKeysDisplay = Array.isArray(irKeys) ? irKeys.join(', ') : irKeys;
@@ -6604,6 +6605,7 @@
                             } else if (remoteType) {
                                 remoteText = `<br><small style="color: #f59e0b;"><i class="bi bi-broadcast"></i> Remote: ${remoteType}</small>`;
                             }
+                            remoteText += `<br><small style="color: #f59e0b;"><i class="bi bi-clock"></i> Delay: ${irDelay}s between keys</small>`;
                             inputsHtml = `<div style="margin-top: 4px;"><small style="color: #10b981;"><i class="bi bi-broadcast"></i> IR Keys: ${irKeysDisplay}</small>${remoteText}</div>`;
                         }
                     } else if (queueItem.method === 'voice_command') {
@@ -6613,8 +6615,9 @@
                         }
                     } else if (queueItem.method === 'send_remote_keys') {
                         const remoteKeys = getParam(queueItem, 'remote_keys', 'remoteKeys');
+                        const keyDelay = getParam(queueItem, 'key_delay', 'keyDelay') || 2.0;
                         if (remoteKeys) {
-                            inputsHtml = `<div style="margin-top: 4px;"><small style="color: #f97316;"><i class="bi bi-controller"></i> Keys: ${remoteKeys}</small></div>`;
+                            inputsHtml = `<div style="margin-top: 4px;"><small style="color: #f97316;"><i class="bi bi-controller"></i> Keys: ${remoteKeys}</small><br><small style="color: #f59e0b;"><i class="bi bi-clock"></i> Delay: ${keyDelay}s between keys</small></div>`;
                         }
                     } else if (queueItem.method === 'screen_validation') {
                         const screenName = getParam(queueItem, 'expected_screen', 'expectedScreen');
@@ -10039,6 +10042,11 @@
                     apiItem.ir_keys = ['HOME', 'POWER'];
                 }
                 
+                // Add IR key delay for ir_test
+                if (item.method === 'ir_test' && item.params?.ir_key_delay !== undefined) {
+                    apiItem.ir_key_delay = item.params.ir_key_delay;
+                }
+                
                 // Add voice text for voice_command
                 const voiceText = item.params?.voice_text;
                 if (voiceText) {
@@ -10049,6 +10057,11 @@
                 const remoteKeys = item.params?.remote_keys;
                 if (remoteKeys) {
                     apiItem.remote_keys = remoteKeys;
+                }
+                
+                // Add key delay for send_remote_keys
+                if (item.method === 'send_remote_keys' && item.params?.key_delay !== undefined) {
+                    apiItem.key_delay = item.params.key_delay;
                 }
                 
                 // Include additional params for specific methods

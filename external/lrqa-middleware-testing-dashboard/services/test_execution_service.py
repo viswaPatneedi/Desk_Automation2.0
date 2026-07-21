@@ -493,6 +493,8 @@ class TestExecutionService:
                     remote_type = queue_item.get('remote_type')
                     voice_text = queue_item.get('voice_text', '')
                     remote_keys = queue_item.get('remote_keys', None)
+                    ir_key_delay = queue_item.get('ir_key_delay', 0.5)
+                    key_delay = queue_item.get('key_delay', 2.0)
                     expected_screen = queue_item.get('expected_screen', None)
                     screen_name = queue_item.get('screen_name', None)
                     wait_seconds = queue_item.get('wait_seconds', 0)
@@ -506,6 +508,10 @@ class TestExecutionService:
                         ir_keys = queue_item.get('irKeys', ['HOME', 'POWER'])
                     if not remote_type:
                         remote_type = queue_item.get('remoteType')
+                    if ir_key_delay == 0.5:
+                        ir_key_delay = queue_item.get('irKeyDelay', 0.5)
+                    if key_delay == 2.0:
+                        key_delay = queue_item.get('keyDelay', 2.0)
                     if expected_screen is None:
                         expected_screen = queue_item.get('expectedScreen', None)
                     if screen_name is None:
@@ -858,7 +864,6 @@ class TestExecutionService:
                         time_module.sleep(2)
                     elif method == "ir_test":
                         log_service.log(f"IR Keys for this instance: {', '.join(ir_keys)}")
-                        ir_key_delay = step.get('params', {}).get('ir_key_delay', 0.5)
                         log_service.log(f"IR Key Delay: {ir_key_delay} seconds")
                         if remote_type:
                             log_service.log(f"IR Remote Type for this instance: {remote_type}")
@@ -878,7 +883,6 @@ class TestExecutionService:
                         )
                     elif method == "send_remote_keys":
                         log_service.log(f"Remote Keys for this instance: {remote_keys}")
-                        key_delay = step.get('params', {}).get('key_delay', 2.0)
                         log_service.log(f"Key Delay: {key_delay} seconds")
                         try:
                             import sys, os as os_mod
