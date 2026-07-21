@@ -4318,17 +4318,19 @@
                 // IR Test - Show modal to select keys
                 console.log('🔧 IR Test method selected - showing key selection modal');
                 
-                const selectedKeys = await showIrTestModal();
-                if (selectedKeys === null) {
+                const irResult = await showIrTestModal();
+                if (irResult === null) {
                     console.log('❌ User cancelled IR test parameters');
                     return null;
                 }
                 
-                params.ir_keys = selectedKeys;
+                params.ir_keys = irResult.sequence;
+                params.ir_key_delay = irResult.delay;
                 params.remote_type = 'auto-detect';  // Auto-detect based on device type
                 
                 console.log('✅ IR Test Parameters:', params);
-                console.log('   ├─ IR Keys:', selectedKeys.join(', '));
+                console.log('   ├─ IR Keys:', irResult.sequence.join(', '));
+                console.log('   ├─ Key Delay:', irResult.delay + 's');
                 console.log('   └─ Remote Type: auto-detect (based on device type at execution)');
             } else if (methodId === 'navigate_to_tiles') {
                 // Prompt for section and tile to navigate
@@ -6077,6 +6079,24 @@
                                             </div>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Timing Control Section -->
+                                    <div style="background: #111827; padding: 12px; border-radius: 6px; border-left: 4px solid #f59e0b; margin-bottom: 1rem;">
+                                        <h6 style="color: #f59e0b; margin-bottom: 10px; font-weight: 600; font-size: 0.9rem;">
+                                            <i class="bi bi-clock"></i> Wait Time Between Keys
+                                        </h6>
+                                        <small style="color: #9ca3af; display: block; margin-bottom: 8px;">
+                                            Set custom delay between each key press. Use longer delays for fastforward/rewind operations. Default is 0.5 seconds.
+                                        </small>
+                                        <div style="display: flex; gap: 8px; align-items: center;">
+                                            <input type="number" id="ir-key-delay" min="0.1" max="10" step="0.1" value="0.5" 
+                                                   style="flex: 1; padding: 8px; background: #0f172a; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px; font-size: 0.85rem;">
+                                            <span style="color: #9ca3af; font-size: 0.85rem;">seconds</span>
+                                        </div>
+                                        <small style="color: #6b7280; margin-top: 6px; display: block;">
+                                            💡 Tip: Use 1-2s for navigation, 2-3s for action keys (OK/SELECT), 3-5s for sequences like FASTFWD
+                                        </small>
+                                    </div>
                                 </div>
                                 <div class="modal-footer" style="border-top: 1px solid #4b5563; padding: 1.5rem;">
                                     <button type="button" class="btn" style="background: #4b5563; color: #e5e7eb;" data-bs-dismiss="modal">Cancel</button>
@@ -6218,9 +6238,13 @@
                         return;
                     }
                     
-                    console.log('✅ IR Test sequence confirmed:', sequenceStack);
+                    const delayInput = document.getElementById('ir-key-delay');
+                    const delay = parseFloat(delayInput ? delayInput.value : '0.5') || 0.5;
                     
-                    // Close modal and resolve with sequence
+                    console.log('✅ IR Test sequence confirmed:', sequenceStack);
+                    console.log('⏱️ IR Key delay:', delay, 'seconds');
+                    
+                    // Close modal and resolve with sequence and delay
                     const bsModal = bootstrap.Modal.getInstance(modalElement);
                     if (bsModal) bsModal.hide();
                     
@@ -6229,7 +6253,10 @@
                         modalElement.remove();
                     }, { once: true });
                     
-                    resolve(sequenceStack);
+                    resolve({
+                        sequence: sequenceStack,
+                        delay: delay
+                    });
                 });
                 
                 // Cancel handler
@@ -6293,12 +6320,18 @@
                     break;
                     
                 case 'send_remote_keys':
-                    params.remote_keys = prompt('Enter remote keys (comma-separated):\nExample: HOME,DOWN,DOWN,OK', 'POWER');
-                    if (!params.remote_keys) {
+                    const keysInput = prompt('Enter remote keys (comma-separated):\nExample: HOME,DOWN,DOWN,OK', 'POWER');
+                    if (!keysInput) {
                         console.log('❌ User cancelled send_remote_keys prompt');
                         return null;
                     }
+                    const keyDelayInput = prompt('Enter wait time between keys in seconds:\nDefault: 2.0 | Navigation: 1-2s | Actions: 2-4s | Sequences: 3-5s', '2.0');
+                    const keyDelay = parseFloat(keyDelayInput || '2.0') || 2.0;
+                    
+                    params.remote_keys = keysInput;
+                    params.key_delay = keyDelay;
                     console.log(`✅ Send Remote Keys: ${params.remote_keys}`);
+                    console.log(`✅ Key Delay: ${params.key_delay}s`);
                     break;
                     
                 case 'wait':
@@ -6936,6 +6969,7 @@
             // Build form fields based on method type
             if (queueItem.method === 'ir_test') {
                 const irKeys = getParam(queueItem, 'ir_keys', 'irKeys') || ['HOME', 'POWER'];
+                const irDelay = getParam(queueItem, 'ir_key_delay', 'irKeyDelay') || 0.5;
                 formHtml += `
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;">IR Keys:</label>
@@ -6943,6 +6977,16 @@
                                style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;" 
                                placeholder="e.g., POWER, MUTE, VOL_UP">
                         <small style="color: #9ca3af; margin-top: 5px; display: block;">Comma-separated (e.g., HOME,POWER)</small>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;">
+                            <i class="bi bi-clock"></i> Wait Time Between Keys (seconds)
+                        </label>
+                        <input type="number" id="edit-ir-delay" value="${irDelay}" min="0.1" max="10" step="0.1"
+                               style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;">
+                        <small style="color: #9ca3af; margin-top: 5px; display: block;">
+                            💡 Default: 0.5s | Navigation: 1-2s | Actions: 2-3s | Sequences: 3-5s
+                        </small>
                     </div>
                     <div style="background: #0f172a; border-radius: 8px; padding: 12px; margin-top: 15px; border-left: 4px solid #10b981;">
                         <p style="color: #10b981; font-size: 0.9rem; margin: 0; font-weight: 600;">
@@ -6967,12 +7011,23 @@
                 `;
             } else if (queueItem.method === 'send_remote_keys') {
                 const remoteKeys = getParam(queueItem, 'remote_keys', 'remoteKeys') || '';
+                const keyDelay = getParam(queueItem, 'key_delay', 'keyDelay') || 2.0;
                 formHtml += `
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;">Remote Keys:</label>
                         <input type="text" id="edit-remote-keys" value="${remoteKeys}"
                                style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;"
                                placeholder="e.g., RIGHT RIGHT DOWN ENTER">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;">
+                            <i class="bi bi-clock"></i> Wait Time Between Keys (seconds)
+                        </label>
+                        <input type="number" id="edit-key-delay" value="${keyDelay}" min="0.1" max="10" step="0.1"
+                               style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;">
+                        <small style="color: #9ca3af; margin-top: 5px; display: block;">
+                            💡 Default: 2.0s | Navigation: 1-2s | Actions: 2-3s | Sequences: 3-5s
+                        </small>
                     </div>
                 `;
             } else if (queueItem.method === 'screen_validation') {
@@ -7508,9 +7563,12 @@
             if (queueItem.method === 'ir_test') {
                 const irKeysText = document.getElementById('edit-ir-keys')?.value || 'HOME,POWER';
                 const irKeys = irKeysText.split(',').map(k => k.trim().toUpperCase()).filter(Boolean);
+                const irDelay = parseFloat(document.getElementById('edit-ir-delay')?.value || '0.5') || 0.5;
                 queueItem.ir_keys = irKeys.length > 0 ? irKeys : ['HOME', 'POWER'];
+                queueItem.ir_key_delay = irDelay;
                 queueItem.remote_type = 'auto-detect';  // Always auto-detect based on device type
                 queueItem.params.ir_keys = queueItem.ir_keys;
+                queueItem.params.ir_key_delay = queueItem.ir_key_delay;
                 queueItem.params.remote_type = queueItem.remote_type;
             } else if (queueItem.method === 'voice_command') {
                 const voiceText = document.getElementById('edit-voice-text')?.value || '';
@@ -7518,8 +7576,11 @@
                 queueItem.params.voice_text = voiceText;
             } else if (queueItem.method === 'send_remote_keys') {
                 const remoteKeys = document.getElementById('edit-remote-keys')?.value || '';
+                const keyDelay = parseFloat(document.getElementById('edit-key-delay')?.value || '2.0') || 2.0;
                 queueItem.remote_keys = remoteKeys;
+                queueItem.key_delay = keyDelay;
                 queueItem.params.remote_keys = remoteKeys;
+                queueItem.params.key_delay = keyDelay;
             } else if (queueItem.method === 'screen_validation') {
                 const expectedScreen = document.getElementById('edit-expected-screen')?.value || '';
                 queueItem.expected_screen = expectedScreen;

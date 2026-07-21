@@ -858,12 +858,14 @@ class TestExecutionService:
                         time_module.sleep(2)
                     elif method == "ir_test":
                         log_service.log(f"IR Keys for this instance: {', '.join(ir_keys)}")
+                        ir_key_delay = step.get('params', {}).get('ir_key_delay', 0.5)
+                        log_service.log(f"IR Key Delay: {ir_key_delay} seconds")
                         if remote_type:
                             log_service.log(f"IR Remote Type for this instance: {remote_type}")
                         method_result = execute_ir_test_process(
                             device.ip, device.port, device.username, device.password,
                             i + 1, device.name, ir_keys, combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
-                            remote_type_override=remote_type
+                            remote_type_override=remote_type, key_delay=ir_key_delay
                         )
                     elif method == "voice_command":
                         if not voice_text:
@@ -876,6 +878,8 @@ class TestExecutionService:
                         )
                     elif method == "send_remote_keys":
                         log_service.log(f"Remote Keys for this instance: {remote_keys}")
+                        key_delay = step.get('params', {}).get('key_delay', 2.0)
+                        log_service.log(f"Key Delay: {key_delay} seconds")
                         try:
                             import sys, os as os_mod
                             if os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))) not in sys.path:
@@ -889,7 +893,8 @@ class TestExecutionService:
                                     key_sequence=remote_keys,  # Pass as string (will be parsed in function)
                                     port=device.port,
                                     username=device.username,
-                                    password=device.password
+                                    password=device.password,
+                                    key_delay=key_delay
                                 )
                                 log_service.log(f"[SENDKEYS-RESULT] Got result: {result}")
                                 method_result = {

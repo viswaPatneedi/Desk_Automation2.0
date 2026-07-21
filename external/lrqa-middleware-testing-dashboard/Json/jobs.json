@@ -2282,5 +2282,42 @@
     "executing_user": "vpatne290",
     "triggered_at": "2026-07-20T15:08:52.140023",
     "queue_position": null
+  },
+  {
+    "job_id": "c8d52ffc-96f7-490b-a5ac-e698ad1cb39a",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "POWER",
+          "HOME"
+        ],
+        "description": "Waking up the device from Sleep"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-07-21T16:31:56.131923",
+    "end_time": "2026-07-21T16:32:35.970648+00:00",
+    "log_file_path": "logs/jobs/c8d52ffc-96f7-490b-a5ac-e698ad1cb39a/execution.log",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-07-21T16:31:56.131939",
+    "eta_seconds": 61,
+    "eta_formatted": "1m 1s",
+    "time_per_iteration": 61,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-07-21T16:31:56.131944",
+    "queue_position": null
   }
 ]

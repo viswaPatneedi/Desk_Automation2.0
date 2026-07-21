@@ -50,7 +50,7 @@ def group_keys(keys: List[str]) -> List[Tuple[str, int]]:
     return grouped
 
 def send_remote_keys(device_ip: str, key_sequence: Union[str, List[str]], 
-                     port: int = 10022, username: str = "root", password: str = "") -> Dict:
+                     port: int = 10022, username: str = "root", password: str = "", key_delay: float = 2.0) -> Dict:
     """
     Send remote control keys to a device via SSH.
     
@@ -63,6 +63,9 @@ def send_remote_keys(device_ip: str, key_sequence: Union[str, List[str]],
         port: SSH port (default: 10022)
         username: SSH username (default: "root")
         password: SSH password (default: "")
+        key_delay: Custom delay in seconds between key presses (default: 2.0s)
+                   - Use 1-2s for navigation keys
+                   - Use 2-4s for action keys (OK, SELECT, ENTER)
     
     Returns:
         Dict with 'success' (bool) and 'message' (str) fields
@@ -71,12 +74,12 @@ def send_remote_keys(device_ip: str, key_sequence: Union[str, List[str]],
         # From API with string
         result = send_remote_keys("10.0.0.126", "RIGHT,RIGHT,DOWN,SELECT")
         
-        # From queue service with list
-        result = send_remote_keys("10.0.0.126", ["RIGHT", "RIGHT", "DOWN"])
+        # From queue service with list with custom delay
+        result = send_remote_keys("10.0.0.126", ["RIGHT", "RIGHT", "DOWN"], key_delay=1.5)
         
         # Multiple calls in same execution (no conflicts)
-        send_remote_keys("10.0.0.126", "HOME,DOWN,SELECT")
-        send_remote_keys("10.0.0.126", "BACK")
+        send_remote_keys("10.0.0.126", "HOME,DOWN,SELECT", key_delay=2.5)
+        send_remote_keys("10.0.0.126", "BACK", key_delay=1.0)
     """
     # Parse input - handle both string and list formats
     if isinstance(key_sequence, str):
@@ -125,12 +128,13 @@ def send_remote_keys(device_ip: str, key_sequence: Union[str, List[str]],
             
             executed_keys.append(f"{display_key}x{repeat}" if repeat > 1 else display_key)
             
-            # Longer delay between key groups to allow UI to process
+            # Use custom key_delay with adjustments for action keys
             # OK and SELECT typically need more time as they trigger actions
             if key in ['OK', 'SELECT', 'ENTER']:
-                time.sleep(4.0)  # 4 second delay after action keys
+                action_delay = key_delay * 1.5 if key_delay >= 1.0 else key_delay + 2.0
+                time.sleep(action_delay)  # Longer delay for action keys
             else:
-                time.sleep(2.0)  # 2 second delay between navigation keys
+                time.sleep(key_delay)  # Standard delay for navigation keys
         
         return {
             "success": True, 

@@ -19,7 +19,7 @@ from methods.method_utils import log_message, create_execution_log_path
 # Import IR utilities
 from config.config_ir_blaster import get_ir_config_for_device, generate_ir_code, send_ir_command
 
-def execute_ir_test_process(device_ip, port, username, password, iteration=1, device_name="Device", selected_keys=None, combined_method_name=None, remote_type_override=None, device_type=None):
+def execute_ir_test_process(device_ip, port, username, password, iteration=1, device_name="Device", selected_keys=None, combined_method_name=None, remote_type_override=None, device_type=None, key_delay=0.5):
     """
     Execute IR Command Test Process:
     Step 1: Send IR command(s) blindly using device-specific IR configuration (no SSH needed)
@@ -34,6 +34,7 @@ def execute_ir_test_process(device_ip, port, username, password, iteration=1, de
         selected_keys: List of IR keys to test (e.g., ['HOME', 'POWER'])
         remote_type_override: Optional remote type to use instead of device default
         device_type: Optional device type for automatic remote type detection (e.g., 'XUMO', 'SKY STREAM')
+        key_delay: Delay in seconds between sending each IR key (default: 0.5s)
     """
     # Default to both keys if none specified
     if not selected_keys:
@@ -118,43 +119,28 @@ def execute_ir_test_process(device_ip, port, username, password, iteration=1, de
                 log_message(f"❌ Failed to generate IR {key} code")
                 ir_test_success = False  # Mark as failed if code generation fails
                 failed_keys.append(key)
-            # Wait 3 seconds before checking logs
-            log_message("[WAIT] Waiting 3 seconds before log validation...")
-            time.sleep(3)
-            
-            # VERIFY LOGS (If SSH available)
-            log_message(f"\n[VERIFY LOGS] Verifying {key} command in device logs (if SSH available)...")
-            # Log validation per key
-            try:
-                ssh = paramiko.SSHClient()
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
-                if key == 'POWER':
-                    # Query device state
-                    stdin, stdout, stderr = ssh.exec_command(device_status_command)
-                    state = stdout.read().decode('utf-8', errors='ignore').strip().lower()
+            # Wait before checking logs (use custom key_delay)
+            log_message(f"[WAIT] Waiting {key_delay} seconds before log validation...")
+            time.sleep(key_delay)
                     log_message(f"[STATE] Device state after POWER: {state}")
                 else:
                     log_message(f"[IR] Sent IR command: {key}")
                 ssh.close()
             except Exception as log_error:
                 log_message(f"❌ Error checking device: {log_error}")
-            # Wait 3 seconds before next key if more remain
+            # Wait before next key if more remain (use custom key_delay)
             if idx < len(selected_keys) - 1:
-                log_message("[WAIT] Waiting 3 seconds before sending next IR key...")
-                time.sleep(3)
+                log_message(f"[WAIT] Waiting {key_delay} seconds before sending next IR key...")
+                time.sleep(key_delay)
         
-        # Wait for device to process IR commands
-        wait_time = 0
+        # Wait for device to process IR commands (use custom key_delay)
+        wait_time = key_delay * 2  # Double the delay after all commands
         if 'HOME' in selected_keys:
-            wait_time = 3
-            log_message("\n[WAIT] Waiting 3 seconds after IR HOME command...")
+            log_message(f"\n[WAIT] Waiting {wait_time} seconds after IR HOME command...")
         elif 'POWER' in selected_keys:
-            wait_time = 6
-            log_message("\n[WAIT] Waiting 6 seconds after IR POWER command...")
+            log_message(f"\n[WAIT] Waiting {wait_time} seconds after IR POWER command...")
         else:
-            wait_time = 3
-            log_message("\n[WAIT] Waiting 3 seconds after IR command...")
+            log_message(f"\n[WAIT] Waiting {wait_time} seconds after IR command...")
         time.sleep(wait_time)
         
         # VERIFICATION: Try to verify via SSH and check if device is on HOME screen
