@@ -89,29 +89,23 @@
                     </ul>
                 </div>
 
-                <span class="text-white d-flex align-items-center gap-2">
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <i class="bi bi-person-circle"></i>
-                            <div>
-                                <div>{{ current_user.name }}</div>
-                                {% if current_user.team_name %}
-                                <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 2px;">{{ current_user.team_name }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    {% if current_user.is_admin %}
-                    <span class="badge bg-danger">♔ Admin</span>
-                    {% endif %}
-                </span>
-
                 <!-- Username Dropdown Menu -->
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="User Options">
-                        <i class="bi bi-person-fill"></i> {{ current_user.name }}
+                        <i class="bi bi-person-fill"></i> {% if current_user.is_admin %}<i class="bi bi-star-fill" style="color: #FFD700; font-size: 0.8em;"></i>{% endif %}
                     </button>
                     <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        <li><h6 class="dropdown-header">
+                            <i class="bi bi-person-circle"></i> {{ current_user.name }}
+                            {% if current_user.is_admin %}<i class="bi bi-star-fill" style="color: #FFD700; margin-left: 4px;"></i>{% endif %}
+                        </h6></li>
+                        {% if current_user.team_name %}
+                        <li><h6 class="dropdown-header" style="color: #9ca3af; font-size: 0.85rem; font-weight: 500;"><i class="bi bi-people-fill"></i> {{ current_user.team_name }}</h6></li>
+                        {% endif %}
+                        {% if current_user.is_admin %}
+                        <li><h6 class="dropdown-header" style="color: #ef4444;"><i class="bi bi-crown-fill"></i> Admin</h6></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/change-password"><i class="bi bi-key"></i> Change Password</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="/logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
