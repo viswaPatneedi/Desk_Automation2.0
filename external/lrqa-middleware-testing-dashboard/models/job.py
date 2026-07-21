@@ -263,6 +263,9 @@ class Job:
             
             return len(jobs)
         
+        # Import here to avoid circular imports
+        from services.audit_logging_service import AuditLoggingService, TransactionRollbackHandler
+        
         # Execute batch operation with transaction handling
         db_success, record_count, db_error = TransactionRollbackHandler.execute_with_rollback(
             _save_batch_to_db,
