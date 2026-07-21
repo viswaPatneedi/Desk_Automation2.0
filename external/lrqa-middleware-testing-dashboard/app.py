@@ -1879,6 +1879,21 @@ def load_user(user_id):
         print(f"[USER_LOADER] ❌ User not found for ID: {user_id}", file=sys.stderr)
     return user
 
+@login_manager.unauthorized_handler
+def unauthorized():
+    """Handle unauthorized access for both API and page requests."""
+    import sys
+    print(f"\n[UNAUTHORIZED] {request.method} {request.path}", file=sys.stderr)
+    print(f"  Is API request: {request.path.startswith('/api/')}", file=sys.stderr)
+    print(f"  Accept header: {request.headers.get('Accept', '')}", file=sys.stderr)
+    
+    # For API requests, return JSON
+    if request.path.startswith('/api/') or request.headers.get('Accept', 'text/html').endswith('json'):
+        return jsonify({'error': 'Unauthorized', 'message': 'Please log in to access this resource.'}), 401
+    
+    # For page requests, redirect to login
+    return redirect(url_for('login'))
+
 # Debug every request
 @app.before_request
 def debug_request():
@@ -3163,6 +3178,30 @@ def fetch_device_mac():
         return jsonify({'success': True, 'mac_address': mac_address})
     else:
         return jsonify({'success': False, 'error': 'Failed to fetch MAC address'}), 500
+
+# Debug Session
+@app.route('/api/debug/session', methods=['GET'])
+def debug_session():
+    """Debug endpoint to check session state"""
+    import sys
+    has_user_id = '_user_id' in session
+    user_id = session.get('_user_id')
+    is_auth = current_user.is_authenticated if hasattr(current_user, 'is_authenticated') else False
+    
+    print(f"\n[DEBUG_SESSION] Checking session state:", file=sys.stderr)
+    print(f"  _user_id in session: {has_user_id}", file=sys.stderr)
+    print(f"  _user_id value: {user_id}", file=sys.stderr)
+    print(f"  current_user: {current_user}", file=sys.stderr)
+    print(f"  is_authenticated: {is_auth}", file=sys.stderr)
+    print(f"  Session cookie in request: {'session' in request.cookies}", file=sys.stderr)
+    
+    return jsonify({
+        'user_id_in_session': has_user_id,
+        'user_id': user_id,
+        'current_user': str(current_user),
+        'is_authenticated': is_auth,
+        'session_cookie_present': 'session' in request.cookies
+    })
 
 # Test Execution
 @app.route('/api/execute', methods=['POST'])
