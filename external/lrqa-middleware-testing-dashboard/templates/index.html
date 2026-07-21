@@ -932,47 +932,23 @@
                 </span>
             </div>
             <div class="d-flex align-items-center gap-3">
-                <!-- Results Dropdown -->
+                <!-- Results Dropdown (New unified dropdown) -->
                 <div class="btn-group" role="group">
-                    <a href="/results" class="btn btn-sm btn-outline-light" title="Table View">
-                        <i class="bi bi-table"></i> Results
-                    </a>
-                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="View Options">
-                        <span class="visually-hidden">Toggle Dropdown</span>
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Results & Tools">
+                        <i class="bi bi-collection-fill"></i> Results
                     </button>
                     <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
-                        <li><a class="dropdown-item" href="/results"><i class="bi bi-table"></i> Table View</a></li>
-                        <li><a class="dropdown-item" href="/results-cards"><i class="bi bi-grid-3x2"></i> Card View</a></li>
+                        <li><a class="dropdown-item" href="/results"><i class="bi bi-grid-3x2"></i> Results</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/services/system-commands"><i class="bi bi-gear-fill"></i> Services</a></li>
+                        <li><a class="dropdown-item" href="/log-patterns"><i class="bi bi-file-earmark-lines"></i> Log Patterns</a></li>
+                        {% if current_user.is_super_admin %}
+                        <li><a class="dropdown-item" href="/admin/ai-agents" onclick="openAiAgentsModal(); return false;"><i class="bi bi-diagram-3-fill"></i> AI Agents</a></li>
+                        {% endif %}
+                        <li><a class="dropdown-item" href="/methods-index"><i class="bi bi-layout-text-window-reverse"></i> Method Index</a></li>
                     </ul>
                 </div>
-                <!-- Services Dropdown -->
-                <div class="btn-group" role="group">
-                    <a href="/services/system-commands" class="btn btn-sm btn-outline-light" title="Services">
-                        <i class="bi bi-gear-fill"></i> Services
-                    </a>
-                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false" title="Service Options">
-                        <span class="visually-hidden">Toggle Dropdown</span>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
-                        <li><a class="dropdown-item" href="/services/system-commands"><i class="bi bi-terminal"></i> System Commands</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><h6 class="dropdown-header">Results Pages</h6></li>
-                        <li><a class="dropdown-item" href="/reboot-perf-results"><i class="bi bi-speedometer2"></i> Reboot Perf Results</a></li>
-                        <li><a class="dropdown-item" href="/deepsleep-results"><i class="bi bi-moon-fill"></i> DeepSleep Results</a></li>
-                        <li><a class="dropdown-item" href="/soft-hard-boot-results"><i class="bi bi-arrow-repeat"></i> Boot Results</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="/reboot-perf-compare"><i class="bi bi-columns-gap"></i> Compare Executions</a></li>
-                    </ul>
-                </div>
-                <a href="/log-patterns" class="btn btn-sm btn-outline-light">
-                    <i class="bi bi-file-earmark-lines"></i> Log Patterns
-                </a>
-                <a href="/methods-index" class="btn btn-sm btn-outline-info" title="View all methods in Index page for comparison">
-                    <i class="bi bi-layout-text-window-reverse"></i> Methods Index
-                </a>
-                <button type="button" class="btn btn-sm btn-outline-warning" onclick="openAiAgentsModal()" title="View AI agents activity and orchestration flow">
-                    <i class="bi bi-diagram-3-fill"></i> AI agents
-                </button>
+
                 <span class="text-white d-flex align-items-center gap-2">
                     <div>
                         <div style="display: flex; align-items: center; gap: 8px;">
@@ -989,17 +965,22 @@
                     <span class="badge bg-danger">♔ Admin</span>
                     {% endif %}
                 </span>
-                {% if current_user.is_super_admin %}
-                <a href="/admin/teams" class="btn btn-sm btn-warning" title="Manage Teams">
-                    <i class="bi bi-people-fill"></i> Teams
-                </a>
-                {% endif %}
-                <a href="/change-password" class="btn btn-sm btn-info" title="Change Password">
-                    <i class="bi bi-key"></i> Change Password
-                </a>
-                <a href="/logout" class="btn btn-sm btn-danger">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                </a>
+
+                <!-- Username Dropdown Menu -->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="User Options">
+                        <i class="bi bi-person-fill"></i> {{ current_user.name }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                        {% if current_user.is_super_admin %}
+                        <li><a class="dropdown-item" href="/admin/teams"><i class="bi bi-people-fill"></i> Teams</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% endif %}
+                        <li><a class="dropdown-item" href="/change-password"><i class="bi bi-key"></i> Change Password</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="/logout"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </nav>
