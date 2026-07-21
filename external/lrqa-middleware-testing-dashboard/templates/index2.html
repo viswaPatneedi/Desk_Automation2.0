@@ -82,6 +82,10 @@
                         <li><a class="dropdown-item" href="/services/system-commands"><i class="bi bi-gear-fill"></i> System Commands</a></li>
                         <li><a class="dropdown-item" href="/log-patterns"><i class="bi bi-file-earmark-lines"></i> Log Patterns</a></li>
                         <li><a class="dropdown-item" href="/reboot-perf-compare"><i class="bi bi-columns-gap"></i> Compare Executions</a></li>
+                        {% if current_user.is_admin %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" onclick="openAiAgentsModal(); return false;"><i class="bi bi-diagram-3-fill"></i> AI Agents</a></li>
+                        {% endif %}
                     </ul>
                 </div>
 
