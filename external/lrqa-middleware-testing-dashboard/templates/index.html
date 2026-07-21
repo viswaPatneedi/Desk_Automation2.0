@@ -934,18 +934,23 @@
             <div class="d-flex align-items-center gap-3">
                 <!-- Results Dropdown (New unified dropdown) -->
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Results & Tools">
+                    <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Results & Execution Data">
                         <i class="bi bi-collection-fill"></i> Results
                     </button>
                     <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
-                        <li><a class="dropdown-item" href="/results"><i class="bi bi-grid-3x2"></i> Results</a></li>
+                        <li><a class="dropdown-item" href="/results"><i class="bi bi-table"></i> Results</a></li>
+                        <li><a class="dropdown-item" href="/results-cards"><i class="bi bi-columns"></i> Execution Results</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="/services/system-commands"><i class="bi bi-gear-fill"></i> Services</a></li>
+                        <li><a class="dropdown-item" href="/deepsleep-results"><i class="bi bi-moon-fill"></i> DeepSleep Results</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">BOOT</h6></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-results"><i class="bi bi-speedometer2"></i> Reboot Performance Results</a></li>
+                        <li><a class="dropdown-item" href="/soft-hard-boot-results"><i class="bi bi-arrow-repeat"></i> Boot Results</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">SERVICES</h6></li>
+                        <li><a class="dropdown-item" href="/services/system-commands"><i class="bi bi-gear-fill"></i> System Commands</a></li>
                         <li><a class="dropdown-item" href="/log-patterns"><i class="bi bi-file-earmark-lines"></i> Log Patterns</a></li>
-                        {% if current_user.is_super_admin %}
-                        <li><a class="dropdown-item" href="/admin/ai-agents" onclick="openAiAgentsModal(); return false;"><i class="bi bi-diagram-3-fill"></i> AI Agents</a></li>
-                        {% endif %}
-                        <li><a class="dropdown-item" href="/methods-index"><i class="bi bi-layout-text-window-reverse"></i> Method Index</a></li>
+                        <li><a class="dropdown-item" href="/reboot-perf-compare"><i class="bi bi-columns-gap"></i> Compare Executions</a></li>
                     </ul>
                 </div>
 
