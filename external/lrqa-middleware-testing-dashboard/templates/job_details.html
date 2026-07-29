@@ -94,7 +94,9 @@
             display: grid;
             grid-template-columns: 1fr 1.4fr;
             gap: 2rem;
-            min-height: calc(100vh - 300px);
+            height: calc(100vh - 300px);
+            align-items: stretch;
+            justify-items: stretch;
         }
         @media (max-width: 1200px) {
             .job-details-layout {
@@ -105,20 +107,25 @@
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-            flex: 1;
+            height: 100%;
             min-height: 0;
+            overflow: hidden;
         }
         .right-column {
             display: flex;
             flex-direction: column;
+            height: 100%;
             min-height: 0;
+            overflow: hidden;
         }
         .job-info-card {
             border-left: 4px solid #0d6efd;
             flex-shrink: 0;
+            flex-grow: 0;
         }
         .execution-queue-card {
             flex-shrink: 0;
+            flex-grow: 0;
             max-height: 500px;
             overflow-y: auto;
         }
@@ -127,21 +134,27 @@
             flex-direction: column;
             flex: 1;
             height: 100%;
+            min-height: 0;
         }
         .logs-card .card-body {
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            min-height: 0;
         }
         .logs-card .log-container {
             flex: 1;
             overflow-y: auto;
+            min-height: 0;
         }
         .screenshots-card {
             display: flex;
             flex-direction: column;
-            height: 100%;
+            flex: 1;
+            height: auto;
+            min-height: 0;
+            overflow: hidden;
         }
         .screenshots-card .card-body {
             flex: 1;
@@ -149,6 +162,7 @@
             flex-direction: column;
             overflow: hidden;
             padding: 1rem;
+            min-height: 0;
         }
         .screenshots-container {
             flex: 1;
@@ -156,7 +170,9 @@
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 1rem;
             overflow-y: auto;
+            overflow-x: hidden;
             padding-right: 0.5rem;
+            min-height: 0;
         }
         .screenshots-container::-webkit-scrollbar {
             width: 8px;
