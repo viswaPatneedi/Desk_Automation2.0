@@ -873,7 +873,12 @@
         // Load and display captured screenshots
         function loadScreenshots() {
             const container = document.getElementById('screenshotsContainer');
-            if (!container) return;
+            if (!container) {
+                console.error('Screenshots container not found');
+                return;
+            }
+            
+            console.log('Loading screenshots for job:', jobId);
             
             // Fetch screenshots for this job
             fetch(`/api/jobs/${jobId}/screenshots`, {
@@ -881,13 +886,17 @@
                 headers: {'Content-Type': 'application/json'}
             })
             .then(response => {
+                console.log('Screenshot API response status:', response.status);
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
+                console.log('Screenshots data received:', data);
+                
                 if (!data.screenshots || data.screenshots.length === 0) {
+                    console.log('No screenshots found for job');
                     container.innerHTML = `
                         <div class="text-center text-muted py-5">
                             <i class="bi bi-image" style="font-size: 2rem;"></i>
@@ -897,17 +906,28 @@
                     return;
                 }
                 
+                console.log(`Building gallery with ${data.screenshots.length} screenshots`);
+                
                 // Build gallery HTML
                 let galleryHtml = '';
                 data.screenshots.forEach((screenshot, index) => {
                     const timestamp = screenshot.timestamp || `Screenshot ${index + 1}`;
                     const imagePath = screenshot.path || screenshot.url;
+                    
+                    console.log(`Screenshot ${index}:`, {
+                        step: screenshot.step,
+                        timestamp: timestamp,
+                        imagePath: imagePath,
+                        filename: screenshot.filename
+                    });
+                    
                     galleryHtml += `
                         <div style="background: #1a1a1a; border: 1px solid #374151; border-radius: 4px; overflow: hidden; cursor: pointer;"
                              onclick="viewScreenshotFullscreen('${imagePath}', '${timestamp}')">
                             <img src="${imagePath}" 
                                  alt="${timestamp}"
-                                 style="width: 100%; height: 150px; object-fit: cover; display: block;">
+                                 style="width: 100%; height: 150px; object-fit: cover; display: block;"
+                                 onerror="console.error('Image failed to load:', '${imagePath}'); this.style.display='none'; this.parentElement.style.background='#ff6b6b'; this.parentElement.innerHTML='<div style=\"height:150px; display:flex; align-items:center; justify-content:center;\"><span style=\"color:#fff; text-align:center;\">Image failed to load</span></div>';">
                             <div style="padding: 0.5rem; background: #111827; color: #cbd5e1; font-size: 0.8rem;">
                                 <strong>${screenshot.step || 'Unknown'}</strong>
                                 <div style="color: #9ca3af; font-size: 0.75rem;">${timestamp}</div>
@@ -915,14 +935,18 @@
                         </div>
                     `;
                 });
+                
+                console.log('Setting gallery HTML, length:', galleryHtml.length);
                 container.innerHTML = galleryHtml;
+                console.log('Gallery rendered successfully');
             })
             .catch(error => {
                 console.error('Error loading screenshots:', error);
                 container.innerHTML = `
-                    <div class="text-center text-muted py-5">
-                        <i class="bi bi-exclamation-triangle" style="font-size: 2rem;">></i>
-                        <p style="margin-top: 1rem;">Error loading screenshots</p>
+                    <div class="text-center text-muted py-5" style="background: #fff3cd; padding: 2rem; border-radius: 4px;">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 2rem; color: #ff6b6b;"></i>
+                        <p style="margin-top: 1rem; color: #333;">Error loading screenshots</p>
+                        <p style="font-size: 0.85rem; color: #666;">${error.message}</p>
                         <button class="btn btn-sm btn-outline-primary" onclick="loadScreenshots()">
                             <i class="bi bi-arrow-clockwise"></i> Retry
                         </button>
