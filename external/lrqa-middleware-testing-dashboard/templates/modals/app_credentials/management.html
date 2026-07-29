@@ -1,0 +1,298 @@
+<!-- App Credentials Management Modal -->
+<div class="modal fade" id="appCredentialsModal" tabindex="-1" aria-labelledby="appCredentialsLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="background: #0f172a; color: #e5e7eb; border: 1px solid #334155;">
+            <div class="modal-header" style="border-bottom: 1px solid #334155;">
+                <h5 class="modal-title" id="appCredentialsLabel" style="color: #10b981;">
+                    <i class="bi bi-key-fill"></i> App Credentials Management
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
+                <div style="margin-bottom: 1.5rem;">
+                    <h6 style="color: #60a5fa; margin-bottom: 1rem;">📋 Credential List</h6>
+                    <div id="credentialsList" style="display: grid; gap: 0.75rem;">
+                        <div style="text-align: center; color: #9ca3af;"><i class="bi bi-hourglass-end"></i> Loading credentials...</div>
+                    </div>
+                </div>
+
+                <hr style="border-color: #334155; margin: 1.5rem 0;">
+
+                <div style="margin-bottom: 1.5rem;">
+                    <h6 style="color: #60a5fa; margin-bottom: 1rem;">➕ Add New Credential</h6>
+                    
+                    <div class="form-group mb-3">
+                        <label for="credAppName" class="form-label" style="color: #e5e7eb;">App Name</label>
+                        <select id="credAppName" class="form-select" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                            <option value="">-- Select App --</option>
+                            <option value="netflix">Netflix</option>
+                            <option value="disney_plus">Disney+</option>
+                            <option value="hulu">Hulu</option>
+                            <option value="prime_video">Prime Video</option>
+                            <option value="youtube">YouTube</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="credTeamName" class="form-label" style="color: #e5e7eb;">Team Name</label>
+                        <input type="text" id="credTeamName" class="form-control" placeholder="e.g., QA-Team, Dev-Team" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="credUsername" class="form-label" style="color: #e5e7eb;">Username / Email</label>
+                        <input type="text" id="credUsername" class="form-control" placeholder="netflix@example.com" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="credPassword" class="form-label" style="color: #e5e7eb;">Password</label>
+                        <input type="password" id="credPassword" class="form-control" placeholder="••••••••" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="credLoginUrl" class="form-label" style="color: #e5e7eb;">Login URL<small style="color: #9ca3af;"> (optional)</small></label>
+                        <input type="url" id="credLoginUrl" class="form-control" placeholder="https://login.netflix.com" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                    </div>
+
+                    <!-- Profile Name - Hidden for now -->
+                    <div class="form-group mb-3" style="display: none;">
+                        <label for="credProfileName" class="form-label" style="color: #e5e7eb;">Profile Name<small style="color: #9ca3af;"> (optional)</small></label>
+                        <input type="text" id="credProfileName" class="form-control" placeholder="e.g., Kids, Adult, Main" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                    </div>
+
+                    <!-- Device Type - Hidden for now -->
+                    <div class="form-group mb-3" style="display: none;">
+                        <label for="credDeviceType" class="form-label" style="color: #e5e7eb;">Device Type<small style="color: #9ca3af;"> (optional)</small></label>
+                        <select id="credDeviceType" class="form-select" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                            <option value="">-- All Devices --</option>
+                            <option value="RDK">RDK</option>
+                            <option value="XUMO-TV">XUMO-TV</option>
+                            <option value="FIRETV">FireTV</option>
+                            <option value="ROKU">Roku</option>
+                        </select>
+                    </div>
+
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="credIsPrimary" checked style="cursor: pointer;">
+                        <label class="form-check-label" for="credIsPrimary" style="color: #e5e7eb; cursor: pointer;">
+                            Set as Primary Credential
+                        </label>
+                        <small style="color: #9ca3af; display: block; margin-top: 0.25rem;">Primary credentials are used by default when executing methods</small>
+                    </div>
+
+                    <button type="button" class="btn w-100" onclick="saveAppCredential()" style="background: #10b981; color: white; border: none; padding: 0.75rem; border-radius: 6px; font-weight: 600; margin-top: 1rem;">
+                        <i class="bi bi-cloud-plus"></i> Save Credential
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #334155; background: #1f2937;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="background: #6b7280; border: none; color: white;">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    async function showAppCredentialsPanel() {
+        // Show the modal
+        const modal = new bootstrap.Modal(document.getElementById('appCredentialsModal'));
+        modal.show();
+        
+        // Check auth status first
+        try {
+            console.log('🔐 Checking authentication status...');
+            const authResponse = await fetch('/api/auth/status', {
+                method: 'GET',
+                credentials: 'include'
+            });
+            const authData = await authResponse.json();
+            console.log('🔑 Auth status:', authData);
+            
+            if (!authData.authenticated) {
+                document.getElementById('credentialsList').innerHTML = `<div style="color: #ef4444;"><i class="bi bi-exclamation-circle"></i> ⚠️ Not authenticated. Please log in first.</div>`;
+                return;
+            }
+            
+            if (!authData.is_super_admin) {
+                document.getElementById('credentialsList').innerHTML = `<div style="color: #ef4444;"><i class="bi bi-shield-exclamation"></i> ⛔ Not a super admin. Only super admins can manage credentials.</div>`;
+                return;
+            }
+            
+            // Load credentials if authenticated and is super admin
+            await loadAppCredentials();
+        } catch (error) {
+            console.error('❌ Error checking auth status:', error);
+            document.getElementById('credentialsList').innerHTML = `<div style="color: #ef4444;"><i class="bi bi-exclamation-triangle"></i> Error checking authentication: ${error.message}</div>`;
+        }
+    }
+
+    async function loadAppCredentials() {
+        try {
+            console.log('🔄 Loading app credentials...');
+            const response = await fetch('/api/admin/app-credentials', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include' // Include session cookies
+            });
+
+            console.log(`📡 Response status: ${response.status}`);
+
+            if (!response.ok) {
+                if (response.status === 403) {
+                    alert('⛔ Access denied. Only super admins can manage app credentials.');
+                    return;
+                }
+                if (response.status === 401) {
+                    alert('⚠️ You need to be logged in. Please login and try again.');
+                    return;
+                }
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const credentials = await response.json();
+            console.log('✅ Credentials loaded:', credentials);
+            displayCredentials(credentials);
+        } catch (error) {
+            console.error('❌ Error loading credentials:', error);
+            document.getElementById('credentialsList').innerHTML = `<div style="color: #ef4444;"><i class="bi bi-exclamation-triangle"></i> Error loading credentials: ${error.message}<br><small style="color: #9ca3af; margin-top: 0.5rem; display: block;">Try refreshing the page or logging in again.</small></div>`;
+        }
+    }
+
+    function displayCredentials(credentials) {
+        if (!credentials || credentials.length === 0) {
+            document.getElementById('credentialsList').innerHTML = '<div style="color: #9ca3af;"><i class="bi bi-info-circle"></i> No credentials configured yet</div>';
+            return;
+        }
+
+        const html = credentials.map((cred, idx) => `
+            <div style="background: #1f2937; border: 1px solid #374151; border-radius: 8px; padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+                    <div>
+                        <strong style="color: #60a5fa;">${cred.app_name.toUpperCase()}</strong>
+                        ${cred.is_primary ? '<span style="background: #10b981; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-left: 0.5rem;">PRIMARY</span>' : ''}
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        ${!cred.is_primary ? `<button onclick="setPrimaryCredential('${cred.credential_id}')" style="background: #3b82f6; border: none; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;" title="Set as Primary"><i class="bi bi-star"></i></button>` : ''}
+                        <button onclick="deleteCredential('${cred.credential_id}')" style="background: #ef4444; border: none; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;" title="Delete"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>
+                <div style="font-size: 0.85rem; color: #9ca3af; margin-bottom: 0.5rem;">
+                    <div><strong>Username:</strong> ${cred.username}</div>
+                    <div><strong>Team:</strong> ${cred.team_name}</div>
+                    ${cred.profile_name ? `<div><strong>Profile:</strong> ${cred.profile_name}</div>` : ''}
+                    ${cred.device_type ? `<div><strong>Device Type:</strong> ${cred.device_type}</div>` : ''}
+                    <div><strong>Used ${cred.usage_count || 0} times</strong> ${cred.last_used_at ? `(Last: ${new Date(cred.last_used_at).toLocaleDateString()})` : ''}</div>
+                </div>
+            </div>
+        `).join('');
+
+        document.getElementById('credentialsList').innerHTML = html;
+    }
+
+    async function saveAppCredential() {
+        const appName = document.getElementById('credAppName').value;
+        const teamName = document.getElementById('credTeamName').value;
+        const username = document.getElementById('credUsername').value;
+        const password = document.getElementById('credPassword').value;
+        const loginUrl = document.getElementById('credLoginUrl').value;
+        const profileName = document.getElementById('credProfileName').value;
+        const deviceType = document.getElementById('credDeviceType').value;
+        const isPrimary = document.getElementById('credIsPrimary').checked;
+
+        if (!appName || !teamName || !username || !password) {
+            alert('⛔ Please fill in all required fields');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/admin/app-credentials', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include', // Include session cookies
+                body: JSON.stringify({
+                    app_name: appName,
+                    username: username,
+                    password: password,
+                    login_url: loginUrl,
+                    team_name: teamName,
+                    profile_name: profileName,
+                    device_type: deviceType,
+                    is_primary: isPrimary
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            // Clear form
+            document.getElementById('credAppName').value = '';
+            document.getElementById('credTeamName').value = '';
+            document.getElementById('credUsername').value = '';
+            document.getElementById('credPassword').value = '';
+            document.getElementById('credLoginUrl').value = '';
+            document.getElementById('credProfileName').value = '';
+            document.getElementById('credDeviceType').value = '';
+            document.getElementById('credIsPrimary').checked = true;
+
+            // Reload list
+            await loadAppCredentials();
+            showNotification('✅ Credential saved successfully', 'success');
+        } catch (error) {
+            console.error('Error saving credential:', error);
+            showNotification(`❌ Error saving credential: ${error.message}`, 'error');
+        }
+    }
+
+    async function setPrimaryCredential(credentialId) {
+        try {
+            const response = await fetch(`/api/admin/app-credentials/${credentialId}/set-primary`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include' // Include session cookies
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            await loadAppCredentials();
+            showNotification('✅ Primary credential updated', 'success');
+        } catch (error) {
+            console.error('Error setting primary credential:', error);
+            showNotification(`❌ Error: ${error.message}`, 'error');
+        }
+    }
+
+    async function deleteCredential(credentialId) {
+        if (!confirm('⚠️ Are you sure you want to delete this credential?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/admin/app-credentials/${credentialId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include' // Include session cookies
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            await loadAppCredentials();
+            showNotification('✅ Credential deleted successfully', 'success');
+        } catch (error) {
+            console.error('Error deleting credential:', error);
+            showNotification(`❌ Error: ${error.message}`, 'error');
+        }
+    }
+</script>

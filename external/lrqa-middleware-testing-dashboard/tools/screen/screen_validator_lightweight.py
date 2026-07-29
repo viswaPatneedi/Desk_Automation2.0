@@ -22,16 +22,17 @@ class LightweightScreenValidator:
     3. Template Matching - Region-based validation
     """
     
-    def __init__(self, reference_dir: str = "reference_screens", excluded_folders: list = None):
+    def __init__(self, reference_dir: str = "reference_screens", excluded_folders: list = None, app_name: str = None):
         self.reference_dir = reference_dir
+        self.app_name = app_name  # App-specific filtering (e.g., "Netflix", "Disney")
         self.excluded_folders = excluded_folders if excluded_folders else []
         self.references = {}
         self.load_references()
         
         # Thresholds for validation
         self.PHASH_THRESHOLD = 10  # Hamming distance (lower = more similar)
-        self.SSIM_THRESHOLD = 0.60  # Structural similarity (0-1, higher = more similar) - LOWERED from 0.70
-        self.TEMPLATE_THRESHOLD = 0.55  # Template match confidence - LOWERED from 0.60
+        self.SSIM_THRESHOLD = 0.65  # Structural similarity (0-1, higher = more similar) - RAISED from 0.60
+        self.TEMPLATE_THRESHOLD = 0.60  # Template match confidence - RAISED from 0.55
         
         # Screen-specific configurations for layout-based matching
         self.SCREEN_CONFIGS = {
@@ -70,6 +71,26 @@ class LightweightScreenValidator:
                     {'name': 'sign_in_button', 'roi': (700, 650, 1220, 750)}, # Sign in button
                 ],
                 'threshold_override': 0.55
+            },
+            'NetflixAssetScreen': {
+                'use_layout_matching': True,
+                'key_regions': [
+                    {'name': 'netflix_logo', 'roi': (25, 60, 150, 120)},      # Netflix logo top-left area
+                    {'name': 'asset_title', 'roi': (50, 105, 800, 200)},      # Asset title (e.g., "STRANGER THINGS") left side
+                    {'name': 'asset_info', 'roi': (50, 160, 900, 280)},       # Asset metadata (year, genre, rating) area
+                    {'name': 'play_button', 'roi': (50, 410, 500, 520)},      # Play/Resume button area
+                    {'name': 'asset_description', 'roi': (50, 230, 1100, 370)} # Description text area
+                ],
+                'threshold_override': 0.58  # Moderate threshold for asset details variations
+            },
+            'NetflixAssetSearchScreen': {
+                'use_layout_matching': True,
+                'key_regions': [
+                    {'name': 'search_bar', 'roi': (300, 70, 900, 150)},       # Search input area with search results text
+                    {'name': 'search_results', 'roi': (300, 130, 1500, 850)}, # Grid of asset thumbnails
+                    {'name': 'asset_tiles', 'roi': (400, 140, 1400, 800)}     # Asset result tiles area
+                ],
+                'threshold_override': 0.60  # Moderate threshold for search results variations
             }
         }
         
@@ -79,24 +100,36 @@ class LightweightScreenValidator:
             print(f"⚠️  Reference directory not found: {self.reference_dir}")
             return
         
+        # If app_name is specified, load only from that app's folder
+        reference_base = self.reference_dir
+        if self.app_name:
+            app_folder = os.path.join(self.reference_dir, self.app_name)
+            if os.path.exists(app_folder):
+                reference_base = app_folder
+                print(f"📁 Loading {self.app_name} references from: {app_folder}")
+            else:
+                print(f"⚠️  App-specific folder not found: {app_folder}")
+                print(f"   Falling back to full reference directory: {self.reference_dir}")
+        else:
+            print(f"📁 Loading references from: {self.reference_dir}")
+        
+        if self.excluded_folders:
+            print(f"   Excluding folders: {', '.join(self.excluded_folders)}")
+        
         # Folders to exclude from loading (default + user-specified)
         excluded_folders = ['Unused_Images', 'Unused_Images_DO_NOT_MERGE', 'backup', 'old']
         excluded_folders.extend(self.excluded_folders)
         
-        print(f"📁 Loading references from: {self.reference_dir}")
-        if self.excluded_folders:
-            print(f"   Excluding folders: {', '.join(self.excluded_folders)}")
-        
         # Walk through directory and subdirectories
-        for root, dirs, files in os.walk(self.reference_dir):
+        for root, dirs, files in os.walk(reference_base):
             # Skip excluded folders
             dirs[:] = [d for d in dirs if not any(excl.lower() in d.lower() for excl in excluded_folders)]
             for filename in files:
                 if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
                     image_path = os.path.join(root, filename)
                     
-                    # Calculate relative path from reference_dir
-                    rel_path = os.path.relpath(image_path, self.reference_dir)
+                    # Calculate relative path from reference_base
+                    rel_path = os.path.relpath(image_path, reference_base)
                     
                     # Create screen name from relative path
                     # Example: FactoryReset/screen1.png -> FactoryReset_screen1

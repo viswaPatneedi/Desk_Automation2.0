@@ -162,6 +162,16 @@ class FormHandler {
             }
         }
 
+        // 🔧 FIX: Explicitly handle checkbox inputs that are unchecked (not included in FormData)
+        // Without this, unchecked checkboxes won't appear in the data object at all
+        const checkboxes = this.form.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(checkbox => {
+            if (!data.hasOwnProperty(checkbox.name)) {
+                // Checkbox was not included in FormData (meaning it's unchecked)
+                data[checkbox.name] = checkbox.checked ? 'on' : 'off';
+            }
+        });
+
         return data;
     }
 
@@ -662,21 +672,29 @@ function getCurrentUTCTimestamp() {
 
 async function showMethodExecutionModal(deviceId) {
     try {
-        // Fetch device info
-        const result = await modalManager.api.get(`/devices/${deviceId}`);
+        // Fetch device info using correct endpoint
+        const result = await modalManager.api.get(`/device/${deviceId}`);
         
         if (!result.success) {
-            modalManager.showError('Failed to load device information');
+            // Fallback: if API call fails, just use deviceId
+            console.warn('Could not fetch device details, using deviceId as fallback');
+            document.getElementById('deviceExecutionName').textContent = deviceId;
+            document.getElementById('executionDeviceId').value = deviceId;
+            modalManager.showModal('methodExecutionModal');
             return;
         }
 
         const device = result.data;
-        document.getElementById('deviceExecutionName').textContent = device.device_name;
+        document.getElementById('deviceExecutionName').textContent = device.name || device.device_name || deviceId;
         document.getElementById('executionDeviceId').value = deviceId;
 
         modalManager.showModal('methodExecutionModal');
     } catch (error) {
-        modalManager.showError(`Error opening method execution modal: ${error.message}`);
+        // Fallback on error
+        console.warn(`Error fetching device info: ${error.message}, using fallback`);
+        document.getElementById('deviceExecutionName').textContent = deviceId;
+        document.getElementById('executionDeviceId').value = deviceId;
+        modalManager.showModal('methodExecutionModal');
     }
 }
 
@@ -722,6 +740,92 @@ function updateMethodParameters() {
                        style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
             </div>
         `;
+    } else if (method === 'netflix_playback') {
+        paramsSection.innerHTML = `
+            <div class="mb-4">
+                <h6 class="text-primary mb-3" style="color: #3b82f6; font-weight: 600; border-bottom: 2px solid #374151; padding-bottom: 10px;">
+                    Netflix Playback Parameters
+                </h6>
+                
+                <div class="mb-3">
+                    <label for="assetVoiceCommand" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                        Asset Voice Command <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="assetVoiceCommand" name="asset_voice_command" 
+                           value="Play Stranger things..." 
+                           placeholder="e.g., Play Stranger things..." required
+                           style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                    <small style="color: #9ca3af;">Voice command to launch and play content</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="playbackDuration" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                        Playback Duration (seconds)
+                    </label>
+                    <input type="number" class="form-control" id="playbackDuration" name="playback_duration" 
+                           value="300" min="60" max="3600"
+                           style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                    <small style="color: #9ca3af;">How long to monitor playback (default: 300s)</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="loginUrl" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                        Login URL
+                    </label>
+                    <input type="text" class="form-control" id="loginUrl" name="login_url" 
+                           value="http://netflix.com/tv2"
+                           placeholder="e.g., http://netflix.com/tv2"
+                           style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="netflixUsername" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                        Netflix Username
+                    </label>
+                    <input type="text" class="form-control" id="netflixUsername" name="username_cred" 
+                           placeholder="Leave empty for existing login"
+                           style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                </div>
+                
+                <div class="mb-3">
+                    <label for="netflixPassword" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                        Netflix Password
+                    </label>
+                    <input type="password" class="form-control" id="netflixPassword" name="password_cred" 
+                           placeholder="Leave empty for existing login"
+                           style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-check-label" style="color: #d1d5db; font-weight: 500;">
+                        <input type="checkbox" class="form-check-input" id="executePlaybackControls" name="execute_playback_controls" 
+                               style="background: #1f2937; border: 1px solid #374151;">
+                        Execute Playback Controls (FF/RW/PAUSE)
+                    </label>
+                    <small style="color: #9ca3af;">Enable trickplay controls testing</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-check-label" style="color: #d1d5db; font-weight: 500;">
+                        <input type="checkbox" class="form-check-input" id="executeScreenshotAnalysis" name="screenshot_analysis" 
+                               style="background: #1f2937; border: 1px solid #374151;">
+                        Execute Screenshot Analysis
+                    </label>
+                    <small style="color: #9ca3af;">Enable AI-based screen validation and analysis</small>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="playbackLogString" class="form-label" style="color: #d1d5db; font-weight: 500;">
+                        Playback Log Pattern
+                    </label>
+                    <input type="text" class="form-control" id="playbackLogString" name="playback_log_string" 
+                           value="state.*PLAYING.*"
+                           placeholder="e.g., state.*PLAYING.*"
+                           style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
+                    <small style="color: #9ca3af;">Regex pattern to validate playback state in device logs</small>
+                </div>
+            </div>
+        `;
     }
 
     // Show ETA section
@@ -748,7 +852,8 @@ function calculateMethodETA() {
         'system_command': 10,
         'voice_command': 5,
         'capture_screenshot': 10,
-        'capture_logs': 10
+        'capture_logs': 10,
+        'netflix_playback': 65
     };
 
     const method = document.getElementById('methodSelect').value;

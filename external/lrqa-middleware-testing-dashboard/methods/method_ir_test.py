@@ -122,6 +122,18 @@ def execute_ir_test_process(device_ip, port, username, password, iteration=1, de
             # Wait before checking logs (use custom key_delay)
             log_message(f"[WAIT] Waiting {key_delay} seconds before log validation...")
             time.sleep(key_delay)
+            
+            # VERIFY LOGS (If SSH available)
+            log_message(f"\n[VERIFY LOGS] Verifying {key} command in device logs (if SSH available)...")
+            # Log validation per key
+            try:
+                ssh = paramiko.SSHClient()
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
+                if key == 'POWER':
+                    # Query device state
+                    stdin, stdout, stderr = ssh.exec_command(device_status_command)
+                    state = stdout.read().decode('utf-8', errors='ignore').strip().lower()
                     log_message(f"[STATE] Device state after POWER: {state}")
                 else:
                     log_message(f"[IR] Sent IR command: {key}")

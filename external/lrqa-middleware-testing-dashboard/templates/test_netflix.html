@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix Playback Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #111827;
+            color: #e5e7eb;
+            padding: 2rem;
+        }
+        .test-section {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .test-pass {
+            color: #10b981;
+        }
+        .test-fail {
+            color: #ef4444;
+        }
+        .test-info {
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">Netflix Playback Implementation Test</h1>
+        
+        <div class="test-section">
+            <h5>1. API Methods Check</h5>
+            <button class="btn btn-primary" onclick="checkMethods()">Check Available Methods</button>
+            <div id="methods-result" style="margin-top: 1rem; display: none;">
+                <pre id="methods-output"></pre>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h5>2. Modal Elements Check</h5>
+            <button class="btn btn-primary" onclick="checkModal()">Check Modal Elements</button>
+            <div id="modal-result" style="margin-top: 1rem; display: none;">
+                <pre id="modal-output"></pre>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h5>3. JavaScript Functions Check</h5>
+            <button class="btn btn-primary" onclick="checkFunctions()">Check JS Functions</button>
+            <div id="functions-result" style="margin-top: 1rem; display: none;">
+                <pre id="functions-output"></pre>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h5>4. Execute Method Button Check</h5>
+            <button class="btn btn-primary" onclick="checkButton()">Check Button</button>
+            <div id="button-result" style="margin-top: 1rem; display: none;">
+                <pre id="button-output"></pre>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h5>5. Direct Modal Test</h5>
+            <button class="btn btn-success" onclick="testModal()">Open Modal with Test Device</button>
+        </div>
+    </div>
+
+    <!-- Method Execution Modal -->
+    {% include 'modals/method_execution/method_execution_select.html' %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/modal-handlers.js"></script>
+
+    <script>
+        async function checkMethods() {
+            const resultDiv = document.getElementById('methods-result');
+            const output = document.getElementById('methods-output');
+            resultDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/available_methods', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                let html = '<span class="test-info">✓ API Response:</span>\n';
+                html += JSON.stringify(data, null, 2) + '\n\n';
+                
+                if (data.methods && data.methods.includes('netflix_playback')) {
+                    html += '<span class="test-pass">✓ netflix_playback found in methods list!</span>';
+                } else {
+                    html += '<span class="test-fail">✗ netflix_playback NOT found in methods list</span>';
+                }
+                
+                output.innerHTML = html;
+            } catch (error) {
+                output.innerHTML = '<span class="test-fail">✗ Error: ' + error.message + '</span>';
+            }
+        }
+
+        function checkModal() {
+            const resultDiv = document.getElementById('modal-result');
+            const output = document.getElementById('modal-output');
+            resultDiv.style.display = 'block';
+            
+            let html = '';
+            
+            // Check modal element
+            const modal = document.getElementById('methodExecutionModal');
+            html += modal ? '<span class="test-pass">✓ Modal element found (methodExecutionModal)</span>\n' 
+                         : '<span class="test-fail">✗ Modal element NOT found</span>\n';
+            
+            // Check method select
+            const methodSelect = document.getElementById('methodSelect');
+            html += methodSelect ? '<span class="test-pass">✓ Method select dropdown found</span>\n' 
+                                 : '<span class="test-fail">✗ Method select dropdown NOT found</span>\n';
+            
+            // Check Netflix option
+            if (methodSelect) {
+                const options = Array.from(methodSelect.options).map(o => o.value);
+                html += options.includes('netflix_playback') 
+                    ? '<span class="test-pass">✓ netflix_playback option found in dropdown</span>\n'
+                    : '<span class="test-fail">✗ netflix_playback option NOT in dropdown\n   Available: ' + options.join(', ') + '</span>\n';
+            }
+            
+            // Check parameter section
+            const paramSection = document.getElementById('methodParametersSection');
+            html += paramSection ? '<span class="test-pass">✓ Parameters section found</span>\n' 
+                                 : '<span class="test-fail">✗ Parameters section NOT found</span>\n';
+            
+            output.innerHTML = html;
+        }
+
+        function checkFunctions() {
+            const resultDiv = document.getElementById('functions-result');
+            const output = document.getElementById('functions-output');
+            resultDiv.style.display = 'block';
+            
+            let html = '';
+            
+            html += typeof showMethodExecutionModal === 'function' 
+                ? '<span class="test-pass">✓ showMethodExecutionModal function exists</span>\n'
+                : '<span class="test-fail">✗ showMethodExecutionModal function NOT found</span>\n';
+            
+            html += typeof updateMethodParameters === 'function'
+                ? '<span class="test-pass">✓ updateMethodParameters function exists</span>\n'
+                : '<span class="test-fail">✗ updateMethodParameters function NOT found</span>\n';
+            
+            html += typeof modalManager !== 'undefined'
+                ? '<span class="test-pass">✓ modalManager object exists</span>\n'
+                : '<span class="test-fail">✗ modalManager object NOT found</span>\n';
+            
+            output.innerHTML = html;
+        }
+
+        function checkButton() {
+            const resultDiv = document.getElementById('button-result');
+            const output = document.getElementById('button-output');
+            resultDiv.style.display = 'block';
+            
+            // Look for Execute Method button
+            const buttons = document.querySelectorAll('button[onclick*="showMethodExecutionModal"]');
+            
+            let html = '';
+            html += '<span class="test-info">Buttons with showMethodExecutionModal onclick: ' + buttons.length + '</span>\n\n';
+            
+            if (buttons.length > 0) {
+                html += '<span class="test-pass">✓ Execute Method buttons found on page!</span>\n';
+                buttons.forEach((btn, idx) => {
+                    html += '\nButton ' + (idx + 1) + ':\n';
+                    html += '  Classes: ' + btn.className + '\n';
+                    html += '  Text: ' + btn.textContent.trim() + '\n';
+                    html += '  onclick: ' + btn.getAttribute('onclick') + '\n';
+                });
+            } else {
+                html += '<span class="test-fail">✗ NO Execute Method buttons found!</span>\n';
+            }
+            
+            output.innerHTML = html;
+        }
+
+        async function testModal() {
+            try {
+                // Set test values
+                document.getElementById('deviceExecutionName').textContent = 'TEST_DEVICE (10.0.0.250)';
+                document.getElementById('executionDeviceId').value = '10.0.0.250';
+                
+                // Show modal
+                const modal = new bootstrap.Modal(document.getElementById('methodExecutionModal'));
+                modal.show();
+                
+                // Select netflix_playback
+                setTimeout(() => {
+                    const select = document.getElementById('methodSelect');
+                    select.value = 'netflix_playback';
+                    
+                    // Trigger change event
+                    const event = new Event('change', { bubbles: true });
+                    select.dispatchEvent(event);
+                    
+                    updateMethodParameters();
+                }, 500);
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

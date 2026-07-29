@@ -280,8 +280,26 @@ def check_and_collect_logs_for_patterns(ssh, device_ip, device_name, iteration, 
         for pattern in log_patterns:
             pattern_safe = pattern.replace("'", "\\'")
             
-            # Search in core_log.txt and other log files
-            search_cmd = f"grep -E '{pattern_safe}' /opt/logs/core_log.txt 2>/dev/null | head -5"
+            # Check if pattern is a complete grep command or already contains file path
+            if pattern_safe.strip().startswith('grep'):
+                # Use pattern as-is (it already contains the file path)
+                search_cmd = f"{pattern_safe.strip()} 2>/dev/null | head -5"
+                log_message_func(f"  [CUSTOM] Using provided grep command: {search_cmd[:100]}")
+            elif '/' in pattern_safe and ('log' in pattern_safe or '.txt' in pattern_safe):
+                # Pattern contains a file path, use it as-is
+                search_cmd = f"{pattern_safe.strip()} 2>/dev/null | head -5"
+                log_message_func(f"  [CUSTOM] Pattern contains file path")
+            else:
+                # Standard pattern - build grep command with default file path
+                # Handle pipe-separated contains values (pattern|contains_value)
+                if '|' in pattern_safe:
+                    parts = pattern_safe.split('|')
+                    search_pattern = parts[0].strip()
+                    contains_value = parts[1].strip()
+                    search_cmd = f"grep -E '{search_pattern}' /opt/logs/core_log.txt 2>/dev/null | grep -i '{contains_value}' 2>/dev/null | head -5"
+                    log_message_func(f"  [CONTAINS_VALUE] Pattern: {search_pattern}, Must contain: {contains_value}")
+                else:
+                    search_cmd = f"grep -E '{pattern_safe}' /opt/logs/core_log.txt 2>/dev/null | head -5"
             
             try:
                 stdin, stdout, stderr = ssh.exec_command(search_cmd, timeout=15)

@@ -13,7 +13,7 @@
                     <i class="bi bi-info-circle"></i> Add optional custom grep patterns to search in device logs. Standard crash detection will run automatically.
                 </p>
 
-                <!-- Pattern List */
+                <!-- Pattern List -->
                 <div id="customLogPatterns" style="margin-bottom: 1rem;">
                     <!-- Patterns added here -->
                 </div>
@@ -28,9 +28,10 @@
                         <i class="bi bi-lightbulb"></i> Examples:
                     </h6>
                     <ul style="font-size: 0.85rem; color: #cbd5e1; margin: 0; padding-left: 1.25rem;">
-                        <li><code style="background: #1a202c; padding: 0.2rem 0.4rem; border-radius: 3px;">process crashed</code> - Contains pattern</li>
-                        <li><code style="background: #1a202c; padding: 0.2rem 0.4rem; border-radius: 3px;">ERROR|CRASH|FATAL</code> - Regex for multiple matches</li>
-                        <li><code style="background: #1a202c; padding: 0.2rem 0.4rem; border-radius: 3px;">NOT contains</code> - Exclude pattern matches</li>
+                        <li><code style="background: #1a202c; padding: 0.2rem 0.4rem; border-radius: 3px;">process crashed</code> - Search for this pattern (Contains)</li>
+                        <li><code style="background: #1a202c; padding: 0.2rem 0.4rem; border-radius: 3px;">ERROR|CRASH|FATAL</code> - Regex for multiple patterns</li>
+                        <li><code style="background: #1a202c; padding: 0.2rem 0.4rem; border-radius: 3px;">ProcessManager</code> + <code style="background: #1a202c; padding: 0.2rem 0.4rem; border-radius: 3px;">not_contains</code> - Exclude these patterns</li>
+                        <li><strong style="color: #fbbf24;">NEW:</strong> Pattern: <code style="background: #1a202c; padding: 0.2rem 0.4rem; border-radius: 3px;">ERROR</code> + Contains Value: <code style="background: #1a202c; padding: 0.2rem 0.4rem; border-radius: 3px;">Module</code> - Find ERROR lines containing "Module"</li>
                     </ul>
                 </div>
             </div>
@@ -52,35 +53,62 @@ function addCustomLogPattern() {
     customLogPatternCount++;
     const patternId = `pattern-${customLogPatternCount}`;
     const patternHTML = `
-        <div class="custom-log-pattern" id="${patternId}" style="display: flex; gap: 0.75rem; margin-bottom: 1rem; align-items: flex-start;">
-            <!-- Pattern Input -->
-            <div style="flex: 1;">
-                <input type="text" class="form-control form-control-sm" placeholder="Grep pattern (e.g., 'ERROR|CRASH')" 
-                       style="background: #2d3748; border-color: #475569; color: #e2e8f0;" 
+        <div class="custom-log-pattern" id="${patternId}" style="margin-bottom: 1.5rem; padding: 1rem; background: #2d3748; border: 1px solid #475569; border-radius: 0.5rem;">
+            <!-- Pattern Input Row -->
+            <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; margin-bottom: 0.25rem; font-size: 0.85rem; color: #cbd5e1; font-weight: 500;">
+                    <i class="bi bi-search"></i> Grep Pattern
+                </label>
+                <input type="text" class="form-control form-control-sm" placeholder="e.g., 'process crashed' or 'ERROR|CRASH'" 
+                       style="background: #1a202c; border-color: #475569; color: #e2e8f0;" 
                        id="pattern-input-${customLogPatternCount}">
                 <small style="color: #9ca3af; margin-top: 0.25rem; display: block;">
                     Regex patterns supported. Case-insensitive.
                 </small>
             </div>
             
-            <!-- Match Type -->
-            <div style="min-width: 150px;">
-                <select class="form-select form-select-sm" id="pattern-type-${customLogPatternCount}" 
-                        style="background: #2d3748; border-color: #475569; color: #e2e8f0;">
-                    <option value="contains">Contains</option>
-                    <option value="not_contains">NOT Contains</option>
-                </select>
+            <!-- Match Type and Contains Value Row -->
+            <div style="display: flex; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <!-- Match Type -->
+                <div style="flex: 0 0 auto; min-width: 140px;">
+                    <label style="display: block; margin-bottom: 0.25rem; font-size: 0.85rem; color: #cbd5e1; font-weight: 500;">
+                        <i class="bi bi-funnel"></i> Match Type
+                    </label>
+                    <select class="form-select form-select-sm" id="pattern-type-${customLogPatternCount}" 
+                            style="background: #1a202c; border-color: #475569; color: #e2e8f0;">
+                        <option value="contains">Contains</option>
+                        <option value="not_contains">NOT Contains</option>
+                    </select>
+                </div>
+                
+                <!-- Contains Value (Optional) -->
+                <div style="flex: 1;">
+                    <label style="display: block; margin-bottom: 0.25rem; font-size: 0.85rem; color: #cbd5e1; font-weight: 500;">
+                        <i class="bi bi-card-text"></i> Contains Value (Optional)
+                    </label>
+                    <input type="text" class="form-control form-control-sm" placeholder="e.g., 'ProcessManager' (value must exist in output)" 
+                           style="background: #1a202c; border-color: #475569; color: #e2e8f0;" 
+                           id="pattern-value-${customLogPatternCount}">
+                    <small style="color: #9ca3af; margin-top: 0.25rem; display: block;">
+                        Additional text that must be present in the grep output
+                    </small>
+                </div>
             </div>
             
             <!-- Remove Button -->
-            <button type="button" class="btn btn-sm btn-outline-danger mt-0" onclick="removeCustomLogPattern('${patternId}')" 
-                    style="min-width: 40px; padding: 0.375rem 0.5rem;">
-                <i class="bi bi-trash"></i>
-            </button>
+            <div style="display: flex; justify-content: flex-end;">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeCustomLogPattern('${patternId}')">
+                    <i class="bi bi-trash"></i> Remove
+                </button>
+            </div>
         </div>
     `;
     
     const container = document.getElementById('customLogPatterns');
+    if (!container) {
+        console.error('❌ Error: customLogPatterns container not found in DOM');
+        return;
+    }
     const patternDiv = document.createElement('div');
     patternDiv.innerHTML = patternHTML;
     container.appendChild(patternDiv);
@@ -100,6 +128,10 @@ function applyCustomLogPatterns() {
     // Collect all patterns
     const patterns = [];
     const container = document.getElementById('customLogPatterns');
+    if (!container) {
+        console.error('❌ Error: customLogPatterns container not found in DOM');
+        return;
+    }
     const patternDivs = container.querySelectorAll('.custom-log-pattern');
     
     patternDivs.forEach(div => {
@@ -107,9 +139,17 @@ function applyCustomLogPatterns() {
         const typeSelect = div.querySelector('select');
         
         if (inputElement && inputElement.value.trim()) {
+            // Get the contains value (optional second input field)
+            const inputs = div.querySelectorAll('input[type="text"]');
+            let containsValue = '';
+            if (inputs.length > 1) {
+                containsValue = inputs[1].value.trim();
+            }
+            
             patterns.push({
                 pattern: inputElement.value.trim(),
-                type: typeSelect ? typeSelect.value : 'contains'
+                type: typeSelect ? typeSelect.value : 'contains',
+                contains_value: containsValue || null
             });
         }
     });
@@ -118,6 +158,31 @@ function applyCustomLogPatterns() {
     window.customLogPatterns = patterns;
     
     console.log(`✅ Applied ${patterns.length} custom log patterns:`, patterns);
+    
+    // Update the display in logPatternsModal to show applied patterns
+    if (patterns.length > 0) {
+        const displayContainer = document.getElementById('customPatternsListDisplay');
+        const displaySection = document.getElementById('appliedCustomPatternsDisplay');
+        
+        if (displayContainer && displaySection) {
+            // Build display HTML for each pattern
+            displayContainer.innerHTML = patterns.map((p, idx) => {
+                const typeLabel = p.type === 'not_contains' ? '🚫 NOT Contains' : '✓ Contains';
+                const containsValueDisplay = p.contains_value ? `<br><small style="color: #a0aec0; margin-left: 1rem; margin-top: 0.25rem;">+ contains value: <code style="color: #fbbf24; background: #0f172a; padding: 0.2rem 0.4rem; border-radius: 3px;">${p.contains_value}</code></small>` : '';
+                return `
+                    <div style="padding: 0.75rem; margin-bottom: 0.5rem; background: #1a202c; border-radius: 3px; border-left: 3px solid ${p.type === 'not_contains' ? '#ef4444' : '#10b981'};">
+                        <strong style="color: #e2e8f0;">#${idx + 1}:</strong> <code style="color: #60a5fa; background: #0f172a; padding: 0.2rem 0.4rem; border-radius: 3px;">${p.pattern}</code>
+                        <span style="color: ${p.type === 'not_contains' ? '#ef4444' : '#10b981'}; margin-left: 0.5rem; font-size: 0.85rem;">${typeLabel}</span>
+                        ${containsValueDisplay}
+                    </div>
+                `;
+            }).join('');
+            
+            // Show the display section
+            displaySection.style.display = 'block';
+            console.log(`✅ Updated pattern display in logPatternsModal`);
+        }
+    }
     
     // Close modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('rebootPerfCustomLogsModal'));

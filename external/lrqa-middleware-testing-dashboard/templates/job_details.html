@@ -390,7 +390,7 @@
                             {% endif %}
                             {{ loop.index }}. {{ item.method }}
                         </strong>
-                        {% if item.ir_keys or item.voice_text or item.remote_keys or item.expected_screen or item.screen_name or item.wait_seconds or item.command or item.expected_output or item.home_screen_timeout or item.optional_checks or item.wait_after_reboot or item.system_command_name or item.system_command_label or item.duration_seconds or item.interval_seconds or item.log_search_patterns or item.auto_collect_logs or item.image_name or item.command_text or item.section or item.tile_to_navigate or item.archive_name or item.boot_type or item.remote_type or item.sleep_duration_minutes or item.execute_deepsleep_wakeup %}
+                        {% if item.ir_keys or item.voice_text or item.remote_keys or item.expected_screen or item.screen_name or item.wait_seconds or item.command or item.expected_output or item.home_screen_timeout or item.optional_checks or item.wait_after_reboot or item.system_command_name or item.system_command_label or item.duration_seconds or item.interval_seconds or item.log_search_patterns or item.auto_collect_logs or item.image_name or item.command_text or item.section or item.tile_to_navigate or item.archive_name or item.boot_type or item.remote_type or item.sleep_duration_minutes or item.execute_deepsleep_wakeup or item.asset_voice_command or item.playback_duration or item.execute_playback_controls or item.execute_screenshot_analysis or item.screenshot_analysis or item.username_cred or item.password_cred or item.login_url or item.playback_log_string %}
                         <div class="mt-2">
                             <small class="text-muted">Parameters:</small>
                             <ul class="mb-0 mt-1">
@@ -611,6 +611,44 @@
                                     </li>
                                     {% endif %}
                                 {% endif %}
+                                {% if item.method == 'netflix_playback' %}
+                                    {% if item.asset_voice_command %}
+                                    <li><code>🎬 Asset Voice Command</code>: <span style="color: #06b6d4; font-weight: bold;">{{ item.asset_voice_command }}</span></li>
+                                    {% endif %}
+                                    {% if item.playback_duration %}
+                                    <li><code>⏱️ Playback Duration</code>: <span style="color: #f59e0b; font-weight: bold;">{{ item.playback_duration }}s</span></li>
+                                    {% endif %}
+                                    {% if item.execute_playback_controls is not none %}
+                                    <li><code>🎮 Playback Controls</code>: 
+                                        {% if item.execute_playback_controls %}
+                                        <span style="color: #10b981; font-weight: bold;">✓ Enabled</span>
+                                        {% else %}
+                                        <span style="color: #9ca3af;">Disabled</span>
+                                        {% endif %}
+                                    </li>
+                                    {% endif %}
+                                    {% if item.execute_screenshot_analysis is not none or item.screenshot_analysis is not none %}
+                                    <li><code>📸 Screenshot Analysis</code>: 
+                                        {% if item.execute_screenshot_analysis or item.screenshot_analysis %}
+                                        <span style="color: #10b981; font-weight: bold;">✓ Enabled</span>
+                                        {% else %}
+                                        <span style="color: #9ca3af;">Disabled</span>
+                                        {% endif %}
+                                    </li>
+                                    {% endif %}
+                                    {% if item.username_cred %}
+                                    <li><code>👤 Netflix Username</code>: <span style="color: #8b5cf6;">{{ item.username_cred }}</span></li>
+                                    {% endif %}
+                                    {% if item.password_cred %}
+                                    <li><code>🔐 Netflix Password</code>: <span style="color: #ef4444;">●●●●●●●●</span></li>
+                                    {% endif %}
+                                    {% if item.login_url %}
+                                    <li><code>🌐 Login URL</code>: <span style="color: #3b82f6;">{{ item.login_url }}</span></li>
+                                    {% endif %}
+                                    {% if item.playback_log_string %}
+                                    <li><code>📋 Playback Log Pattern</code>: <span style="color: #10b981;">{{ item.playback_log_string }}</span></li>
+                                    {% endif %}
+                                {% endif %}
                             </ul>
                         </div>
                         {% endif %}
@@ -619,6 +657,26 @@
                 {% else %}
                     <p class="text-muted mb-0">No execution queue data available</p>
                 {% endif %}
+            </div>
+        </div>
+
+        <!-- Captured Screenshots Section -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="bi bi-images"></i> Captured Screenshots
+                </h5>
+                <button class="btn btn-sm btn-outline-primary" onclick="refreshScreenshots()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="screenshotsContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-hourglass-split" style="font-size: 2rem;"></i>
+                        <p style="margin-top: 1rem;">Loading screenshots...</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -731,6 +789,117 @@
             }
         }
 
+        // Load and display captured screenshots
+        function loadScreenshots() {
+            const container = document.getElementById('screenshotsContainer');
+            if (!container) return;
+            
+            // Fetch screenshots for this job
+            fetch(`/api/jobs/${jobId}/screenshots`, {
+                credentials: 'include',
+                headers: {'Content-Type': 'application/json'}
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!data.screenshots || data.screenshots.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-muted py-5">
+                            <i class="bi bi-image" style="font-size: 2rem;"></i>
+                            <p style="margin-top: 1rem;">No screenshots captured yet</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Build gallery HTML
+                let galleryHtml = '';
+                data.screenshots.forEach((screenshot, index) => {
+                    const timestamp = screenshot.timestamp || `Screenshot ${index + 1}`;
+                    const imagePath = screenshot.path || screenshot.url;
+                    galleryHtml += `
+                        <div style="background: #1a1a1a; border: 1px solid #374151; border-radius: 4px; overflow: hidden; cursor: pointer;"
+                             onclick="viewScreenshotFullscreen('${imagePath}', '${timestamp}')">
+                            <img src="${imagePath}" 
+                                 alt="${timestamp}"
+                                 style="width: 100%; height: 150px; object-fit: cover; display: block;">
+                            <div style="padding: 0.5rem; background: #111827; color: #cbd5e1; font-size: 0.8rem;">
+                                <strong>${screenshot.step || 'Unknown'}</strong>
+                                <div style="color: #9ca3af; font-size: 0.75rem;">${timestamp}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = galleryHtml;
+            })
+            .catch(error => {
+                console.error('Error loading screenshots:', error);
+                container.innerHTML = `
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-exclamation-triangle" style="font-size: 2rem;">></i>
+                        <p style="margin-top: 1rem;">Error loading screenshots</p>
+                        <button class="btn btn-sm btn-outline-primary" onclick="loadScreenshots()">
+                            <i class="bi bi-arrow-clockwise"></i> Retry
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        // Display screenshot in fullscreen modal
+        function viewScreenshotFullscreen(imagePath, title) {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.95);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                padding: 2rem;
+            `;
+            modal.innerHTML = `
+                <div style="position: relative; max-width: 90vw; max-height: 90vh;">
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 2rem; cursor: pointer;">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </button>
+                    <img src="${imagePath}" alt="${title}" style="max-width: 100%; max-height: 85vh; border-radius: 4px;">
+                    <div style="color: #cbd5e1; text-align: center; margin-top: 1rem; font-size: 0.9rem;">
+                        ${title}
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.onclick = (e) => {
+                if (e.target === modal) modal.remove();
+            };
+        }
+
+        // Refresh screenshots
+        function refreshScreenshots() {
+            loadScreenshots();
+        }
+
+        // Load screenshots on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadScreenshots();
+            // Reload every 5 seconds if job is running
+            setInterval(() => {
+                if (lastKnownStatus === 'running') {
+                    loadScreenshots();
+                }
+            }, 5000);
+        });
+        
         // Start countdown timer
         function startCountdown() {
             if (countdownInterval) {

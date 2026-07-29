@@ -52,7 +52,7 @@ class OllamaScreenValidator:
     def __init__(self, 
                  ollama_url: str = None,
                  model: str = None,
-                 timeout: int = 60,
+                 timeout: int = 45,
                  debug: bool = False):
         """
         Initialize Ollama Screen Validator
@@ -60,7 +60,7 @@ class OllamaScreenValidator:
         Args:
             ollama_url: Ollama API base URL (default: http://localhost:11434)
             model: Model to use (default: llava)
-            timeout: Request timeout in seconds (default: 60)
+            timeout: Request timeout in seconds (default: 45)
             debug: Enable debug logging (default: False)
         """
         self.ollama_url = ollama_url or os.environ.get('OLLAMA_BASE_URL', 'http://localhost:11434')
@@ -127,14 +127,15 @@ class OllamaScreenValidator:
             if not img_base64:
                 return {'error': 'Failed to encode image'}
             
-            # Prepare analysis prompt
-            prompt = f"""Analyze this TV screenshot and answer:
-1. What screen/app is currently displayed?
-2. Is this the '{expected_screen}' screen? (Yes/No with confidence 0-100)
-3. What are the main UI elements visible?
-4. What is the current focus/highlight?
+            # Prepare analysis prompt - simplified for faster response
+            prompt = f"""Screen: {expected_screen}
 
-Be concise and factual. Expected screen: {expected_screen}"""
+Analyze this screenshot BRIEFLY:
+1. Current screen/app name?
+2. Match? (Yes/No + confidence 0-100)
+3. Main UI elements?
+
+Be VERY CONCISE."""
             
             # Call Ollama API
             response = requests.post(
@@ -153,14 +154,22 @@ Be concise and factual. Expected screen: {expected_screen}"""
                 result = response.json()
                 analysis_text = result.get('response', '')
                 
+                if not analysis_text or len(analysis_text.strip()) < 5:
+                    logger.warning(f"Empty or invalid OLLAMA response")
+                    return {'error': 'Empty OLLAMA response'}
+                
                 # Parse response for confidence
                 confidence = self._extract_confidence(analysis_text, expected_screen)
                 is_match = confidence >= 60  # 60% threshold
+                
+                # Extract detected screen name from analysis
+                detected_screen = self._extract_screen_name(analysis_text, expected_screen)
                 
                 return {
                     'success': True,
                     'match': is_match,
                     'confidence': confidence,
+                    'detected_screen': detected_screen or expected_screen,
                     'analysis': analysis_text,
                     'model': self.model,
                     'provider': 'ollama'
@@ -169,6 +178,9 @@ Be concise and factual. Expected screen: {expected_screen}"""
                 logger.error(f"Ollama API error: {response.status_code}")
                 return {'error': f'Ollama API returned {response.status_code}'}
         
+        except requests.exceptions.Timeout:
+            logger.error(f"OLLAMA request timed out after {self.timeout}s")
+            return {'error': f'Ollama timeout after {self.timeout}s'}
         except Exception as e:
             logger.error(f"Ollama analysis error: {e}")
             return {'error': str(e)}
@@ -301,6 +313,33 @@ Be concise and factual. Expected screen: {expected_screen}"""
         
         logger.warning(f"Quick check failed after {retries} attempt(s)")
         return False
+    
+    def _extract_screen_name(self, analysis_text: str, expected_screen: str) -> Optional[str]:
+        """
+        Extract detected screen name from OLLAMA analysis text
+        
+        Tries to identify screen name mentioned in the analysis
+        """
+        analysis_lower = analysis_text.lower()
+        expected_lower = expected_screen.lower()
+        
+        # If expected screen is mentioned in analysis, that's likely the detected screen
+        if expected_lower in analysis_lower:
+            return expected_screen
+        
+        # Look for explicit screen mentions
+        screen_keywords = {
+            'netflix': ['netflix', 'profile', 'search', 'asset', 'playback'],
+            'home': ['home', 'xumo', 'tiles', 'apps'],
+            'youtube': ['youtube', 'video', 'search'],
+            'disney': ['disney', 'plus'],
+        }
+        
+        for screen, keywords in screen_keywords.items():
+            if any(kw in analysis_lower for kw in keywords):
+                return screen.title()
+        
+        return None
 
 
 # Convenience function for quick usage

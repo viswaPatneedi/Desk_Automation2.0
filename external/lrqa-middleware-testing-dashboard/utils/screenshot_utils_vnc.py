@@ -59,29 +59,6 @@ def get_vnc_screenshot_url(device_ip, device_name, iteration, timestamp=None, vn
     return url
 
 
-def get_vnc_port_for_device(device_ip, tunnel_mode=False, tunnel_host='localhost'):
-    """
-    Get the VNC port for a device based on deployment mode.
-    
-    Args:
-        device_ip: IP address of the device
-        tunnel_mode: If True, uses tunnel mode port mapping
-        tunnel_host: Host to use in tunnel mode (default: localhost)
-    
-    Returns:
-        tuple: (host, port)
-    """
-    from config.config_deployment import VNC_PORT_MAPPING, DEFAULT_VNC_PORT, TUNNEL_MODE
-    
-    if tunnel_mode or TUNNEL_MODE:
-        # Tunnel mode: Use mapped port on tunnel host
-        vnc_port = VNC_PORT_MAPPING.get(device_ip, DEFAULT_VNC_PORT)
-        return tunnel_host, vnc_port
-    else:
-        # Local mode: Use device IP with default port
-        return device_ip, DEFAULT_VNC_PORT
-
-
 def take_vnc_screenshot(
     device_ip, 
     device_name, 
@@ -218,89 +195,99 @@ def take_vnc_screenshot(
                 dimensions = image.size
                 log(f"✓ Image validation: {dimensions[0]}x{dimensions[1]} pixels")
                 
-                # Perform AI-based screen validation (V2.0 implementation - using Ollama default)
+                # Skip heavy AI validation - use lightweight pixel-based validator with reference screens
+                # This is faster and more reliable than waiting for Ollama/Gemini which typically times out
                 try:
-                    from services.unified_screen_validator import UnifiedScreenValidator
+                    log(f"🔍 Performing screen validation using reference-based detection...")
                     
-                    log(f"🔍 Performing AI-based screen validation (provider: auto-detected)...")
-                    validator = UnifiedScreenValidator(debug=False)
-                    provider_info = validator.get_provider_info()
-                    log(f"   Using provider: {provider_info.get('actual', 'unknown')}")
+                    # PRIMARY: Use pixel/layout matching (fast, accurate, reliable)
+                    screen_detected = None
+                    confidence = 0.0
+                    validation_method = None
+                    ollama_confidence = None
                     
-                    # Call unified validator with expected screen context
-                    ai_result = validator.validate_screen_detailed(
-                        screenshot_path=local_path,
-                        expected_screen=None,  # Will be auto-detected by AI
-                        device_name=device_name
-                    )
+                    # FAST PATH: Reference screen matching (pixel/layout-based)
+                    log(f"⚡ Using reference screen matching (pixel/layout-based) for fast validation...")
                     
-                    if ai_result.get('success', False):
-                        screen_detected = ai_result.get('detected_screen', 'Unknown')
-                        confidence = ai_result.get('confidence', 0.0)
+                    try:
+                        from tools.screen.screen_validator_lightweight import LightweightScreenValidator
                         
-                        log(f"✓ Screen detected: {screen_detected} ({confidence:.2%})")
-                        log(f"  Focus elements: {', '.join(ai_result.get('focus_elements', []))}")
+                        # Determine reference directory path
+                        app_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                        data_ref = os.path.join(app_root, "data/references")
                         
-                        if ai_result.get('anomalies'):
-                            log(f"  ⚠ Anomalies detected: {', '.join(ai_result.get('anomalies', []))}")
+                        if os.path.exists(data_ref):
+                            ref_dir = data_ref
+                            log(f"✓ Using app-specific reference directory: {ref_dir}")
+                        else:
+                            ref_dir = "reference_screens"
+                            if not os.path.exists(ref_dir):
+                                ref_dir = os.path.join(app_root, "reference_screens")
+                            log(f"✓ Using fallback reference directory: {ref_dir}")
                         
-                        screen_state = {
-                            'screen_detected': screen_detected,
-                            'confidence': confidence,
-                            'device_matched': ai_result.get('device_matched', False),
-                            'validation_details': {
-                                'focus_elements': ai_result.get('focus_elements', []),
-                                'ui_elements': ai_result.get('ui_elements', []),
-                                'anomalies': ai_result.get('anomalies', []),
-                                'analysis_method': 'AI_VISION',
-                                'device_name': device_name,
-                                'context': context
-                            }
-                        }
-                    else:
-                        log(f"⚠ AI validation failed: {ai_result.get('error', 'Unknown error')}")
-                        log(f"  Falling back to lightweight validation...")
+                        if app_name:
+                            log(f"📁 Searching {app_name} reference screens in: {ref_dir}")
                         
-                        # Fallback to lightweight validator
-                        from screen_validator_lightweight import LightweightScreenValidator
-                        validator = LightweightScreenValidator(excluded_folders=['FactoryReset-XUMO-TV'])
-                        validation_result = validator.find_best_match(local_path)
+                        # Use reference screens for pixel matching
+                        lightweight_validator = LightweightScreenValidator(
+                            reference_dir=ref_dir,
+                            excluded_folders=['FactoryReset-XUMO-TV'],
+                            app_name=app_name
+                        )
+                        validation_result = lightweight_validator.find_best_match(local_path)
                         
                         screen_detected = validation_result.get('best_match', 'Unknown')
                         confidence = validation_result.get('confidence', 0.0)
+                        validation_method = 'PIXEL_MATCHING_WITH_APP_SPECIFIC_REFERENCES'
                         
-                        log(f"✓ Screen detected (fallback): {screen_detected} ({confidence:.2%})")
-                        screen_state = {
-                            'screen_detected': screen_detected,
-                            'confidence': confidence,
-                            'device_matched': False,
-                            'validation_details': {
-                                'analysis_method': 'PIXEL_MATCHING_FALLBACK',
-                                'fallback_reason': ai_result.get('error', 'AI analysis failed'),
-                                **validation_result.get('details', {})
-                            }
-                        }
-                
-                except ImportError:
-                    log(f"⚠ AI analyzer not available, using lightweight validation...")
-                    from screen_validator_lightweight import LightweightScreenValidator
+                        log(f"✓ Pixel matching result: {screen_detected} ({confidence:.2%})")
+                    except Exception as pixel_err:
+                        log(f"⚠ Pixel matching error: {pixel_err}, attempting fallback...")
                     
-                    validator = LightweightScreenValidator(excluded_folders=['FactoryReset-XUMO-TV'])
-                    validation_result = validator.find_best_match(local_path)
+                    # OPTIONAL: Validate with OLLAMA AI if pixel matching succeeded but with low confidence
+                    # This adds semantic understanding without slowing down fast cases
+                    if screen_detected and screen_detected != 'Unknown' and confidence < 0.85:
+                        try:
+                            log(f"🤖 Running AI validation for enhanced confidence...")
+                            from services.ai_vision.ai_screen_validator_ollama import OllamaScreenValidator
+                            
+                            ollama_validator = OllamaScreenValidator(debug=False)
+                            if ollama_validator.available:
+                                screen_context = app_name if app_name else "Device"
+                                result = ollama_validator.validate_screen_detailed(local_path, screen_context)
+                                
+                                if result and 'error' not in result:
+                                    ai_detected = result.get('detected_screen', screen_detected)
+                                    ai_confidence = result.get('confidence', 0) / 100.0
+                                    
+                                    # Use AI result if it provides higher confidence or matches pixel result
+                                    if ai_confidence > confidence:
+                                        ollama_confidence = ai_confidence
+                                        log(f"  ⬆ AI validation improved confidence: {ai_confidence:.2%}")
+                                        confidence = ai_confidence
+                                    elif ai_detected == screen_detected:
+                                        ollama_confidence = ai_confidence
+                                        log(f"  ✓ AI validation confirms: {screen_detected}")
+                                    else:
+                                        log(f"  ℹ AI suggests: {ai_detected} ({ai_confidence:.2%}) - keeping pixel match")
+                        except Exception as ai_err:
+                            log(f"  ℹ AI validation skipped (optional): {ai_err}")
                     
-                    screen_detected = validation_result.get('best_match', 'Unknown')
-                    confidence = validation_result.get('confidence', 0.0)
-                    
-                    log(f"✓ Screen detected (lightweight): {screen_detected} ({confidence:.2%})")
                     screen_state = {
                         'screen_detected': screen_detected,
                         'confidence': confidence,
-                        'device_matched': False,
-                        'validation_details': validation_result.get('details', {})
+                        'validation_details': {
+                            'analysis_method': validation_method,
+                            'primary_validator': 'PIXEL_MATCHING',
+                            'ai_enhanced': ollama_confidence is not None,
+                            'app_name': app_name,
+                        }
                     }
-                
                 except Exception as val_err:
-                    log(f"⚠ Screen validation failed: {val_err}")
+                    log(f"⚠ Screen validation warning: {val_err}")
+                    import traceback
+                    log(f"  Traceback: {traceback.format_exc()}")
+                    screen_state = {'screen_detected': 'Unknown', 'confidence': 0.0}
                 
                 image.close()
                 
@@ -377,11 +364,11 @@ def take_vnc_screenshot_with_fallback(
 ):
     """
     Take screenshot using VNC first, with automatic fallback to ScreenCapture plugin if VNC fails.
-
+    
     This provides the best of both worlds:
     - Fast VNC capture when available
     - Fallback to ScreenCapture plugin when VNC is unavailable
-
+    
     Args:
         ssh: Active SSH connection (needed for fallback only)
         device_ip: IP address of device
@@ -458,107 +445,6 @@ def take_vnc_screenshot_with_fallback(
     return result
 
 
-def compare_screenshot_methods(device_ip, device_name, iteration, log_callback=None):
-    """
-    Compare VNC vs ScreenCapture plugin performance and quality.
-    
-    Useful for benchmarking and validating which method works best for a device.
-    
-    Args:
-        device_ip: Device IP
-        device_name: Device name
-        iteration: Iteration number
-        log_callback: Logging callback
-    
-    Returns:
-        dict: Comparison results
-    """
-    def log(msg):
-        if log_callback:
-            log_callback(msg)
-        else:
-            logger.info(msg)
-    
-    import paramiko
-    from config.config_devices import get_device_by_ip
-    
-    log("=" * 80)
-    log("SCREENSHOT METHOD COMPARISON: VNC vs ScreenCapture Plugin")
-    log("=" * 80)
-    
-    results = {}
-    
-    # Test VNC method
-    log("\n[METHOD 1] Testing VNC-based capture...")
-    vnc_start = time.time()
-    vnc_result = take_vnc_screenshot(
-        device_ip, device_name, iteration,
-        log_callback=log_callback
-    )
-    vnc_time = time.time() - vnc_start
-    results['vnc'] = {
-        'success': vnc_result['success'],
-        'time': vnc_time,
-        'file_size': vnc_result.get('file_size', 0),
-        'error': vnc_result.get('error')
-    }
-    
-    if vnc_result['success']:
-        log(f"✓ VNC Success: {vnc_time:.2f}s, {vnc_result['file_size']/1024:.2f}KB")
-    else:
-        log(f"❌ VNC Failed: {vnc_result['error']}")
-    
-    # Test ScreenCapture plugin method
-    log("\n[METHOD 2] Testing ScreenCapture plugin capture...")
-    try:
-        device = get_device_by_ip(device_ip)
-        if device:
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(device_ip, port=device.port, username=device.username, password=device.password)
-            
-            from utils.screenshot_utils import take_and_analyze_screenshot
-            
-            plugin_start = time.time()
-            plugin_result = take_and_analyze_screenshot(
-                ssh, f"{device_ip}_{device_name}_Iteration-{iteration}",
-                device_ip, log_callback=log_callback
-            )
-            plugin_time = time.time() - plugin_start
-            
-            results['plugin'] = {
-                'success': plugin_result.get('success', False),
-                'time': plugin_time,
-                'error': plugin_result.get('error')
-            }
-            
-            if plugin_result.get('success'):
-                log(f"✓ Plugin Success: {plugin_time:.2f}s")
-            else:
-                log(f"❌ Plugin Failed: {plugin_result.get('error')}")
-            
-            ssh.close()
-    except Exception as e:
-        log(f"⚠ Plugin test failed: {e}")
-        results['plugin'] = {'success': False, 'error': str(e)}
-    
-    # Summary
-    log("\n" + "=" * 80)
-    log("SUMMARY")
-    log("=" * 80)
-    
-    if results['vnc']['success'] and results['plugin']['success']:
-        vnc_faster = results['vnc']['time'] < results['plugin']['time']
-        speedup = results['plugin']['time'] / results['vnc']['time']
-        method = "VNC" if vnc_faster else "Plugin"
-        log(f"🏆 {method} method is {speedup:.1f}x faster")
-    
-    log(f"VNC:    {results['vnc']['success']} ({results['vnc']['time']:.2f}s)")
-    log(f"Plugin: {results['plugin']['success']} ({results['plugin']['time']:.2f}s)")
-    
-    return results
-
-
 # ============================================================================
 # INTEGRATION GUIDE
 # ============================================================================
@@ -567,7 +453,7 @@ HOW TO USE VNC SCREENSHOTS IN YOUR METHODS:
 
 Option 1: Replace ScreenCapture with VNC (Fastest)
 -----------
-from tools.screen.screenshot_utils_vnc import take_vnc_screenshot
+from utils.screenshot_utils_vnc import take_vnc_screenshot
 
 result = take_vnc_screenshot(
     device_ip="10.0.0.195",
@@ -582,7 +468,7 @@ if result['success']:
 
 Option 2: Use Fallback (Reliable)
 -----------
-from tools.screen.screenshot_utils_vnc import take_vnc_screenshot_with_fallback
+from utils.screenshot_utils_vnc import take_vnc_screenshot_with_fallback
 
 result = take_vnc_screenshot_with_fallback(
     ssh=ssh,
@@ -595,13 +481,13 @@ result = take_vnc_screenshot_with_fallback(
 
 Option 3: Add to Existing Methods
 -----------
-In method_deepsleep.py, method_reboot.py, etc.:
+In methods/method_netflix_playback.py, method_deepsleep.py, etc.:
 
 # Replace:
 # screenshot_result = take_and_analyze_screenshot(...)
 
 # With:
-from tools.screen.screenshot_utils_vnc import take_vnc_screenshot_with_fallback
+from utils.screenshot_utils_vnc import take_vnc_screenshot_with_fallback
 screenshot_result = take_vnc_screenshot_with_fallback(
     ssh, device_ip, safe_device_name, iteration,
     fallback_to_plugin=True

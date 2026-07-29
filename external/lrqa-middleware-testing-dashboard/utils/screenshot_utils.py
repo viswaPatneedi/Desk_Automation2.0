@@ -190,7 +190,7 @@ def normalize_screenshot_path(file_path):
         file_path: Absolute or relative filesystem path to screenshot
         
     Returns:
-        Web-friendly path (e.g., '/screenshots/screenshots/file.png' or '/screenshots/reference_screens/file.png')
+        Web-friendly path (e.g., '/screenshots/{job_id}/file.png')
     """
     if not file_path:
         return None
@@ -203,8 +203,17 @@ def normalize_screenshot_path(file_path):
     if not file_path.startswith('/'):
         return file_path
     
-    # Handle absolute paths - extract the relevant relative portion
-    # Priority: reference_screens > Enhancement_output > screenshots > filename only
+    # Handle absolute paths - extract job_id and filename
+    # Extract the job_id (UUID) if present in path
+    import re
+    uuid_pattern = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+    uuid_match = re.search(uuid_pattern, file_path, re.IGNORECASE)
+    
+    if uuid_match:
+        # Found a job ID - use it with the filename
+        job_id = uuid_match.group()
+        filename = os.path.basename(file_path)
+        return f"/screenshots/{job_id}/{filename}"
     
     # Check for reference_screens directory
     if 'reference_screens' in file_path.lower():
@@ -220,19 +229,12 @@ def normalize_screenshot_path(file_path):
         if idx >= 0:
             return f"/screenshots/{file_path[idx:]}"
     
-    # Check for screenshots directory
-    if 'screenshots' in file_path.lower():
-        lower_path = file_path.lower()
-        idx = lower_path.find('screenshots')
-        if idx >= 0:
-            return f"/screenshots/{file_path[idx:]}"
-    
     # If none of the known directories found, return with just the filename
     filename = os.path.basename(file_path)
     return f"/screenshots/{filename}"
 
 # Global timeout for entire screenshot operation (prevents infinite hangs)
-SCREENSHOT_HARD_TIMEOUT = 60  # Maximum 60 seconds for entire screenshot operation
+SCREENSHOT_HARD_TIMEOUT = 30  # 🔧 REDUCED: Maximum 30 seconds (was 60) to prevent long AI validation waits on Ollama timeouts
 
 @contextmanager
 def timeout_handler(seconds, error_message="Operation timed out"):
@@ -412,7 +414,7 @@ def extract_text_with_preprocessing(image, log_callback=None):
     
     return text
 
-def take_and_analyze_screenshot(ssh, screenshot_name, device_ip, log_callback=None, screenshot_folder='screenshots', after_reboot=False):
+def take_and_analyze_screenshot(ssh, screenshot_name, device_ip, log_callback=None, screenshot_folder='screenshots', after_reboot=False, app_name=None, step=None):
     """
     Complete screenshot workflow: Capture device screen and extract text
     This matches the implementation from Device-Reboot-Deepsleep-Wakeup_Updated.py
@@ -427,6 +429,8 @@ def take_and_analyze_screenshot(ssh, screenshot_name, device_ip, log_callback=No
         log_callback: Optional function to call for logging
         screenshot_folder: Folder path where screenshot should be saved (default: 'screenshots')
         after_reboot: If True, use longer retry delays for post-reboot captures
+        app_name: App name for app-specific reference screen matching (e.g., 'netflix')
+        step: Step number for this screenshot (e.g., 0, 1, 2) for UI display
     
     Returns:
         dict: {
@@ -447,7 +451,7 @@ def take_and_analyze_screenshot(ssh, screenshot_name, device_ip, log_callback=No
     log(f"⏱ Starting screenshot capture (max timeout: {SCREENSHOT_HARD_TIMEOUT}s)")
     
     try:
-        return _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screenshot_folder, after_reboot, start_time)
+        return _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screenshot_folder, after_reboot, start_time, app_name, step)
     except TimeoutError as te:
         elapsed = time.time() - start_time
         error_msg = f"Screenshot operation timed out after {elapsed:.1f}s (hard limit: {SCREENSHOT_HARD_TIMEOUT}s)"
@@ -475,12 +479,60 @@ def take_and_analyze_screenshot(ssh, screenshot_name, device_ip, log_callback=No
             'error': error_msg
         }
 
-def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screenshot_folder, after_reboot, start_time):
+def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screenshot_folder, after_reboot, start_time, app_name=None, step=None):
     """
     Internal function with actual screenshot logic.
     Separated to allow timeout wrapper.
+    
+    Strategy: Try VNC first (fast, 5-10s), then fall back to RPC-based ScreenCapture plugin (slow, 20-30s)
     """
     try:
+        # STEP 1: Try VNC-based screenshot first (faster method)
+        log(f"📸 Attempting VNC-based screenshot (fast method)...")
+        
+        from utils.screenshot_utils_vnc import take_vnc_screenshot_with_fallback
+        
+        # Extract device name from screenshot_name if possible
+        device_name = screenshot_name.split('_')[0] if '_' in screenshot_name else "Device"
+        iteration = 1  # Default iteration for VNC naming
+        
+        # Try to extract iteration number if present
+        import re
+        iteration_match = re.search(r'ITR[_-]?(\d+)', screenshot_name, re.IGNORECASE)
+        if iteration_match:
+            iteration = int(iteration_match.group(1))
+        
+        # Attempt VNC screenshot with fallback to RPC
+        vnc_result = take_vnc_screenshot_with_fallback(
+            ssh=ssh,
+            device_ip=device_ip,
+            device_name=device_name,
+            iteration=iteration,
+            screenshot_folder=screenshot_folder,
+            vnc_port=5800,
+            log_callback=log,
+            fallback_to_plugin=True,
+            context=None,
+            app_name=app_name,
+            step=step
+        )
+        
+        # If VNC succeeded, return the result in the expected format
+        if vnc_result.get('success'):
+            log(f"✓ Screenshot method: VNC")
+            return {
+                'success': True,
+                'screenshot_url': vnc_result.get('url'),
+                'local_path': normalize_screenshot_path(vnc_result.get('local_path')),
+                'extracted_text': None,
+                'screen_state': vnc_result.get('screen_state', {'screen_detected': 'Unknown', 'confidence': 0.0}),
+                'error': None
+            }
+        
+        # VNC failed, fall back to RPC-based method
+        log(f"⚠ VNC method failed ({vnc_result.get('error')}), falling back to RPC-based ScreenCapture plugin...")
+        log(f"🚀 Using traditional RPC-based screenshot method (slower, but more reliable when VNC is unavailable)...")
+        
         # Activate ScreenCapture plugin before taking screenshot
         activate_success, activate_error = activate_screencapture_plugin(ssh, log)
         if not activate_success:
@@ -553,7 +605,7 @@ def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screensh
             # For after-reboot screenshots the server upload can be delayed; use shorter retries to avoid hanging
             if after_reboot:
                 # Small extra wait before starting attempts to give device time to finish upload
-                extra_wait = 5  # Reduced from 10s to 5s
+                extra_wait = 3  # Reduced from 5s to 3s for faster failures
                 log(f"After-reboot capture: waiting extra {extra_wait}s before first download attempt")
                 
                 # Check if we're approaching timeout limit
@@ -563,14 +615,15 @@ def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screensh
                 else:
                     time.sleep(extra_wait)
                 
-                max_retries = 2  # Reduced from 3 to 2 (2 total attempts)
-                retry_delays = [0, 5]  # Attempt 0: no delay, Retry 1: 5s (max 10s total)
+                max_retries = 3  # Increased from 2 to 3 (3 total attempts)
+                retry_delays = [0, 3, 5]  # Attempt 0: no delay, Retry 1: 3s, Retry 2: 5s (max 13s total)
             else:
-                max_retries = 2  # Reduced from 3 to 2
-                retry_delays = [0, 5]  # Attempt 0: no delay, Retry 1: 5s
+                max_retries = 3  # Increased from 2 to 3
+                retry_delays = [0, 3, 5]  # Attempt 0: no delay, Retry 1: 3s, Retry 2: 5s
 
             response = None
             upload_verified = False
+            min_valid_file_size = 1000  # Minimum 1KB for a valid PNG screenshot
 
             for attempt in range(max_retries):
                 # Check if we're approaching timeout limit
@@ -586,7 +639,7 @@ def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screensh
 
                 # STEP 1: Verify file exists on server with valid size using HEAD request
                 try:
-                    log(f"Verifying upload completion on server (attempt {attempt + 1})...")
+                    log(f"Verifying upload completion on server (attempt {attempt + 1}/{max_retries})...")
                     # Reduced timeout from 30s to 15s to be more aggressive
                     head_resp = requests.head(download_url, verify=False, timeout=15)
                     
@@ -623,17 +676,18 @@ def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screensh
                                 log(f"✓ Size comparison PASSED: Device and server sizes match within tolerance")
                         
                         # Verify file has content and is an image
-                        if file_size > 0 and 'image' in content_type:
-                            log(f"✓ Upload verified: File exists on server with {file_size} bytes")
-                            upload_verified = True
-                        elif file_size == 0:
-                            log(f"⚠ File exists but has 0 bytes - upload may still be in progress")
+                        if file_size < min_valid_file_size:
+                            log(f"⚠ File size {file_size} bytes is below minimum threshold of {min_valid_file_size} bytes")
+                            log(f"   Upload may still be in progress...")
                             if attempt < max_retries - 1:
                                 log(f"   Waiting for upload to complete...")
                                 continue
                             else:
-                                log(f"❌ File still 0 bytes after all retries - upload failed")
+                                log(f"❌ File still too small after all retries")
                                 break
+                        elif 'image' in content_type:
+                            log(f"✓ Upload verified: File exists on server with {file_size} bytes")
+                            upload_verified = True
                         else:
                             log(f"⚠ File exists but Content-Type is not image: {content_type}")
                             if attempt < max_retries - 1:
@@ -675,8 +729,21 @@ def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screensh
                             log(f"   Will retry...")
 
             # Check if download was successful
-            if not upload_verified or response is None or response.status_code != 200:
-                error_msg = f"Failed to download screenshot after {max_retries} attempts - file not uploaded or 0 bytes"
+            if not upload_verified:
+                error_msg = f"Failed to verify file on server after {max_retries} attempts - file not ready or not available"
+                log(f"❌ {error_msg}")
+                return {
+                    'success': False,
+                    'screenshot_url': download_url,
+                    'local_path': None,
+                    'extracted_text': None,
+                    'screen_state': None,
+                    'error': error_msg
+                }
+            
+            if response is None or response.status_code != 200:
+                status_code = response.status_code if response else "No response"
+                error_msg = f"Failed to download screenshot after verification - HTTP {status_code}"
                 log(f"❌ {error_msg}")
                 return {
                     'success': False,
@@ -759,7 +826,16 @@ def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screensh
                     log(f"  Falling back to lightweight validation...")
                     
                     from tools.screen.screen_validator_lightweight import LightweightScreenValidator
-                    lightweight_validator = LightweightScreenValidator(excluded_folders=['FactoryReset-XUMO-TV'])
+                    import os
+                    ref_dir = "reference_screens"
+                    if not os.path.exists(ref_dir):
+                        app_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                        ref_dir = os.path.join(app_root, "reference_screens")
+                    if not os.path.exists(ref_dir):
+                        data_ref = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data/references")
+                        if os.path.exists(data_ref):
+                            ref_dir = data_ref
+                    lightweight_validator = LightweightScreenValidator(reference_dir=ref_dir, excluded_folders=['FactoryReset-XUMO-TV'])
                     validation_result = lightweight_validator.find_best_match(local_path)
                     
                     screen_detected = validation_result.get('best_match', 'Unknown')
@@ -778,8 +854,16 @@ def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screensh
             except ImportError as ie:
                 log(f"⚠ Unified validator not available: {ie}, using lightweight validation...")
                 from tools.screen.screen_validator_lightweight import LightweightScreenValidator
-                
-                lightweight_validator = LightweightScreenValidator(excluded_folders=['FactoryReset-XUMO-TV'])
+                import os
+                ref_dir = "reference_screens"
+                if not os.path.exists(ref_dir):
+                    app_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                    ref_dir = os.path.join(app_root, "reference_screens")
+                if not os.path.exists(ref_dir):
+                    data_ref = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data/references")
+                    if os.path.exists(data_ref):
+                        ref_dir = data_ref
+                lightweight_validator = LightweightScreenValidator(reference_dir=ref_dir, excluded_folders=['FactoryReset-XUMO-TV'])
                 validation_result = lightweight_validator.find_best_match(local_path)
                 
                 screen_detected = validation_result.get('best_match', 'Unknown')
@@ -909,13 +993,61 @@ def extract_text_from_screenshot(screenshot_url, log_callback=None):
             log_callback(message)
     
     try:
+        log(f"📸 Checking file availability on server before download...")
+        
+        # STEP 1: Verify file exists on server with valid size using HEAD request
+        try:
+            head_resp = requests.head(screenshot_url, verify=False, timeout=15)
+            
+            if head_resp.status_code == 200:
+                content_length = head_resp.headers.get('Content-Length', '0')
+                content_type = head_resp.headers.get('Content-Type', '')
+                
+                try:
+                    file_size = int(content_length)
+                except:
+                    file_size = 0
+                
+                log(f"   ✓ File available on server: {file_size} bytes ({file_size/1024:.2f} KB)")
+                log(f"   ✓ Content-Type: {content_type}")
+                
+                # Verify file has content and is an image
+                if file_size == 0:
+                    error_msg = f"File exists on server but is empty (0 bytes) - upload may still be in progress"
+                    log(f"⚠ {error_msg}")
+                    return False, None, error_msg
+                elif 'image' not in content_type.lower():
+                    error_msg = f"File exists but Content-Type is not image: {content_type}"
+                    log(f"⚠ {error_msg}")
+                    return False, None, error_msg
+                else:
+                    log(f"✓ File verified and ready for download")
+            else:
+                error_msg = f"Server returned HTTP {head_resp.status_code} - file may not be ready"
+                log(f"⚠ {error_msg}")
+                return False, None, error_msg
+                
+        except Exception as head_err:
+            log(f"⚠ Could not verify file with HEAD request: {head_err}")
+            log(f"   Proceeding with direct download attempt...")
+        
+        # STEP 2: Download the file
         log(f"Downloading screenshot from {screenshot_url}...")
         
-        response = requests.get(screenshot_url, stream=True, timeout=screenshot_download_timeout)
+        response = requests.get(screenshot_url, stream=True, verify=False, timeout=15)
         if response.status_code != 200:
             error_msg = f"Failed to download screenshot, HTTP {response.status_code}"
             log(f"❌ {error_msg}")
             return False, None, error_msg
+        
+        # Verify downloaded content
+        content_size = len(response.content)
+        if content_size == 0:
+            error_msg = f"Downloaded file is empty (0 bytes) - upload may be incomplete"
+            log(f"❌ {error_msg}")
+            return False, None, error_msg
+        
+        log(f"✓ Downloaded {content_size} bytes ({content_size/1024:.2f} KB)")
         
         # Open image from response
         capture_image = Image.open(io.BytesIO(response.content))

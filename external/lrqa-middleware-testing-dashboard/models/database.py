@@ -65,6 +65,8 @@ class User(Base):
     email = Column(String(255), unique=True)
     team_name = Column(String(255))
     is_admin = Column(Boolean, default=False)
+    is_super_admin = Column(Boolean, default=False)
+    is_team_admin = Column(Boolean, default=False)
     is_approved = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
@@ -75,6 +77,8 @@ class User(Base):
     devices = relationship("Device", back_populates="created_by_user")
     jobs = relationship("Job", back_populates="user")
     audit_logs = relationship("AuditLog", back_populates="performed_by_user")
+    app_credentials_created = relationship("AppCredential", foreign_keys="AppCredential.created_by", backref="creator")
+    app_credentials_updated = relationship("AppCredential", foreign_keys="AppCredential.updated_by", backref="updater")
     
     def to_dict(self):
         return {
@@ -83,6 +87,8 @@ class User(Base):
             'email': self.email,
             'team_name': self.team_name,
             'is_admin': self.is_admin,
+            'is_super_admin': self.is_super_admin,
+            'is_team_admin': self.is_team_admin,
             'is_approved': self.is_approved,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'active': self.active
@@ -248,6 +254,8 @@ class Job(Base):
     start_time = Column(DateTime)
     end_time = Column(DateTime)
     log_file_path = Column(Text)
+    session_folder = Column(Text)  # Path to execution session folder (for screenshots/logs)
+    team_name = Column(String(255), default='')  # Team name for credential lookup and context
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
     

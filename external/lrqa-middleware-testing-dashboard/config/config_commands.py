@@ -47,5 +47,6 @@ AVAILABLE_METHODS = [
     'validate_results',
     'activate_flux',
     'navigate_to_tiles',
+    'netflix_playback',  # Netflix app launch and playback testing with AI screen detection
     'execute_sequence'
 ]

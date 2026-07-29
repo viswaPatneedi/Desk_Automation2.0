@@ -487,6 +487,7 @@
         .method-icon.activate-flux { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
         .method-icon.navigate-tiles { background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%); }
         .method-icon.check-logs { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
+        .method-icon.netflix-playback { background: linear-gradient(135deg, #e50914 0%, #b81d13 100%); }
         .method-icon.maintenance-curl { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
         .method-icon.standby-ir { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
         .method-icon.standby-ir { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); }
@@ -976,6 +977,7 @@
                         <li><hr class="dropdown-divider"></li>
                         {% if current_user.is_super_admin %}
                         <li><a class="dropdown-item" href="/admin/teams"><i class="bi bi-people-fill"></i> Teams</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="showAppCredentialsPanel(); return false;"><i class="bi bi-key-fill"></i> App Credentials</a></li>
                         <li><hr class="dropdown-divider"></li>
                         {% endif %}
                         <li><a class="dropdown-item" href="/change-password"><i class="bi bi-key"></i> Change Password</a></li>
@@ -1334,6 +1336,18 @@
                                     <p>Validate logs by pattern</p>
                                 </div>
                             </div>
+
+                            <div class="method-card" draggable="true" data-method="netflix_playback"
+                                 data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true"
+                                 data-bs-title="<strong>Netflix Playback</strong><br>Launch Netflix app and play content with AI-powered screen detection.<br><br><strong>Features:</strong><br>• Voice command to launch Netflix<br>• Automatic login detection (LOGIN/PROFILE/HOME/ASSET screens)<br>• AI screen detection with OCR fallback validation<br>• Real-time screenshot capture at key steps<br>• Playback controls testing (FF/RW/PAUSE)<br>• Automatic ENTER key confirmation after voice command<br><br><strong>Steps:</strong><br>1. Go HOME screen<br>2. Send voice command (e.g., 'Play Stranger Things')<br>3. Verify screen transition from HOME<br>4. Handle login/profile selection if needed<br>5. Detect asset/content screen using AI<br>6. Launch playback<br>7. Monitor playback for duration<br>8. Optional: Execute playback controls<br><br><strong>AI Validation:</strong> 2-layer detection with layout matching + OCR backup<br><strong>Screenshots:</strong> Captured at Steps 0, 4, 6<br><strong>ETA:</strong> ~65 seconds (configurable)">
+                                <div class="method-icon netflix-playback">
+                                    <i class="bi bi-play-fill"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Netflix Playback</h6>
+                                    <p>Launch & play Netflix with AI detection</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1622,6 +1636,9 @@
                                         </div>
                                         <!-- Right Side: Action Buttons -->
                                         <div class="device-item-actions">
+                                            <button class="btn btn-info btn-sm" onclick="showMethodExecutionModal('{{ device.ip }}')" title="Execute Method on Device">
+                                                <i class="bi bi-play-circle"></i>
+                                            </button>
                                             <button class="btn btn-warning btn-sm" onclick="editDevice('{{ device.ip }}')" title="Edit Device">
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
@@ -1866,6 +1883,21 @@
                         <button type="button" class="btn btn-sm" onclick="openCustomLogPatternsModal()" style="background: #6366f1; color: white; border: none;">
                             <i class="bi bi-plus-circle"></i> Add Custom Patterns
                         </button>
+                    </div>
+
+                    <!-- Phase 22: Display Applied Custom Patterns -->
+                    <div id="appliedCustomPatternsDisplay" style="margin-top: 1.5rem; display: none; background: #0f172a; border: 1px solid #4b5563; border-left: 4px solid #8b5cf6; padding: 1rem; border-radius: 0.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <p style="margin: 0 0 0.75rem 0; font-weight: 600; color: #8b5cf6;">
+                                <i class="bi bi-check-circle-fill"></i> Applied Custom Patterns
+                            </p>
+                            <button type="button" class="btn btn-sm btn-outline-warning" onclick="clearCustomPatterns()" style="font-size: 0.85rem; padding: 0.25rem 0.75rem;">
+                                <i class="bi bi-trash"></i> Clear All
+                            </button>
+                        </div>
+                        <div id="customPatternsListDisplay" style="font-size: 0.9rem; color: #9ca3af; margin-left: 1rem;">
+                            <!-- Applied patterns shown here -->
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer" style="background: #111827; border-top: 1px solid #1f2937;">
@@ -2119,6 +2151,165 @@
         </div>
     </div>
 
+    <!-- Modal: Netflix Playback Parameters -->
+    <div class="modal fade" id="netflixPlaybackModal" tabindex="-1" aria-labelledby="netflixPlaybackLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content" style="background: #1f2937; border: 1px solid #374151; border-radius: 8px;">
+                <div class="modal-header" style="background: #111827; border-bottom: 1px solid #374151;">
+                    <h5 class="modal-title" id="netflixPlaybackLabel" style="color: #e5e7eb;"><i class="bi bi-play-circle"></i> Netflix Playback Configuration</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="background: #111827; color: #e5e7eb; max-height: 70vh; overflow-y: auto;">
+                    
+                    <!-- ASSET COMMAND (Required) -->
+                    <div class="mb-3">
+                        <label for="netflixAssetVoiceInput" class="form-label"><span style="color: #ef4444;">*</span> Asset/Title to Search For:</label>
+                        <input type="text" id="netflixAssetVoiceInput" class="form-control" 
+                               placeholder="e.g., Breaking Bad, Stranger Things, Bullet Train" 
+                               value="Play Stranger things..."
+                               style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;"
+                               autofocus
+                               required>
+                        <small style="color: #9ca3af;">Example: &quot;Play Breaking Bad Season 1&quot;</small>
+                    </div>
+
+                    <hr style="border-color: #374151;">
+
+                    <!-- PLAYBACK DURATION -->
+                    <div class="mb-3">
+                        <label for="netflixDurationInput" class="form-label">Playback Duration (seconds):</label>
+                        <div class="input-group">
+                            <input type="number" id="netflixDurationInput" class="form-control" 
+                                   value="300" min="10" max="3600"
+                                   style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                            <span class="input-group-text" style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">sec</span>
+                        </div>
+                        <small style="color: #9ca3af;">Minimum: 10 seconds | Default: 300 seconds (5 minutes)</small>
+                    </div>
+
+                    <hr style="border-color: #374151;">
+
+                    <!-- PLAYBACK CONTROLS -->
+                    <div class="mb-3">
+                        <label for="netflixPlaybackControlsCheckbox" class="form-label">Execute Playback Controls Test:</label>
+                        <select id="netflixControlsSelect" class="form-select" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                            <option value="no" selected>No - Skip playback controls</option>
+                            <option value="yes">Yes - Test PLAY/PAUSE/FF/RW controls</option>
+                        </select>
+                        <small style="color: #9ca3af;">Tests forward/backward and pause/play buttons during playback</small>
+                    </div>
+
+                    <!-- SCREENSHOT ANALYSIS -->
+                    <div class="mb-3">
+                        <label for="netflixScreenshotSelect" class="form-label">Execute Screenshot Analysis:</label>
+                        <select id="netflixScreenshotSelect" class="form-select" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                            <option value="yes" selected>Yes - Analyze screenshots for UI elements</option>
+                            <option value="no">No - Skip screenshot analysis</option>
+                        </select>
+                        <small style="color: #9ca3af;">Captures and analyzes screen to detect app state</small>
+                    </div>
+
+                    <hr style="border-color: #374151;">
+
+                    <!-- CREDENTIALS SOURCE - SIMPLIFIED TO 2 OPTIONS -->
+                    <div class="mb-3">
+                        <label for="netflixCredentialsSourceSelect" class="form-label">Netflix Credentials:</label>
+                        <select id="netflixCredentialsSourceSelect" class="form-select" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;" onchange="handleNetflixCredentialsSourceChange()">
+                            <option value="db" selected>USE STORED CREDENTIALS</option>
+                            <option value="custom">CUSTOM</option>
+                        </select>
+                        <small style="color: #9ca3af;">Choose credentials source for Netflix authentication</small>
+                    </div>
+
+                    <!-- DB CREDENTIALS SECTION - NO DETAILS DISPLAY -->
+                    <div id="netflixDbCredentialsSection" style="display: block;">
+                        <div class="alert alert-info" style="background: #1e3a5f; border: 1px solid #3b82f6; color: #93c5fd;">
+                            <i class="bi bi-lock"></i> <strong>Stored Credentials</strong> - Securely stored Netflix account credentials from your team database will be used automatically.
+                        </div>
+                    </div>
+
+                    <!-- CUSTOM CREDENTIALS SECTION -->
+                    <div id="netflixCustomCredentialsSection" style="display: none;">
+                        <div class="alert alert-warning" style="background: #78350f; border: 1px solid #d97706; color: #fcd34d;">
+                            <i class="bi bi-exclamation-triangle"></i> Provide your Netflix account credentials below
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="netflixUsername" class="form-label">Netflix Username/Email:</label>
+                            <input type="text" id="netflixUsername" class="form-control" 
+                                   placeholder="your_email@example.com"
+                                   style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="netflixPassword" class="form-label">Netflix Password:</label>
+                            <input type="password" id="netflixPassword" class="form-control" 
+                                   placeholder="••••••••"
+                                   style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="netflixLoginUrl" class="form-label">Login/Activation URL (Optional):</label>
+                            <input type="text" id="netflixLoginUrl" class="form-control" 
+                                   value="http://netflix.com/tv2"
+                                   placeholder="http://netflix.com/tv2"
+                                   style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                            <small style="color: #9ca3af;">Default is used if left empty</small>
+                        </div>
+                    </div>
+
+                    <hr style="border-color: #374151;">
+
+                    <!-- PLAYBACK LOG PATTERN -->
+                    <div class="mb-3">
+                        <label for="netflixLogPattern" class="form-label">Playback Log Pattern (Optional):</label>
+                        <input type="text" id="netflixLogPattern" class="form-control" 
+                               value="state.*PLAYING.*"
+                               placeholder="state.*PLAYING.*"
+                               style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                        <small style="color: #9ca3af;"><strong>Default</strong>: <code style="background: #1f2937; padding: 2px 4px; border-radius: 2px; color: #10b981;">state.*PLAYING.*</code><br>Examples: <code>MEDIACONTROL.*PLAYING</code>, <code>state change succeeded</code></small>
+                    </div>
+
+                </div>
+                <div class="modal-footer" style="background: #0f172a; border-top: 1px solid #374151;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="confirmNetflixPlayback()">
+                        <i class="bi bi-check-circle"></i> Confirm & Add to Queue
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        #netflixPlaybackModal .form-label {
+            color: #e5e7eb !important;
+            font-weight: 500;
+        }
+        #netflixPlaybackModal .form-control,
+        #netflixPlaybackModal .form-select {
+            background: #1f2937 !important;
+            border: 1px solid #374151 !important;
+            color: #e5e7eb !important;
+        }
+        #netflixPlaybackModal .form-control::placeholder {
+            color: #6b7280 !important;
+        }
+        #netflixPlaybackModal .form-control:focus,
+        #netflixPlaybackModal .form-select:focus {
+            background: #1f2937 !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25) !important;
+            color: #e5e7eb !important;
+        }
+        #netflixPlaybackModal hr {
+            margin: 1.5rem 0;
+        }
+        #netflixPlaybackModal .alert {
+            margin-bottom: 1rem;
+        }
+    </style>
+
     <!-- Modal: Capture Current Screen - Image Name -->
     <div class="modal fade" id="captureScreenModal" tabindex="-1" aria-labelledby="captureScreenLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -2209,6 +2400,9 @@
 
     <!-- Bootstrap JS -->
     <script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
+    
+    <!-- Modal Handlers JS for Method Execution & Device Management -->
+    <script src="{{ url_for('static', filename='js/modal-handlers.js') }}"></script>
     
     <script>
         let executionQueue = [];
@@ -2480,8 +2674,51 @@
             try {
                 // Check if response is ok
                 if (!response.ok) {
+                    // Handle 401 Unauthorized specifically
+                    if (response.status === 401) {
+                        console.error(`🔐 ${context} returned 401 UNAUTHORIZED - Session may have expired`);
+                        
+                        // Only show alert if one isn't already visible
+                        if (!window.sessionExpiredAlertShown) {
+                            window.sessionExpiredAlertShown = true;
+                            window.sessionExpired = true;
+                            
+                            // Stop polling
+                            if (window.dashboardRefreshInterval) {
+                                clearInterval(window.dashboardRefreshInterval);
+                            }
+                            
+                            // Show alert only once per session
+                            const existingAlert = document.getElementById('session-expired-alert');
+                            if (!existingAlert) {
+                                const alert = document.createElement('div');
+                                alert.id = 'session-expired-alert';
+                                alert.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #fee2e2; border: 1px solid #fca5a5; padding: 1rem; border-radius: 0.5rem; z-index: 9999; max-width: 400px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+                                alert.innerHTML = '⚠️ Your session has expired. <a href="/login" style="color: #991b1b; font-weight: bold; text-decoration: underline;">Click here to login again</a>';
+                                document.body.appendChild(alert);
+                                
+                                // Auto-hide after 30 seconds if user hasn't clicked
+                                setTimeout(() => {
+                                    if (existingAlert) {
+                                        alert.style.opacity = '0.5';
+                                    }
+                                }, 15000);
+                            }
+                        }
+                        throw new Error(`HTTP ${response.status} - Session Expired`);
+                    }
                     console.error(`❌ ${context} returned status ${response.status}`);
                     throw new Error(`HTTP ${response.status}`);
+                }
+                
+                // Clear session expired flag if request succeeded
+                if (window.sessionExpired) {
+                    window.sessionExpired = false;
+                    window.sessionExpiredAlertShown = false;
+                    const existingAlert = document.getElementById('session-expired-alert');
+                    if (existingAlert) {
+                        existingAlert.remove();
+                    }
                 }
                 
                 // Check content type
@@ -2500,7 +2737,12 @@
                 const data = await response.json();
                 return data;
             } catch (error) {
-                console.error(`❌ safeJsonParse error in ${context}:`, error);
+                // Only log on specific conditions to reduce noise
+                if (error.message.includes('401')) {
+                    // 401 already logged above
+                } else {
+                    console.error(`❌ safeJsonParse error in ${context}:`, error);
+                }
                 throw error;
             }
         }
@@ -2509,7 +2751,23 @@
         document.addEventListener('DOMContentLoaded', function() {
             initializeDashboard();
             updateDeviceCountBadge();
+            
+            // Add global handler for all modals to restore scrolling when they close
+            document.querySelectorAll('.modal').forEach(modalElement => {
+                modalElement.addEventListener('hidden.bs.modal', function() {
+                    // Ensure scroll is enabled when modal closes
+                    document.body.style.overflow = '';
+                    document.documentElement.style.overflow = '';
+                    document.body.classList.remove('modal-open');
+                    
+                    // Force scroll position to update
+                    window.scrollBy(0, 0);
+                });
+            });
         });
+        
+        // Global variables
+        let currentUserTeam = '{{ current_user.team_name }}' || null;
         
         function initializeDashboard() {
             console.log('🚀 Initializing Dashboard...');
@@ -2524,6 +2782,12 @@
                         return;
                     }
                     console.log(`✅ User authenticated: ${data.username}`);
+                    
+                    // Set team from auth response
+                    if (data.team_name) {
+                        currentUserTeam = data.team_name;
+                        console.log(`🏢 User team: ${currentUserTeam}`);
+                    }
                     
                     // Proceed with dashboard initialization only if authenticated
                     continueDashboardInitialization();
@@ -2588,8 +2852,9 @@
                 aiModalHost.appendChild(aiPanel);
             }
             
-            // Auto-refresh executions every 5 seconds
-            setInterval(loadCurrentExecutions, 5000);
+            // Auto-refresh executions every 15 seconds (reduced from 5s to minimize API calls)
+            // Store interval ID globally so it can be cleared if session expires
+            window.dashboardRefreshInterval = setInterval(loadCurrentExecutions, 15000);
             
             // ✅ MANUAL DEVICE STATUS REFRESH: Click "Refresh Status" button to check all devices
             // (Removed auto-refresh - users can now click the button to check device status on-demand)
@@ -4304,7 +4569,7 @@
             console.log(`📝 Getting parameters (async) for method: ${methodId} (${methodName})`);
             
             // Methods that require user input
-            const methodsRequiringInput = ['ir_test', 'deepsleep', 'maintenance_deepsleep_wakeup', 'maintenance_CURL_deepsleep_wakeup', 'standby_deep_sleep_ir_control', 'send_remote_keys', 'wait', 'execute_command', 'screen_validation', 'reboot_performance', 'reboot_perf_v2_optimized', 'check_logs', 'navigate_to_tiles', 'memcapture_tool', 'soft_hard_boot', 'voice_command', 'capture_current_screen', 'trail_method', 'capture_base_image'];
+            const methodsRequiringInput = ['ir_test', 'deepsleep', 'maintenance_deepsleep_wakeup', 'maintenance_CURL_deepsleep_wakeup', 'standby_deep_sleep_ir_control', 'send_remote_keys', 'wait', 'execute_command', 'screen_validation', 'reboot_performance', 'reboot_perf_v2_optimized', 'check_logs', 'navigate_to_tiles', 'memcapture_tool', 'soft_hard_boot', 'voice_command', 'capture_current_screen', 'trail_method', 'capture_base_image', 'netflix_playback'];
             
             // Only prompt if method is in the list
             if (!methodsRequiringInput.includes(methodId)) {
@@ -4598,6 +4863,49 @@
                 
                 params.voice_text = pendingModalParams.voice_text;
                 console.log(`✅ Voice Command - Text: ${params.voice_text}`);
+            } else if (methodId === 'netflix_playback') {
+                // Show modal for Netflix Playback parameters
+                pendingModalParams = {};
+                const modalEl = document.getElementById('netflixPlaybackModal');
+                document.getElementById('netflixAssetVoiceInput').value = 'Play Stranger things...';
+                document.getElementById('netflixDurationInput').value = '300';
+                document.getElementById('netflixControlsSelect').value = 'no';
+                document.getElementById('netflixScreenshotSelect').value = 'yes';
+                document.getElementById('netflixCredentialsSourceSelect').value = 'db';
+                document.getElementById('netflixUsername').value = '';
+                document.getElementById('netflixPassword').value = '';
+                document.getElementById('netflixLoginUrl').value = 'http://netflix.com/tv2';
+                document.getElementById('netflixLogPattern').value = 'state.*PLAYING.*';
+                
+                // Show DB section, hide custom section
+                document.getElementById('netflixDbCredentialsSection').style.display = 'block';
+                document.getElementById('netflixCustomCredentialsSection').style.display = 'none';
+                
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+                
+                // Wait for modal to close
+                await new Promise((resolve) => {
+                    modalEl.addEventListener('hidden.bs.modal', () => {
+                        resolve();
+                    }, { once: true });
+                });
+                
+                if (!pendingModalParams.asset_voice_command) {
+                    console.log('❌ User cancelled netflix_playback parameters');
+                    return null;
+                }
+                
+                params.asset_voice_command = pendingModalParams.asset_voice_command;
+                params.playback_duration = pendingModalParams.playback_duration;
+                params.login_url = pendingModalParams.login_url;
+                params.username_cred = pendingModalParams.username_cred;
+                params.password_cred = pendingModalParams.password_cred;
+                params.execute_playback_controls = pendingModalParams.execute_playback_controls;
+                params.screenshot_analysis = pendingModalParams.screenshot_analysis;
+                params.log_pattern = pendingModalParams.log_pattern;
+                
+                console.log(`✅ Netflix Playback Parameters:`, params);
             } else if (methodId === 'capture_current_screen') {
                 // Show modal for image name input
                 pendingModalParams = {};
@@ -5033,6 +5341,38 @@
                     textarea.value = '';
                 }
             }
+            
+            // Phase 22: Display applied custom patterns if any exist
+            if (window.customLogPatterns && window.customLogPatterns.length > 0) {
+                const displayContainer = document.getElementById('customPatternsListDisplay');
+                const displaySection = document.getElementById('appliedCustomPatternsDisplay');
+                
+                if (displayContainer && displaySection) {
+                    // Build display HTML for each pattern
+                    displayContainer.innerHTML = window.customLogPatterns.map((p, idx) => {
+                        const typeLabel = p.type === 'not_contains' ? '🚫 NOT Contains' : '✓ Contains';
+                        const containsValueDisplay = p.contains_value ? `<br><small style="color: #a0aec0; margin-left: 1rem; margin-top: 0.25rem;">+ contains value: <code style="color: #fbbf24; background: #0f172a; padding: 0.2rem 0.4rem; border-radius: 3px;">${p.contains_value}</code></small>` : '';
+                        return `
+                            <div style="padding: 0.75rem; margin-bottom: 0.5rem; background: #1a202c; border-radius: 3px; border-left: 3px solid ${p.type === 'not_contains' ? '#ef4444' : '#10b981'};">
+                                <strong style="color: #e2e8f0;">#${idx + 1}:</strong> <code style="color: #60a5fa; background: #0f172a; padding: 0.2rem 0.4rem; border-radius: 3px;">${p.pattern}</code>
+                                <span style="color: ${p.type === 'not_contains' ? '#ef4444' : '#10b981'}; margin-left: 0.5rem; font-size: 0.85rem;">${typeLabel}</span>
+                                ${containsValueDisplay}
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    // Show the display section
+                    displaySection.style.display = 'block';
+                    console.log(`✅ Displaying ${window.customLogPatterns.length} applied custom patterns`);
+                }
+            } else {
+                // Hide the display section if no patterns
+                const displaySection = document.getElementById('appliedCustomPatternsDisplay');
+                if (displaySection) {
+                    displaySection.style.display = 'none';
+                }
+            }
+            
             const modal = new bootstrap.Modal(document.getElementById('logPatternsModal'));
             modal.show();
         }
@@ -5052,14 +5392,22 @@
             if (window.customLogPatterns && window.customLogPatterns.length > 0) {
                 console.log(`✅ [PHASE 22] Merging ${window.customLogPatterns.length} custom patterns into log_search_patterns`);
                 window.customLogPatterns.forEach(customPattern => {
-                    // Convert to grep format with NOT prefix for negation
+                    // Convert to grep format with NOT prefix for negation and contains_value if provided
                     let formattedPattern = customPattern.pattern;
+                    
+                    // Add contains value if specified
+                    if (customPattern.contains_value) {
+                        formattedPattern = `${customPattern.pattern}|${customPattern.contains_value}`;
+                        console.log(`   📌 Added: ${formattedPattern} (type: ${customPattern.type}, contains_value: ${customPattern.contains_value})`);
+                    } else {
+                        console.log(`   📌 Added: ${formattedPattern} (type: ${customPattern.type})`);
+                    }
+                    
                     if (customPattern.type === 'not_contains') {
                         // Mark as NOT pattern using ! prefix for backend processing
-                        formattedPattern = `!${customPattern.pattern}`;
+                        formattedPattern = `!${formattedPattern}`;
                     }
                     logPatterns.push(formattedPattern);
-                    console.log(`   📌 Added: ${formattedPattern} (type: ${customPattern.type})`);
                 });
             }
             
@@ -5067,15 +5415,94 @@
             closeLogPatternsModal();
             showAutoCollectModal(logPatterns.length);
         }
+
+        // Phase 22: Clear all custom patterns
+        function clearCustomPatterns() {
+            if (confirm('⚠️ Are you sure you want to clear all custom patterns? This cannot be undone.')) {
+                window.customLogPatterns = [];
+                
+                // Hide the display section
+                const displaySection = document.getElementById('appliedCustomPatternsDisplay');
+                if (displaySection) {
+                    displaySection.style.display = 'none';
+                }
+                
+                console.log('✅ [PHASE 22] All custom patterns cleared');
+                showNotification('✅ All custom patterns cleared', 'success');
+            }
+        }
         
         // Phase 22: Open custom patterns modal from log patterns flow
         function openCustomLogPatternsModal() {
             console.log('🔧 [PHASE 22] Opening custom log patterns modal from logPatternsModal');
-            // Reset custom patterns for fresh input
+            // Populate modal with previously added patterns if available
             const container = document.getElementById('customLogPatterns');
             if (container) {
                 container.innerHTML = '';
                 customLogPatternCount = 0;
+                
+                // If there are previously applied patterns, restore them in the modal
+                if (window.customLogPatterns && window.customLogPatterns.length > 0) {
+                    console.log(`🔧 [PHASE 22] Restoring ${window.customLogPatterns.length} previously added patterns`);
+                    window.customLogPatterns.forEach(appliedPattern => {
+                        customLogPatternCount++;
+                        const patternId = `pattern-${customLogPatternCount}`;
+                        const patternHTML = `
+                            <div class="custom-log-pattern" id="${patternId}" style="margin-bottom: 1.5rem; padding: 1rem; background: #2d3748; border: 1px solid #475569; border-radius: 0.5rem;">
+                                <!-- Pattern Input Row -->
+                                <div style="margin-bottom: 0.75rem;">
+                                    <label style="display: block; margin-bottom: 0.25rem; font-size: 0.85rem; color: #cbd5e1; font-weight: 500;">
+                                        <i class="bi bi-search"></i> Grep Pattern
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="e.g., 'process crashed' or 'ERROR|CRASH'" 
+                                           style="background: #1a202c; border-color: #475569; color: #e2e8f0;" 
+                                           id="pattern-input-${customLogPatternCount}" value="${appliedPattern.pattern}">
+                                    <small style="color: #9ca3af; margin-top: 0.25rem; display: block;">
+                                        Regex patterns supported. Case-insensitive.
+                                    </small>
+                                </div>
+                                
+                                <!-- Match Type and Contains Value Row -->
+                                <div style="display: flex; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                    <!-- Match Type -->
+                                    <div style="flex: 0 0 auto; min-width: 140px;">
+                                        <label style="display: block; margin-bottom: 0.25rem; font-size: 0.85rem; color: #cbd5e1; font-weight: 500;">
+                                            <i class="bi bi-funnel"></i> Match Type
+                                        </label>
+                                        <select class="form-select form-select-sm" id="pattern-type-${customLogPatternCount}" 
+                                                style="background: #1a202c; border-color: #475569; color: #e2e8f0;">
+                                            <option value="contains" ${appliedPattern.type === 'contains' ? 'selected' : ''}>Contains</option>
+                                            <option value="not_contains" ${appliedPattern.type === 'not_contains' ? 'selected' : ''}>NOT Contains</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Contains Value (Optional) -->
+                                    <div style="flex: 1;">
+                                        <label style="display: block; margin-bottom: 0.25rem; font-size: 0.85rem; color: #cbd5e1; font-weight: 500;">
+                                            <i class="bi bi-card-text"></i> Contains Value (Optional)
+                                        </label>
+                                        <input type="text" class="form-control form-control-sm" placeholder="e.g., 'ProcessManager' (value must exist in output)" 
+                                               style="background: #1a202c; border-color: #475569; color: #e2e8f0;" 
+                                               id="pattern-value-${customLogPatternCount}" value="${appliedPattern.contains_value || ''}">
+                                        <small style="color: #9ca3af; margin-top: 0.25rem; display: block;">
+                                            Additional text that must be present in the grep output
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Remove Button -->
+                                <div style="display: flex; justify-content: flex-end;">
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeCustomLogPattern('${patternId}')">
+                                        <i class="bi bi-trash"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                        const patternDiv = document.createElement('div');
+                        patternDiv.innerHTML = patternHTML;
+                        container.appendChild(patternDiv.firstElementChild);
+                    });
+                }
             }
             // Close the log patterns modal temporarily
             closeLogPatternsModal();
@@ -5416,6 +5843,96 @@
             const modal = bootstrap.Modal.getInstance(document.getElementById('voiceCommandModal'));
             if (modal) modal.hide();
         }
+
+        function confirmNetflixPlayback() {
+            const credentialsSource = document.getElementById('netflixCredentialsSourceSelect').value;
+            const assetVoiceCommand = document.getElementById('netflixAssetVoiceInput').value.trim();
+            
+            if (!assetVoiceCommand) {
+                alert('Asset Voice Command is required');
+                return;
+            }
+            
+            // Collect all Netflix playback parameters
+            pendingModalParams.asset_voice_command = assetVoiceCommand;
+            pendingModalParams.playback_duration = parseInt(document.getElementById('netflixDurationInput').value) || 300;
+            pendingModalParams.execute_playback_controls = document.getElementById('netflixControlsSelect').value === 'yes';
+            pendingModalParams.screenshot_analysis = document.getElementById('netflixScreenshotSelect').value === 'yes';
+            pendingModalParams.playback_log_string = document.getElementById('netflixLogPattern').value.trim() || 'state.*PLAYING.*';
+            
+            if (credentialsSource === 'db') {
+                // Use stored database credentials
+                pendingModalParams.username_cred = '';
+                pendingModalParams.password_cred = '';
+                pendingModalParams.login_url = '';
+                pendingModalParams.credentials_source = 'stored';
+                console.log('✅ Netflix Playback: Using STORED credentials from database');
+                console.log(`   • Asset: ${assetVoiceCommand}`);
+                console.log(`   • Duration: ${pendingModalParams.playback_duration}s`);
+                console.log(`   • Playback Controls: ${pendingModalParams.execute_playback_controls}`);
+                console.log(`   • Screenshot Analysis: ${pendingModalParams.screenshot_analysis}`);
+                console.log(`   • Log Pattern: ${pendingModalParams.playback_log_string}`);
+            } else {
+                // Use custom credentials
+                const username = document.getElementById('netflixUsername').value.trim();
+                const password = document.getElementById('netflixPassword').value.trim();
+                
+                if (!username || !password) {
+                    alert('Please provide both username and password for custom credentials');
+                    return;
+                }
+                
+                pendingModalParams.username_cred = username;
+                pendingModalParams.password_cred = password;
+                pendingModalParams.login_url = document.getElementById('netflixLoginUrl').value.trim() || 'http://netflix.com/tv2';
+                pendingModalParams.credentials_source = 'custom';
+                console.log('✅ Netflix Playback: Using CUSTOM credentials');
+                console.log(`   • Asset: ${assetVoiceCommand}`);
+                console.log(`   • Duration: ${pendingModalParams.playback_duration}s`);
+                console.log(`   • Playback Controls: ${pendingModalParams.execute_playback_controls}`);
+                console.log(`   • Screenshot Analysis: ${pendingModalParams.screenshot_analysis}`);
+                console.log(`   • Log Pattern: ${pendingModalParams.playback_log_string}`);
+                console.log(`   • Credentials Source: ${pendingModalParams.credentials_source}`);
+            }
+            
+            const modal = bootstrap.Modal.getInstance(document.getElementById('netflixPlaybackModal'));
+            if (modal) {
+                // Explicitly restore scroll before hiding modal
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+                modal.hide();
+                
+                // Ensure scroll is restored after modal hides
+                setTimeout(() => {
+                    document.body.style.overflow = '';
+                    document.documentElement.style.overflow = '';
+                    document.body.classList.remove('modal-open');
+                }, 100);
+            }
+        }
+
+        function handleNetflixCredentialsSourceChange() {
+            const source = document.getElementById('netflixCredentialsSourceSelect').value;
+            const dbSection = document.getElementById('netflixDbCredentialsSection');
+            const customSection = document.getElementById('netflixCustomCredentialsSection');
+            
+            if (source === 'db') {
+                dbSection.style.display = 'block';
+                customSection.style.display = 'none';
+            } else {
+                // custom
+                dbSection.style.display = 'none';
+                customSection.style.display = 'block';
+            }
+        }
+
+        // loadNetflixDbCredentials - REMOVED 
+        // Simplified to 2-option modal (USE STORED vs CUSTOM)
+        // Backend will handle credential retrieval based on credentials_source parameter
+        
+        // handleNetflixDbCredentialSelect - REMOVED
+        // Simplified to 2-option modal (USE STORED vs CUSTOM)
+        // No need to display credential details in UI
 
         function confirmCaptureScreen() {
             const imageName = document.getElementById('imageNameInput').value.trim();
@@ -6796,6 +7313,29 @@
                             <small style="color: #10b981;"><i class="bi bi-list-check"></i> Sequence: <strong>${sequenceName}</strong></small><br>
                             <small style="color: #06b6d4;"><i class="bi bi-layers-fill"></i> Contains ${methodCount} method${methodCount !== 1 ? 's' : ''}</small>
                         </div>`;
+                    } else if (queueItem.method === 'netflix_playback') {
+                        const asset = getParam(queueItem, 'asset_voice_command') || '';
+                        const duration = getParam(queueItem, 'playback_duration') || 300;
+                        const controls = getParam(queueItem, 'execute_playback_controls') ? 'Yes' : 'No';
+                        const analysis = getParam(queueItem, 'execute_screenshot_analysis', 'screenshot_analysis') !== false ? 'Yes' : 'No';
+                        const username = getParam(queueItem, 'username_cred') || '';
+                        const password = getParam(queueItem, 'password_cred') || '';
+                        const hasCredentials = username && password;
+                        const usernameDisplay = username ? username.substring(0, 20) + (username.length > 20 ? '...' : '') : '';
+                        const loginUrl = getParam(queueItem, 'login_url') || 'http://netflix.com/tv2';
+                        const logPattern = getParam(queueItem, 'playback_log_string', 'log_pattern') || 'state.*PLAYING.*';
+                        
+                        if (asset) {
+                            const credentialDisplay = hasCredentials ? `<br><small style="color: #10b981;"><i class="bi bi-key-fill"></i> Login: ${usernameDisplay}</small><br><small style="color: #f59e0b;"><i class="bi bi-link-45deg"></i> URL: ${loginUrl}</small>` : '';
+                            const logDisplay = `<br><small style="color: #8b5cf6;"><i class="bi bi-search"></i> Log Pattern: ${logPattern}</small>`;
+                            
+                            inputsHtml = `<div style="margin-top: 4px;">
+                                <small style="color: #E50914;"><i class="bi bi-play-circle-fill"></i> Asset: "${asset}"</small><br>
+                                <small style="color: #06b6d4;"><i class="bi bi-clock-fill"></i> Duration: ${duration}s</small><br>
+                                <small style="color: #10b981;"><i class="bi bi-controller"></i> Controls: ${controls}, Analysis: ${analysis}</small>
+                                ${credentialDisplay}${logDisplay}
+                            </div>`;
+                        }
                     }
                     
                     // Add condition display if exists
@@ -6829,31 +7369,33 @@
                                     <small style="color: #9ca3af; display: block; margin-top: 0.25rem;">${methodInfo.description}</small>
                                     ${inputsHtml}
                                     ${conditionHtml}
-                                    <div style="margin-top: 0.5rem; padding: 0.5rem; background: #1f2937; border-radius: 4px; border: 1px dashed #4b5563;">
-                                        <small style="color: #9ca3af; display: block; margin-bottom: 0.25rem;"><i class="bi bi-chat-left-text-fill"></i> Description (Required)</small>
-                                        <textarea id="desc-${index}" placeholder="Why is this method used at this step? (e.g., 'Validate device boots correctly after firmware update')" style="width: 100%; min-height: 50px; padding: 0.5rem; background: #0f172a; border: 1px solid #4b5563; color: #e5e7eb; border-radius: 4px; font-size: 0.85rem; font-family: inherit; resize: vertical;" onchange="saveDescriptionForStep(${index}, this.value)">${description}</textarea>
-                                    </div>
                                 </div>
-                                <div style="display: flex; gap: 0.25rem; margin-left: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
-                                    <button onclick="moveMethodUp(${index})" ${index === 0 ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0 2px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: ${index === 0 ? 'not-allowed' : 'pointer'}; opacity: ${index === 0 ? '0.5' : '1'};" title="Move up">
-                                        <i class="bi bi-arrow-up"></i>
-                                    </button>
-                                    <button onclick="moveMethodDown(${index})" ${index === executionQueue.length - 1 ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0 2px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: ${index === executionQueue.length - 1 ? 'not-allowed' : 'pointer'}; opacity: ${index === executionQueue.length - 1 ? '0.5' : '1'};" title="Move down">
-                                        <i class="bi bi-arrow-down"></i>
-                                    </button>
-                                    <input type="number" min="1" max="${executionQueue.length}" placeholder="pos" onkeypress="handleMoveToPositionKeypress(event, ${index})" style="width: 45px; padding: 0.25rem; border: 1px solid #4b5563; background: #1f2937; color: #e5e7eb; border-radius: 4px; text-align: center; font-size: 0.75rem; margin: 0 2px;" title="Enter position and press Enter">
-                                    <button onclick="editMethodInQueue(${index})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0 2px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Edit parameters">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </button>
-                                    <button onclick="cloneMethodInQueue(${index})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0 2px; background: #8b5cf6; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Clone this step">
-                                        <i class="bi bi-files"></i>
-                                    </button>
-                                    <button onclick="setConditionForStep(${index})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0 2px; background: ${queueItem.condition ? '#10b981' : '#6b7280'}; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Set condition">
-                                        <i class="bi bi-${queueItem.condition ? 'check-circle-fill' : 'shuffle'}"></i>
-                                    </button>
-                                    <button onclick="removeMethodFromQueue(${index})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0 2px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Remove">
-                                        <i class="bi bi-x-lg"></i>
-                                    </button>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-left: 0.5rem;">
+                                    <div style="display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: flex-end;">
+                                        <button onclick="moveMethodUp(${index})" ${index === 0 ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0 2px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: ${index === 0 ? 'not-allowed' : 'pointer'}; opacity: ${index === 0 ? '0.5' : '1'};" title="Move up">
+                                            <i class="bi bi-arrow-up"></i>
+                                        </button>
+                                        <button onclick="moveMethodDown(${index})" ${index === executionQueue.length - 1 ? 'disabled' : ''} style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0 2px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: ${index === executionQueue.length - 1 ? 'not-allowed' : 'pointer'}; opacity: ${index === executionQueue.length - 1 ? '0.5' : '1'};" title="Move down">
+                                            <i class="bi bi-arrow-down"></i>
+                                        </button>
+                                        <input type="number" min="1" max="${executionQueue.length}" placeholder="pos" onkeypress="handleMoveToPositionKeypress(event, ${index})" style="width: 45px; padding: 0.25rem; border: 1px solid #4b5563; background: #1f2937; color: #e5e7eb; border-radius: 4px; text-align: center; font-size: 0.75rem; margin: 0 2px;" title="Enter position and press Enter">
+                                        <button onclick="editMethodInQueue(${index})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0 2px; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Edit parameters">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <button onclick="cloneMethodInQueue(${index})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0 2px; background: #8b5cf6; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Clone this step">
+                                            <i class="bi bi-files"></i>
+                                        </button>
+                                        <button onclick="setConditionForStep(${index})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0 2px; background: ${queueItem.condition ? '#10b981' : '#6b7280'}; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Set condition">
+                                            <i class="bi bi-${queueItem.condition ? 'check-circle-fill' : 'shuffle'}"></i>
+                                        </button>
+                                        <button onclick="removeMethodFromQueue(${index})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; margin: 0 2px; background: #dc2626; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Remove">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                    <div style="padding: 0.5rem; background: #1f2937; border-radius: 4px; border: 1px dashed #4b5563; min-width: 350px;">
+                                        <small style="color: #9ca3af; display: block; margin-bottom: 0.25rem;"><i class="bi bi-chat-left-text-fill"></i> Description (Required)</small>
+                                        <textarea id="desc-${index}" placeholder="Why is this method used at this step? (e.g., 'Validate device boots correctly after firmware update')" style="width: 100%; min-height: 80px; padding: 0.5rem; background: #0f172a; border: 1px solid #4b5563; color: #e5e7eb; border-radius: 4px; font-size: 0.85rem; font-family: inherit; resize: vertical;" onchange="saveDescriptionForStep(${index}, this.value)">${description}</textarea>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -7379,6 +7921,61 @@
                         <small style="color: #9ca3af; display: block; margin-top: 5px;">If reboot exceeds this time, logs auto-collected. Leave blank to disable. Range: 1-600 seconds</small>
                     </div>
                 `;
+            } else if (queueItem.method === 'netflix_playback') {
+                const assetVoice = getParam(queueItem, 'asset_voice_command') || 'Play Stranger things...';
+                const duration = getParam(queueItem, 'playback_duration') || 300;
+                const playbackControls = getParam(queueItem, 'execute_playback_controls') || false;
+                const screenshotAnalysis = getParam(queueItem, 'screenshot_analysis') || false;
+                const credentialsSource = getParam(queueItem, 'credentials_source') || 'db';
+                const username = getParam(queueItem, 'username_cred') || '';
+                const password = getParam(queueItem, 'password_cred') || '';
+                const loginUrl = getParam(queueItem, 'login_url') || 'http://netflix.com/tv2';
+                const logPattern = getParam(queueItem, 'log_pattern') || 'state.*PLAYING.*';
+                
+                formHtml += `
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;"><i class="bi bi-mic-fill"></i> Asset Voice Command:</label>
+                        <textarea id="edit-netflix-asset" style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px; min-height: 60px; resize: vertical;" 
+                                  placeholder="e.g., Play Stranger things...">${assetVoice}</textarea>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;"><i class="bi bi-hourglass-split"></i> Playback Duration (seconds):</label>
+                        <input type="number" id="edit-netflix-duration" value="${duration}" min="10" step="10"
+                               style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;"><i class="bi bi-joystick"></i> Playback Controls:</label>
+                        <select id="edit-netflix-controls" style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;">
+                            <option value="false" ${!playbackControls ? 'selected' : ''}>No - Skip trickplay</option>
+                            <option value="true" ${playbackControls ? 'selected' : ''}>Yes - Execute FF/RW/Pause/Play</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;"><i class="bi bi-camera-fill"></i> Screenshot Analysis:</label>
+                        <select id="edit-netflix-screenshot" style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;">
+                            <option value="false" ${!screenshotAnalysis ? 'selected' : ''}>No - Skip screenshots</option>
+                            <option value="true" ${screenshotAnalysis ? 'selected' : ''}>Yes - Capture & analyze</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;"><i class="bi bi-key-fill"></i> Credentials Source:</label>
+                        <select id="edit-netflix-cred-source" style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;">
+                            <option value="db" ${credentialsSource === 'db' ? 'selected' : ''}>Database (Recommended)</option>
+                            <option value="custom" ${credentialsSource === 'custom' ? 'selected' : ''}>Custom</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;"><i class="bi bi-globe"></i> Login URL:</label>
+                        <input type="text" id="edit-netflix-login-url" value="${loginUrl}"
+                               style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;"><i class="bi bi-search"></i> Log Pattern:</label>
+                        <input type="text" id="edit-netflix-log-pattern" value="${logPattern}"
+                               style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;"
+                               placeholder="e.g., state.*PLAYING.*">
+                    </div>
+                `;
             } else if (queueItem.method === 'check_logs') {
                 const selectedPatterns = getParam(queueItem, 'selected_patterns', 'selectedPatterns') || [];
                 formHtml += `
@@ -7682,6 +8279,30 @@
                 queueItem.params.auto_collect_logs = autoCollect;
                 queueItem.params.termination_if_not_found = terminationIfNotFound;
                 queueItem.params.max_performance_time = maxPerformanceTime;
+            } else if (queueItem.method === 'netflix_playback') {
+                const assetVoice = document.getElementById('edit-netflix-asset')?.value || 'Play Stranger things...';
+                const duration = parseInt(document.getElementById('edit-netflix-duration')?.value || 300);
+                const playbackControls = document.getElementById('edit-netflix-controls')?.value === 'true';
+                const screenshotAnalysis = document.getElementById('edit-netflix-screenshot')?.value === 'true';
+                const credentialsSource = document.getElementById('edit-netflix-cred-source')?.value || 'db';
+                const loginUrl = document.getElementById('edit-netflix-login-url')?.value || 'http://netflix.com/tv2';
+                const logPattern = document.getElementById('edit-netflix-log-pattern')?.value || 'state.*PLAYING.*';
+                
+                queueItem.asset_voice_command = assetVoice;
+                queueItem.playback_duration = duration;
+                queueItem.execute_playback_controls = playbackControls;
+                queueItem.screenshot_analysis = screenshotAnalysis;
+                queueItem.credentials_source = credentialsSource;
+                queueItem.login_url = loginUrl;
+                queueItem.log_pattern = logPattern;
+                
+                queueItem.params.asset_voice_command = assetVoice;
+                queueItem.params.playback_duration = duration;
+                queueItem.params.execute_playback_controls = playbackControls;
+                queueItem.params.screenshot_analysis = screenshotAnalysis;
+                queueItem.params.credentials_source = credentialsSource;
+                queueItem.params.login_url = loginUrl;
+                queueItem.params.log_pattern = logPattern;
             } else if (queueItem.method === 'check_logs') {
                 const selectedPatterns = Array.from(document.querySelectorAll('.check-logs-pattern-checkbox:checked'))
                     .map(checkbox => checkbox.value);
@@ -8582,7 +9203,20 @@
                     }, 100);
                 })
                 .catch(error => {
-                    console.error('❌ Error loading executions:', error);
+                    // Only log error every 30+ seconds to avoid spam from polling
+                    if (!window.lastErrorLogged || Date.now() - window.lastErrorLogged > 30000) {
+                        // Don't log 401 errors - they're handled separately
+                        if (!error.message.includes('401')) {
+                            console.error('❌ Error loading executions:', error);
+                        }
+                        window.lastErrorLogged = Date.now();
+                    }
+                    
+                    // If it's a 401, don't show error state (session expired alert is already shown)
+                    if (error.message.includes('401')) {
+                        return;
+                    }
+                    
                     const emptyState = `
                         <div style="text-align: center; padding: 2rem 0; color: #f87171;">
                             <i class="bi bi-exclamation-triangle" style="font-size: 2rem; display: block; margin-bottom: 1rem;"></i>
@@ -10094,6 +10728,18 @@
                     apiItem.validation_type = item.params?.validation_type;
                 } else if (item.method === 'screen_validation') {
                     apiItem.expected_text = item.params?.expected_text;
+                } else if (item.method === 'netflix_playback') {
+                    // Copy all Netflix playback parameters from item.params
+                    apiItem.asset_voice_command = item.params?.asset_voice_command;
+                    apiItem.playback_duration = item.params?.playback_duration;
+                    apiItem.playback_log_string = item.params?.playback_log_string;
+                    apiItem.username_cred = item.params?.username_cred;
+                    apiItem.password_cred = item.params?.password_cred;
+                    apiItem.execute_playback_controls = item.params?.execute_playback_controls;
+                    apiItem.screenshot_analysis = item.params?.screenshot_analysis;
+                    apiItem.login_url = item.params?.login_url;
+                    apiItem.credentials_source = item.params?.credentials_source;
+                    console.log(`  ✓ Step (netflix_playback): All Netflix parameters included - asset="${apiItem.asset_voice_command}", duration=${apiItem.playback_duration}s`);
                 }
                 
                 // Include step description (user-provided rationale for this step)
@@ -10663,6 +11309,20 @@
 
     <!-- Phase 22: Custom Log Filtering Modal for Reboot Performance v2 -->
     {% include 'modals/reboot_perf_custom_logs.html' %}
+    
+    <!-- Method Execution Modal -->
+    {% include 'modals/method_execution/method_execution_select.html' %}
+    
+    <!-- Execution Context Capture Modal -->
+    {% include 'modals/execution_context/execution_context_capture.html' %}
+    
+    <!-- Sequence Management Modal -->
+    {% include 'modals/sequence_management/sequence_create.html' %}
+
+    <!-- App Credentials Management Modal (Super Admin Only) -->
+    {% if current_user.is_super_admin %}
+    {% include 'modals/app_credentials/management.html' %}
+    {% endif %}
 
 </body>
 </html>

@@ -5,5 +5,6 @@ Contains data models and database/storage interactions
 
 from .device import Device
 from .test_result import TestResult
+from .app_credential import AppCredential
 
-__all__ = ['Device', 'TestResult']
+__all__ = ['Device', 'TestResult', 'AppCredential']

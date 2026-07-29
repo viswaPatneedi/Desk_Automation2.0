@@ -7,7 +7,7 @@ import os
 
 # AI Vision Provider Selection
 # Options: 'ollama', 'openai', 'google', 'azure', 'tesseract'
-AI_VISION_PROVIDER = os.getenv('AI_VISION_PROVIDER', 'tesseract')  # Default to Tesseract
+AI_VISION_PROVIDER = os.getenv('AI_VISION_PROVIDER', 'ollama')  # Default to OLLAMA (local, free, no API keys)
 
 # Ollama Configuration (FREE - runs locally)
 OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')

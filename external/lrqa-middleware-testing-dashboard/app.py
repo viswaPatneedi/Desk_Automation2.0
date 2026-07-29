@@ -68,6 +68,7 @@ from services.queue_service import QueueService
 from services.recovery_service import RecoveryService
 from services.execution_monitor_service import ExecutionMonitorService
 from services.periodic_data_sync_service import PeriodicDataSyncService
+from services.auto_cleanup_service import AutoCleanupService, initialize_cleanup_service
 
 # Import Controllers
 from controllers.device_controller import DeviceController
@@ -106,11 +107,12 @@ print("✓ Database initialized for Flask")
 # ===== END DATABASE CONFIGURATION =====
 
 app.secret_key = os.environ.get('SECRET_KEY', 'rdke-qa-dashboard-secret-key-change-in-production')
-app.config['PERMANENT_SESSION_LIFETIME'] = 86400  # 24 hours
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Allow cookies on same-site requests
-app.config['SESSION_COOKIE_SECURE'] = False  # False for HTTP, True for HTTPS
+app.config['PERMANENT_SESSION_LIFETIME'] = 10800  # 3 hours (180 minutes) of inactivity
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Standard for HTTP development
+app.config['SESSION_COOKIE_SECURE'] = False  # False for HTTP, True for HTTPS in production
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent JS access to session cookie
 app.config['SESSION_COOKIE_DOMAIN'] = None  # No domain restriction - works with any IP/hostname
+app.config['SESSION_REFRESH_EACH_REQUEST'] = True  # Extend session on each request (3 hour inactivity timeout)
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # Reload templates on file changes
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable static file caching
 
@@ -166,18 +168,43 @@ def add_cache_headers(response):
     return response
 
 @app.before_request
+def ensure_session_permanent():
+    """Ensure session is marked as permanent for all authenticated users."""
+    # Mark session as permanent to respect PERMANENT_SESSION_LIFETIME
+    session.permanent = True
+    # NOTE: Do NOT set session.modified = True on every request
+    # This causes Flask to regenerate the session instead of just extending it
+    # With SESSION_REFRESH_EACH_REQUEST = True, Flask automatically extends the session
+    
+    # Debug logging for API requests
+    if request.path.startswith('/api/'):
+        user_id = session.get('_cached_user_id')
+        auth_status = current_user.is_authenticated
+        print(f"[SESSION_DEBUG] {request.method} {request.path} | Authenticated: {auth_status} | User ID: {user_id} | Has session cookie: {bool(request.cookies.get('session'))}", file=sys.stderr, flush=True)
+
+@app.before_request
 def enforce_api_authentication():
     """Require authenticated app users for all API access except explicit public auth probe."""
     public_api_paths = {
         '/api/auth/status',
+        '/api/available_methods',  # Allow browser to check available methods
     }
 
     if request.path.startswith('/api/') and request.path not in public_api_paths:
         if not current_user.is_authenticated:
+            # Log 401s but only once per session to avoid spam
+            print(f"[AUTH] 401 Unauthorized: {request.method} {request.path} from {request.remote_addr}  | User ID: {session.get('_cached_user_id')} | Has session cookie: {bool(request.cookies.get('session'))}", file=sys.stderr, flush=True)
             return jsonify({
                 'error': 'Unauthorized',
                 'message': 'Login required to access application data'
             }), 401
+
+@app.after_request
+def set_session_cookie_headers(response):
+    """Add headers to help with session persistence"""
+    response.headers['Vary'] = 'Cookie'
+    response.headers['X-Session-Check'] = 'OK' if current_user.is_authenticated else 'UNAUTH'
+    return response
 
 # Endpoint to get available methods for UI (moved here to ensure 'app' is defined)
 @app.route('/api/available_methods', methods=['GET'])
@@ -204,6 +231,12 @@ def get_available_methods():
         app.logger.warning(f"Falling back to config methods: {e}")
 
     return jsonify({'methods': AVAILABLE_METHODS, 'source': 'config'})
+
+
+@app.route('/test_netflix', methods=['GET'])
+def test_netflix():
+    """Test page for Netflix Playback implementation diagnostic"""
+    return render_template('test_netflix.html')
 
 
 def _normalize_text(text):
@@ -1868,16 +1901,74 @@ login_manager.login_message_category = 'info'
 
 @login_manager.user_loader
 def load_user(user_id):
-    """Load user by ID for Flask-Login."""
+    """Load user by ID for Flask-Login with robust error handling."""
     import sys
-    print(f"\n[USER_LOADER] Loading user: {user_id}", file=sys.stderr)
-    user = User.get_user_by_id(user_id)
-    print(f"[USER_LOADER] Result: {user}", file=sys.stderr)
-    if user:
-        print(f"[USER_LOADER] ✅ User loaded: {user.ntid}", file=sys.stderr)
-    else:
-        print(f"[USER_LOADER] ❌ User not found for ID: {user_id}", file=sys.stderr)
-    return user
+    try:
+        # Try to load user from database
+        user = User.get_user_by_id(user_id)
+        if user:
+            # Cache user in session to reduce DB queries on subsequent requests
+            if '_cached_user' not in session or user_id != session.get('_cached_user_id'):
+                session['_cached_user'] = {
+                    'id': user.get_id(),
+                    'ntid': user.ntid,
+                    'name': user.name,
+                    'email': user.email,
+                    'team_name': getattr(user, 'team_name', ''),
+                    'is_super_admin': getattr(user, 'is_super_admin', False),
+                    'is_team_admin': getattr(user, 'is_team_admin', False),
+                }
+                session['_cached_user_id'] = user_id
+            return user
+        else:
+            # User not found in DB, but might be in cache - use cache as fallback
+            cached_user = session.get('_cached_user')
+            if cached_user and session.get('_cached_user_id') == user_id:
+                # Return a minimal user object from cache
+                class CachedUser:
+                    def __init__(self, data):
+                        self.id = data['id']
+                        self.ntid = data['ntid']
+                        self.name = data['name']
+                        self.email = data['email']
+                        self.is_active = True
+                        self.is_authenticated = True
+                        self.team_name = data.get('team_name', '')
+                        self.is_super_admin = data.get('is_super_admin', False)
+                        self.is_team_admin = data.get('is_team_admin', False)
+                    
+                    def get_id(self):
+                        return self.id
+                
+                return CachedUser(cached_user)
+            return None
+    except Exception as e:
+        # Database error - use cache if available
+        import traceback
+        print(f"[USER_LOADER] ⚠️  Database error loading user {user_id}: {e}", file=sys.stderr)
+        print(traceback.format_exc(), file=sys.stderr)
+        
+        cached_user = session.get('_cached_user')
+        if cached_user and session.get('_cached_user_id') == user_id:
+            # Return user from cache on database error
+            class CachedUser:
+                def __init__(self, data):
+                    self.id = data['id']
+                    self.ntid = data['ntid']
+                    self.name = data['name']
+                    self.email = data['email']
+                    self.is_active = True
+                    self.is_authenticated = True
+                    self.team_name = data.get('team_name', '')
+                    self.is_super_admin = data.get('is_super_admin', False)
+                    self.is_team_admin = data.get('is_team_admin', False)
+                
+                def get_id(self):
+                    return self.id
+            
+            print(f"[USER_LOADER] ✅ Using cached user for {user_id}", file=sys.stderr)
+            return CachedUser(cached_user)
+        return None
 
 @login_manager.unauthorized_handler
 def unauthorized():
@@ -1899,20 +1990,25 @@ def unauthorized():
 def debug_request():
     """Debug session and authentication on each request"""
     import sys
-    if '/api/' in request.path:
-        # Only log API requests to reduce noise
+    if '/api/jobs' in request.path or '/api/execution-history' in request.path:
+        # Log polling requests in detail
         user_id = session.get('_user_id')
+        cached_user = session.get('_cached_user')
         has_session = '_user_id' in session
+        has_cache = '_cached_user' in session
         is_authenticated = current_user.is_authenticated if hasattr(current_user, 'is_authenticated') else False
         
-        print(f"\n[REQUEST] {request.method} {request.path}", file=sys.stderr)
-        print(f"  Session _user_id: {user_id}", file=sys.stderr)
-        print(f"  Has _user_id in session: {has_session}", file=sys.stderr)
+        print(f"\n[POLL] {request.method} {request.path}", file=sys.stderr)
+        print(f"  Session._user_id: {user_id}", file=sys.stderr)
+        print(f"  Has._user_id: {has_session}", file=sys.stderr)
+        print(f"  Has_cached_user: {has_cache}", file=sys.stderr)
+        if has_cache:
+            print(f"  Cached_user.ntid: {cached_user.get('ntid', 'N/A')}", file=sys.stderr)
         print(f"  current_user: {current_user}", file=sys.stderr)
         print(f"  is_authenticated: {is_authenticated}", file=sys.stderr)
-        print(f"  Session cookie received: {'session' in request.cookies}", file=sys.stderr)
-        if 'session' in request.cookies:
-            print(f"  Session cookie preview: {request.cookies['session'][:30]}...", file=sys.stderr)
+        print(f"  current_user.is_active: {getattr(current_user, 'is_active', 'N/A')}", file=sys.stderr)
+        print(f"  Session.permanent: {session.permanent}", file=sys.stderr)
+        print(f"  Session.sid: {session.sid if hasattr(session, 'sid') else 'N/A'}", file=sys.stderr)
 
 # Initialize Services (Business Logic Layer)
 # Recovery is ENABLED for automatic job resumption on app restart
@@ -1922,6 +2018,27 @@ test_execution_service = TestExecutionService(recovery_service)
 log_service = LogService()
 queue_service = QueueService(test_execution_service, recovery_service)
 periodic_sync_service = PeriodicDataSyncService(interval_seconds=1800)
+
+# Initialize Auto Cleanup Service (removes old logs, screenshots, and job folders)
+try:
+    from config.config_auto_cleanup import AUTO_CLEANUP_ENABLED
+    if AUTO_CLEANUP_ENABLED:
+        print("\n" + "="*60)
+        print("AUTO CLEANUP SERVICE INITIALIZATION")
+        print("="*60)
+        cleanup_service = AutoCleanupService()
+        print(f"✅ Auto Cleanup Service: ENABLED")
+        print(f"   Retention Period: 10 days")
+        print(f"   Targets: Logs, Screenshots, Job Folders")
+        print(f"   Cleanup Interval: Daily at 2 AM")
+        print("="*60 + "\n")
+        # Initialize cleanup on startup
+        initialize_cleanup_service()
+    else:
+        cleanup_service = None
+except Exception as e:
+    print(f"⚠️  Auto Cleanup Service: ERROR - {e}")
+    cleanup_service = None
 
 # Print deployment configuration
 print_deployment_info()
@@ -2146,6 +2263,19 @@ def login():
             session.permanent = True
             login_user(user, remember=remember, duration=timedelta(days=1))
             
+            # Cache user data in session for offline capability and DB error fallback
+            session['_cached_user'] = {
+                'id': user.get_id(),
+                'ntid': user.ntid,
+                'name': user.name,
+                'email': user.email,
+                'team_name': getattr(user, 'team_name', ''),
+                'is_super_admin': getattr(user, 'is_super_admin', False),
+                'is_team_admin': getattr(user, 'is_team_admin', False),
+            }
+            session['_cached_user_id'] = user.get_id()
+            session.modified = True
+            
             print(f"✅ [LOGIN] Session set and user logged in", file=sys.stderr)
             print(f"   Session ID: {session.get('_id', 'N/A')}", file=sys.stderr)
             print(f"   Session data: _user_id={session.get('_user_id', 'N/A')}", file=sys.stderr)
@@ -2194,8 +2324,22 @@ def register():
         if error:
             return render_template('register.html', error=error)
         
-        # Auto-login after registration
-        login_user(user)
+        # Auto-login after registration - ensure persistent session
+        session.permanent = True
+        login_user(user, remember=True, duration=timedelta(days=1))
+        
+        # Cache user data in session for offline capability and DB error fallback
+        session['_cached_user'] = {
+            'id': user.get_id(),
+            'ntid': user.ntid,
+            'name': user.name,
+            'email': user.email,
+            'team_name': getattr(user, 'team_name', ''),
+            'is_super_admin': getattr(user, 'is_super_admin', False),
+            'is_team_admin': getattr(user, 'is_team_admin', False),
+        }
+        session['_cached_user_id'] = user.get_id()
+        session.modified = True
         return redirect(url_for('index'))
     
     return render_template('register.html')
@@ -2396,6 +2540,166 @@ def get_db_grants():
             'error': 'Failed to fetch database grants',
             'details': str(e)
         }), 500
+
+
+# ============================================================
+# APP CREDENTIAL MANAGEMENT ENDPOINTS (Super Admin Only)
+# ============================================================
+
+@app.route('/api/admin/app-credentials', methods=['GET'])
+@login_required
+def list_app_credentials():
+    """List all app credentials - Super admin only"""
+    if not getattr(current_user, 'is_super_admin', False):
+        return jsonify({'error': 'Unauthorized - Super admin only'}), 403
+    
+    from controllers.app_credential_controller import AppCredentialController
+    
+    team_name = request.args.get('team_name')
+    app_name = request.args.get('app_name')
+    is_active = request.args.get('is_active', 'true').lower() == 'true'
+    
+    result, status_code = AppCredentialController.list_credentials(
+        team_name=team_name,
+        app_name=app_name,
+        is_active=is_active
+    )
+    
+    return jsonify(result if isinstance(result, list) else [result]), status_code
+
+
+@app.route('/api/admin/app-credentials', methods=['POST'])
+@login_required
+def create_app_credential():
+    """Create a new app credential - Super admin only"""
+    if not getattr(current_user, 'is_super_admin', False):
+        return jsonify({'error': 'Unauthorized - Super admin only'}), 403
+    
+    from controllers.app_credential_controller import AppCredentialController
+    
+    data = request.get_json()
+    
+    required_fields = ['app_name', 'username', 'password', 'team_name']
+    missing = [f for f in required_fields if not data.get(f)]
+    if missing:
+        return jsonify({'error': f'Missing required fields: {", ".join(missing)}'}), 400
+    
+    result, status_code = AppCredentialController.create_credential(
+        app_name=data.get('app_name'),
+        username=data.get('username'),
+        password=data.get('password'),
+        login_url=data.get('login_url'),
+        team_name=data.get('team_name'),
+        current_user=current_user,
+        profile_name=data.get('profile_name'),
+        api_key=data.get('api_key'),
+        custom_config=data.get('custom_config'),
+        app_version=data.get('app_version'),
+        device_type=data.get('device_type'),
+        is_primary=data.get('is_primary', True)
+    )
+    
+    return jsonify(result), status_code
+
+
+@app.route('/api/admin/app-credentials/<credential_id>', methods=['GET'])
+@login_required
+def get_app_credential(credential_id):
+    """Get a specific app credential - Super admin or team member"""
+    from controllers.app_credential_controller import AppCredentialController
+    
+    # Check if requesting user should have access
+    is_super_admin = getattr(current_user, 'is_super_admin', False)
+    is_team_admin = getattr(current_user, 'is_team_admin', False)
+    
+    # For internal methods needing credentials with passwords
+    include_password = request.args.get('include_password', 'false').lower() == 'true'
+    
+    if include_password:
+        if not (is_super_admin or is_team_admin):
+            return jsonify({'error': 'Unauthorized - Admin only for credentials with passwords'}), 403
+        result, status_code = AppCredentialController.get_credential_with_password(credential_id, current_user)
+    else:
+        result, status_code = AppCredentialController.get_credential(credential_id)
+    
+    return jsonify(result), status_code
+
+
+@app.route('/api/admin/app-credentials/by-app/<app_name>', methods=['GET'])
+@login_required
+def get_primary_app_credential(app_name):
+    """
+    Get primary credential for an app (for methods to use)
+    Internal-only endpoint for internal method execution
+    """
+    from controllers.app_credential_controller import AppCredentialController
+    
+    team_name = request.args.get('team_name') or getattr(current_user, 'team_name', None)
+    
+    if not team_name:
+        return jsonify({'error': 'team_name required'}), 400
+    
+    result, status_code = AppCredentialController.get_primary_credential(app_name, team_name)
+    return jsonify(result), status_code
+
+
+@app.route('/api/admin/app-credentials/<credential_id>', methods=['PUT'])
+@login_required
+def update_app_credential(credential_id):
+    """Update an app credential - Super admin only"""
+    if not getattr(current_user, 'is_super_admin', False):
+        return jsonify({'error': 'Unauthorized - Super admin only'}), 403
+    
+    from controllers.app_credential_controller import AppCredentialController
+    
+    data = request.get_json()
+    result, status_code = AppCredentialController.update_credential(
+        credential_id=credential_id,
+        current_user=current_user,
+        **data
+    )
+    
+    return jsonify(result), status_code
+
+
+@app.route('/api/admin/app-credentials/<credential_id>', methods=['DELETE'])
+@login_required
+def delete_app_credential(credential_id):
+    """Delete (soft delete) an app credential - Super admin only"""
+    if not getattr(current_user, 'is_super_admin', False):
+        return jsonify({'error': 'Unauthorized - Super admin only'}), 403
+    
+    from controllers.app_credential_controller import AppCredentialController
+    
+    result, status_code = AppCredentialController.delete_credential(credential_id)
+    return jsonify(result), status_code
+
+
+@app.route('/api/admin/app-credentials/<credential_id>/set-primary', methods=['POST'])
+@login_required
+def set_primary_app_credential(credential_id):
+    """Set a credential as primary for its app - Super admin only"""
+    if not getattr(current_user, 'is_super_admin', False):
+        return jsonify({'error': 'Unauthorized - Super admin only'}), 403
+    
+    from controllers.app_credential_controller import AppCredentialController
+    
+    result, status_code = AppCredentialController.set_primary_credential(
+        credential_id=credential_id,
+        current_user=current_user
+    )
+    
+    return jsonify(result), status_code
+
+
+@app.route('/api/app-credentials/usage/<credential_id>', methods=['POST'])
+@login_required
+def record_credential_usage(credential_id):
+    """Record that a credential was used (called by methods internally)"""
+    from controllers.app_credential_controller import AppCredentialController
+    AppCredentialController.record_usage(credential_id)
+    return jsonify({'message': 'Usage recorded'}), 200
+
 
 # Password Reset - File-based storage for reset codes (works with multiple Gunicorn workers)
 # Structure: {ntid: {'code': '123456', 'email': 'user@comcast.com', 'expires': 'ISO8601_timestamp'}}
@@ -3487,6 +3791,7 @@ def serve_screenshot(filename):
     local_screenshots_dir = os.path.join(base_dir, 'screenshots')
     local_screenshots_upper_dir = os.path.join(base_dir, 'SCREENSHOTS')
     local_reference_dir = os.path.join(base_dir, 'reference_screens')
+    home_screenshots_dir = os.path.expanduser('~/screenshots')
 
     # Normalize common prefixes so we don't double-join paths
     if filename.startswith('/'):
@@ -3511,8 +3816,9 @@ def serve_screenshot(filename):
     except Exception:
         pass
 
-    # Common fallback locations
+    # Common fallback locations (HOME DIRECTORY FIRST TO FIND JOB-SPECIFIC SCREENSHOTS)
     possible_paths.extend([
+        home_screenshots_dir,                   # User home directory - HIGHEST PRIORITY for job screenshots
         '/media/pi/Lexar/Enhancement_output',  # Legacy path
         '/media/lrqa/Lexar/Enhancement_output',
         local_screenshots_dir,                  # Local screenshots
@@ -4612,6 +4918,153 @@ def get_job(job_id):
         return jsonify({'success': True, 'job': job.to_dict()})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/jobs/<job_id>/screenshots', methods=['GET'])
+@login_required
+def get_job_screenshots(job_id):
+    """Get list of screenshots for a job"""
+    try:
+        # Define base directory for app
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        job = Job.get_job(job_id)
+        if not job:
+            return jsonify({'success': False, 'error': 'Job not found'}), 404
+        
+        screenshots = []
+        
+        # First priority: Use stored session_folder if available
+        if getattr(job, 'session_folder', None):
+            session_folder_path = job.session_folder
+            screenshots_dir = os.path.join(session_folder_path, 'SCREENSHOTS')
+            
+            if os.path.isdir(screenshots_dir):
+                try:
+                    files = sorted(os.listdir(screenshots_dir))
+                    for filename in files:
+                        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
+                            filepath = os.path.join(screenshots_dir, filename)
+                            if os.path.isfile(filepath):
+                                # Extract relative path from Enhancement_output for URL
+                                rel_path = os.path.relpath(screenshots_dir, os.path.join(base_dir, 'Enhancement_output'))
+                                screenshot_url = f'/screenshots/Enhancement_output/{rel_path}/{filename}'
+                                screenshots.append({
+                                    'path': screenshot_url,
+                                    'filename': filename,
+                                    'step': extract_step_from_filename(filename),
+                                    'timestamp': extract_timestamp_from_filename(filename) or filename
+                                })
+                except Exception as e:
+                    print(f"⚠️  Error reading screenshots from session folder {screenshots_dir}: {e}", file=sys.stderr)
+            
+            # Return screenshots from session folder (only current execution)
+            return jsonify({
+                'success': True,
+                'screenshots': screenshots,
+                'count': len(screenshots),
+                'source': 'session_folder'
+            })
+        
+        # Fallback: Look in job-specific screenshot folders (legacy)
+        job_folders_to_check = [
+            os.path.join(base_dir, 'screenshots', job_id),
+            os.path.join(base_dir, 'SCREENSHOTS', job_id),
+            os.path.expanduser(f'~/screenshots/{job_id}'),  # User home directory
+        ]
+        
+        # Add lexar drive path if available
+        try:
+            from methods.method_utils import get_lexar_base_path
+            lexar_path = get_lexar_base_path()
+            if lexar_path:
+                job_folders_to_check.extend([
+                    os.path.join(lexar_path, 'screenshots', job_id),
+                    os.path.join(lexar_path, 'SCREENSHOTS', job_id),
+                ])
+        except:
+            pass
+        
+        for folder in job_folders_to_check:
+            if os.path.isdir(folder):
+                try:
+                    files = sorted(os.listdir(folder))
+                    for filename in files:
+                        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
+                            filepath = os.path.join(folder, filename)
+                            if os.path.isfile(filepath):
+                                # Serve via /screenshots/ route
+                                screenshot_url = f'/screenshots/{job_id}/{filename}'
+                                screenshots.append({
+                                    'path': screenshot_url,
+                                    'filename': filename,
+                                    'step': extract_step_from_filename(filename),
+                                    'timestamp': extract_timestamp_from_filename(filename) or filename
+                                })
+                except Exception as e:
+                    print(f"⚠️  Error reading screenshots from {folder}: {e}", file=sys.stderr)
+        
+        return jsonify({
+            'success': True,
+            'screenshots': screenshots,
+            'count': len(screenshots),
+            'source': 'job_folders'
+        })
+    except Exception as e:
+        print(f"❌ Error getting screenshots for job {job_id}: {e}", file=sys.stderr)
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+def extract_step_from_filename(filename):
+    """Extract step number from screenshot filename"""
+    try:
+        import re
+        # Try primary pattern like "Step-0_Iteration-1" or "Step-4_Iteration-1" or "Step-6.1_Iteration-1" (with decimals for substeps)
+        match = re.search(r'[Ss]tep[_-]?(\d+(?:\.\d+)?)', filename)
+        if match:
+            step_value = match.group(1)
+            # Check if it's a decimal substep (e.g., "6.1")
+            if '.' in step_value:
+                return f"Step {step_value}"  # Keep as string to preserve decimal: "Step 6.1"
+            else:
+                return f"Step {int(step_value)}"
+        
+        # Fallback: Try VNC format pattern like "10.0.0.250_netflix_Iteration-1_20260727_195918.png"
+        match = re.search(r'[Ii]teration[_-]?(\d+)', filename)
+        if match:
+            return f"Iteration {int(match.group(1))}"
+        
+        # Fallback: Try pattern like "step_04_" or "Step04" or just the number at start
+        match = re.search(r'^(\d+)_', filename)
+        if match:
+            return f"Step {int(match.group(1))}"
+    except:
+        pass
+    return None
+
+def extract_timestamp_from_filename(filename):
+    """Extract timestamp from screenshot filename if present"""
+    try:
+        import re
+        # Try VNC format pattern like "20260727_195918" - YYYYMMDD_HHMMSS
+        match = re.search(r'(\d{8})_(\d{6})', filename)
+        if match:
+            date_str = match.group(1)  # e.g., "20260727"
+            time_str = match.group(2)  # e.g., "195918"
+            # Format as YYYY-MM-DD HH:MM:SS
+            year = date_str[0:4]
+            month = date_str[4:6]
+            day = date_str[6:8]
+            hour = time_str[0:2]
+            minute = time_str[2:4]
+            second = time_str[4:6]
+            return f"{year}-{month}-{day} {hour}:{minute}:{second}"
+        
+        # Try pattern like "2024-01-15_10-30-45" or "20240115_103045"
+        match = re.search(r'(\d{4}-\d{2}-\d{2}[_T]\d{2}[-:]\d{2}[-:]\d{2})', filename)
+        if match:
+            return match.group(1).replace('_', ' ').replace('-', ':')
+    except:
+        pass
+    return None
 
 @app.route('/api/jobs/<job_id>/lock-status', methods=['GET'])
 @login_required

@@ -122,7 +122,8 @@ class TestController:
                     methods=method_names,
                     execution_queue=execution_queue,
                     iterations=iterations,
-                    sequence_name=sequence_name
+                    sequence_name=sequence_name,
+                    team_name=getattr(current_user, 'team_name', '')
                 )
                 # Add job to device queue (using queue_service)
                 from services.queue_service import QueueService
@@ -148,7 +149,8 @@ class TestController:
                 methods=method_names,
                 execution_queue=execution_queue,
                 iterations=iterations,
-                sequence_name=sequence_name
+                sequence_name=sequence_name,
+                team_name=getattr(current_user, 'team_name', '')
             )
             
             # Calculate ETA and lock device

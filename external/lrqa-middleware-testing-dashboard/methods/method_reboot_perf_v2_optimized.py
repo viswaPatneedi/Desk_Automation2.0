@@ -317,8 +317,27 @@ def check_and_collect_logs_for_patterns(ssh, device_ip, device_name, iteration, 
         for idx, pattern in enumerate(regular_patterns, 1):
             log_message_func(f"\n  [PATTERN {idx}/{len(regular_patterns)}] Searching for: {pattern}")
             try:
-                # Use grep to search for the pattern (case-insensitive)
-                grep_cmd = f"grep -i -E '{pattern}' /opt/logs/core_log.txt | head -1"
+                # Check if pattern is a complete grep command (starts with 'grep')
+                if pattern.strip().startswith('grep'):
+                    # Use pattern as-is (it already contains the file path)
+                    grep_cmd = pattern.strip()
+                    log_message_func(f"    [CUSTOM] Using provided grep command: {grep_cmd}")
+                elif '/' in pattern and ('log' in pattern or '.txt' in pattern):
+                    # Pattern contains a file path, use it as-is
+                    grep_cmd = pattern.strip()
+                    log_message_func(f"    [CUSTOM] Pattern contains file path: {grep_cmd}")
+                else:
+                    # Standard pattern - build grep command with default file path
+                    # Handle pipe-separated contains values (pattern|contains_value)
+                    if '|' in pattern:
+                        parts = pattern.split('|')
+                        search_pattern = parts[0].strip()
+                        contains_value = parts[1].strip()
+                        grep_cmd = f"grep -i -E '{search_pattern}' /opt/logs/core_log.txt | grep -i '{contains_value}' | head -1"
+                        log_message_func(f"    [CONTAINS_VALUE] Pattern: {search_pattern}, Must contain: {contains_value}")
+                    else:
+                        grep_cmd = f"grep -i -E '{pattern}' /opt/logs/core_log.txt | head -1"
+                
                 import socket
                 stdin, stdout, stderr = ssh.exec_command(grep_cmd, timeout=20)
                 stdout.channel.settimeout(20.0)
@@ -333,7 +352,7 @@ def check_and_collect_logs_for_patterns(ssh, device_ip, device_name, iteration, 
                     patterns_found.append(pattern)
                     log_message_func(f"    ✅ FOUND! Sample: {log_output[:100]}")
                 else:
-                    log_message_func(f"    ⚠ Pattern not found in core_log.txt")
+                    log_message_func(f"    ⚠ Pattern not found")
             except Exception as e:
                 log_message_func(f"    ❌ Error searching for pattern: {str(e)[:100]}")
         
@@ -341,8 +360,27 @@ def check_and_collect_logs_for_patterns(ssh, device_ip, device_name, iteration, 
         for idx, pattern in enumerate(negation_patterns, 1):
             log_message_func(f"\n  [NOT PATTERN {idx}/{len(negation_patterns)}] Searching for absence of: {pattern}")
             try:
-                # Use grep -v to search for lines that DON'T contain the pattern
-                grep_cmd = f"grep -v -i -E '{pattern}' /opt/logs/core_log.txt | grep -v '^$' | head -1"
+                # Check if pattern is a complete grep command (starts with 'grep')
+                if pattern.strip().startswith('grep'):
+                    # Use pattern as-is and negate it with grep -v
+                    grep_cmd = pattern.strip().replace('grep', 'grep -v', 1)
+                    log_message_func(f"    [CUSTOM] Using provided grep command (negated): {grep_cmd}")
+                elif '/' in pattern and ('log' in pattern or '.txt' in pattern):
+                    # Pattern contains a file path, negate it
+                    grep_cmd = f"{pattern.strip()} | grep -v"
+                    log_message_func(f"    [CUSTOM] Pattern with file path (negated)")
+                else:
+                    # Standard pattern - build grep -v command with default file path
+                    # Handle pipe-separated contains values (pattern|contains_value)
+                    if '|' in pattern:
+                        parts = pattern.split('|')
+                        exclude_pattern = parts[0].strip()
+                        contains_value = parts[1].strip()
+                        grep_cmd = f"grep -v -i -E '{exclude_pattern}' /opt/logs/core_log.txt | grep -i '{contains_value}' | grep -v '^$' | head -1"
+                        log_message_func(f"    [CONTAINS_VALUE] Exclude pattern: {exclude_pattern}, Must contain: {contains_value}")
+                    else:
+                        grep_cmd = f"grep -v -i -E '{pattern}' /opt/logs/core_log.txt | grep -v '^$' | head -1"
+                
                 import socket
                 stdin, stdout, stderr = ssh.exec_command(grep_cmd, timeout=20)
                 stdout.channel.settimeout(20.0)

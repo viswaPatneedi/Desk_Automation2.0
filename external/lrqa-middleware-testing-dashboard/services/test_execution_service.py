@@ -33,6 +33,7 @@ from methods.method_check_logs import execute_check_logs
 from methods.method_maintenance_deepsleep_wakeup import execute_maintenance_deepsleep_wakeup_process
 from methods.method_maintenance_CURL_deepsleep_wakeup import execute_maintenance_CURL_deepsleep_wakeup_process
 from methods.method_deepsleep_maintenance_wakeup import execute_deepsleep_maintenance_wakeup_process
+from methods.method_netflix_playback import netflix_playback
 
 class TestExecutionService:
     """Service for managing test execution"""
@@ -191,11 +192,12 @@ class TestExecutionService:
         # Update job status to running and set log file path
         if job_id:
             print(f"✅ [EXECUTION] Updating job {job_id} status to RUNNING")
-            Job.update_job_status(job_id, 'running', log_file_path=log_file_path)
+            Job.update_job_status(job_id, 'running', log_file_path=log_file_path, session_folder=session_folder)
             # Verify the status was updated
             updated_job = Job.get_job(job_id)
             if updated_job:
                 print(f"✅ [EXECUTION] Job {job_id} status after update: {updated_job.status}")
+                print(f"✅ [EXECUTION] Job {job_id} session_folder: {getattr(updated_job, 'session_folder', None)}")
             else:
                 print(f"❌ [EXECUTION] Failed to retrieve job {job_id} after status update")
         
@@ -1235,6 +1237,68 @@ class TestExecutionService:
                                     "details": f"Navigation failed: {str(e)}",
                                     "final_focused_tile": None
                                 }
+                    
+                    elif method == "netflix_playback":
+                        # Netflix app launch and playback testing with AI screen detection
+                        asset_voice_command = queue_item.get('asset_voice_command', 'Play Stranger things...')
+                        playback_duration = queue_item.get('playback_duration', 300)
+                        execute_playback_controls = queue_item.get('execute_playback_controls', False)
+                        login_url = queue_item.get('login_url', 'http://netflix.com/tv2')
+                        username_cred = queue_item.get('username_cred', '')
+                        password_cred = queue_item.get('password_cred', '')
+                        playback_log_string = queue_item.get('playback_log_string', 'state.*PLAYING.*')
+                        
+                        log_service.log(f"Launching Netflix and playing: {asset_voice_command}")
+                        try:
+                            result = netflix_playback(
+                                device_ip=device.ip,
+                                port=device.port,
+                                username=device.username,
+                                password=device.password,
+                                login_url=login_url,
+                                username_cred=username_cred,
+                                password_cred=password_cred,
+                                asset_voice_command=asset_voice_command,
+                                playback_log_string=playback_log_string,
+                                execute_playback_controls=execute_playback_controls,
+                                playback_duration=playback_duration,
+                                iteration=i + 1,
+                                device_name=device.name,
+                                combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
+                                log_callback=log_service.log,
+                                job_id=job.job_id if job else None,
+                                team_name=job.team_name if job else None,
+                                session_folder=session_folder
+                            )
+                            
+                            method_result = {
+                                "iteration": i + 1,
+                                "screenshots": result.get('screenshots', []),
+                                "logs": result.get('logs', []),
+                                "success": result.get('success', False),
+                                "details": result.get('details', ''),
+                                "step_results": result.get('step_results', {}),
+                                "playback_status": result.get('playback_status', 'unknown'),
+                                "app_launch_time": result.get('app_launch_time', 0),
+                                "playback_start_time": result.get('playback_start_time', 0)
+                            }
+                            
+                            log_service.log(f"{'✓' if result.get('success') else '✗'} Netflix playback: {result.get('details', '')}")
+                            if result.get('playback_status'):
+                                log_service.log(f"   Playback Status: {result.get('playback_status')}")
+                            if result.get('app_launch_time'):
+                                log_service.log(f"   App Launch Time: {result.get('app_launch_time')}s")
+                        
+                        except Exception as e:
+                            log_service.log(f"❌ Netflix playback failed: {str(e)}")
+                            method_result = {
+                                "iteration": i + 1,
+                                "screenshots": [],
+                                "logs": [],
+                                "success": False,
+                                "details": f"Netflix playback failed: {str(e)}",
+                                "playback_status": "error"
+                            }
                     
                     elif method == "memcapture_tool":
                         # Memcapture tool - Execute approved system commands and capture TOP metrics to Excel

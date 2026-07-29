@@ -17,7 +17,8 @@ class Job:
                  status='pending', start_time=None, end_time=None, log_file_path=None,
                  execution_queue=None, sequence_name=None, current_step=0, current_iteration=0,
                  iteration_results=None, created_at=None, execution_type=None, 
-                 executing_user=None, triggered_at=None, queue_position=None):
+                 executing_user=None, triggered_at=None, queue_position=None, team_name=None,
+                 session_folder=None):
         self.job_id = job_id
         self.user_id = user_id
         self.device_ip = device_ip
@@ -29,6 +30,7 @@ class Job:
         self.start_time = start_time or datetime.utcnow().isoformat()
         self.end_time = end_time
         self.log_file_path = log_file_path
+        self.session_folder = session_folder  # Path to execution session folder for screenshots/logs
         self.sequence_name = sequence_name
         # execution_type: 'direct_method' (user selected methods) or 'saved_sequence' (user selected sequence)
         self.execution_type = execution_type or ('saved_sequence' if sequence_name else 'direct_method')
@@ -42,6 +44,7 @@ class Job:
         self.executing_user = executing_user or user_id  # NTID of user who triggered execution
         self.triggered_at = triggered_at or datetime.utcnow().isoformat()  # When execution was started
         self.queue_position = queue_position or None  # Position in device queue (for PENDING/QUEUED jobs)
+        self.team_name = team_name or ''  # Team name for Netflix credential lookup and user context
         
         # Log job creation for diagnostics
         print(f"✅ [JOB] Job created: {self.job_id} on device {self.device_ip}")
@@ -68,6 +71,7 @@ class Job:
             'start_time': self.start_time,
             'end_time': self.end_time,
             'log_file_path': self.log_file_path,
+            'session_folder': getattr(self, 'session_folder', None),
             'sequence_name': self.sequence_name,
             'execution_type': self.execution_type,
             'current_step': getattr(self, 'current_step', 0),
@@ -81,7 +85,8 @@ class Job:
             # Phase 21: Add execution tracking fields
             'executing_user': getattr(self, 'executing_user', self.user_id),
             'triggered_at': getattr(self, 'triggered_at', self.start_time),
-            'queue_position': getattr(self, 'queue_position', None)
+            'queue_position': getattr(self, 'queue_position', None),
+            'team_name': getattr(self, 'team_name', '')
         }
     
     def _calculate_eta(self):
@@ -149,6 +154,7 @@ class Job:
             start_time=data.get('start_time'),
             end_time=data.get('end_time'),
             log_file_path=data.get('log_file_path'),
+            session_folder=data.get('session_folder'),
             execution_queue=data.get('execution_queue', []),
             sequence_name=data.get('sequence_name'),
             current_step=data.get('current_step', 0),
@@ -159,7 +165,8 @@ class Job:
             # Phase 21: Load execution tracking fields
             executing_user=data.get('executing_user', data.get('user_id')),
             triggered_at=data.get('triggered_at'),
-            queue_position=data.get('queue_position')
+            queue_position=data.get('queue_position'),
+            team_name=data.get('team_name', '')
         )
     
     @staticmethod
@@ -188,13 +195,15 @@ class Job:
                         'start_time': row.start_time.isoformat() if row.start_time else None,
                         'end_time': row.end_time.isoformat() if row.end_time else None,
                         'log_file_path': row.log_file_path,
+                        'session_folder': getattr(row, 'session_folder', None),
                         'sequence_name': row.sequence_name,
                         'execution_type': row.execution_type,
                         'execution_queue': row.execution_queue or [],
                         'current_step': row.current_step or 0,
                         'current_iteration': row.current_iteration or 0,
                         'iteration_results': row.iteration_results or {},
-                        'created_at': row.created_at.isoformat() if row.created_at else None
+                        'created_at': row.created_at.isoformat() if row.created_at else None,
+                        'team_name': getattr(row, 'team_name', '')
                     }
                     jobs.append(Job.from_dict(job_data))
                 
@@ -246,6 +255,8 @@ class Job:
                         start_time=job.start_time if isinstance(job.start_time, datetime) else None,
                         end_time=job.end_time if isinstance(job.end_time, datetime) else None,
                         log_file_path=job.log_file_path,
+                        session_folder=getattr(job, 'session_folder', None),
+                        team_name=getattr(job, 'team_name', ''),
                         created_at=datetime.now(timezone.utc),
                         updated_at=datetime.now(timezone.utc)
                     )
@@ -259,6 +270,8 @@ class Job:
                     db_job.start_time = job.start_time if isinstance(job.start_time, datetime) else None
                     db_job.end_time = job.end_time if isinstance(job.end_time, datetime) else None
                     db_job.log_file_path = job.log_file_path
+                    db_job.session_folder = getattr(job, 'session_folder', None)
+                    db_job.team_name = getattr(job, 'team_name', '')
                     db_job.updated_at = datetime.now(timezone.utc)
             
             return len(jobs)
@@ -290,7 +303,7 @@ class Job:
     
     @staticmethod
     def create_job(user_id, device_ip, device_name, methods, iterations, 
-                   execution_queue=None, sequence_name=None):
+                   execution_queue=None, sequence_name=None, team_name=None):
         """Create a new job in both PostgreSQL and JSON."""
         from services.audit_logging_service import AuditLoggingService, TransactionRollbackHandler
         
@@ -303,7 +316,8 @@ class Job:
             methods=methods,
             iterations=iterations,
             execution_queue=execution_queue,
-            sequence_name=sequence_name
+            sequence_name=sequence_name,
+            team_name=team_name
         )
         
         # Save to PostgreSQL with transaction rollback on error
@@ -322,6 +336,7 @@ class Job:
                 current_step=0,
                 current_iteration=0,
                 iteration_results={},
+                team_name=team_name or '',
                 created_at=datetime.now(timezone.utc),
                 updated_at=datetime.now(timezone.utc)
             )
@@ -376,7 +391,7 @@ class Job:
         return None
     
     @staticmethod
-    def update_job_status(job_id, status, end_time=None, log_file_path=None):
+    def update_job_status(job_id, status, end_time=None, log_file_path=None, session_folder=None):
         """Update job status with database transaction handling."""
         from services.audit_logging_service import AuditLoggingService, TransactionRollbackHandler
         
@@ -392,6 +407,8 @@ class Job:
                 db_job.end_time = end_time
             if log_file_path:
                 db_job.log_file_path = log_file_path
+            if session_folder:
+                db_job.session_folder = session_folder
             db_job.updated_at = datetime.now(timezone.utc)
             
             return {'old_status': old_status, 'new_status': status}
@@ -432,6 +449,8 @@ class Job:
                             job['end_time'] = end_time
                         if log_file_path:
                             job['log_file_path'] = log_file_path
+                        if session_folder:
+                            job['session_folder'] = session_folder
                         break
                 return data_list
 
@@ -503,6 +522,9 @@ class Job:
     @staticmethod
     def update_iteration_result(job_id, iteration_num, result):
         """Update result for a specific iteration with database transaction handling."""
+        # Import here to avoid circular imports
+        from services.audit_logging_service import AuditLoggingService, TransactionRollbackHandler
+        
         # Save to PostgreSQL with transaction rollback on error
         def _update_db_iteration(session):
             db_job = session.query(DBJob).filter_by(job_id=job_id).first()
@@ -550,6 +572,27 @@ class Job:
             print(f"⚠️  [JOB] JSON iteration update failed: {e}", file=sys.stderr)
         
         return db_success
+    
+    @staticmethod
+    def update_execution_results(job_id, step_results):
+        """Update execution results for a job (e.g., screenshots, validation data from method steps)."""
+        try:
+            def _update(data):
+                data_list = data if isinstance(data, list) else []
+                for job in data_list:
+                    if job.get('job_id') == job_id:
+                        execution_results = job.get('execution_results') or {}
+                        # Merge new step_results with existing execution_results
+                        execution_results.update(step_results)
+                        job['execution_results'] = execution_results
+                        break
+                return data_list
+
+            FileLockManager.atomic_json_update(JOBS_FILE, _update)
+            return True
+        except Exception as e:
+            print(f"⚠️  [JOB] Failed to update execution results: {e}", file=sys.stderr)
+            return False
     
     @staticmethod
     def get_running_jobs():
