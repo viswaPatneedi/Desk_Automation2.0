@@ -1119,15 +1119,26 @@ def netflix_playback(
                         log(f"ℹ Step 6.1 Screen detection: {screen_detected} ({screen_validation.get('confidence', 0):.2%} confidence)")
                     
                     # ENHANCED: Use Netflix-specific feature detection for Step 6.1
-                    # Catches cases where pixel matching is wrong (e.g., login screen misclassified as asset)
+                    # CRITICAL: Always run enhanced detection to improve accuracy for asset vs home screens
+                    # Catches cases where pixel matching is wrong (e.g., asset screen misclassified as home)
+                    # This is especially important when pixel_confidence is NOT extremely high (>90%)
                     pixel_confidence = screen_validation.get('confidence', 0.0)
                     try:
                         from tools.screen.netflix_screen_detector import NetflixScreenDetector
                         detector = NetflixScreenDetector()
                         screenshot_path = result.get('local_path', '')
                         
-                        if screenshot_path and os.path.exists(screenshot_path) and pixel_confidence < 0.70:
-                            # Only run enhanced detection if pixel confidence is low
+                        # Run enhanced detection in these cases:
+                        # 1. Low confidence pixel matching (<70%)
+                        # 2. Medium confidence (70-90%) with ambiguous screen (Netflix_NetflixHome likely misclassified)
+                        # 3. Always when we're trying to distinguish between home and asset screens
+                        should_run_enhanced = (
+                            pixel_confidence < 0.90 or  # Try to improve all non-very-high-confidence matches
+                            'home' in screen_detected.lower()  # CRITICAL: Home is frequently misclassified as asset
+                        )
+                        
+                        if screenshot_path and os.path.exists(screenshot_path) and should_run_enhanced:
+                            log(f"🔍 Running enhanced Netflix screen detection (pixel confidence: {pixel_confidence:.1%})...")
                             detection_result = detector.distinguish_home_vs_asset(
                                 screenshot_path,
                                 screen_detected,
@@ -1137,16 +1148,24 @@ def netflix_playback(
                             enhanced_screen = detection_result.get('final_screen', screen_detected)
                             enhanced_confidence = detection_result.get('confidence', pixel_confidence)
                             
-                            # Log feature detection details
+                            # Log feature detection details for debugging and transparency
+                            button_info = detection_result.get('button_detection', {})
+                            metadata_info = detection_result.get('metadata_detection', {})
+                            
+                            log(f"  📊 Enhanced detection results:")
+                            log(f"     • Buttons: {button_info.get('has_buttons', False)} ({button_info.get('button_count', 0)} detected)")
+                            log(f"     • Metadata patterns: {metadata_info.get('has_metadata', False)} ({len(metadata_info.get('patterns_found', []))} patterns)")
+                            log(f"     • Reason: {detection_result.get('reason', 'N/A')}")
+                            
+                            # If enhanced detection changed the result, log the reclassification
                             if enhanced_screen != screen_detected:
-                                log(f"  🔍 Enhanced detection analysis:")
-                                log(f"     Button detection: {detection_result['button_detection']['has_buttons']} ({detection_result['button_detection']['button_count']} buttons)")
-                                log(f"     Metadata patterns: {detection_result['metadata_detection']['has_metadata']} ({len(detection_result['metadata_detection']['patterns_found'])} patterns)")
-                                log(f"  ⬆ Step 6.1 reclassified: {screen_detected} ({pixel_confidence:.1%}) → {enhanced_screen} ({enhanced_confidence:.1%})")
+                                log(f"  ✓ RECLASSIFIED: {screen_detected} ({pixel_confidence:.1%}) → {enhanced_screen} ({enhanced_confidence:.1%})")
                                 screen_detected = enhanced_screen
+                            else:
+                                log(f"  ✓ Confirmed: {screen_detected} ({enhanced_confidence:.1%})")
                     
                     except Exception as enhance_err:
-                        log(f"  ⚠ Enhanced detection skipped for Step 6.1: {enhance_err}")
+                        log(f"  ⚠ Enhanced detection error for Step 6.1: {enhance_err}")
                     
                     # ================================================================
                     # STEP 6.1 CONTINUED: VALIDATE AND PROCEED TO ASSET SELECTION
@@ -1305,26 +1324,58 @@ def netflix_playback(
                             step_results['step_6_content_launch'] = 'success_with_issues'
                     
                     elif 'asset' in detected_lower:
-                        # Already on asset screen (search screen not shown)
-                        log("→ Asset screen already detected - attempting to start playback with ENTER...")
+                        # ================================================================
+                        # ASSET SCREEN ALREADY DETECTED AT STEP 6.1 - SKIP STEP 6.2
+                        # ================================================================
+                        log("→ Asset detail screen already detected at Step 6.1")
+                        log("  SKIPPING STEP 6.2 (asset detail validation)")
+                        log("  Reason: Enhanced screen detection already confirmed asset screen")
+                        log("  Proceeding directly to Step 6.3 (OCR validation)")
                         
+                        # Update asset screenshot info with Step 6.1 capture
+                        asset_screenshot_info = {
+                            'path': result.get('local_path'),
+                            'url': result.get('screenshot_url'),
+                            'step': 6.1,
+                            'timestamp': timestamp,
+                            'screen_detected': screen_detected,
+                            'step_6_2_skipped': True,
+                            'skip_reason': 'asset_screen_detected_at_step_6_1'
+                        }
+                        
+                        # Attempt to start playback
                         try:
+                            log("🎬 Starting playback (asset screen confirmed at Step 6.1)")
                             enter_cmd = "keySimulator -kenter"
                             stdin, stdout, stderr = ssh.exec_command(enter_cmd, timeout=15)
                             stdout.read()
                             log("✓ Sent ENTER to start playback")
-                            step_results['step_6_asset_selection'] = 'asset_screen_direct'
-                            step_results['step_6_content_launch'] = 'success_direct'
+                            step_results['step_6_asset_selection'] = 'asset_screen_confirmed_6_1'
+                            step_results['step_6_content_launch'] = 'success_optimized'
+                            step_results['step_6_skipped_6_2'] = True
                         except Exception as e:
                             log(f"❌ Error sending ENTER: {e}")
                             step_results['step_6_asset_selection'] = f'error: {e}'
                             step_results['step_6_content_launch'] = f'keypress_error: {e}'
+                            step_results['step_6_skipped_6_2'] = True
                     
                     else:
-                        log(f"ℹ Screen detected: {screen_detected} (not explicitly asset or search screen)")
-                        log(f"  Proceeding to next step")
-                        step_results['step_6_content_launch'] = 'success'
-                        step_results['step_6_asset_selection'] = f'unknown_screen: {screen_detected}'
+                        log(f"ℹ Screen detected at Step 6.1: {screen_detected}")
+                        log(f"  Enhanced detection did not classify as search/asset screen")
+                        log(f"  Context: After voice command, assuming asset content is loaded")
+                        log(f"  Proceeding to Step 6.3 (OCR validation) for content confirmation")
+                        
+                        # Update asset screenshot for Step 6.3 validation
+                        asset_screenshot_info = {
+                            'path': result.get('local_path'),
+                            'url': result.get('screenshot_url'),
+                            'step': 6.1,
+                            'timestamp': timestamp,
+                            'screen_detected': screen_detected
+                        }
+                        
+                        step_results['step_6_content_launch'] = 'success_ambiguous'
+                        step_results['step_6_asset_selection'] = f'screen_context: {screen_detected}'
                     
                     step_results['step_6_screenshot'] = asset_screenshot_info
                     
