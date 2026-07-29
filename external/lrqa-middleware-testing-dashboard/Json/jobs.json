@@ -3791,5 +3791,89 @@
       },
       "step_6_asset_selection": "matched_and_played"
     }
+  },
+  {
+    "job_id": "cf92aca9-d007-4299-93b3-1e4b65cb46ab",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "netflix_playback"
+    ],
+    "execution_queue": [
+      {
+        "method": "netflix_playback",
+        "asset_voice_command": "Play Little Hearts from Netflix",
+        "playback_duration": 400,
+        "username_cred": "",
+        "password_cred": "",
+        "execute_playback_controls": true,
+        "screenshot_analysis": true,
+        "login_url": "",
+        "description": "App launch"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-07-29T09:21:47.314737",
+    "end_time": "2026-07-29T09:36:18.681124+00:00",
+    "log_file_path": "logs/jobs/cf92aca9-d007-4299-93b3-1e4b65cb46ab/execution.log",
+    "session_folder": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_092147_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-07-29T09:21:47.314754",
+    "eta_seconds": 45,
+    "eta_formatted": "45s",
+    "time_per_iteration": 45,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-07-29T09:21:47.314759",
+    "queue_position": null,
+    "team_name": "LRQA",
+    "execution_results": {
+      "step_0_screenshot_verification": "success",
+      "step_0_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_092147_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-0_Iteration-1_20260729_092159.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 0,
+        "timestamp": "20260729_092147"
+      },
+      "step_4_screen_capture": "NETFLIX_PROFILE_SCREEN",
+      "step_4_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_092147_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-4_Iteration-1_20260729_092358.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "timestamp": "20260729_092147"
+      },
+      "step_4_screen_validation": {
+        "screen_detected": "Netflix_NetflixProfileScreen",
+        "confidence": 0.7373331189155579,
+        "validation_details": {
+          "analysis_method": "PIXEL_MATCHING_WITH_APP_SPECIFIC_REFERENCES",
+          "primary_validator": "PIXEL_MATCHING",
+          "ai_enhanced": false,
+          "app_name": "netflix"
+        }
+      },
+      "step_5_screenshot_verification": "success",
+      "step_5_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_092147_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-5_Iteration-1_20260729_092521.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 5,
+        "timestamp": "20260729_092521"
+      },
+      "step_6_content_launch": "success",
+      "step_6_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_092147_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-6.1_Iteration-1_20260729_092640.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 6.1,
+        "timestamp": "20260729_092640"
+      },
+      "step_6_asset_selection": "unknown_screen: Netflix_NetflixHome"
+    }
   }
 ]

@@ -972,5 +972,27 @@
     "tiles_summary": null,
     "rdk_milestones_log": null,
     "boot_type": null
+  },
+  {
+    "iteration": 1,
+    "phase": "netflix_playback Execution",
+    "status": "PASSED",
+    "details": "Netflix playback test completed with 16/37 steps successful",
+    "screenshots": [],
+    "logs": [],
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "method": "netflix_playback",
+    "timestamp": "2026-07-29T09:36:17.822360+00:00",
+    "date": "2026-07-29",
+    "job_id": "cf92aca9-d007-4299-93b3-1e4b65cb46ab",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": null,
+    "build_info": null,
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
   }
 ]

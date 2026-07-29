@@ -922,17 +922,17 @@
                     });
                     
                     galleryHtml += `
-                        <div style="background: #1a1a1a; border: 1px solid #374151; border-radius: 4px; overflow: hidden; cursor: pointer;"
+                        <div style="background: #1a1a1a; border: 1px solid #374151; border-radius: 4px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column;"
                              onclick="viewScreenshotFullscreen('${imagePath}', '${timestamp}')">
                             <img src="${imagePath}" 
                                  alt="${timestamp}"
-                                 style="width: 100%; height: 150px; object-fit: cover; display: block;"
-                                 onerror="console.error('Image failed to load:', '${imagePath}'); this.style.display='none'; this.parentElement.style.background='#ff6b6b'; this.parentElement.innerHTML='<div style=\"height:150px; display:flex; align-items:center; justify-content:center;\"><span style=\"color:#fff; text-align:center;\">Image failed to load</span></div>';">
-                            <div style="padding: 0.5rem; background: #111827; color: #cbd5e1; font-size: 0.8rem;">
+                                 style="width: 100%; height: 150px; object-fit: cover; display: block; flex-shrink: 0;"
+                                 onerror="this.style.display='none'; this.parentElement.style.background='#ff6b6b';">
+                            <div style="padding: 0.5rem; background: #111827; color: #cbd5e1; font-size: 0.8rem; flex-shrink: 0;">
                                 <strong>${screenshot.step || 'Unknown'}</strong>
                                 <div style="color: #9ca3af; font-size: 0.75rem;">${timestamp}</div>
                             </div>
-                        </div>
+                        </div>`
                     `;
                 });
                 
