@@ -1732,7 +1732,7 @@
                                                     <i class="bi bi-tv"></i> Lab Device: {{ device.ip }}
                                                 </small>
                                                 <small class="device-item-detail">
-                                                    <i class="bi bi-cpu"></i> Via R-Pi: {{ device.rpi_ip or 'N/A' }}:{{ device.rpi_port or 'N/A' }}
+                                                    <i class="bi bi-cpu"></i> Via R-Pi: {{ (device.rpi_config.rpi_ip if device.rpi_config and device.rpi_config.rpi_ip else 'N/A') }}:{{ (device.rpi_config.rpi_port if device.rpi_config and device.rpi_config.rpi_port else 60201) }}
                                                 </small>
                                                 <small class="device-item-detail">
                                                     <i class="bi bi-ethernet"></i> {{ device.mac_address or 'N/A' }}
@@ -4174,7 +4174,50 @@
         function openDeviceManagementModal() {
             const modal = document.getElementById('deviceManagementModal');
             const bootstrapModal = new bootstrap.Modal(modal);
+            
+            // Refresh device display to show DESK and GDF_RACK sections correctly
+            updateDeviceListDisplay();
+            
             bootstrapModal.show();
+        }
+        
+        // Update device list to show DESK and GDF_RACK sections with empty states
+        function updateDeviceListDisplay() {
+            console.log('🔄 Updating device list display with DESK/GDF_RACK sections...');
+            
+            const deskList = document.getElementById('desk-devices-list');
+            const deskEmpty = document.getElementById('desk-devices-empty');
+            const rackList = document.getElementById('rack-devices-list');
+            const rackEmpty = document.getElementById('rack-devices-empty');
+            
+            if (!deskList || !rackList) {
+                console.warn('⚠️ Device list containers not found');
+                return;
+            }
+            
+            // Count devices in each category
+            const deskDevices = deskList.querySelectorAll('.device-item').length;
+            const rackDevices = rackList.querySelectorAll('.device-item').length;
+            
+            console.log(`📊 Device count - DESK: ${deskDevices}, GDF_RACK: ${rackDevices}`);
+            
+            // Show/hide empty states
+            if (deskEmpty) {
+                deskEmpty.style.display = deskDevices === 0 ? 'block' : 'none';
+            }
+            if (rackEmpty) {
+                rackEmpty.style.display = rackDevices === 0 ? 'block' : 'none';
+            }
+            
+            // Ensure both sections are visible
+            if (deskList.parentElement) {
+                deskList.parentElement.style.display = 'block';
+            }
+            if (rackList.parentElement) {
+                rackList.parentElement.style.display = 'block';
+            }
+            
+            console.log('✅ Device list display updated');
         }
         
         // NEW: Refresh device list from backend to remove deleted devices
@@ -8943,6 +8986,11 @@
             // Mark button as active
             if (buttonElement) {
                 buttonElement.classList.add('active');
+            }
+            
+            // Update device list display when switching to devices tab
+            if (tabName === 'devices') {
+                updateDeviceListDisplay();
             }
         }
         

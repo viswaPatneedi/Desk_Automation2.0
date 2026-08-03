@@ -165,7 +165,7 @@ class TestExecutionService:
                 'password': device.password
             }
     
-
+    def execute_test(self, device_ip: str, methods: str | List[str], iterations: int,
                     selected_ir_keys: Optional[List[str]] = None, voice_text: Optional[str] = None) -> bool:
         """
         Execute test method(s) on a device

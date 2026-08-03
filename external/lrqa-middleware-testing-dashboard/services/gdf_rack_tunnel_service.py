@@ -188,7 +188,7 @@ class GDFRackTunnelService:
         except Exception as e:
             return False, f"Port forwarding error: {str(e)}"
     
-    def _port_forward_handler(self, channel, (origin, origin_port), (server_addr, server_port)):
+    def _port_forward_handler(self, channel, origin, server_addr):
         """
         Handler for incoming port forward connections
         Called when a connection arrives on a forwarded port

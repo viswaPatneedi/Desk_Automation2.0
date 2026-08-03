@@ -3058,5 +3058,46 @@
     "triggered_at": "2026-07-31T20:13:27.055492",
     "queue_position": null,
     "team_name": "LRQA"
+  },
+  {
+    "job_id": "fc6fa935-cfc8-4cd2-93cc-22b9f4567896",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME"
+        ],
+        "ir_key_delay": 0.5,
+        "description": "Switching the device ON"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-03T20:13:12.649997",
+    "end_time": "2026-08-03T20:13:30.379132+00:00",
+    "log_file_path": "logs/jobs/fc6fa935-cfc8-4cd2-93cc-22b9f4567896/execution.log",
+    "session_folder": "Enhancement_output/sessions/IR_TEST_ELEMENT_A4K_10-0-0-250_1_ITR_20260803_201312_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-03T20:13:12.650016",
+    "eta_seconds": 43,
+    "eta_formatted": "43s",
+    "time_per_iteration": 43,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-03T20:13:12.650024",
+    "queue_position": null,
+    "team_name": "LRQA"
   }
 ]
