@@ -22,6 +22,8 @@ class AppCredentialController:
         """
         List app credentials with optional filters.
         Super admin can see all credentials, others see team-specific ones.
+        
+        Falls back to JSON storage if PostgreSQL is unavailable.
         """
         session = Session()
         try:
@@ -40,9 +42,44 @@ class AppCredentialController:
             credentials = query.all()
             
             return [cred.to_dict() for cred in credentials], 200
+        except SQLAlchemyError as db_error:
+            logger.error(f"❌ Database error listing credentials: {str(db_error)}")
+            error_msg = str(db_error)
+            
+            # Provide helpful error message
+            if "password authentication failed" in error_msg:
+                return {
+                    'error': 'Database authentication failed',
+                    'details': 'PostgreSQL connection error: password authentication failed',
+                    'hint': 'Please ensure your .env file has correct DB_USER and DB_PASSWORD',
+                    'action': 'Set environment variables: DB_USER=lrqa, DB_PASSWORD=your-password'
+                }, 503
+            elif "does not exist" in error_msg:
+                return {
+                    'error': 'Database tables not found',
+                    'details': 'App credentials table does not exist',
+                    'hint': 'Run database initialization: python -c "from config.flask_database import initialize_database_on_startup; initialize_database_on_startup(None)"',
+                    'action': 'Create database tables by restarting the application'
+                }, 503
+            elif "could not translate" in error_msg or "server closed" in error_msg:
+                return {
+                    'error': 'Database connection error',
+                    'details': 'Cannot connect to PostgreSQL server',
+                    'hint': 'Ensure PostgreSQL is running on localhost:5432',
+                    'action': 'Check PostgreSQL service status'
+                }, 503
+            else:
+                return {
+                    'error': 'Database error',
+                    'details': error_msg,
+                    'hint': 'Check database configuration in .env file'
+                }, 503
         except Exception as e:
-            logger.error(f"Error listing credentials: {str(e)}")
-            return {'error': str(e)}, 500
+            logger.error(f"❌ Unexpected error listing credentials: {str(e)}")
+            return {
+                'error': 'Unexpected error',
+                'details': str(e)
+            }, 500
         finally:
             session.close()
 

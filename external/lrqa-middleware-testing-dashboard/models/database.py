@@ -21,9 +21,9 @@ logger = logging.getLogger(__name__)
 # Database URL construction from environment variables
 DB_HOST = os.environ.get('DB_HOST', 'localhost')
 DB_PORT = os.environ.get('DB_PORT', '5432')
-DB_NAME = os.environ.get('DB_NAME', 'desk_automation_v2')
-DB_USER = os.environ.get('DB_USER', 'postgres')
-DB_PASSWORD = os.environ.get('DB_PASSWORD', 'postgres')
+DB_NAME = os.environ.get('DB_NAME', 'lrqa_v2')  # Match Flask config default
+DB_USER = os.environ.get('DB_USER', 'lrqa')  # Changed from 'postgres' to 'lrqa'
+DB_PASSWORD = os.environ.get('DB_PASSWORD', 'lrqa_password')  # Changed from 'postgres' to 'lrqa_password'
 
 # Build DATABASE_URL from individual components OR use provided DATABASE_URL
 DATABASE_URL = os.environ.get(
