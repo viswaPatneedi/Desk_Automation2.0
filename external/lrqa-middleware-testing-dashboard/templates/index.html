@@ -11756,5 +11756,151 @@
     {% include 'modals/app_credentials/management.html' %}
     {% endif %}
 
+    <!-- Welcome to Dashboard Popup Modal - Only for New Users -->
+    {% if show_welcome_popup %}
+    <div class="modal fade" id="welcomePopupModal" tabindex="-1" aria-labelledby="welcomePopupLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 15px;">
+                <!-- Close Button -->
+                <button type="button" class="btn-close btn-close-white position-absolute" style="top: 15px; right: 15px; z-index: 10;" data-bs-dismiss="modal" aria-label="Close" id="welcomePopupCloseBtn"></button>
+                
+                <!-- Modal Header -->
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title text-white font-weight-bold" id="welcomePopupLabel" style="font-size: 1.8rem; letter-spacing: 0.5px;">
+                        👋 Welcome to RDK-E Middleware Dashboard 2.0
+                    </h5>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="modal-body text-white pb-0">
+                    <p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 1.5rem;">
+                        Welcome, <strong>{{ current_user.name }}</strong>! We're thrilled to have you on board. Let's explore the powerful features of our integrated testing platform.
+                    </p>
+
+                    <!-- Features Grid -->
+                    <div class="row g-3 mb-3">
+                        <!-- Feature 1: Device Management -->
+                        <div class="col-md-6">
+                            <div class="card bg-white bg-opacity-10 border-0 rounded-3 h-100" style="backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+                                <div class="card-body p-4">
+                                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📱</div>
+                                    <h6 class="card-title text-white font-weight-bold">Device Management</h6>
+                                    <p class="card-text small text-white-50">Register and manage your devices, including DESK and GDF_RACK configurations with SSH tunneling.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature 2: Test Execution -->
+                        <div class="col-md-6">
+                            <div class="card bg-white bg-opacity-10 border-0 rounded-3 h-100" style="backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+                                <div class="card-body p-4">
+                                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">▶️</div>
+                                    <h6 class="card-title text-white font-weight-bold">Test Execution</h6>
+                                    <p class="card-text small text-white-50">Execute predefined test methods on your devices and track real-time progress.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature 3: Job Monitoring -->
+                        <div class="col-md-6">
+                            <div class="card bg-white bg-opacity-10 border-0 rounded-3 h-100" style="backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+                                <div class="card-body p-4">
+                                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                                    <h6 class="card-title text-white font-weight-bold">Job Monitoring</h6>
+                                    <p class="card-text small text-white-50">Monitor job queues, track execution status, and analyze comprehensive logs.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Feature 4: Sequences & Automation -->
+                        <div class="col-md-6">
+                            <div class="card bg-white bg-opacity-10 border-0 rounded-3 h-100" style="backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+                                <div class="card-body p-4">
+                                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚙️</div>
+                                    <h6 class="card-title text-white font-weight-bold">Sequences & Automation</h6>
+                                    <p class="card-text small text-white-50">Create and manage test sequences with AI learning capabilities.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Tips -->
+                    <div class="alert alert-info border-0 rounded-3 text-dark" style="background: rgba(255,255,255,0.15);">
+                        <strong>💡 Quick Tip:</strong> Start by exploring the Device Management modal to register your first device!
+                    </div>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light px-4" id="startUsingDashboardBtn">
+                        Start Using Dashboard →
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Welcome Popup JavaScript Controller -->
+    <script>
+        // Initialize welcome popup on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Only show popup if flag is set
+            const showWelcome = {{ 'true' if show_welcome_popup else 'false' }};
+            
+            if (showWelcome) {
+                // Show the modal
+                const welcomeModal = new bootstrap.Modal(document.getElementById('welcomePopupModal'));
+                welcomeModal.show();
+            }
+        });
+
+        // Handle close button
+        const closeBtn = document.getElementById('welcomePopupCloseBtn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                markWelcomePopupShown();
+            });
+        }
+
+        // Handle "Start Using Dashboard" button
+        const startBtn = document.getElementById('startUsingDashboardBtn');
+        if (startBtn) {
+            startBtn.addEventListener('click', function() {
+                markWelcomePopupShown();
+            });
+        }
+
+        // Function to mark popup as shown
+        function markWelcomePopupShown() {
+            fetch('/api/welcome-popup/mark-shown', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('✅ Welcome popup marked as shown');
+                    // Hide the modal if it's still open
+                    const welcomeModal = bootstrap.Modal.getInstance(document.getElementById('welcomePopupModal'));
+                    if (welcomeModal) {
+                        welcomeModal.hide();
+                    }
+                }
+            })
+            .catch(error => console.error('Error marking welcome popup:', error));
+        }
+
+        // Add event listener to modal hide event
+        const welcomePopupElement = document.getElementById('welcomePopupModal');
+        if (welcomePopupElement) {
+            welcomePopupElement.addEventListener('hidden.bs.modal', function() {
+                markWelcomePopupShown();
+            });
+        }
+    </script>
+
 </body>
 </html>

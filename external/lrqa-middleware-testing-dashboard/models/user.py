@@ -10,7 +10,7 @@ from models.database import Session, User as DBUser
 class User:
     """User model for storing user information and authentication."""
     
-    def __init__(self, ntid, email, name, password_hash, created_at=None, user_id=None, alternate_email=None, is_admin=False, team_name=None, is_super_admin=False, is_team_admin=False):
+    def __init__(self, ntid, email, name, password_hash, created_at=None, user_id=None, alternate_email=None, is_admin=False, team_name=None, is_super_admin=False, is_team_admin=False, welcome_popup_shown=False):
         self.user_id = user_id or ntid  # Use NTID as user_id if not provided
         self.ntid = ntid
         self.email = email
@@ -21,6 +21,7 @@ class User:
         self.is_super_admin = is_super_admin or is_admin  # Super admin - controls everything
         self.is_team_admin = is_team_admin  # Team admin - controls own team only
         self.created_at = created_at or datetime.utcnow().isoformat()
+        self.welcome_popup_shown = welcome_popup_shown  # Track if user has seen welcome popup
         self.is_authenticated = True
         self.is_active = True
         self.is_anonymous = False
@@ -57,7 +58,8 @@ class User:
             'is_admin': self.is_admin,  # Legacy field
             'is_super_admin': self.is_super_admin,  # NEW: Super admin controls everything
             'is_team_admin': self.is_team_admin,  # NEW: Team admin controls own team
-            'team_name': self.team_name
+            'team_name': self.team_name,
+            'welcome_popup_shown': self.welcome_popup_shown  # Track if user has seen welcome popup
         }
     
     @staticmethod
@@ -74,7 +76,8 @@ class User:
             is_admin=data.get('is_admin', False),  # Legacy
             is_super_admin=data.get('is_super_admin', data.get('is_admin', False)),  # NEW
             is_team_admin=data.get('is_team_admin', False),  # NEW
-            team_name=data.get('team_name', '')
+            team_name=data.get('team_name', ''),
+            welcome_popup_shown=data.get('welcome_popup_shown', False)  # Track popup viewing
         )
 
     @staticmethod
@@ -108,7 +111,8 @@ class User:
             user_id=backup_data.get('user_id', row.username),
             alternate_email=backup_data.get('alternate_email', row.email or f"{row.username}@cable.comcast.com"),
             is_admin=row.is_admin,
-            team_name=row.team_name or backup_data.get('team_name', '')
+            team_name=row.team_name or backup_data.get('team_name', ''),
+            welcome_popup_shown=backup_data.get('welcome_popup_shown', False)
         )
         user.is_approved = row.is_approved
         user.is_active = row.active

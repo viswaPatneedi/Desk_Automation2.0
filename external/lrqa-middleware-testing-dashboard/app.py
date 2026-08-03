@@ -2371,6 +2371,25 @@ def auth_status():
         'login_url': url_for('login')
     })
 
+@app.route('/api/welcome-popup/mark-shown', methods=['POST'])
+@login_required
+def mark_welcome_popup_shown():
+    """Mark that user has seen the welcome popup"""
+    try:
+        # Get current user and update welcome_popup_shown flag
+        current_user.welcome_popup_shown = True
+        current_user.save()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Welcome popup marked as shown'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 # =============================================================================
 # TEAM MANAGEMENT ENDPOINTS (Super Admin Only)
 # =============================================================================
@@ -3105,7 +3124,10 @@ def index():
             continue
         device_list.append(device.to_dict())
     
-    return render_template('index.html', devices=device_list, user=current_user)
+    # Check if user has seen welcome popup
+    show_welcome_popup = not getattr(current_user, 'welcome_popup_shown', False)
+    
+    return render_template('index.html', devices=device_list, user=current_user, show_welcome_popup=show_welcome_popup)
 
 @app.route('/dashboard')
 @login_required
