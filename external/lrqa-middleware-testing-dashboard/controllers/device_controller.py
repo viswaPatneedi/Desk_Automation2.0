@@ -62,16 +62,33 @@ class DeviceController:
     
     @staticmethod
     def add_device():
-        """POST /api/devices - Add a new device"""
+        """POST /api/devices - Add a new device (DESK or GDF_RACK)"""
         try:
             from flask_login import current_user
             data = request.json
 
-            # Validate required fields (except team_name, which is handled below)
-            required_fields = ['name', 'device_type', 'mac_address', 'location']
-            for field in required_fields:
-                if field not in data:
-                    return jsonify({'error': f'Missing required field: {field}'}), 400
+            # Check if this is a RACK device
+            is_rack_device = data.get('is_rack_device', False)
+            
+            # Validate required fields based on device type
+            if is_rack_device:
+                # RACK device validation
+                required_fields = ['name', 'device_type', 'location']
+                rpi_required_fields = ['rpi_ip', 'rpi_username', 'rpi_password']
+                
+                for field in required_fields:
+                    if field not in data:
+                        return jsonify({'error': f'Missing required RACK field: {field}'}), 400
+                
+                for field in rpi_required_fields:
+                    if field not in data:
+                        return jsonify({'error': f'Missing R-Pi configuration: {field}'}), 400
+            else:
+                # DESK device validation
+                required_fields = ['name', 'device_type', 'mac_address', 'location']
+                for field in required_fields:
+                    if field not in data:
+                        return jsonify({'error': f'Missing required field: {field}'}), 400
 
             # Determine team_name logic
             is_admin = getattr(current_user, 'is_admin', False)
@@ -80,13 +97,23 @@ class DeviceController:
             else:
                 team_name = getattr(current_user, 'team_name', '')
 
+            # Build R-Pi config for RACK devices
+            rpi_config = {}
+            if is_rack_device:
+                rpi_config = {
+                    'rpi_ip': data.get('rpi_ip'),
+                    'rpi_port': data.get('rpi_port', 60201),
+                    'rpi_username': data.get('rpi_username'),
+                    'rpi_password': data.get('rpi_password')
+                }
+
             # Create device object
             device = Device(
-                ip=data.get('ip', ''),
+                ip=data.get('ip', '') if not is_rack_device else data.get('lab_ip', ''),
                 name=data['name'],
-                username=data.get('username', 'root'),
-                password=data.get('password', ''),
-                port=data.get('port', 10022),
+                username=data.get('username', 'root') if not is_rack_device else data.get('lab_username', 'root'),
+                password=data.get('password', '') if not is_rack_device else data.get('lab_password', ''),
+                port=data.get('port', 10022) if not is_rack_device else data.get('lab_port', 10022),
                 ir_config=data.get('ir_config', {}),
                 mac_address=data.get('mac_address', ''),
                 vnc_url=data.get('vnc_url', ''),
@@ -94,7 +121,9 @@ class DeviceController:
                 jump_host_config=data.get('jump_host_config', {}),
                 device_type=data.get('device_type', ''),
                 location=data.get('location', ''),
-                team_name=team_name
+                team_name=team_name,
+                is_rack_device=is_rack_device,
+                rpi_config=rpi_config
             )
 
             # Add device
@@ -233,7 +262,9 @@ class DeviceController:
                 jump_host_config=existing_device.jump_host_config,
                 device_type=device_type,
                 location=location,
-                team_name=team_name
+                team_name=team_name,
+                is_rack_device=existing_device.is_rack_device,
+                rpi_config=existing_device.rpi_config
             )
             
             # Update device

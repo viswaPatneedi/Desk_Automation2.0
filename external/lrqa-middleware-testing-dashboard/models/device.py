@@ -15,7 +15,8 @@ class Device:
     
     def __init__(self, ip: str, name: str, username: str, password: str, 
                  port: int = 10022, ir_config: Optional[Dict] = None, mac_address: str = None, vnc_url: str = None,
-                 use_jump_host: bool = False, jump_host_config: Optional[Dict] = None, device_type: str = None, location: str = None, team_name: str = None):
+                 use_jump_host: bool = False, jump_host_config: Optional[Dict] = None, device_type: str = None, location: str = None, team_name: str = None,
+                 is_rack_device: bool = False, rpi_config: Optional[Dict] = None):
         self.original_ip = ip  # Store original IP for VNC URL generation
         self.ip = ip
         self.name = name
@@ -30,6 +31,8 @@ class Device:
         self.device_type = device_type or ''
         self.location = location or ''
         self.team_name = team_name or ''
+        self.is_rack_device = is_rack_device
+        self.rpi_config = rpi_config or {}
     
     @property
     def vnc_url(self) -> str:
@@ -51,7 +54,9 @@ class Device:
             'jump_host_config': self.jump_host_config,
             'device_type': self.device_type,
             'location': self.location,
-            'team_name': self.team_name
+            'team_name': self.team_name,
+            'is_rack_device': self.is_rack_device,
+            'rpi_config': self.rpi_config
         }
 
     def to_storage_dict(self) -> Dict:
@@ -70,6 +75,8 @@ class Device:
             'device_type': self.device_type,
             'location': self.location,
             'team_name': self.team_name,
+            'is_rack_device': self.is_rack_device,
+            'rpi_config': self.rpi_config,
             'is_active': True
         }
     
@@ -99,7 +106,9 @@ class Device:
             jump_host_config=data.get('jump_host_config', {}),
             device_type=data.get('device_type', ''),
             location=data.get('location', ''),
-            team_name=data.get('team_name', '')
+            team_name=data.get('team_name', ''),
+            is_rack_device=data.get('is_rack_device', False),
+            rpi_config=data.get('rpi_config', {})
         )
         # Apply tunnel mode connection parameters if enabled
         if TUNNEL_MODE:
@@ -135,7 +144,9 @@ class Device:
                         'jump_host_config': row.jump_host_config or {},
                         'device_type': row.device_type,
                         'location': row.location,
-                        'team_name': row.team_name
+                        'team_name': row.team_name,
+                        'is_rack_device': getattr(row, 'is_rack_device', False),
+                        'rpi_config': getattr(row, 'rpi_config', {}) or {}
                     }))
                 return devices
         except Exception:

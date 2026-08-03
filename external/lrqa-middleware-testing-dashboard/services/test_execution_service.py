@@ -7,12 +7,13 @@ import threading
 import os
 import time as time_module
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List, Optional, Tuple, Dict
 from models.device import Device
 from models.test_result import TestResult
 from models.job import Job
 from models.device_lock import DeviceLock
 from utils.device_lock_manager import DeviceLockManager
+from services.gdf_rack_tunnel_service import GDFRackTunnelService
 from methods.method_reboot import execute_reboot_process
 from methods.method_deepsleep import execute_deepsleep_process
 from methods.method_ir_test import execute_ir_test_process
@@ -48,8 +49,123 @@ class TestExecutionService:
         self.last_method_result = {}  # Store last method result for passing data between methods
         self.voice_command_text = {}  # Store voice command text per device
         self.cross_method_data = {}  # Store persistent data across method executions (e.g., flux_server_ip_port)
+        self.active_tunnels = {}  # Store active GDF_RACK tunnel services by device IP
     
-    def execute_test(self, device_ip: str, methods: str | List[str], iterations: int,
+    def establish_tunnel_for_device(self, device: Device, log_service=None) -> Tuple[bool, str, Optional[GDFRackTunnelService]]:
+        """
+        Establish tunnel for RACK device if needed
+        
+        Args:
+            device: Device object (may be RACK or DESK)
+            log_service: Optional log service for logging tunnel status
+            
+        Returns:
+            Tuple of (success, message, tunnel_service or None)
+        """
+        if not device.is_rack_device:
+            # DESK device - no tunnel needed
+            return True, "DESK device - direct connection", None
+        
+        if not device.rpi_config:
+            return False, "RACK device missing R-Pi configuration", None
+        
+        try:
+            # Build lab device config from device object
+            lab_device_config = {
+                'lab_ip': device.ip or '10.0.0.28',  # Default lab IP if not set
+                'lab_port': device.port or 10022,
+                'lab_username': device.username or 'root',
+                'lab_password': device.password or '',
+                'device_name': device.name
+            }
+            
+            # Create tunnel service
+            tunnel_service = GDFRackTunnelService(device.rpi_config, lab_device_config)
+            
+            # Establish tunnel connection
+            success, msg = tunnel_service.connect()
+            if success:
+                # Store tunnel for later cleanup
+                self.active_tunnels[device.ip] = tunnel_service
+                status_msg = f"✅ Tunnel established to {device.name} via R-Pi"
+                if log_service:
+                    log_service.log(status_msg)
+                else:
+                    print(status_msg)
+                return True, status_msg, tunnel_service
+            else:
+                error_msg = f"❌ Tunnel connection failed: {msg}"
+                if log_service:
+                    log_service.log(error_msg)
+                else:
+                    print(error_msg)
+                return False, error_msg, None
+                
+        except Exception as e:
+            error_msg = f"❌ Error establishing tunnel: {str(e)}"
+            if log_service:
+                log_service.log(error_msg)
+            else:
+                print(error_msg)
+            return False, error_msg, None
+    
+    def cleanup_tunnel_for_device(self, device_ip: str, log_service=None):
+        """
+        Cleanup tunnel connection for a device
+        
+        Args:
+            device_ip: IP address of device
+            log_service: Optional log service for logging
+        """
+        if device_ip not in self.active_tunnels:
+            return
+        
+        try:
+            tunnel = self.active_tunnels[device_ip]
+            tunnel.disconnect()
+            del self.active_tunnels[device_ip]
+            msg = f"✅ Tunnel cleaned up for device {device_ip}"
+            if log_service:
+                log_service.log(msg)
+            else:
+                print(msg)
+        except Exception as e:
+            msg = f"⚠️  Warning cleaning up tunnel: {str(e)}"
+            if log_service:
+                log_service.log(msg)
+            else:
+                print(msg)
+    
+    def get_connection_params_for_device(self, device: Device) -> Dict[str, any]:
+        """
+        Get connection parameters for device (DESK or RACK)
+        For RACK devices, returns localhost with forwarded ports
+        For DESK devices, returns direct connection params
+        
+        Args:
+            device: Device object
+            
+        Returns:
+            Dict with keys: ip, port, username, password
+        """
+        if device.is_rack_device:
+            # RACK device - use forwarded localhost connection
+            return {
+                'ip': '127.0.0.1',
+                'port': 10022,
+                'username': device.username or 'root',
+                'password': device.password
+            }
+        else:
+            # DESK device - use direct connection
+            return {
+                'ip': device.ip,
+                'port': device.port,
+                'username': device.username,
+                'password': device.password
+            }
+    
+
                     selected_ir_keys: Optional[List[str]] = None, voice_text: Optional[str] = None) -> bool:
         """
         Execute test method(s) on a device
@@ -229,6 +345,22 @@ class TestExecutionService:
                     total_iterations=iterations,
                     session_folder=session_folder
                 )
+            
+            # ✨ ESTABLISH TUNNEL FOR RACK DEVICES ✨
+            tunnel_service = None
+            if device.is_rack_device:
+                tunnel_success, tunnel_msg, tunnel_service = self.establish_tunnel_for_device(device, log_service)
+                if not tunnel_success:
+                    log_service.log(f"\n❌ CRITICAL: Failed to establish R-Pi tunnel")
+                    log_service.log(f"{tunnel_msg}")
+                    if job_id:
+                        Job.update_job_status(job_id, 'failed', 
+                            end_time=datetime.now(timezone.utc).isoformat(),
+                            log_file_path=log_file_path
+                        )
+                        DeviceLock.unlock_device(device.ip)
+                    raise RuntimeError(f"GDF_RACK tunnel establishment failed: {tunnel_msg}")
+                log_service.log(f"\n{tunnel_msg}")
             
             for i in range(start_iteration, iterations):
                 # Check if job has been cancelled
@@ -523,12 +655,19 @@ class TestExecutionService:
 
                     log_service.log(f"\n--- Executing: {method.upper()} (Step {method_index + 1}/{len(execution_queue)}) ---")
 
+                    # ✨ GET DEVICE CONNECTION PARAMETERS (handles both DESK and RACK) ✨
+                    conn_params = self.get_connection_params_for_device(device)
+                    conn_device_ip = conn_params['ip']
+                    conn_port = conn_params['port']
+                    conn_username = conn_params['username']
+                    conn_password = conn_params['password']
+
                     method_result = None
                     if method == "reboot":
                         # Pass combined method name to create proper folder structure for multi-method execution
                         # Pass has_deepsleep flag to adjust maintenance wait time (15 mins with deepsleep, 2 mins standalone)
                         method_result = execute_reboot_process(
-                            device.ip, device.port, device.username, device.password,
+                            conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             has_deepsleep=has_deepsleep,
                             job_id=job_id
@@ -538,10 +677,10 @@ class TestExecutionService:
                             try:
                                 from screenshot_utils import take_and_analyze_screenshot
                                 screenshot_info = take_and_analyze_screenshot(
-                                    device_ip=device.ip,
-                                    port=device.port,
-                                    username=device.username,
-                                    password=device.password,
+                                    device_ip=conn_device_ip,
+                                    port=conn_port,
+                                    username=conn_username,
+                                    password=conn_password,
                                     iteration=i + 1,
                                     method=method,
                                     save_dir="screenshots"
@@ -557,7 +696,7 @@ class TestExecutionService:
                     elif method == "reboot_performance":
                         # Reboot performance monitoring with timing and home screen detection
                         method_result = execute_reboot_performance_process(
-                            device.ip, device.port, device.username, device.password,
+                            conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, combined_method_name=combined_method_name if len(execution_queue) > 1 else None
                         )
                     elif method == "reboot_performance_v2":
@@ -602,7 +741,7 @@ class TestExecutionService:
                                 log_service.log("No valid post-reboot checks configured")
                         
                         method_result = execute_reboot_performance_v2_process(
-                            device.ip, device.port, device.username, device.password,
+                            conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, 
                             combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             optional_checks=optional_checks_resolved,
@@ -662,7 +801,7 @@ class TestExecutionService:
                             log_service.log("Log collection: DISABLED")
                         
                         method_result = execute_reboot_perf_v2_optimized_process(
-                            device.ip, device.port, device.username, device.password,
+                            conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, 
                             combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             optional_checks=optional_checks_resolved,
@@ -724,7 +863,7 @@ class TestExecutionService:
                             log_service.log("Log collection: DISABLED")
                         
                         method_result = execute_trail_method_process(
-                            device.ip, device.port, device.username, device.password,
+                            conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, 
                             combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             optional_checks=optional_checks_resolved,
@@ -753,7 +892,7 @@ class TestExecutionService:
                         log_service.log(f"Data Collection: rdk_milestones.log will be captured")
                         
                         method_result = execute_soft_hard_boot_process(
-                            device.ip, device.port, device.username, device.password,
+                            conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name,
                             combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             boot_type=boot_type,
@@ -774,7 +913,7 @@ class TestExecutionService:
                         log_service.log(f"DeepSleep perform_reboot: {perform_reboot}")
                         
                         method_result = execute_deepsleep_process(
-                            device.ip, device.port, device.username, device.password,
+                            conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, skip_pre, device.name, combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             remote_type=remote_type_ds,
                             sleep_duration_minutes=sleep_duration,
@@ -792,7 +931,7 @@ class TestExecutionService:
                         log_service.log(f"Execute DeepSleep & Wakeup phases: {execute_ds_wakeup}")
                         
                         method_result = execute_maintenance_deepsleep_wakeup_process(
-                            device.ip, device.port, device.username, device.password,
+                            conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             remote_type=remote_type_mdw,
                             sleep_duration_minutes=sleep_duration,
@@ -812,7 +951,7 @@ class TestExecutionService:
                         log_service.log(f"Execute DeepSleep & Wakeup phases: {execute_ds_wakeup}")
                         
                         method_result = execute_maintenance_CURL_deepsleep_wakeup_process(
-                            device.ip, device.port, device.username, device.password,
+                            conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             remote_type=remote_type_mdw,
                             sleep_duration_minutes=sleep_duration,
@@ -828,7 +967,7 @@ class TestExecutionService:
                         log_service.log("This method will execute all 6 steps: wake, EPG check, configure deep sleep, enter sleep, wake from deep sleep, and reboot")
                         
                         method_result = execute_deepsleep_maintenance_wakeup_process(
-                            device.ip, device.port, device.username, device.password,
+                            conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, remote_type=remote_type_dmw,
                             job_id=job_id
                         )
@@ -840,7 +979,7 @@ class TestExecutionService:
                         log_service.log(f"Standby Deep Sleep IR Control remote_type: {remote_type_standby or 'default'}")
                         
                         method_result = execute_standby_deep_sleep_ir_control_process(
-                            device.ip, device.port, device.username, device.password,
+                            conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             remote_type=remote_type_standby,
                             job_id=job_id
@@ -852,7 +991,7 @@ class TestExecutionService:
                             log_service.log("Checking device status...")
                             client = paramiko.SSHClient()
                             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                            client.connect(device.ip, port=device.port, username=device.username, password=device.password, timeout=10)
+                            client.connect(conn_device_ip, port=conn_port, username=conn_username, password=conn_password, timeout=10)
                             stdin, stdout, stderr = client.exec_command('uptime')
                             uptime_output = stdout.read().decode().strip()
                             log_service.log(f"✓ Device is online and responsive")
@@ -870,7 +1009,7 @@ class TestExecutionService:
                         if remote_type:
                             log_service.log(f"IR Remote Type for this instance: {remote_type}")
                         method_result = execute_ir_test_process(
-                            device.ip, device.port, device.username, device.password,
+                            conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, ir_keys, combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             remote_type_override=remote_type, key_delay=ir_key_delay
                         )
@@ -880,7 +1019,7 @@ class TestExecutionService:
                             continue
                         log_service.log(f"Voice command for this instance: \"{voice_text}\"")
                         method_result = execute_voice_command_process(
-                            device.ip, device.port, device.username, device.password,
+                            conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, voice_text, combined_method_name=combined_method_name if len(execution_queue) > 1 else None
                         )
                     elif method == "send_remote_keys":
@@ -895,11 +1034,11 @@ class TestExecutionService:
                             if remote_keys:
                                 log_service.log(f"[SENDKEYS-START] Beginning remote key execution")
                                 result = send_keys_func(
-                                    device_ip=device.ip,
+                                    device_ip=conn_device_ip,
                                     key_sequence=remote_keys,  # Pass as string (will be parsed in function)
-                                    port=device.port,
-                                    username=device.username,
-                                    password=device.password,
+                                    port=conn_port,
+                                    username=conn_username,
+                                    password=conn_password,
                                     key_delay=key_delay
                                 )
                                 log_service.log(f"[SENDKEYS-RESULT] Got result: {result}")
@@ -931,11 +1070,11 @@ class TestExecutionService:
                             # Use device credentials and expected_screen parameter
                             if expected_screen:
                                 result = validate_screen_func(
-                                    device_ip=device.ip,
+                                    device_ip=conn_device_ip,
                                     expected_screen=expected_screen,
-                                    port=device.port,
-                                    username=device.username,
-                                    password=device.password
+                                    port=conn_port,
+                                    username=conn_username,
+                                    password=conn_password
                                 )
                                 # Store screenshot path for display
                                 screenshot_path = result.get('screenshot_path', '')
@@ -1785,7 +1924,12 @@ class TestExecutionService:
                 if job and job.iteration_results:
                     if any(result == 'failed' for result in job.iteration_results.values()):
                         final_status = 'failed'
-                
+            
+            # ✨ CLEANUP TUNNEL FOR RACK DEVICES ✨
+            if device.is_rack_device:
+                self.cleanup_tunnel_for_device(device.ip, log_service)
+            
+            if job_id:
                 Job.update_job_status(
                     job_id, 
                     final_status, 
@@ -1805,6 +1949,10 @@ class TestExecutionService:
             error_msg = f"\n❌ Error during execution: {str(e)}\n{traceback.format_exc()}"
             print(f"🔧 [DEBUG] Exception in _execute_queue_sequence: {error_msg}")
             log_service.log(error_msg)
+            
+            # ✨ CLEANUP TUNNEL ON ERROR ✨
+            if device.is_rack_device:
+                self.cleanup_tunnel_for_device(device.ip, log_service)
             
             # CRITICAL: Flush logs immediately after error to ensure they're written
             if log_file_handle:
