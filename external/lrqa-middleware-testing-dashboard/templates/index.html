@@ -8933,8 +8933,8 @@
             const allButtons = document.querySelectorAll('.device-management-tab-btn');
             allButtons.forEach(btn => btn.classList.remove('active'));
             
-            // Show selected tab
-            const tabId = tabName === 'devices' ? 'devices-tab' : 'add-form-tab';
+            // Show selected tab - construct tab ID by appending '-tab' to tabName
+            const tabId = tabName + '-tab';  // Handles 'devices', 'add-form', 'add-rack-form'
             const tabContent = document.getElementById(tabId);
             if (tabContent) {
                 tabContent.classList.add('active');
