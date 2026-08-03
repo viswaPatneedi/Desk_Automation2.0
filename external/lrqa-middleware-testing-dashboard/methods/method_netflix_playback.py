@@ -374,12 +374,73 @@ def netflix_playback(
                 log(f"✓ Home screen screenshot captured")
                 screenshot_verified = True
                 
+                # ================================================================
+                # STEP 0 ENHANCED: VALIDATE HOME SCREEN (NOT INPUT SCREEN)
+                # ================================================================
+                # CRITICAL: Ensure we're on HOME screen, not an input selection screen
+                # Previous execution showed false positive: INPUT_SCREEN_ANTEENA matched
+                # Solution: Use enhanced detection to validate correct screen
+                
+                screen_validation = result.get('screen_state', {})
+                pixel_confidence = screen_validation.get('confidence', 0.0)
+                pixel_match_result = screen_validation.get('screen_detected', 'Unknown')
+                
+                log(f"🔍 Step 0 Enhanced Validation: Pixel match = {pixel_match_result} ({pixel_confidence:.1%})")
+                
+                # Flag: Is this an INPUT screen (wrong) instead of HOME?
+                is_input_screen = any(x in str(pixel_match_result).upper() for x in [
+                    'INPUT_SCREEN', 'HDMI', 'ANTEENA', 'ANTENNA', 'USB', 'AIRPLAY', 'COMPOSITE'
+                ])
+                
+                # If we matched an INPUT screen OR low confidence, run enhanced validation
+                if is_input_screen or pixel_confidence < 0.75:
+                    log(f"⚠ Input screen detected or low confidence - running enhanced HOME validation...")
+                    
+                    try:
+                        # Import enhanced detector to validate this is actually HOME
+                        from tools.screen.netflix_screen_detector import NetflixScreenDetector
+                        detector = NetflixScreenDetector()
+                        screenshot_path = result.get('local_path', '')
+                        
+                        if screenshot_path and os.path.exists(screenshot_path):
+                            # For HOME validation, use distinguish_home_vs_asset
+                            # If it's NOT an asset screen and logs confirm HOME, it's the home screen
+                            enhanced_result = detector.distinguish_home_vs_asset(
+                                screenshot_path,
+                                pixel_match_result,
+                                pixel_confidence
+                            )
+                            
+                            final_screen = enhanced_result.get('final_screen', pixel_match_result)
+                            final_confidence = enhanced_result.get('confidence', pixel_confidence)
+                            
+                            # If enhanced detection says NOT asset screen (i.e., it's home-like), confirm HOME
+                            if 'AssetScreen' not in final_screen:
+                                log(f"  ✓ Enhanced validation confirms HOME-like screen: {final_screen} ({final_confidence:.1%})")
+                                log(f"  ℹ Reason: {enhanced_result.get('reason', 'Feature-based validation')}")
+                                # Update confidence if enhanced detection is more reliable
+                                if final_confidence > pixel_confidence:
+                                    screen_validation['confidence'] = final_confidence
+                                    log(f"  ✓ Updated confidence: {pixel_confidence:.1%} → {final_confidence:.1%}")
+                            else:
+                                # Asset screen detected, but we sent HOME - this is wrong
+                                log(f"  ⚠ WARNING: Enhanced detection found ASSET features despite HOME keypress!")
+                                log(f"  ℹ Screen may not have navigated to home properly")
+                    
+                    except Exception as enhance_err:
+                        log(f"  ⚠ Enhanced validation error: {enhance_err}")
+                        # Fall back to basic validation
+                        log(f"  ℹ Relying on device logs for HOME verification")
+                
                 # Store screenshot info for results display (like steps 4 & 6)
                 home_screenshot_info = {
                     'path': result.get('local_path'),
                     'url': result.get('screenshot_url'),
                     'step': 0,
-                    'timestamp': timestamp
+                    'timestamp': timestamp,
+                    'screen_detected': pixel_match_result,
+                    'confidence': pixel_confidence,
+                    'validation_method': 'enhanced' if (is_input_screen or pixel_confidence < 0.75) else 'pixel_matching'
                 }
                 
                 step_results['step_0_screenshot_verification'] = 'success'
@@ -794,6 +855,52 @@ def netflix_playback(
                     
                     log(f"✓ Screen Validation Result: {screen_detected} ({confidence:.2%} confidence)")
                     
+                    # ================================================================
+                    # STEP 4 ENHANCED: IMPROVED SCREEN DETECTION WITH FEATURE ANALYSIS
+                    # ================================================================
+                    # Similar to Step 6.1: Use enhanced detection when pixel confidence is low
+                    # This prevents misclassification (e.g., home as profile, asset as home)
+                    
+                    if confidence < 0.90:  # Apply enhanced detection for non-very-high confidence matches
+                        log(f"🔍 Step 4 Enhanced Detection: Running feature-based validation (pixel confidence: {confidence:.1%})...")
+                        
+                        try:
+                            from tools.screen.netflix_screen_detector import NetflixScreenDetector
+                            detector = NetflixScreenDetector()
+                            screenshot_path = result.get('local_path', '')
+                            
+                            if screenshot_path and os.path.exists(screenshot_path):
+                                # Use the same distinguishing logic as Step 6
+                                enhanced_result = detector.distinguish_home_vs_asset(
+                                    screenshot_path,
+                                    screen_detected,
+                                    confidence
+                                )
+                                
+                                enhanced_screen = enhanced_result.get('final_screen', screen_detected)
+                                enhanced_confidence = enhanced_result.get('confidence', confidence)
+                                
+                                # Log feature detection details
+                                button_info = enhanced_result.get('button_detection', {})
+                                metadata_info = enhanced_result.get('metadata_detection', {})
+                                
+                                log(f"  📊 Feature detection:")
+                                log(f"     • Buttons: {button_info.get('has_buttons', False)} ({button_info.get('button_count', 0)} detected)")
+                                log(f"     • Metadata: {metadata_info.get('has_metadata', False)} ({len(metadata_info.get('patterns_found', []))} patterns)")
+                                
+                                # If enhanced detection changed the result, log the reclassification
+                                if enhanced_screen != screen_detected:
+                                    log(f"  ✓ RECLASSIFIED: {screen_detected} ({confidence:.1%}) → {enhanced_screen} ({enhanced_confidence:.1%})")
+                                    screen_detected = enhanced_screen
+                                    confidence = enhanced_confidence
+                                else:
+                                    log(f"  ✓ Confirmed: {screen_detected} ({enhanced_confidence:.1%})")
+                        
+                        except Exception as enhance_err:
+                            log(f"  ⚠ Enhanced detection error: {enhance_err}")
+                            # Fall back to basic detection
+                            log(f"  ℹ Using base pixel matching result")
+                    
                     # Map AI detection to screen state using enhanced keyword matching
                     detected_lower = str(screen_detected).lower()
                     
@@ -815,6 +922,11 @@ def netflix_playback(
                         log(f"⚠ Unknown Netflix screen detected: {screen_detected}")
                     
                     log(f"✓ Screen state determined: {screen_state} [confidence: {confidence:.2%}]")
+                    
+                    # Store enhanced detection info in validation result
+                    screen_validation['screen_detected'] = screen_detected
+                    screen_validation['confidence'] = confidence
+                    screen_validation['validation_method'] = 'enhanced' if confidence != screen_validation.get('confidence', 0) else 'pixel_matching'
                 else:
                     log(f"⚠ No AI validation result available, using fallback detection")
                     screen_state = "NETFLIX_UNKNOWN_SCREEN"
@@ -954,16 +1066,79 @@ def netflix_playback(
             if result.get('success'):
                 log(f"✓ Profile screen screenshot captured")
                 
-                # Store screenshot info for results display
+                # ================================================================
+                # STEP 5.5 ENHANCED: VALIDATE PROFILE/HOME SCREEN WITH FEATURES
+                # ================================================================
+                # Similar to Step 4 & 6: Use enhanced detection for better accuracy
+                # Validates that profile selection proceeded to correct next screen
+                
+                screen_validation = result.get('screen_state', {})
+                screen_detected = screen_validation.get('screen_detected', 'Unknown')
+                confidence = screen_validation.get('confidence', 0.0)
+                
+                # 🔧 FIX: Handle None values from fallback validation
+                if screen_detected is None or screen_detected == 'None':
+                    screen_detected = 'Unknown'
+                
+                log(f"🔍 Step 5.5 Screen Validation: {screen_detected} ({confidence:.1%})")
+                
+                # Apply enhanced detection for low confidence matches
+                # After profile selection, we expect HOME or ASSET, not LOGIN or PROFILE again
+                if confidence < 0.85:
+                    log(f"🔍 Step 5.5 Enhanced Detection: Running feature validation (confidence: {confidence:.1%})...")
+                    
+                    try:
+                        from tools.screen.netflix_screen_detector import NetflixScreenDetector
+                        detector = NetflixScreenDetector()
+                        screenshot_path = result.get('local_path', '')
+                        
+                        if screenshot_path and os.path.exists(screenshot_path):
+                            enhanced_result = detector.distinguish_home_vs_asset(
+                                screenshot_path,
+                                screen_detected,
+                                confidence
+                            )
+                            
+                            enhanced_screen = enhanced_result.get('final_screen', screen_detected)
+                            enhanced_confidence = enhanced_result.get('confidence', confidence)
+                            
+                            # Log results
+                            button_info = enhanced_result.get('button_detection', {})
+                            metadata_info = enhanced_result.get('metadata_detection', {})
+                            
+                            log(f"  📊 Feature detection:")
+                            log(f"     • Buttons: {button_info.get('has_buttons', False)} ({button_info.get('button_count', 0)} detected)")
+                            log(f"     • Metadata: {metadata_info.get('has_metadata', False)} ({len(metadata_info.get('patterns_found', []))} patterns)")
+                            
+                            if enhanced_screen != screen_detected:
+                                log(f"  ✓ RECLASSIFIED: {screen_detected} ({confidence:.1%}) → {enhanced_screen} ({enhanced_confidence:.1%})")
+                                screen_detected = enhanced_screen
+                                confidence = enhanced_confidence
+                            else:
+                                log(f"  ✓ Confirmed: {screen_detected} ({enhanced_confidence:.1%})")
+                            
+                            # Update screen validation with enhanced results
+                            screen_validation['screen_detected'] = screen_detected
+                            screen_validation['confidence'] = confidence
+                    
+                    except Exception as enhance_err:
+                        log(f"  ⚠ Enhanced detection error: {enhance_err}")
+                        log(f"  ℹ Using pixel matching result")
+                
+                # Store screenshot info for results display with validation details
                 profile_screenshot_info = {
                     'path': result.get('local_path'),
                     'url': result.get('screenshot_url'),
                     'step': 5,
-                    'timestamp': timestamp
+                    'timestamp': timestamp,
+                    'screen_detected': screen_detected,
+                    'confidence': confidence,
+                    'validation_method': 'enhanced' if screen_validation.get('confidence', 0) < 0.85 else 'pixel_matching'
                 }
                 
                 step_results['step_5_screenshot_verification'] = 'success'
                 step_results['step_5_screenshot'] = profile_screenshot_info
+                step_results['step_5_screen_validation'] = screen_validation
                 
                 # Update job in real-time with step_5 results
                 if job_id:
@@ -1548,59 +1723,90 @@ def netflix_playback(
         log("="*80)
         
         # 🔧 ENHANCED: Check device logs BEFORE sending ENTER to determine current playback state
-        playback_already_started = False
-        playback_paused = False
+        # CRITICAL FIX: Only check the LATEST/MOST RECENT state, not multiple transitions
+        playback_should_send_enter = False
+        latest_state = None
         
-        log(f"🔍 Analyzing playback state from logs (since {asset_command_timestamp})...")
+        log(f"🔍 Analyzing LATEST playback state from logs (since {asset_command_timestamp})...")
         
         try:
-            # Look for MediaControl state change logs that indicate playback status
+            # Get ONLY the LATEST/MOST RECENT playback state transition
             log_check_cmd = (
-                f"awk '$1 >= \"{asset_command_timestamp}\"' /opt/logs/sky-messages.log | "
-                f"grep -i 'MEDIACONTROL.*old_state' | tail -3"
+                f"grep -i 'MEDIACONTROL.*old_state' /opt/logs/sky-messages.log | tail -1"
             )
             
             stdin, stdout, stderr = ssh.exec_command(log_check_cmd, timeout=15)
-            log_output = stdout.read().decode('utf-8', errors='ignore').strip()
+            latest_log_line = stdout.read().decode('utf-8', errors='ignore').strip()
             
-            if log_output:
-                log(f"📊 Recent playback state logs:")
-                for line in log_output.split('\n')[-3:]:
-                    if line.strip():
-                        log(f"   {line}")
-                        
-                        # Check for PLAYING state (new_state PLAYING)
-                        if 'new_state PLAYING' in line and 'old_state PLAYING' not in line:
-                            playback_already_started = True
-                            log(f"✓ Playback already initiated - skipping ENTER keypress")
-                        
-                        # Check for PAUSED state that needs resuming
-                        elif 'old_state PLAYING, new_state PAUSED' in line:
-                            playback_paused = True
-                            log(f"⏸ Playback is PAUSED - will send ENTER to resume")
+            if latest_log_line:
+                log(f"📊 LATEST playback state transition:")
+                log(f"   {latest_log_line}")
+                
+                # Determine current state based on ONLY the latest transition
+                if 'new_state PLAYING' in latest_log_line:
+                    # Latest state is PLAYING (regardless of what came before)
+                    latest_state = 'PLAYING'
+                    log(f"   ✅ Current state: PLAYING")
+                    log(f"   ✓ Playback is already active - SKIPPING ENTER keypress")
+                    playback_should_send_enter = False
+                    
+                elif 'new_state PAUSED' in latest_log_line:
+                    # Latest state is PAUSED - needs to resume
+                    latest_state = 'PAUSED'
+                    log(f"   ⏸ Current state: PAUSED")
+                    log(f"   ⚠️ Playback is PAUSED - will send ENTER to resume")
+                    playback_should_send_enter = True
+                    
+                else:
+                    # State is something else (READY, NULL, etc.)
+                    latest_state = 'OTHER'
+                    log(f"   ℹ️ Current state: {latest_log_line[latest_log_line.rfind('new_state'):latest_log_line.rfind('new_state')+30]}")
+                    log(f"   ℹ️ Will send ENTER as precaution")
+                    playback_should_send_enter = True
             else:
-                log(f"ℹ No playback state logs found yet - will send ENTER as normal")
+                log(f"ℹ️ No playback state logs found yet - will send ENTER as normal")
+                playback_should_send_enter = True
+                latest_state = 'UNKNOWN'
                 
         except Exception as e:
             log(f"⚠ Error checking playback logs: {e} - proceeding with ENTER keypress")
+            playback_should_send_enter = True
+            latest_state = 'ERROR'
         
-        # Send ENTER only if playback hasn't started OR if it's paused
-        if not playback_already_started or playback_paused:
-            log("⏯ Sending ENTER keypress to start/resume playback...")
+        # Send ENTER ONLY if playback is PAUSED or state is unknown (not if PLAYING)
+        step_7_latest_log_line = 0  # Track latest log line number from Step 7
+        
+        if playback_should_send_enter:
+            log(f"⏯ Sending ENTER keypress to start/resume playback...")
             enter_cmd = "keySimulator -kenter"
             
             try:
                 stdin, stdout, stderr = ssh.exec_command(enter_cmd, timeout=15)
                 stdout.read()
-                log("✓ ENTER keypress sent")
+                log(f"✓ ENTER keypress sent (Latest state was: {latest_state})")
                 step_results['step_7_playback_initiation'] = 'enter_sent'
             except Exception as e:
                 log(f"❌ Error sending ENTER keypress: {e}")
                 step_results['step_7_playback_initiation'] = f'keypress_error: {e}'
                 overall_success = False
         else:
-            log("✓ Skipping ENTER - playback already active")
+            log(f"✓ SKIPPED ENTER - Playback is already PLAYING")
             step_results['step_7_playback_initiation'] = 'playback_active'
+            step_results['step_7_latest_state'] = latest_state
+        
+        # Capture the latest log line number from Step 7 for comparison in Step 8
+        try:
+            log_line_cmd = f"grep -n 'MEDIACONTROL.*old_state' /opt/logs/sky-messages.log | tail -1"
+            stdin, stdout, stderr = ssh.exec_command(log_line_cmd, timeout=15)
+            step7_log_output = stdout.read().decode('utf-8', errors='ignore').strip()
+            if step7_log_output:
+                try:
+                    step_7_latest_log_line = int(step7_log_output.split(':')[0])
+                    log(f"📍 Step 7 latest log line number: {step_7_latest_log_line}")
+                except (ValueError, IndexError):
+                    pass
+        except:
+            pass
         
         log("⏳ Waiting 10 seconds for playback to stabilize...")
         time.sleep(10)
@@ -1610,9 +1816,178 @@ def netflix_playback(
         # STEP 8: CONTINUOUS PLAYBACK MONITORING (MULTI-LAYER HEALTH CHECK)
         # ======================================================================
         log("\n" + "="*80)
-        log("[STEP 8] CONTINUOUS PLAYBACK MONITORING (MULTI-LAYER HEALTH CHECK)")
+        log("[STEP 8] PLAYBACK STATE VERIFICATION & CONTINUOUS MONITORING")
         log("="*80)
         
+        # ============================================================================
+        # STEP 8.0: PRE-MONITORING PLAYBACK STATE VALIDATION
+        # ============================================================================
+        # This phase checks if the asset was unexpectedly paused after loading
+        # and ensures playback is truly active before continuous monitoring begins
+        
+        log("\n📋 [PHASE 1] PRE-MONITORING PLAYBACK STATE VALIDATION")
+        log("-" * 80)
+        
+        playback_validation_status = "unknown"
+        playback_confirmed_playing = False
+        playback_paused_after_start = False
+        pause_to_play_transition_confirmed = False
+        
+        try:
+            # 🔍 Check for latest playback state transitions after asset command
+            log(f"🔍 Checking for playback state transitions since asset command...")
+            
+            log_check_cmd = (
+                f"grep -n 'MEDIACONTROL.*old_state' /opt/logs/sky-messages.log | "
+                f"tail -20"
+            )
+            
+            stdin, stdout, stderr = ssh.exec_command(log_check_cmd, timeout=15)
+            playback_logs = stdout.read().decode('utf-8', errors='ignore').strip().split('\n')
+            
+            if playback_logs and playback_logs[0]:
+                log(f"📊 Recent playback state transitions:")
+                
+                latest_playing_to_paused = None
+                latest_paused_to_playing = None
+                latest_playing_state = None
+                
+                # Parse logs to find state transitions
+                for log_line in reversed(playback_logs):
+                    if not log_line.strip():
+                        continue
+                    
+                    log(f"   {log_line}")
+                    
+                    # Look for PLAYING -> PAUSED transition (asset got paused unexpectedly)
+                    if 'old_state PLAYING, new_state PAUSED' in log_line and not latest_playing_to_paused:
+                        latest_playing_to_paused = log_line
+                        playback_paused_after_start = True
+                    
+                    # Look for PAUSED -> PLAYING transition (asset resumed)
+                    elif 'old_state PAUSED, new_state PLAYING' in log_line and not latest_paused_to_playing:
+                        latest_paused_to_playing = log_line
+                    
+                    # Track latest PLAYING state for reference
+                    elif 'new_state PLAYING' in log_line and 'old_state PLAYING' not in log_line and not latest_playing_state:
+                        latest_playing_state = log_line
+                
+                # ================================================================
+                # VALIDATION LOGIC: Determine if playback intervention needed
+                # ================================================================
+                log(f"\n🔍 Playback State Analysis:")
+                
+                if latest_playing_to_paused:
+                    log(f"   ⏸ Found PLAYING→PAUSED transition:")
+                    log(f"     {latest_playing_to_paused}")
+                    
+                    # Check if this is a RECENT pause (after playback truly started)
+                    if latest_playing_state:
+                        # Extract timestamps to compare (if available in log format)
+                        log(f"   ✓ Playback WAS started (found PLAYING state)")
+                        
+                        # Check if PAUSED state is AFTER the PLAYING state
+                        if playback_logs.index(latest_playing_to_paused) > playback_logs.index(latest_playing_state):
+                            log(f"   ⚠️ ALERT: Asset PAUSED after it started playing!")
+                            log(f"   → This indicates unexpected pause during playback")
+                            
+                            # If there's NO more recent PAUSED->PLAYING transition, we need to resume
+                            if not latest_paused_to_playing or playback_logs.index(latest_playing_to_paused) > playback_logs.index(latest_paused_to_playing):
+                                log(f"\n🎯 ACTION REQUIRED: Sending ENTER keypress to resume playback...")
+                                log(f"   Expected sequence:")
+                                log(f"   1. Send ENTER keypress")
+                                log(f"   2. Wait for PAUSED→PLAYING transition")
+                                log(f"   3. Confirm playback is active")
+                                
+                                # Send ENTER keypress to resume
+                                enter_cmd = "keySimulator -kenter"
+                                try:
+                                    stdin, stdout, stderr = ssh.exec_command(enter_cmd, timeout=15)
+                                    stdout.read()
+                                    log(f"   ✓ ENTER keypress sent")
+                                    step_results['step_8_pause_recovery_action'] = 'enter_sent'
+                                    
+                                    # Wait briefly for state transition
+                                    log(f"   ⏳ Waiting 3 seconds for playback to resume...")
+                                    time.sleep(3)
+                                    
+                                    # Verify PAUSED->PLAYING transition occurred
+                                    log(f"🔍 Verifying playback resumed after ENTER keypress...")
+                                    
+                                    verify_resume_cmd = (
+                                        f"grep -n 'MEDIACONTROL.*old_state PAUSED, new_state PLAYING' "
+                                        f"/opt/logs/sky-messages.log | tail -1"
+                                    )
+                                    
+                                    stdin, stdout, stderr = ssh.exec_command(verify_resume_cmd, timeout=15)
+                                    resume_log = stdout.read().decode('utf-8', errors='ignore').strip()
+                                    
+                                    if resume_log:
+                                        log(f"   ✓ PAUSED→PLAYING transition confirmed!")
+                                        log(f"     {resume_log}")
+                                        pause_to_play_transition_confirmed = True
+                                        playback_confirmed_playing = True
+                                        playback_validation_status = "paused_recovered_to_playing"
+                                        step_results['step_8_pause_recovery'] = 'successful_resume_detected'
+                                        log(f"   ✅ Playback has resumed successfully")
+                                    else:
+                                        log(f"   ❌ No PAUSED→PLAYING transition found after ENTER keypress")
+                                        log(f"   ⚠️ WARNING: Playback may not have resumed properly")
+                                        playback_validation_status = "pause_recovery_unconfirmed"
+                                        step_results['step_8_pause_recovery'] = 'no_resume_confirmation'
+                                        overall_success = False
+                                        
+                                except Exception as e:
+                                    log(f"   ❌ Error sending resume keypress: {e}")
+                                    step_results['step_8_pause_recovery'] = f'keypress_error: {e}'
+                                    overall_success = False
+                            else:
+                                log(f"   ✓ Playback already resumed (found later PAUSED→PLAYING transition)")
+                                log(f"     {latest_paused_to_playing}")
+                                pause_to_play_transition_confirmed = True
+                                playback_confirmed_playing = True
+                                playback_validation_status = "paused_already_resumed"
+                                step_results['step_8_pause_recovery'] = 'already_resumed'
+                        else:
+                            log(f"   ℹ️ Note: PAUSED state appears before PLAYING state (log order issue)")
+                    else:
+                        log(f"   ⚠️ WARNING: Found pause transition but no playback start found")
+                        log(f"   ℹ️ Asset may not have started properly")
+                        playback_validation_status = "paused_no_prior_start"
+                        step_results['step_8_pause_recovery'] = 'paused_before_confirmed_start'
+                elif latest_playing_state:
+                    log(f"   ✓ Playback is active (found PLAYING state)")
+                    log(f"     {latest_playing_state}")
+                    playback_confirmed_playing = True
+                    playback_validation_status = "actively_playing"
+                    step_results['step_8_pause_recovery'] = 'no_pause_detected_actively_playing'
+                else:
+                    log(f"   ℹ️ No playback state transitions found in recent logs")
+                    log(f"   ℹ️ Cannot determine if asset is playing or paused")
+                    playback_validation_status = "state_unknown"
+                    step_results['step_8_pause_recovery'] = 'no_state_info'
+                
+                log(f"\n✅ Validation Complete:")
+                log(f"   • Playback Status: {playback_validation_status}")
+                log(f"   • Confirmed Playing: {playback_confirmed_playing}")
+                log(f"   • Pause Detected: {playback_paused_after_start}")
+                log(f"   • Pause-to-Play Recovery: {pause_to_play_transition_confirmed}")
+                
+            else:
+                log(f"   ℹ️ No playback state logs found - insufficient data for validation")
+                playback_validation_status = "insufficient_logs"
+                step_results['step_8_pause_recovery'] = 'no_logs_available'
+                
+        except Exception as e:
+            log(f"   ❌ Error during playback state validation: {e}")
+            playback_validation_status = f"error: {e}"
+            step_results['step_8_pause_recovery'] = f'validation_error: {e}'
+        
+        # ============================================================================
+        # STEP 8.1: CONTINUOUS PLAYBACK MONITORING
+        # ============================================================================
+        log("\n📋 [PHASE 2] CONTINUOUS PLAYBACK MONITORING")
+        log("-" * 80)
         log(f"🎬 Monitoring Netflix app in foreground for {playback_duration} seconds...")
         
         # Monitor playback duration with periodic app foreground checks + log monitoring
@@ -1621,6 +1996,7 @@ def netflix_playback(
         log(f"   • Netflix app foreground status")
         log(f"   • Resolution rendering logs (notifyResolution)")
         log(f"   • App activity logs (saveAppStatusToFile)")
+        log(f"   • Playback state transitions (MEDIACONTROL logs)")
         log(f"")
         
         start_time = time.time()
@@ -1631,6 +2007,13 @@ def netflix_playback(
         playback_detection_attempts = 0  # Track consecutive attempts with no playback
         playback_detected_at_least_once = False  # Track if playback was ever detected
         no_playback_detected_threshold = 10  # If 10 consecutive attempts show no playback, mark as failed
+        playback_stopped_during_monitoring = False  # Track if playback stopped during monitoring
+        
+        # NEW: Track log line numbers to detect NEW logs (not stale ones)
+        last_resolution_log_line = 0  # Line number of last resolution log seen
+        last_analytics_log_line = 0   # Line number of last analytics log seen
+        last_reported_pause_line_num = 0  # Line number of last reported PLAYING→PAUSED transition
+        last_reported_resume_line_num = 0  # Line number of last reported PAUSED→PLAYING transition
         
         while time.time() - start_time < playback_duration:
             remaining = playback_duration - (time.time() - start_time)
@@ -1657,44 +2040,145 @@ def netflix_playback(
                 log(f"   ⚠ Error checking foreground app: {e}")
             
             # Layer 2: Check for notifyResolution logs (rendering/playback indicator)
+            # ENHANCED: Only report ACTIVE if log line number is NEWER than last check
             try:
                 resolution_cmd = (
-                    f"grep -o 'notifyResolution:.*width([0-9]\\+), height([0-9]\\+)' "
+                    f"grep -n 'notifyResolution:.*width([0-9]\\+), height([0-9]\\+)' "
                     f"/opt/logs/sky-messages.log | tail -1"
                 )
                 stdin, stdout, stderr = ssh.exec_command(resolution_cmd, timeout=15)
                 resolution_output = stdout.read().decode('utf-8', errors='ignore').strip()
                 
                 if resolution_output:
-                    log(f"   ✓ Rendering active: {resolution_output}")
-                    last_resolution_log_time = time.time()
-                    playback_detection_attempts = 0  # Reset counter
-                    playback_detected_at_least_once = True
+                    try:
+                        # Extract line number and log content
+                        log_line_num, log_content = resolution_output.split(':', 1)
+                        log_line_num = int(log_line_num)
+                        
+                        # Only report ACTIVE if this is a NEW log (line number increased)
+                        if log_line_num > last_resolution_log_line:
+                            log(f"   ✓ Rendering active: {log_content.strip()}")
+                            last_resolution_log_line = log_line_num  # Update to new line number
+                            last_resolution_log_time = time.time()
+                            playback_detection_attempts = 0  # Reset counter
+                            playback_detected_at_least_once = True
+                        else:
+                            # Stale log - same as before
+                            log(f"   ⚠ No NEW resolution logs (stale from previous check)")
+                    except (ValueError, IndexError):
+                        # Couldn't parse line number, show warning
+                        log(f"   ⚠ Resolution log format error")
                 else:
-                    log(f"   ⚠ No recent resolution logs")
+                    log(f"   ⚠ No resolution logs found")
             except Exception as e:
                 log(f"   ⚠ Error checking resolution logs: {e}")
             
             # Layer 3: Check for AppAnalyticsService logs (app activity indicator)
+            # ENHANCED: Only report ACTIVE if log line number is NEWER than last check
             try:
                 analytics_cmd = (
-                    f"grep -o 'saveAppStatusToFile, currentDuration: [0-9]\\+' "
+                    f"grep -n 'saveAppStatusToFile, currentDuration: [0-9]\\+' "
                     f"/opt/logs/sky-messages.log | tail -1"
                 )
                 stdin, stdout, stderr = ssh.exec_command(analytics_cmd, timeout=15)
                 analytics_output = stdout.read().decode('utf-8', errors='ignore').strip()
                 
                 if analytics_output:
-                    log(f"   ✓ App active: {analytics_output}")
-                    last_analytics_log_time = time.time()
-                    playback_detection_attempts = 0  # Reset counter
-                    playback_detected_at_least_once = True
+                    try:
+                        # Extract line number and log content
+                        log_line_num, log_content = analytics_output.split(':', 1)
+                        log_line_num = int(log_line_num)
+                        
+                        # Only report ACTIVE if this is a NEW log (line number increased)
+                        if log_line_num > last_analytics_log_line:
+                            log(f"   ✓ App active: {log_content.strip()}")
+                            last_analytics_log_line = log_line_num  # Update to new line number
+                            last_analytics_log_time = time.time()
+                            playback_detection_attempts = 0  # Reset counter
+                            playback_detected_at_least_once = True
+                        else:
+                            # Stale log - same as before
+                            log(f"   ⚠ No NEW activity logs (stale from previous check)")
+                            playback_detection_attempts += 1  # Increment no-playback counter
+                    except (ValueError, IndexError):
+                        # Couldn't parse line number, treat as no new activity
+                        log(f"   ⚠ App activity log format error")
+                        playback_detection_attempts += 1
                 else:
-                    log(f"   ⚠ No recent analytics logs")
+                    log(f"   ⚠ No app activity logs found")
                     playback_detection_attempts += 1  # Increment no-playback counter
             except Exception as e:
                 log(f"   ⚠ Error checking analytics logs: {e}")
                 playback_detection_attempts += 1  # Increment counter on error too
+            
+            # Layer 4: Check for playback state transitions (PLAYING -> PAUSED / PAUSED -> PLAYING)
+            # ONLY check logs NEWER than Step 7 to avoid redundant monitoring
+            # ENHANCED: Track line numbers to detect only NEW transitions (not already reported)
+            try:
+                # Get the latest pause transition (if any after Step 7)
+                pause_check_cmd = (
+                    f"grep -n 'MEDIACONTROL.*old_state PLAYING, new_state PAUSED' "
+                    f"/opt/logs/sky-messages.log | tail -1"
+                )
+                stdin, stdout, stderr = ssh.exec_command(pause_check_cmd, timeout=15)
+                pause_output = stdout.read().decode('utf-8', errors='ignore').strip()
+                
+                # Get the latest resume transition (if any after Step 7)
+                resume_check_cmd = (
+                    f"grep -n 'MEDIACONTROL.*old_state PAUSED, new_state PLAYING' "
+                    f"/opt/logs/sky-messages.log | tail -1"
+                )
+                stdin, stdout, stderr = ssh.exec_command(resume_check_cmd, timeout=15)
+                resume_output = stdout.read().decode('utf-8', errors='ignore').strip()
+                
+                # Determine current playback state based on LATEST transitions
+                playback_status_msg = "Playback is still happening"  # Default status
+                pause_detected_new = False
+                
+                if pause_output:
+                    try:
+                        pause_line_num = int(pause_output.split(':')[0])
+                        
+                        # Check if pause is AFTER Step 7 AND we haven't reported this pause yet
+                        if pause_line_num > step_7_latest_log_line and pause_line_num > last_reported_pause_line_num:
+                            # Check if resume happened after this pause
+                            if resume_output:
+                                resume_line_num = int(resume_output.split(':')[0])
+                                
+                                # Only report if resume is AFTER the pause AND we haven't reported it yet
+                                if resume_line_num > pause_line_num and resume_line_num > last_reported_resume_line_num:
+                                    # Resumed after pause - currently playing
+                                    log(f"   📊 Playback state: Resumed (PAUSED→PLAYING detected)")
+                                    log(f"      Resume log: {resume_output}")
+                                    playback_status_msg = "Playback recovered after pause"
+                                    last_reported_resume_line_num = resume_line_num  # Mark as reported
+                                elif resume_line_num <= pause_line_num:
+                                    # Paused but not yet resumed (NEW pause detected)
+                                    log(f"   ⚠️ ALERT: Playback PAUSED during monitoring!")
+                                    log(f"      {pause_output}")
+                                    playback_stopped_during_monitoring = True
+                                    pause_detected_new = True
+                                    playback_status_msg = "⚠️ Playback PAUSED - awaiting user action"
+                                    last_reported_pause_line_num = pause_line_num  # Mark as reported
+                                # else: resume already reported, skip reporting again
+                            else:
+                                # Paused and no resume log (NEW pause)
+                                log(f"   ⚠️ ALERT: Playback PAUSED during monitoring!")
+                                log(f"      {pause_output}")
+                                playback_stopped_during_monitoring = True
+                                pause_detected_new = True
+                                playback_status_msg = "⚠️ Playback PAUSED - awaiting user action"
+                                last_reported_pause_line_num = pause_line_num  # Mark as reported
+                        # else: pause already reported or from Step 7, don't report again
+                    except (ValueError, IndexError):
+                        pass  # Couldn't parse line number, continue with default status
+                
+                # If no new pause detected after Step 7, report stable playback
+                if not pause_detected_new:
+                    log(f"   ✓ {playback_status_msg}")
+                    
+            except Exception as e:
+                log(f"   ⚠ Error checking playback state: {e}")
             
             # Check if we hit the no-playback threshold
             if playback_detection_attempts >= no_playback_detected_threshold:
@@ -1702,7 +2186,7 @@ def netflix_playback(
                 log(f"   → Playback may have failed or stalled")
                 break
             
-            # Layer 4: Detect interrupted playback
+            # Layer 5: Detect interrupted playback
             # If rendering logs stopped but app still in foreground → playback interrupted
             if app_in_foreground:
                 time_since_resolution = time.time() - last_resolution_log_time
@@ -1722,9 +2206,58 @@ def netflix_playback(
         log(f"  Final status:")
         log(f"  • App in foreground: {not app_lost_foreground}")
         log(f"  • Playback detected: {playback_detected_at_least_once}")
+        log(f"  • Playback stopped during monitoring: {playback_stopped_during_monitoring}")
         log(f"  • Time since last resolution log: {time.time() - last_resolution_log_time:.0f}s")
         log(f"  • Time since last analytics log: {time.time() - last_analytics_log_time:.0f}s")
         log(f"  • No-playback detection count: {playback_detection_attempts}/{no_playback_detected_threshold}")
+        
+        # ============================================================================
+        # POST-MONITORING VALIDATION: Check final playback state
+        # ============================================================================
+        log(f"\n📋 [PHASE 3] POST-MONITORING PLAYBACK STATE VALIDATION")
+        log("-" * 80)
+        
+        # Get the latest playback state transition to confirm current playback status
+        try:
+            final_state_cmd = (
+                f"grep 'MEDIACONTROL.*old_state' /opt/logs/sky-messages.log | tail -1"
+            )
+            stdin, stdout, stderr = ssh.exec_command(final_state_cmd, timeout=15)
+            final_state_log = stdout.read().decode('utf-8', errors='ignore').strip()
+            
+            if final_state_log:
+                log(f"🔍 Final playback state transition:")
+                log(f"   {final_state_log}")
+                
+                if 'new_state PLAYING' in final_state_log and 'old_state PLAYING' not in final_state_log:
+                    log(f"   ✅ Playback is ACTIVE as of final check")
+                    step_results['step_8_final_playback_state'] = 'playing'
+                    
+                    # Check if playback stopped during monitoring
+                    if playback_stopped_during_monitoring:
+                        log(f"   ⚠️ Note: Playback was paused during monitoring but has since resumed")
+                        step_results['step_8_playback_stability'] = 'recovered_from_pause'
+                    else:
+                        log(f"   ✅ Playback remained stable throughout monitoring")
+                        step_results['step_8_playback_stability'] = 'stable_continuous'
+                        
+                elif 'new_state PAUSED' in final_state_log or 'old_state PLAYING, new_state PAUSED' in final_state_log:
+                    log(f"   ❌ Playback ended in PAUSED state")
+                    log(f"   ⚠️ ERROR: Playback is PAUSED at end of monitoring")
+                    step_results['step_8_final_playback_state'] = 'paused'
+                    step_results['step_8_playback_stability'] = 'ended_paused'
+                    overall_success = False
+                else:
+                    log(f"   ℹ️ Final state unknown or no recent transitions")
+                    step_results['step_8_final_playback_state'] = 'unknown'
+                    step_results['step_8_playback_stability'] = 'state_unclear'
+            else:
+                log(f"   ℹ️ No playback state logs found for final validation")
+                step_results['step_8_final_playback_state'] = 'no_logs'
+                
+        except Exception as e:
+            log(f"   ⚠ Error during final validation: {e}")
+            step_results['step_8_final_playback_state'] = f'error: {e}'
         
         step_results['step_8_playback_monitoring'] = 'app_monitored'
         step_results['step_8_app_foreground'] = not app_lost_foreground

@@ -3875,5 +3875,745 @@
       },
       "step_6_asset_selection": "unknown_screen: Netflix_NetflixHome"
     }
+  },
+  {
+    "job_id": "8696ae9b-f86b-442a-bf3f-d1226ecd88a2",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "netflix_playback"
+    ],
+    "execution_queue": [
+      {
+        "method": "netflix_playback",
+        "asset_voice_command": "Play Stranger things Netflix",
+        "playback_duration": 300,
+        "username_cred": "",
+        "password_cred": "",
+        "execute_playback_controls": true,
+        "screenshot_analysis": true,
+        "login_url": "",
+        "description": "App Launch"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-07-29T11:22:34.734638",
+    "end_time": "2026-07-29T11:36:44.616945+00:00",
+    "log_file_path": "logs/jobs/8696ae9b-f86b-442a-bf3f-d1226ecd88a2/execution.log",
+    "session_folder": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_112234_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-07-29T11:22:34.734654",
+    "eta_seconds": 45,
+    "eta_formatted": "45s",
+    "time_per_iteration": 45,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-07-29T11:22:34.734660",
+    "queue_position": null,
+    "team_name": "LRQA",
+    "execution_results": {
+      "step_0_screenshot_verification": "success",
+      "step_0_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_112234_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-0_Iteration-1_20260729_112246.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 0,
+        "timestamp": "20260729_112235"
+      },
+      "step_4_screen_capture": "NETFLIX_PROFILE_SCREEN",
+      "step_4_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_112234_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-4_Iteration-1_20260729_112441.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "timestamp": "20260729_112235"
+      },
+      "step_4_screen_validation": {
+        "screen_detected": "Netflix_NetflixProfileScreen",
+        "confidence": 0.6885133981704712,
+        "validation_details": {
+          "analysis_method": "PIXEL_MATCHING_WITH_APP_SPECIFIC_REFERENCES",
+          "primary_validator": "PIXEL_MATCHING",
+          "ai_enhanced": false,
+          "app_name": "netflix"
+        }
+      },
+      "step_5_screenshot_verification": "success",
+      "step_5_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_112234_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-5_Iteration-1_20260729_112607.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 5,
+        "timestamp": "20260729_112607"
+      },
+      "step_6_content_launch": "success_with_validation",
+      "step_6_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_112234_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-6.2_Iteration-1_20260729_112846.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 6.2,
+        "timestamp": "20260729_112845",
+        "screen_detected": "Netflix_NetflixAssetScreen"
+      },
+      "step_6_asset_selection": "matched_and_played"
+    }
+  },
+  {
+    "job_id": "7ca64424-1820-40a5-b285-0393d1cf258d",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "netflix_playback"
+    ],
+    "execution_queue": [
+      {
+        "method": "netflix_playback",
+        "asset_voice_command": "Play Stranger things From Netflix",
+        "playback_duration": 200,
+        "username_cred": "",
+        "password_cred": "",
+        "execute_playback_controls": true,
+        "screenshot_analysis": true,
+        "login_url": "",
+        "description": "App Launch"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-07-29T13:24:55.251259",
+    "end_time": "2026-07-29T13:37:32.344575+00:00",
+    "log_file_path": "logs/jobs/7ca64424-1820-40a5-b285-0393d1cf258d/execution.log",
+    "session_folder": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_132455_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-07-29T13:24:55.251296",
+    "eta_seconds": 45,
+    "eta_formatted": "45s",
+    "time_per_iteration": 45,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-07-29T13:24:55.251303",
+    "queue_position": null,
+    "team_name": "LRQA",
+    "execution_results": {
+      "step_0_screenshot_verification": "success",
+      "step_0_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_132455_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-0_Iteration-1_20260729_132507.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 0,
+        "timestamp": "20260729_132455"
+      },
+      "step_4_screen_capture": "NETFLIX_PROFILE_SCREEN",
+      "step_4_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_132455_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-4_Iteration-1_20260729_132701.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "timestamp": "20260729_132455"
+      },
+      "step_4_screen_validation": {
+        "screen_detected": "Netflix_NetflixProfileScreen",
+        "confidence": 0.7006446123123169,
+        "validation_details": {
+          "analysis_method": "PIXEL_MATCHING_WITH_APP_SPECIFIC_REFERENCES",
+          "primary_validator": "PIXEL_MATCHING",
+          "ai_enhanced": false,
+          "app_name": "netflix"
+        }
+      },
+      "step_5_screenshot_verification": "success",
+      "step_5_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_132455_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-5_Iteration-1_20260729_132828.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 5,
+        "timestamp": "20260729_132828"
+      },
+      "step_6_content_launch": "success_with_validation",
+      "step_6_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_132455_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-6.2_Iteration-1_20260729_133109.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 6.2,
+        "timestamp": "20260729_133109",
+        "screen_detected": "Netflix_NetflixAssetScreen"
+      },
+      "step_6_asset_selection": "matched_and_played"
+    }
+  },
+  {
+    "job_id": "6ed1fda4-7d10-44fb-8bef-171b0b186d09",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "netflix_playback"
+    ],
+    "execution_queue": [
+      {
+        "method": "netflix_playback",
+        "asset_voice_command": "Play Stranger things from Netflix",
+        "playback_duration": 300,
+        "username_cred": "",
+        "password_cred": "",
+        "execute_playback_controls": true,
+        "screenshot_analysis": true,
+        "login_url": "",
+        "description": "App Launch"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-07-29T14:03:39.663942",
+    "end_time": "2026-07-29T14:16:24.353743+00:00",
+    "log_file_path": "logs/jobs/6ed1fda4-7d10-44fb-8bef-171b0b186d09/execution.log",
+    "session_folder": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_140339_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-07-29T14:03:39.663958",
+    "eta_seconds": 45,
+    "eta_formatted": "45s",
+    "time_per_iteration": 45,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-07-29T14:03:39.663963",
+    "queue_position": null,
+    "team_name": "LRQA",
+    "execution_results": {
+      "step_0_screenshot_verification": "success",
+      "step_0_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_140339_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-0_Iteration-1_20260729_140351.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 0,
+        "timestamp": "20260729_140340"
+      },
+      "step_4_screen_capture": "NETFLIX_PROFILE_SCREEN",
+      "step_4_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_140339_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-4_Iteration-1_20260729_140545.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "timestamp": "20260729_140340"
+      },
+      "step_4_screen_validation": {
+        "screen_detected": "Netflix_NetflixProfileScreen",
+        "confidence": 0.45752716064453125,
+        "validation_details": {
+          "analysis_method": "PIXEL_MATCHING_WITH_APP_SPECIFIC_REFERENCES",
+          "primary_validator": "PIXEL_MATCHING",
+          "ai_enhanced": false,
+          "app_name": "netflix"
+        }
+      },
+      "step_5_screenshot_verification": "success",
+      "step_5_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_140339_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-5_Iteration-1_20260729_140711.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 5,
+        "timestamp": "20260729_140710"
+      },
+      "step_6_content_launch": "success_with_validation",
+      "step_6_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_140339_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-6.2_Iteration-1_20260729_140958.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 6.2,
+        "timestamp": "20260729_140958",
+        "screen_detected": "Netflix_NetflixAssetScreen"
+      },
+      "step_6_asset_selection": "matched_and_played"
+    }
+  },
+  {
+    "job_id": "ffac17dd-b609-440b-9d91-ca50aa22263e",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "netflix_playback"
+    ],
+    "execution_queue": [
+      {
+        "method": "netflix_playback",
+        "asset_voice_command": "Play Breaking Bad Season 1 from Netflix",
+        "playback_duration": 400,
+        "username_cred": "",
+        "password_cred": "",
+        "execute_playback_controls": true,
+        "screenshot_analysis": true,
+        "login_url": "",
+        "description": "App Launch"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-07-29T14:41:41.566828",
+    "end_time": "2026-07-29T14:55:45.566416+00:00",
+    "log_file_path": "logs/jobs/ffac17dd-b609-440b-9d91-ca50aa22263e/execution.log",
+    "session_folder": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_144141_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-07-29T14:41:41.566844",
+    "eta_seconds": 45,
+    "eta_formatted": "45s",
+    "time_per_iteration": 45,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-07-29T14:41:41.566850",
+    "queue_position": null,
+    "team_name": "LRQA",
+    "execution_results": {
+      "step_0_screenshot_verification": "success",
+      "step_0_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_144141_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-0_Iteration-1_20260729_144153.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 0,
+        "timestamp": "20260729_144142"
+      },
+      "step_4_screen_capture": "NETFLIX_PROFILE_SCREEN",
+      "step_4_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_144141_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-4_Iteration-1_20260729_144346.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "timestamp": "20260729_144142"
+      },
+      "step_4_screen_validation": {
+        "screen_detected": "Netflix_NetflixProfileScreen",
+        "confidence": 0.6050286293029785,
+        "validation_details": {
+          "analysis_method": "PIXEL_MATCHING_WITH_APP_SPECIFIC_REFERENCES",
+          "primary_validator": "PIXEL_MATCHING",
+          "ai_enhanced": false,
+          "app_name": "netflix"
+        }
+      },
+      "step_5_screenshot_verification": "success",
+      "step_5_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_144141_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-5_Iteration-1_20260729_144513.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 5,
+        "timestamp": "20260729_144513"
+      },
+      "step_6_content_launch": "success_with_validation",
+      "step_6_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_144141_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-6.2_Iteration-1_20260729_144803.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 6.2,
+        "timestamp": "20260729_144803",
+        "screen_detected": "Netflix_NetflixAssetScreen"
+      },
+      "step_6_asset_selection": "matched_and_played"
+    }
+  },
+  {
+    "job_id": "25b6960b-30df-4488-a6d4-8a3698182c9e",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "netflix_playback"
+    ],
+    "execution_queue": [
+      {
+        "method": "netflix_playback",
+        "asset_voice_command": "Play Stranger things Season 1 from Netflix",
+        "playback_duration": 300,
+        "username_cred": "",
+        "password_cred": "",
+        "execute_playback_controls": true,
+        "screenshot_analysis": true,
+        "login_url": "",
+        "description": "App Launch"
+      }
+    ],
+    "iterations": 1,
+    "status": "cancelled",
+    "start_time": "2026-07-29T15:36:41.608010",
+    "end_time": "2026-07-29T15:49:54.912196",
+    "log_file_path": "logs/jobs/25b6960b-30df-4488-a6d4-8a3698182c9e/execution.log",
+    "session_folder": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_153641_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-07-29T15:36:41.608027",
+    "eta_seconds": 45,
+    "eta_formatted": "45s",
+    "time_per_iteration": 45,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-07-29T15:36:41.608033",
+    "queue_position": null,
+    "team_name": "LRQA",
+    "execution_results": {
+      "step_0_screenshot_verification": "success",
+      "step_0_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_153641_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-0_Iteration-1_20260729_153653.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 0,
+        "timestamp": "20260729_153642"
+      },
+      "step_4_screen_capture": "NETFLIX_PROFILE_SCREEN",
+      "step_4_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_153641_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-4_Iteration-1_20260729_153848.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "timestamp": "20260729_153642"
+      },
+      "step_4_screen_validation": {
+        "screen_detected": "Netflix_NetflixProfileScreen",
+        "confidence": 0.6987589597702026,
+        "validation_details": {
+          "analysis_method": "PIXEL_MATCHING_WITH_APP_SPECIFIC_REFERENCES",
+          "primary_validator": "PIXEL_MATCHING",
+          "ai_enhanced": false,
+          "app_name": "netflix"
+        }
+      },
+      "step_5_screenshot_verification": "success",
+      "step_5_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_153641_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-5_Iteration-1_20260729_154015.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 5,
+        "timestamp": "20260729_154015"
+      },
+      "step_6_content_launch": "success_with_validation",
+      "step_6_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_153641_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-6.2_Iteration-1_20260729_154312.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 6.2,
+        "timestamp": "20260729_154311",
+        "screen_detected": "Netflix_NetflixAssetScreen"
+      },
+      "step_6_asset_selection": "matched_and_played"
+    }
+  },
+  {
+    "job_id": "57967aa7-90ec-421d-bb86-903ce0764139",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "netflix_playback"
+    ],
+    "execution_queue": [
+      {
+        "method": "netflix_playback",
+        "asset_voice_command": "Play Breaking Bad Season 1 from Netflix",
+        "playback_duration": 300,
+        "username_cred": "",
+        "password_cred": "",
+        "execute_playback_controls": true,
+        "screenshot_analysis": true,
+        "login_url": "",
+        "description": "App Launch"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-07-29T16:03:41.632694",
+    "end_time": "2026-07-29T16:18:11.758284+00:00",
+    "log_file_path": "logs/jobs/57967aa7-90ec-421d-bb86-903ce0764139/execution.log",
+    "session_folder": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_160341_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-07-29T16:03:41.632711",
+    "eta_seconds": 45,
+    "eta_formatted": "45s",
+    "time_per_iteration": 45,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-07-29T16:03:41.632716",
+    "queue_position": null,
+    "team_name": "LRQA",
+    "execution_results": {
+      "step_0_screenshot_verification": "success",
+      "step_0_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_160341_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-0_Iteration-1_20260729_160353.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 0,
+        "timestamp": "20260729_160342",
+        "screen_detected": "XUMO_XUMO_HomeScreen",
+        "confidence": 0.4478799654210883,
+        "validation_method": "enhanced"
+      },
+      "step_4_screen_capture": "NETFLIX_PROFILE_SCREEN",
+      "step_4_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_160341_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-4_Iteration-1_20260729_160548.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "timestamp": "20260729_160342"
+      },
+      "step_4_screen_validation": {
+        "screen_detected": "Netflix_NetflixProfileScreen",
+        "confidence": 0.6994826793670654,
+        "validation_details": {
+          "analysis_method": "PIXEL_MATCHING_WITH_APP_SPECIFIC_REFERENCES",
+          "primary_validator": "PIXEL_MATCHING",
+          "ai_enhanced": false,
+          "app_name": "netflix"
+        },
+        "validation_method": "pixel_matching"
+      },
+      "step_5_screenshot_verification": "success",
+      "step_5_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_160341_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-5_Iteration-1_20260729_160716.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 5,
+        "timestamp": "20260729_160716",
+        "screen_detected": "Netflix_NetflixHome",
+        "confidence": 0.8219581878885025,
+        "validation_method": "enhanced"
+      },
+      "step_6_content_launch": "success_with_validation",
+      "step_6_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_160341_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-6.2_Iteration-1_20260729_161004.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 6.2,
+        "timestamp": "20260729_161004",
+        "screen_detected": "Netflix_NetflixAssetScreen"
+      },
+      "step_6_asset_selection": "matched_and_played"
+    }
+  },
+  {
+    "job_id": "7502f7f7-4b16-4f68-9307-5a71c2c62b9e",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "netflix_playback"
+    ],
+    "execution_queue": [
+      {
+        "method": "netflix_playback",
+        "asset_voice_command": "Play Breaking Bad Season 1 from Netflix",
+        "playback_duration": 500,
+        "username_cred": "",
+        "password_cred": "",
+        "execute_playback_controls": true,
+        "screenshot_analysis": true,
+        "login_url": "",
+        "description": "App launch"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-07-29T19:10:44.014713",
+    "end_time": "2026-07-29T19:25:02.233447+00:00",
+    "log_file_path": "logs/jobs/7502f7f7-4b16-4f68-9307-5a71c2c62b9e/execution.log",
+    "session_folder": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_191044_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-07-29T19:10:44.014731",
+    "eta_seconds": 45,
+    "eta_formatted": "45s",
+    "time_per_iteration": 45,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-07-29T19:10:44.014737",
+    "queue_position": null,
+    "team_name": "LRQA",
+    "execution_results": {
+      "step_0_screenshot_verification": "success",
+      "step_0_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_191044_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-0_Iteration-1_20260729_191056.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 0,
+        "timestamp": "20260729_191044",
+        "screen_detected": "XUMO_XUMO_HomeScreen",
+        "confidence": 0.5137518446875515,
+        "validation_method": "enhanced"
+      },
+      "step_4_screen_capture": "NETFLIX_PROFILE_SCREEN",
+      "step_4_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_191044_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-4_Iteration-1_20260729_191256.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "timestamp": "20260729_191044"
+      },
+      "step_4_screen_validation": {
+        "screen_detected": "Netflix_NetflixProfileScreen",
+        "confidence": 0.5632827281951904,
+        "validation_details": {
+          "analysis_method": "PIXEL_MATCHING_WITH_APP_SPECIFIC_REFERENCES",
+          "primary_validator": "PIXEL_MATCHING",
+          "ai_enhanced": false,
+          "app_name": "netflix"
+        },
+        "validation_method": "pixel_matching"
+      },
+      "step_5_screenshot_verification": "success",
+      "step_5_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_191044_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-5_Iteration-1_20260729_191424.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 5,
+        "timestamp": "20260729_191424",
+        "screen_detected": "Netflix_NetflixHome",
+        "confidence": 0.8394889112511632,
+        "validation_method": "enhanced"
+      },
+      "step_6_content_launch": "success_ambiguous",
+      "step_6_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_191044_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-6.1_Iteration-1_20260729_191544.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 6.1,
+        "timestamp": "20260729_191544",
+        "screen_detected": "Netflix_NetflixHome"
+      },
+      "step_6_asset_selection": "screen_context: Netflix_NetflixHome"
+    }
+  },
+  {
+    "job_id": "5c363112-bf9b-47ac-b976-0c02717609e7",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "netflix_playback"
+    ],
+    "execution_queue": [
+      {
+        "method": "netflix_playback",
+        "asset_voice_command": "Play Stranger things from Netflix",
+        "playback_duration": 300,
+        "username_cred": "",
+        "password_cred": "",
+        "execute_playback_controls": true,
+        "screenshot_analysis": true,
+        "login_url": "",
+        "description": "App Launch"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-07-29T19:26:03.488814",
+    "end_time": "2026-07-29T19:38:58.987192+00:00",
+    "log_file_path": "logs/jobs/5c363112-bf9b-47ac-b976-0c02717609e7/execution.log",
+    "session_folder": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_192603_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-07-29T19:26:03.488836",
+    "eta_seconds": 45,
+    "eta_formatted": "45s",
+    "time_per_iteration": 45,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-07-29T19:26:03.488842",
+    "queue_position": null,
+    "team_name": "LRQA",
+    "execution_results": {
+      "step_0_screenshot_verification": "success",
+      "step_0_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_192603_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-0_Iteration-1_20260729_192615.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 0,
+        "timestamp": "20260729_192603",
+        "screen_detected": "XUMO_XUMO_HomeScreen",
+        "confidence": 0.4384650600979805,
+        "validation_method": "enhanced"
+      },
+      "step_4_screen_capture": "NETFLIX_ASSET_SCREEN",
+      "step_4_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_192603_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-4_Iteration-1_20260729_192811.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "timestamp": "20260729_192603"
+      },
+      "step_4_screen_validation": {
+        "screen_detected": "Netflix_NetflixAssetScreen",
+        "confidence": 0.88,
+        "validation_details": {
+          "analysis_method": "PIXEL_MATCHING_WITH_APP_SPECIFIC_REFERENCES",
+          "primary_validator": "PIXEL_MATCHING",
+          "ai_enhanced": false,
+          "app_name": "netflix"
+        },
+        "validation_method": "pixel_matching"
+      },
+      "step_5_screenshot_verification": "success",
+      "step_5_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_192603_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-5_Iteration-1_20260729_192929.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 5,
+        "timestamp": "20260729_192929",
+        "screen_detected": "Netflix_NetflixAssetScreen",
+        "confidence": 0.88,
+        "validation_method": "pixel_matching"
+      },
+      "step_6_content_launch": "success_ambiguous",
+      "step_6_screenshot": {
+        "path": "Enhancement_output/sessions/NETFLIX_PLAYBACK_ELEMENT_A4K_10-0-0-250_1_ITR_20260729_192603_UTC/SCREENSHOTS/10.0.0.250_netflix_Step-6.1_Iteration-1_20260729_193052.png",
+        "url": "http://10.0.0.250:5800/screenshot.png",
+        "step": 6.1,
+        "timestamp": "20260729_193051",
+        "screen_detected": "Netflix_NetflixLoginScreen_v2"
+      },
+      "step_6_asset_selection": "screen_context: Netflix_NetflixLoginScreen_v2"
+    }
+  },
+  {
+    "job_id": "07d487a7-9120-4ee2-8acd-929a51c97243",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "POWER"
+        ],
+        "ir_key_delay": 0.5,
+        "description": "Wakeup the device"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-07-31T20:13:27.055471",
+    "end_time": "2026-07-31T20:13:44.656393+00:00",
+    "log_file_path": "logs/jobs/07d487a7-9120-4ee2-8acd-929a51c97243/execution.log",
+    "session_folder": "Enhancement_output/sessions/IR_TEST_ELEMENT_A4K_10-0-0-250_1_ITR_20260731_201327_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-07-31T20:13:27.055486",
+    "eta_seconds": 43,
+    "eta_formatted": "43s",
+    "time_per_iteration": 43,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-07-31T20:13:27.055492",
+    "queue_position": null,
+    "team_name": "LRQA"
   }
 ]
