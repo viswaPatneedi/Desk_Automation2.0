@@ -8,9 +8,9 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
+            <div class="modal-body" style="max-height: 700px; overflow-y: auto;">
                 <div style="margin-bottom: 1.5rem;">
-                    <h6 style="color: #60a5fa; margin-bottom: 1rem;">📋 Credential List</h6>
+                    <h6 style="color: #60a5fa; margin-bottom: 1rem;">📋 Existing Credentials</h6>
                     <div id="credentialsList" style="display: grid; gap: 0.75rem;">
                         <div style="text-align: center; color: #9ca3af;"><i class="bi bi-hourglass-end"></i> Loading credentials...</div>
                     </div>
@@ -19,7 +19,7 @@
                 <hr style="border-color: #334155; margin: 1.5rem 0;">
 
                 <div style="margin-bottom: 1.5rem;">
-                    <h6 style="color: #60a5fa; margin-bottom: 1rem;">➕ Add New Credential</h6>
+                    <h6 style="color: #60a5fa; margin-bottom: 1rem;"><span id="formModeIcon">➕</span> <span id="formModeTitle">Add New Credential</span></h6>
                     
                     <div class="form-group mb-3">
                         <label for="credAppName" class="form-label" style="color: #e5e7eb;">App Name</label>
@@ -32,6 +32,7 @@
                             <option value="youtube">YouTube</option>
                             <option value="other">Other</option>
                         </select>
+                        <small style="color: #9ca3af; display: block; margin-top: 0.25rem;">App name cannot be changed during edit</small>
                     </div>
 
                     <div class="form-group mb-3">
@@ -80,9 +81,17 @@
                         <small style="color: #9ca3af; display: block; margin-top: 0.25rem;">Primary credentials are used by default when executing methods</small>
                     </div>
 
-                    <button type="button" class="btn w-100" onclick="saveAppCredential()" style="background: #10b981; color: white; border: none; padding: 0.75rem; border-radius: 6px; font-weight: 600; margin-top: 1rem;">
-                        <i class="bi bi-cloud-plus"></i> Save Credential
-                    </button>
+                    <!-- Hidden field to store credential_id when editing -->
+                    <input type="hidden" id="editingCredentialId" value="">
+
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" id="saveCredentialBtn" class="btn flex-grow-1" onclick="saveAppCredential()" style="background: #10b981; color: white; border: none; padding: 0.75rem; border-radius: 6px; font-weight: 600; margin-top: 1rem;">
+                            <i class="bi bi-cloud-plus"></i> Save Credential
+                        </button>
+                        <button type="button" id="cancelEditBtn" class="btn" onclick="cancelEdit()" style="background: #6b7280; color: white; border: none; padding: 0.75rem; border-radius: 6px; font-weight: 600; margin-top: 1rem; display: none; flex-grow: 1;">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer" style="border-top: 1px solid #334155; background: #1f2937;">
@@ -172,10 +181,12 @@
                     <div>
                         <strong style="color: #60a5fa;">${cred.app_name.toUpperCase()}</strong>
                         ${cred.is_primary ? '<span style="background: #10b981; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-left: 0.5rem;">PRIMARY</span>' : ''}
+                        ${!cred.is_active ? '<span style="background: #f59e0b; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; margin-left: 0.5rem;">INACTIVE</span>' : ''}
                     </div>
-                    <div style="display: flex; gap: 0.5rem;">
-                        ${!cred.is_primary ? `<button onclick="setPrimaryCredential('${cred.credential_id}')" style="background: #3b82f6; border: none; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;" title="Set as Primary"><i class="bi bi-star"></i></button>` : ''}
-                        <button onclick="deleteCredential('${cred.credential_id}')" style="background: #ef4444; border: none; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer;" title="Delete"><i class="bi bi-trash"></i></button>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
+                        <button onclick="editCredential('${cred.credential_id}')" style="background: #3b82f6; border: none; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; white-space: nowrap;" title="Edit Credential"><i class="bi bi-pencil-square"></i> Edit</button>
+                        ${!cred.is_primary ? `<button onclick="setPrimaryCredential('${cred.credential_id}')" style="background: #f59e0b; border: none; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; white-space: nowrap;" title="Set as Primary"><i class="bi bi-star"></i> Primary</button>` : ''}
+                        <button onclick="deleteCredential('${cred.credential_id}')" style="background: #ef4444; border: none; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; white-space: nowrap;" title="Delete"><i class="bi bi-trash"></i> Delete</button>
                     </div>
                 </div>
                 <div style="font-size: 0.85rem; color: #9ca3af; margin-bottom: 0.5rem;">
@@ -183,7 +194,7 @@
                     <div><strong>Team:</strong> ${cred.team_name}</div>
                     ${cred.profile_name ? `<div><strong>Profile:</strong> ${cred.profile_name}</div>` : ''}
                     ${cred.device_type ? `<div><strong>Device Type:</strong> ${cred.device_type}</div>` : ''}
-                    <div><strong>Used ${cred.usage_count || 0} times</strong> ${cred.last_used_at ? `(Last: ${new Date(cred.last_used_at).toLocaleDateString()})` : ''}</div>
+                    <div><strong>Used ${cred.usage_count || 0} times</strong> ${cred.last_used_at ? `(Last: ${new Date(cred.last_used_at).toLocaleDateString()})` : '(Never used)'}</div>
                 </div>
             </div>
         `).join('');
@@ -192,6 +203,7 @@
     }
 
     async function saveAppCredential() {
+        const editingCredentialId = document.getElementById('editingCredentialId').value;
         const appName = document.getElementById('credAppName').value;
         const teamName = document.getElementById('credTeamName').value;
         const username = document.getElementById('credUsername').value;
@@ -201,19 +213,40 @@
         const deviceType = document.getElementById('credDeviceType').value;
         const isPrimary = document.getElementById('credIsPrimary').checked;
 
-        if (!appName || !teamName || !username || !password) {
-            alert('⛔ Please fill in all required fields');
+        // Validation
+        if (!appName || !teamName || !username) {
+            alert('⛔ Please fill in App Name, Team Name, and Username');
+            return;
+        }
+
+        if (!editingCredentialId && !password) {
+            alert('⛔ Password is required for new credentials');
             return;
         }
 
         try {
-            const response = await fetch('/api/admin/app-credentials', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include', // Include session cookies
-                body: JSON.stringify({
+            let url, method, body;
+
+            if (editingCredentialId) {
+                // Update existing credential
+                url = `/api/admin/app-credentials/${editingCredentialId}`;
+                method = 'PUT';
+                body = {
+                    username: username,
+                    login_url: loginUrl,
+                    profile_name: profileName,
+                    device_type: deviceType,
+                    is_primary: isPrimary
+                };
+                // Only include password if it's not empty
+                if (password && password.trim() !== '') {
+                    body.password = password;
+                }
+            } else {
+                // Create new credential
+                url = '/api/admin/app-credentials';
+                method = 'POST';
+                body = {
                     app_name: appName,
                     username: username,
                     password: password,
@@ -222,30 +255,112 @@
                     profile_name: profileName,
                     device_type: deviceType,
                     is_primary: isPrimary
-                })
+                };
+            }
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include', // Include session cookies
+                body: JSON.stringify(body)
             });
 
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP ${response.status}`);
             }
 
-            // Clear form
-            document.getElementById('credAppName').value = '';
-            document.getElementById('credTeamName').value = '';
-            document.getElementById('credUsername').value = '';
-            document.getElementById('credPassword').value = '';
-            document.getElementById('credLoginUrl').value = '';
-            document.getElementById('credProfileName').value = '';
-            document.getElementById('credDeviceType').value = '';
-            document.getElementById('credIsPrimary').checked = true;
-
+            // Clear form and reset mode
+            resetCredentialForm();
+            
             // Reload list
             await loadAppCredentials();
-            showNotification('✅ Credential saved successfully', 'success');
+            
+            if (editingCredentialId) {
+                showNotification('✅ Credential updated successfully', 'success');
+            } else {
+                showNotification('✅ Credential created successfully', 'success');
+            }
         } catch (error) {
             console.error('Error saving credential:', error);
             showNotification(`❌ Error saving credential: ${error.message}`, 'error');
         }
+    }
+
+    async function editCredential(credentialId) {
+        try {
+            // Fetch credential details (admin can fetch with password)
+            const response = await fetch(`/api/admin/app-credentials/${credentialId}?include_password=true`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: Unable to load credential`);
+            }
+
+            const cred = await response.json();
+            
+            // Populate form with credential data
+            document.getElementById('credAppName').value = cred.app_name;
+            document.getElementById('credAppName').disabled = true; // Can't change app name
+            document.getElementById('credTeamName').value = cred.team_name;
+            document.getElementById('credUsername').value = cred.username;
+            document.getElementById('credPassword').value = cred.password === '***hidden***' ? '' : (cred.password || '');
+            document.getElementById('credLoginUrl').value = cred.login_url || '';
+            document.getElementById('credProfileName').value = cred.profile_name || '';
+            document.getElementById('credDeviceType').value = cred.device_type || '';
+            document.getElementById('credIsPrimary').checked = cred.is_primary || false;
+            
+            // Set the hidden credential_id field
+            document.getElementById('editingCredentialId').value = credentialId;
+            
+            // Update form mode
+            document.getElementById('formModeIcon').textContent = '✏️';
+            document.getElementById('formModeTitle').textContent = 'Edit Credential';
+            document.getElementById('saveCredentialBtn').innerHTML = '<i class="bi bi-cloud-check"></i> Update Credential';
+            document.getElementById('cancelEditBtn').style.display = 'flex';
+            
+            // Scroll to form
+            document.querySelector('.modal-body').scrollTop = document.querySelector('.modal-body').scrollHeight;
+            
+            showNotification('✏️ Editing credential - Password field is empty (leave blank to keep current)', 'info');
+        } catch (error) {
+            console.error('Error loading credential:', error);
+            showNotification(`❌ Error loading credential: ${error.message}`, 'error');
+        }
+    }
+
+    function cancelEdit() {
+        resetCredentialForm();
+        showNotification('✅ Edit cancelled', 'info');
+    }
+
+    function resetCredentialForm() {
+        // Clear form fields
+        document.getElementById('credAppName').value = '';
+        document.getElementById('credAppName').disabled = false;
+        document.getElementById('credTeamName').value = '';
+        document.getElementById('credUsername').value = '';
+        document.getElementById('credPassword').value = '';
+        document.getElementById('credLoginUrl').value = '';
+        document.getElementById('credProfileName').value = '';
+        document.getElementById('credDeviceType').value = '';
+        document.getElementById('credIsPrimary').checked = true;
+        
+        // Clear editing mode
+        document.getElementById('editingCredentialId').value = '';
+        
+        // Reset form mode to "Add"
+        document.getElementById('formModeIcon').textContent = '➕';
+        document.getElementById('formModeTitle').textContent = 'Add New Credential';
+        document.getElementById('saveCredentialBtn').innerHTML = '<i class="bi bi-cloud-plus"></i> Save Credential';
+        document.getElementById('cancelEditBtn').style.display = 'none';
     }
 
     async function setPrimaryCredential(credentialId) {
