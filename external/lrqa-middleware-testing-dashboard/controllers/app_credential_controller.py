@@ -194,8 +194,8 @@ class AppCredentialController:
                 device_type=device_type,
                 is_primary=is_primary if not existing else False,  # Only first is primary
                 team_name=team_name,
-                created_by=current_user.id if current_user else None,
-                updated_by=current_user.id if current_user else None
+                created_by=current_user.user_id if current_user else None,
+                updated_by=current_user.user_id if current_user else None
             )
             
             session.add(new_cred)
@@ -234,7 +234,7 @@ class AppCredentialController:
                     setattr(cred, field, kwargs[field])
             
             cred.updated_at = datetime.now(timezone.utc)
-            cred.updated_by = current_user.id if current_user else None
+            cred.updated_by = current_user.user_id if current_user else None
             
             session.commit()
             return cred.to_dict(), 200
@@ -290,7 +290,7 @@ class AppCredentialController:
             
             cred.is_primary = True
             cred.updated_at = datetime.now(timezone.utc)
-            cred.updated_by = current_user.id if current_user else None
+            cred.updated_by = current_user.user_id if current_user else None
             
             session.commit()
             return cred.to_dict(), 200
