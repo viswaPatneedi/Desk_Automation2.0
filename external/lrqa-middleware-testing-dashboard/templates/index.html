@@ -4357,7 +4357,8 @@
                                     job_id: job.job_id,
                                     eta: job.eta_formatted || `${Math.round((job.eta_seconds || 0) / 60)}m`,
                                     current_iteration: job.current_iteration,
-                                    iterations: job.iterations
+                                    iterations: job.iterations,
+                                    executing_user: job.executing_user || job.user_id || 'Unknown'
                                 };
                             }
                         });
@@ -4368,8 +4369,61 @@
                     deviceRows.forEach(row => {
                         const deviceIp = row.getAttribute('data-device-ip');
                         const statusBadge = row.querySelector('.device-status-badge');
+                        const runningJob = runningJobs[deviceIp];
                         
-                        // Start with "Checking..." state
+                        // If device is busy/locked, skip SSH check and just show busy status
+                        if (runningJob) {
+                            completedChecks++;
+                            console.log(`⏭️  Skipping status check for ${deviceIp} - Device is BUSY (locked by ${runningJob.executing_user})`);
+                            
+                            // Device is executing a job - show busy status with user details
+                            const progressText = runningJob.current_iteration ? 
+                                ` (${runningJob.current_iteration}/${runningJob.iterations})` : '';
+                            
+                            statusBadge.innerHTML = `
+                                <div style="text-align: left;">
+                                    <div><i class="bi bi-hourglass-split"></i> Busy${progressText}</div>
+                                    <small style="font-size: 0.7rem; font-weight: 600;">👤 ${runningJob.executing_user}</small><br>
+                                    <small style="font-size: 0.7rem; font-weight: 600;">⏱️  ETA: ${runningJob.eta}</small>
+                                </div>
+                            `;
+                            statusBadge.style.background = '#dc2626';
+                            statusBadge.style.color = '#fee2e2';
+                            statusBadge.style.whiteSpace = 'normal';
+                            statusBadge.style.lineHeight = '1.3';
+                            statusBadge.style.padding = '0.5rem';
+                            statusBadge.style.minWidth = '120px';
+                            
+                            // Mask the device row - disable checkbox and dim it
+                            row.setAttribute('data-device-status', 'busy');
+                            const checkbox = row.querySelector('.device-checkbox');
+                            if (checkbox) {
+                                checkbox.disabled = true;
+                                checkbox.style.opacity = '0.5';
+                                checkbox.style.cursor = 'not-allowed';
+                                checkbox.title = `Device is busy - being used by ${runningJob.executing_user}`;
+                            }
+                            row.style.opacity = '0.7';
+                            row.style.pointerEvents = 'none';
+                            row.style.backgroundColor = '#1e293b';
+                            
+                            busyDevices.push({ 
+                                row, 
+                                checkbox: checkbox, 
+                                eta: runningJob.eta,
+                                executing_user: runningJob.executing_user
+                            });
+                            console.log(`⏳ ${deviceIp} is BUSY - User: ${runningJob.executing_user}, ETA: ${runningJob.eta}`);
+                            
+                            // Check if all checks are done
+                            if (completedChecks === deviceRows.length) {
+                                console.log('📋 Reorganizing device list to reflect current device status...');
+                                reorganizeDeviceList(deviceSelector, activeDevices, busyDevices, inactiveDevices);
+                            }
+                            return; // Skip SSH check for this device
+                        }
+                        
+                        // Start with "Checking..." state for non-busy devices
                         statusBadge.innerHTML = '<i class="bi bi-hourglass-split"></i> Checking...';
                         statusBadge.style.background = '#6b7280';
                         
@@ -4388,41 +4442,42 @@
                         .then(data => {
                             completedChecks++;
                             if (data.success) {
-                                // Device is reachable
-                                const runningJob = runningJobs[deviceIp];
+                                // Device is reachable and available
+                                statusBadge.innerHTML = '<i class="bi bi-check-circle-fill"></i> Available';
+                                statusBadge.style.background = '#10b981';
+                                statusBadge.style.whiteSpace = 'normal';
+                                row.setAttribute('data-device-status', 'active');
+                                row.style.opacity = '1';
+                                row.style.pointerEvents = 'auto';
+                                row.style.backgroundColor = '';
                                 
-                                if (runningJob) {
-                                    // Device is executing a job
-                                    const progressText = runningJob.current_iteration ? 
-                                        ` (${runningJob.current_iteration}/${runningJob.iterations})` : '';
-                                    statusBadge.innerHTML = `
-                                        <i class="bi bi-hourglass-split"></i> Busy${progressText}<br>
-                                        <small style="font-size: 0.75rem; font-weight: 600;">ETA: ${runningJob.eta}</small>
-                                    `;
-                                    statusBadge.style.background = '#fbbf24';
-                                    statusBadge.style.whiteSpace = 'normal';
-                                    statusBadge.style.lineHeight = '1.2';
-                                    statusBadge.style.padding = '0.4rem';
-                                    row.setAttribute('data-device-status', 'busy');
-                                    busyDevices.push({ row, checkbox: row.querySelector('.device-checkbox'), eta: runningJob.eta });
-                                    console.log(`⏳ ${deviceIp} is BUSY (Job: ${runningJob.job_id}) - ETA: ${runningJob.eta}`);
-                                } else {
-                                    // Device is reachable and available
-                                    statusBadge.innerHTML = '<i class="bi bi-check-circle-fill"></i> Available';
-                                    statusBadge.style.background = '#10b981';
-                                    statusBadge.style.whiteSpace = 'normal';
-                                    row.setAttribute('data-device-status', 'active');
-                                    activeDevices.push({ row, checkbox: row.querySelector('.device-checkbox') });
-                                    console.log(`✅ ${deviceIp} is ACTIVE`);
+                                const checkbox = row.querySelector('.device-checkbox');
+                                if (checkbox) {
+                                    checkbox.disabled = false;
+                                    checkbox.style.opacity = '1';
+                                    checkbox.style.cursor = 'pointer';
+                                    checkbox.title = 'Device is available - you can queue jobs for it';
                                 }
+                                
+                                activeDevices.push({ row, checkbox: checkbox });
+                                console.log(`✅ ${deviceIp} is AVAILABLE (SSH: OK)`);
                             } else {
                                 // Device is not reachable
                                 statusBadge.innerHTML = '<i class="bi bi-x-circle-fill"></i> Inactive';
                                 statusBadge.style.background = '#ef4444';
                                 statusBadge.style.whiteSpace = 'normal';
                                 row.setAttribute('data-device-status', 'inactive');
-                                inactiveDevices.push({ row, checkbox: row.querySelector('.device-checkbox') });
-                                console.log(`❌ ${deviceIp} is INACTIVE`);
+                                
+                                const checkbox = row.querySelector('.device-checkbox');
+                                if (checkbox) {
+                                    checkbox.disabled = false;
+                                    checkbox.style.opacity = '1';
+                                    checkbox.style.cursor = 'pointer';
+                                    checkbox.title = 'Device is inactive - SSH connection failed';
+                                }
+                                
+                                inactiveDevices.push({ row, checkbox: checkbox });
+                                console.log(`❌ ${deviceIp} is INACTIVE (SSH: Failed)`);
                             }
                             
                             // Always reorganize device list to reflect current status
@@ -4438,7 +4493,15 @@
                             statusBadge.style.background = '#ef4444';
                             statusBadge.style.whiteSpace = 'normal';
                             row.setAttribute('data-device-status', 'inactive');
-                            inactiveDevices.push({ row, checkbox: row.querySelector('.device-checkbox') });
+                            
+                            const checkbox = row.querySelector('.device-checkbox');
+                            if (checkbox) {
+                                checkbox.disabled = false;
+                                checkbox.style.opacity = '1';
+                                checkbox.style.cursor = 'pointer';
+                            }
+                            
+                            inactiveDevices.push({ row, checkbox: checkbox });
                             
                             if (completedChecks === deviceRows.length) {
                                 console.log('📋 Reorganizing device list to reflect current device status...');
