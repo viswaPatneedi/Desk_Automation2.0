@@ -75,13 +75,11 @@
                                     id="deviceType" 
                                     name="device_type"
                                     required
-                                    onchange="toggleRpiFields()"
                                     style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
                                 <option value="" selected disabled>Select device type...</option>
                                 <option value="rdk_box">RDK Box</option>
                                 <option value="xumo">Xumo Device</option>
                                 <option value="generic">Generic STB</option>
-                                <option value="gdf_rack">GDF_RACK Device</option>
                                 <option value="other">Other</option>
                             </select>
                             <div class="invalid-feedback" style="display: block; color: #ef4444;">
@@ -175,79 +173,6 @@
                         </div>
                     </div>
                     
-                    <!-- Raspberry Pi (R-Pi) Credentials Section - Only for GDF_RACK -->
-                    <div id="rpiCredentialsSection" style="display: none; margin-bottom: 2rem; padding: 1rem; background: #1a2332; border: 1px solid #2d3748; border-radius: 8px;">
-                        <h6 class="text-warning mb-3" style="color: #f59e0b; font-weight: 600;">
-                            <i class="bi bi-cpu"></i> Raspberry Pi (R-Pi) Credentials
-                        </h6>
-                        
-                        <!-- R-Pi IP Address -->
-                        <div class="mb-3">
-                            <label for="rpiIp" class="form-label" style="color: #d1d5db; font-weight: 500;">
-                                R-Pi IP Address
-                                <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="rpiIp" 
-                                   name="rpi_ip"
-                                   placeholder="192.168.1.100"
-                                   style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
-                            <div class="invalid-feedback" style="display: block; color: #ef4444;">
-                                Please provide R-Pi IP address.
-                            </div>
-                        </div>
-                        
-                        <!-- R-Pi Port -->
-                        <div class="mb-3">
-                            <label for="rpiPort" class="form-label" style="color: #d1d5db; font-weight: 500;">
-                                R-Pi Port
-                                <span class="text-danger">*</span>
-                            </label>
-                            <input type="number" 
-                                   class="form-control" 
-                                   id="rpiPort" 
-                                   name="rpi_port"
-                                   placeholder="22"
-                                   value="22"
-                                   min="1"
-                                   max="65535"
-                                   style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
-                        </div>
-                        
-                        <!-- R-Pi Username -->
-                        <div class="mb-3">
-                            <label for="rpiUsername" class="form-label" style="color: #d1d5db; font-weight: 500;">
-                                R-Pi Username
-                                <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" 
-                                   class="form-control" 
-                                   id="rpiUsername" 
-                                   name="rpi_username"
-                                   placeholder="pi"
-                                   value="pi"
-                                   style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
-                        </div>
-                        
-                        <!-- R-Pi Password -->
-                        <div class="mb-3">
-                            <label for="rpiPassword" class="form-label" style="color: #d1d5db; font-weight: 500;">
-                                R-Pi Password
-                                <span class="text-danger">*</span>
-                            </label>
-                            <input type="password" 
-                                   class="form-control" 
-                                   id="rpiPassword" 
-                                   name="rpi_password"
-                                   placeholder="Enter R-Pi password"
-                                   style="background: #1f2937; border: 1px solid #374151; color: #e5e7eb;">
-                            <small class="form-text" style="color: #9ca3af;">
-                                Password will be encrypted before storage
-                            </small>
-                        </div>
-                    </div>
-                    
                     <!-- Device Status Section -->
                     <div class="mb-4">
                         <h6 class="text-primary mb-3" style="color: #3b82f6; font-weight: 600;">
@@ -300,32 +225,6 @@
     </div>
 </div>
 
-<script>
-    /**
-     * Toggle R-PI credential fields based on device type selection
-     */
-    function toggleRpiFields() {
-        const deviceType = document.getElementById('deviceType').value;
-        const rpiSection = document.getElementById('rpiCredentialsSection');
-        const rpiInputs = rpiSection.querySelectorAll('input[type="text"], input[type="password"], input[type="number"]');
-        
-        if (deviceType === 'gdf_rack') {
-            // Show R-PI section and make fields required
-            rpiSection.style.display = 'block';
-            rpiInputs.forEach(input => {
-                input.required = true;
-            });
-        } else {
-            // Hide R-PI section and remove required attribute
-            rpiSection.style.display = 'none';
-            rpiInputs.forEach(input => {
-                input.required = false;
-                input.value = '';
-            });
-        }
-    }
-</script>
-
 <style>
 /* Form styling for device management modal */
 .form-control:focus,
@@ -360,27 +259,5 @@
 h6.text-primary {
     border-bottom: 2px solid #374151;
     padding-bottom: 10px;
-}
-
-h6.text-warning {
-    border-bottom: 2px solid #f59e0b;
-    padding-bottom: 10px;
-}
-
-/* R-PI Section styling */
-#rpiCredentialsSection {
-    animation: expandSection 0.3s ease-in-out;
-}
-
-@keyframes expandSection {
-    from {
-        opacity: 0;
-        max-height: 0;
-        overflow: hidden;
-    }
-    to {
-        opacity: 1;
-        max-height: 1000px;
-    }
 }
 </style>

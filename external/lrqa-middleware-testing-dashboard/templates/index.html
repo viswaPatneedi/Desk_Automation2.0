@@ -1377,21 +1377,59 @@
                                 </button>
                             </div>
                             <div id="device-selector" style="border: 1px solid #6b7280; border-radius: 6px; padding: 0.75rem; max-height: 300px; overflow-y: auto;">
-                                {% if devices %}
-                                    {% for device in devices %}
-                                    <div class="device-row" data-device-ip="{{ device.ip }}" data-device-type="{{ device.device_type or 'UNKNOWN' }}" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; margin-bottom: 0.5rem; border: 1px solid #475569;">
-                                        <input type="checkbox" class="form-check-input device-checkbox" id="device-{{ device.ip }}" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" data-device-type="{{ device.device_type or 'UNKNOWN' }}" style="margin-right: 1rem; width: 18px; height: 18px; cursor: pointer;">
-                                        <div style="flex: 1;">
-                                            <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">{{ device.name }} • <span style="color: #9ca3af; font-size: 0.85rem;">{{ device.ip }} • <span class="device-mac-display">{{ device.mac_address or 'N/A' }}</span>{% if device.device_type %} • <span style="color: #60a5fa; font-weight: 600;"><i class="bi bi-hdd-rack-fill"></i> {{ device.device_type }}</span>{% endif %}</span> </div>
-                                        </div>
-                                        <span class="device-status-badge" style="background: #6b7280; color: #fff; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; min-width: 75px; text-align: center;">
-                                            <i class="bi bi-hourglass-split"></i> Checking...
-                                        </span>
+                                <!-- DESK Devices Section -->
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="color: #10b981; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                        <i class="bi bi-desktop"></i> DESK Devices
                                     </div>
-                                    {% endfor %}
-                                {% else %}
-                                    <p style="color: #9ca3af; margin: 0; text-align: center; padding: 1rem;">No devices available</p>
-                                {% endif %}
+                                    <div id="desk-device-selector">
+                                    {% if devices %}
+                                        {% for device in devices %}
+                                        {% if not device.is_rack_device %}
+                                        <div class="device-row" data-device-ip="{{ device.ip }}" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; margin-bottom: 0.5rem; border: 1px solid #475569;">
+                                            <input type="checkbox" class="form-check-input device-checkbox" id="device-{{ device.ip }}" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" style="margin-right: 1rem; width: 18px; height: 18px; cursor: pointer;">
+                                            <div style="flex: 1;">
+                                                <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">{{ device.name }} • <span style="color: #9ca3af; font-size: 0.85rem;">{{ device.ip }} • <span class="device-mac-display">{{ device.mac_address or 'N/A' }}</span></span> </div>
+                                            </div>
+                                            <span class="device-status-badge" style="background: #6b7280; color: #fff; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; min-width: 75px; text-align: center;">
+                                                <i class="bi bi-hourglass-split"></i> Checking...
+                                            </span>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    </div>
+                                    <div id="desk-device-selector-empty" style="color: #9ca3af; text-align: center; padding: 1rem; font-size: 0.9rem; display: none;">
+                                        No DESK devices available
+                                    </div>
+                                </div>
+
+                                <!-- GDF_RACK Devices Section -->
+                                <div style="margin-bottom: 1rem; border-top: 1px solid #475569; padding-top: 1rem;">
+                                    <div style="color: #f59e0b; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                                        <i class="bi bi-hdd-rack-fill"></i> GDF_RACK Devices (Lab)
+                                    </div>
+                                    <div id="rack-device-selector">
+                                    {% if devices %}
+                                        {% for device in devices %}
+                                        {% if device.is_rack_device %}
+                                        <div class="device-row" data-device-ip="{{ device.ip }}" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; margin-bottom: 0.5rem; border: 1px solid #f59e0b33;">
+                                            <input type="checkbox" class="form-check-input device-checkbox" id="device-{{ device.ip }}" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" style="margin-right: 1rem; width: 18px; height: 18px; cursor: pointer;">
+                                            <div style="flex: 1;">
+                                                <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">{{ device.name }} • <span style="color: #9ca3af; font-size: 0.85rem;">Lab: {{ device.ip }} via R-Pi {{ device.rpi_ip or 'N/A' }}</span> </div>
+                                            </div>
+                                            <span class="device-status-badge" style="background: #f59e0b; color: #000; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; min-width: 75px; text-align: center;">
+                                                <i class="bi bi-hourglass-split"></i> Checking...
+                                            </span>
+                                        </div>
+                                        {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                    </div>
+                                    <div id="rack-device-selector-empty" style="color: #9ca3af; text-align: center; padding: 1rem; font-size: 0.9rem; display: none;">
+                                        No GDF_RACK devices available
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <!-- Execution Order Header with Save/Clear Buttons -->
@@ -1567,7 +1605,10 @@
                             <i class="bi bi-list-check"></i> Registered Devices
                         </button>
                         <button class="device-management-tab-btn" onclick="switchDeviceTab('add-form', this)">
-                            <i class="bi bi-plus-circle-fill"></i> Add New Device
+                            <i class="bi bi-desktop"></i> Add DESK Device
+                        </button>
+                        <button class="device-management-tab-btn" onclick="switchDeviceTab('add-rack-form', this)">
+                            <i class="bi bi-hdd-rack-fill"></i> Add GDF_RACK Device
                         </button>
                     </div>
 
@@ -1609,14 +1650,21 @@
                         </div>
                         {% endif %}
                             
-                            <div class="device-list" id="device-list">
+                        <div class="device-list" id="device-list">
+                            <!-- DESK Devices Section -->
+                            <div style="margin-bottom: 2rem;">
+                                <h6 style="color: #10b981; margin-bottom: 1rem; font-weight: 600; border-bottom: 2px solid #10b981; padding-bottom: 0.5rem;">
+                                    <i class="bi bi-desktop"></i> DESK Devices
+                                </h6>
+                                <div id="desk-devices-list">
                                 {% if devices %}
                                     {% for device in devices %}
-                                    <div class="device-item" data-ip="{{ device.ip }}" data-team="{{ device.team_name or '' }}" data-device-type="{{ device.device_type or 'UNKNOWN' }}">
+                                    {% if not device.is_rack_device %}
+                                    <div class="device-item" data-ip="{{ device.ip }}" data-team="{{ device.team_name or '' }}">
                                         <!-- Checkbox: Multi-select -->
                                         {% if current_user.is_admin %}
                                         <div style="display: flex; align-items: center; margin-right: 0.75rem;">
-                                            <input type="checkbox" class="device-checkbox" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" data-device-type="{{ device.device_type or 'UNKNOWN' }}"
+                                            <input type="checkbox" class="device-checkbox" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" 
                                                    onchange="updateDeviceSelectionCount()" 
                                                    style="width: 18px; height: 18px; cursor: pointer;">
                                         </div>
@@ -1630,9 +1678,6 @@
                                                 </small>
                                                 <small class="device-item-detail">
                                                     <i class="bi bi-ethernet"></i> {{ device.mac_address or 'N/A' }}
-                                                </small>
-                                                <small class="device-item-detail" style="color: #60a5fa; font-weight: 600;">
-                                                    <i class="bi bi-hdd-rack-fill"></i> {{ device.device_type or 'UNKNOWN' }}
                                                 </small>
                                             </div>
                                             {% if device.team_name %}<small class="device-item-team"><i class="bi bi-people"></i> {{ device.team_name }}</small>{% endif %}
@@ -1652,14 +1697,73 @@
                                             {% endif %}
                                         </div>
                                     </div>
+                                    {% endif %}
                                     {% endfor %}
-                                {% else %}
-                                    <div class="device-list-placeholder">
-                                        <i class="bi bi-inbox device-list-placeholder-icon"></i>
-                                        <p style="margin: 0; font-size: 0.9rem;">No devices registered yet</p>
-                                    </div>
                                 {% endif %}
+                                </div>
+                                <div id="desk-devices-empty" style="color: #9ca3af; text-align: center; padding: 2rem; display: none;">
+                                    <i class="bi bi-inbox"></i> No DESK devices registered yet
+                                </div>
                             </div>
+
+                            <!-- GDF_RACK Devices Section -->
+                            <div style="margin-bottom: 2rem;">
+                                <h6 style="color: #f59e0b; margin-bottom: 1rem; font-weight: 600; border-bottom: 2px solid #f59e0b; padding-bottom: 0.5rem;">
+                                    <i class="bi bi-hdd-rack-fill"></i> GDF_RACK Devices (Lab)
+                                </h6>
+                                <div id="rack-devices-list">
+                                {% if devices %}
+                                    {% for device in devices %}
+                                    {% if device.is_rack_device %}
+                                    <div class="device-item" data-ip="{{ device.ip }}" data-team="{{ device.team_name or '' }}" data-is-rack="true">
+                                        <!-- Checkbox: Multi-select -->
+                                        {% if current_user.is_admin %}
+                                        <div style="display: flex; align-items: center; margin-right: 0.75rem;">
+                                            <input type="checkbox" class="device-checkbox" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" 
+                                                   onchange="updateDeviceSelectionCount()" 
+                                                   style="width: 18px; height: 18px; cursor: pointer;">
+                                        </div>
+                                        {% endif %}
+                                        <!-- Left Side: Device Info -->
+                                        <div class="device-item-info">
+                                            <h6 class="device-item-name">{{ device.name }}</h6>
+                                            <div class="device-item-details">
+                                                <small class="device-item-detail">
+                                                    <i class="bi bi-tv"></i> Lab Device: {{ device.ip }}
+                                                </small>
+                                                <small class="device-item-detail">
+                                                    <i class="bi bi-cpu"></i> Via R-Pi: {{ device.rpi_ip or 'N/A' }}:{{ device.rpi_port or 'N/A' }}
+                                                </small>
+                                                <small class="device-item-detail">
+                                                    <i class="bi bi-ethernet"></i> {{ device.mac_address or 'N/A' }}
+                                                </small>
+                                            </div>
+                                            {% if device.team_name %}<small class="device-item-team"><i class="bi bi-people"></i> {{ device.team_name }}</small>{% endif %}
+                                        </div>
+                                        <!-- Right Side: Action Buttons -->
+                                        <div class="device-item-actions">
+                                            <button class="btn btn-info btn-sm" onclick="showMethodExecutionModal('{{ device.ip }}')" title="Execute Method on Device">
+                                                <i class="bi bi-play-circle"></i>
+                                            </button>
+                                            <button class="btn btn-warning btn-sm" onclick="editDevice('{{ device.ip }}')" title="Edit Device">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                            {% if current_user.is_admin %}
+                                            <button class="btn btn-danger btn-sm" onclick="removeDevice('{{ device.ip }}')" title="Delete Device">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                                </div>
+                                <div id="rack-devices-empty" style="color: #9ca3af; text-align: center; padding: 2rem; display: none;">
+                                    <i class="bi bi-inbox"></i> No GDF_RACK devices registered yet
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Tab: Add New Device Form -->
@@ -1681,10 +1785,9 @@
 
                         <div class="device-form-group">
                             <label for="device-type" class="device-form-label">Device Type <span class="text-danger">*</span></label>
-                            <select class="form-select device-form-select" id="device-type" onchange="toggleDeviceTypeFields()" required>
+                            <select class="form-select device-form-select" id="device-type" required>
                                 <option value="XUMO">XUMO</option>
                                 <option value="SKY STREAM">SKY STREAM</option>
-                                <option value="GDF_RACK">GDF_RACK</option>
                             </select>
                         </div>
 
@@ -1737,6 +1840,108 @@
                         <div style="margin-top: 1.2rem;">
                             <button id="add-device-btn" class="btn btn-success btn-custom w-100" style="padding: 0.6rem; font-weight: 600; font-size: 0.95rem;">
                                 <i class="bi bi-plus-lg"></i> Add Device
+                            </button>
+                        </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Add GDF_RACK Device Form -->
+                    <div id="add-rack-form-tab" class="device-management-tab-content">
+                        <h6 class="device-list-section-title">
+                            <i class="bi bi-hdd-rack-fill"></i> Add GDF_RACK Device (Lab Device via R-Pi Tunnel)
+                        </h6>
+                        <p style="color: #9ca3af; font-size: 0.9rem; margin-bottom: 1.5rem;">
+                            <i class="bi bi-info-circle"></i> GDF_RACK devices are located in the lab and accessible through a Raspberry Pi tunnel.
+                        </p>
+                        
+                        <div class="form-scrollable">
+                        <!-- Raspberry Pi Configuration Section -->
+                        <div style="background: #1f2937; border: 1px solid #374151; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                            <h6 style="color: #60a5fa; margin-bottom: 1rem; font-weight: 600;">
+                                <i class="bi bi-cpu"></i> Raspberry Pi (Tunnel Host) Configuration
+                            </h6>
+                            
+                            <div class="device-form-group">
+                                <label for="rpi-ip" class="device-form-label">R-Pi IP Address <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control device-form-input" id="rpi-ip" placeholder="e.g., 10.138.17.42" required>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="rpi-port" class="device-form-label">R-Pi SSH Port <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control device-form-input" id="rpi-port" placeholder="e.g., 60201" value="60201" required>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="rpi-username" class="device-form-label">R-Pi Username <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control device-form-input" id="rpi-username" placeholder="e.g., pi" value="pi" required>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="rpi-password" class="device-form-label">R-Pi Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control device-form-input" id="rpi-password" placeholder="Enter R-Pi password" required>
+                                <small style="color: #9ca3af; display: block; margin-top: 0.25rem;">Password will be encrypted before storage</small>
+                            </div>
+                        </div>
+
+                        <!-- Lab Device Configuration Section -->
+                        <div style="background: #1f2937; border: 1px solid #374151; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                            <h6 style="color: #fbbf24; margin-bottom: 1rem; font-weight: 600;">
+                                <i class="bi bi-tv"></i> Lab Device Configuration
+                            </h6>
+                            
+                            <div class="device-form-group">
+                                <label for="rack-device-name" class="device-form-label">Device Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control device-form-input" id="rack-device-name" placeholder="e.g., Lab-XUMO-01" required>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="rack-device-type" class="device-form-label">LAB Device Type <span class="text-danger">*</span></label>
+                                <select class="form-select device-form-select" id="rack-device-type" required>
+                                    <option value="">-- Select Device Type --</option>
+                                    <option value="XUMO">XUMO</option>
+                                    <option value="SKY STREAM">SKY STREAM</option>
+                                </select>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="rack-device-ip" class="device-form-label">Lab Device IP Address <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control device-form-input" id="rack-device-ip" placeholder="e.g., 10.0.0.28" required>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="rack-device-port" class="device-form-label">Lab Device SSH Port <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control device-form-input" id="rack-device-port" placeholder="e.g., 10022" value="10022" required>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="rack-device-username" class="device-form-label">Lab Device SSH Username <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control device-form-input" id="rack-device-username" placeholder="e.g., root" value="root" required>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="rack-device-mac" class="device-form-label">Device MAC Address <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control device-form-input" id="rack-device-mac" placeholder="e.g., 1C:2F:A2:30:35:B6" required>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="rack-device-location" class="device-form-label">Location / Lab <span class="text-danger">*</span></label>
+                                <select class="form-select device-form-select" id="rack-device-location" required>
+                                    <option value="">-- Select Location --</option>
+                                    <option value="IND">IND (India)</option>
+                                    <option value="US">US</option>
+                                    <option value="UK">UK</option>
+                                </select>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="rack-device-team" class="device-form-label">Team Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control device-form-input" id="rack-device-team" placeholder="e.g., QA Team" required>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 1.2rem;">
+                            <button id="add-rack-device-btn" class="btn btn-success btn-custom w-100" style="padding: 0.6rem; font-weight: 600; font-size: 0.95rem;">
+                                <i class="bi bi-plus-lg"></i> Add GDF_RACK Device
                             </button>
                         </div>
                         </div>
@@ -3565,19 +3770,16 @@
             }
         }
         
-        // Toggle device type specific fields
-        function toggleDeviceTypeFields() {
-            const deviceType = document.getElementById('device-type').value;
-            console.log('Device type changed to:', deviceType);
-            // Currently no special fields needed for different device types in the main form
-            // This is a placeholder for future device-type-specific fields
-        }
-        
         // Setup device form submission handler
         function setupDeviceFormHandler() {
             const addBtn = document.getElementById('add-device-btn');
             if (addBtn) {
                 addBtn.addEventListener('click', handleAddOrUpdateDevice);
+            }
+            
+            const addRackBtn = document.getElementById('add-rack-device-btn');
+            if (addRackBtn) {
+                addRackBtn.addEventListener('click', handleAddRackDevice);
             }
         }
         
@@ -3713,6 +3915,113 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('❌ Error processing device: ' + error.message);
+            });
+        }
+        
+        // Handle adding GDF_RACK device
+        function handleAddRackDevice() {
+            const rackDeviceData = {
+                name: document.getElementById('rack-device-name').value,
+                ip: document.getElementById('rack-device-ip').value,
+                device_type: document.getElementById('rack-device-type').value,
+                mac_address: document.getElementById('rack-device-mac').value,
+                location: document.getElementById('rack-device-location').value,
+                team_name: document.getElementById('rack-device-team').value,
+                username: 'root',
+                is_rack_device: true,
+                rpi_config: {
+                    rpi_ip: document.getElementById('rpi-ip').value,
+                    rpi_port: parseInt(document.getElementById('rpi-port').value),
+                    rpi_username: document.getElementById('rpi-username').value,
+                    rpi_password: document.getElementById('rpi-password').value
+                },
+                rack_device: {
+                    lab_device_ip: document.getElementById('rack-device-ip').value,
+                    lab_device_port: parseInt(document.getElementById('rack-device-port').value),
+                    lab_device_username: document.getElementById('rack-device-username').value
+                }
+            };
+            
+            // Validate required fields
+            const requiredFields = ['name', 'ip', 'device_type', 'mac_address', 'location', 'team_name'];
+            const rpiRequiredFields = ['rpi_ip', 'rpi_port', 'rpi_username', 'rpi_password'];
+            
+            for (let field of requiredFields) {
+                if (!rackDeviceData[field]) {
+                    alert(`Please fill in all required device fields`);
+                    return;
+                }
+            }
+            
+            for (let field of rpiRequiredFields) {
+                if (!rackDeviceData.rpi_config[field.replace('rpi_', '')]) {
+                    alert(`Please fill in all required R-Pi configuration fields`);
+                    return;
+                }
+            }
+            
+            // Validate IP format
+            if (!/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(rackDeviceData.ip)) {
+                alert('Please enter a valid lab device IP address');
+                return;
+            }
+            
+            if (!/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(rackDeviceData.rpi_config.rpi_ip)) {
+                alert('Please enter a valid R-Pi IP address');
+                return;
+            }
+            
+            console.log('➕ Adding GDF_RACK device...', rackDeviceData);
+            
+            fetch('/api/devices', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(rackDeviceData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || data.message || `HTTP ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('API Response:', data);
+                showNotification(`✅ GDF_RACK device added successfully`, 'success');
+                
+                // Reset form
+                document.getElementById('rack-device-name').value = '';
+                document.getElementById('rack-device-ip').value = '';
+                document.getElementById('rack-device-type').value = '';
+                document.getElementById('rack-device-mac').value = '';
+                document.getElementById('rack-device-location').value = '';
+                document.getElementById('rack-device-team').value = '';
+                document.getElementById('rack-device-port').value = '10022';
+                document.getElementById('rack-device-username').value = 'root';
+                document.getElementById('rpi-ip').value = '';
+                document.getElementById('rpi-port').value = '60201';
+                document.getElementById('rpi-username').value = 'pi';
+                document.getElementById('rpi-password').value = '';
+                
+                updateDeviceCountBadge();
+                
+                // Switch back to devices tab to show the result
+                const devicesTabBtn = document.querySelectorAll('.device-management-tab-btn')[0];
+                if (devicesTabBtn) {
+                    switchDeviceTab('devices', devicesTabBtn);
+                }
+                
+                // Refresh device list from backend WITHOUT closing modal
+                refreshDeviceListFromBackend().then(() => {
+                    console.log('✅ GDF_RACK Device list refreshed in modal - keeping modal open');
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('❌ Error adding GDF_RACK device: ' + error.message);
             });
         }
         
