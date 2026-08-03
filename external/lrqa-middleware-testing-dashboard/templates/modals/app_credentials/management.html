@@ -11,6 +11,15 @@
             <div class="modal-body" style="max-height: 700px; overflow-y: auto;">
                 <div style="margin-bottom: 1.5rem;">
                     <h6 style="color: #60a5fa; margin-bottom: 1rem;">📋 Existing Credentials</h6>
+                    
+                    <!-- Team Filter -->
+                    <div class="form-group mb-3">
+                        <label for="filterTeam" class="form-label" style="color: #e5e7eb; font-size: 0.9rem;">Filter by Team</label>
+                        <select id="filterTeam" class="form-select" onchange="filterCredentialsByTeam()" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                            <option value="">-- All Teams --</option>
+                        </select>
+                    </div>
+                    
                     <div id="credentialsList" style="display: grid; gap: 0.75rem;">
                         <div style="text-align: center; color: #9ca3af;"><i class="bi bi-hourglass-end"></i> Loading credentials...</div>
                     </div>
@@ -23,15 +32,7 @@
                     
                     <div class="form-group mb-3">
                         <label for="credAppName" class="form-label" style="color: #e5e7eb;">App Name</label>
-                        <select id="credAppName" class="form-select" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
-                            <option value="">-- Select App --</option>
-                            <option value="netflix">Netflix</option>
-                            <option value="disney_plus">Disney+</option>
-                            <option value="hulu">Hulu</option>
-                            <option value="prime_video">Prime Video</option>
-                            <option value="youtube">YouTube</option>
-                            <option value="other">Other</option>
-                        </select>
+                        <input type="text" id="credAppName" class="form-control" placeholder="e.g., netflix, disney_plus, hulu" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
                         <small style="color: #9ca3af; display: block; margin-top: 0.25rem;">App name cannot be changed during edit</small>
                     </div>
 
@@ -102,6 +103,9 @@
 </div>
 
 <script>
+    // Store all credentials for filtering
+    let allCredentials = [];
+
     async function showAppCredentialsPanel() {
         // Show the modal
         const modal = new bootstrap.Modal(document.getElementById('appCredentialsModal'));
@@ -162,10 +166,53 @@
 
             const credentials = await response.json();
             console.log('✅ Credentials loaded:', credentials);
-            displayCredentials(credentials);
+            
+            // Store all credentials for filtering
+            allCredentials = credentials || [];
+            
+            // Populate team filter dropdown
+            populateTeamFilter(allCredentials);
+            
+            // Display all credentials initially
+            displayCredentials(allCredentials);
         } catch (error) {
             console.error('❌ Error loading credentials:', error);
             document.getElementById('credentialsList').innerHTML = `<div style="color: #ef4444;"><i class="bi bi-exclamation-triangle"></i> Error loading credentials: ${error.message}<br><small style="color: #9ca3af; margin-top: 0.5rem; display: block;">Try refreshing the page or logging in again.</small></div>`;
+        }
+    }
+
+    function populateTeamFilter(credentials) {
+        // Get unique teams from credentials
+        const teams = [...new Set(credentials.map(c => c.team_name))].sort();
+        
+        const filterSelect = document.getElementById('filterTeam');
+        const currentValue = filterSelect.value;
+        
+        // Clear existing options except the first one
+        filterSelect.innerHTML = '<option value="">-- All Teams --</option>';
+        
+        // Add team options
+        teams.forEach(team => {
+            const option = document.createElement('option');
+            option.value = team;
+            option.textContent = team;
+            filterSelect.appendChild(option);
+        });
+        
+        // Restore previous selection if it still exists
+        filterSelect.value = currentValue;
+    }
+
+    function filterCredentialsByTeam() {
+        const selectedTeam = document.getElementById('filterTeam').value;
+        
+        if (selectedTeam === '') {
+            // Show all credentials
+            displayCredentials(allCredentials);
+        } else {
+            // Filter credentials by selected team
+            const filteredCredentials = allCredentials.filter(cred => cred.team_name === selectedTeam);
+            displayCredentials(filteredCredentials);
         }
     }
 
@@ -275,7 +322,8 @@
             // Clear form and reset mode
             resetCredentialForm();
             
-            // Reload list
+            // Reload list and reset filter
+            document.getElementById('filterTeam').value = '';
             await loadAppCredentials();
             
             if (editingCredentialId) {
