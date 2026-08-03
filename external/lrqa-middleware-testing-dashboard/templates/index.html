@@ -1379,10 +1379,10 @@
                             <div id="device-selector" style="border: 1px solid #6b7280; border-radius: 6px; padding: 0.75rem; max-height: 300px; overflow-y: auto;">
                                 {% if devices %}
                                     {% for device in devices %}
-                                    <div class="device-row" data-device-ip="{{ device.ip }}" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; margin-bottom: 0.5rem; border: 1px solid #475569;">
-                                        <input type="checkbox" class="form-check-input device-checkbox" id="device-{{ device.ip }}" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" style="margin-right: 1rem; width: 18px; height: 18px; cursor: pointer;">
+                                    <div class="device-row" data-device-ip="{{ device.ip }}" data-device-type="{{ device.device_type or 'UNKNOWN' }}" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; margin-bottom: 0.5rem; border: 1px solid #475569;">
+                                        <input type="checkbox" class="form-check-input device-checkbox" id="device-{{ device.ip }}" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" data-device-type="{{ device.device_type or 'UNKNOWN' }}" style="margin-right: 1rem; width: 18px; height: 18px; cursor: pointer;">
                                         <div style="flex: 1;">
-                                            <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">{{ device.name }} • <span style="color: #9ca3af; font-size: 0.85rem;">{{ device.ip }} • <span class="device-mac-display">{{ device.mac_address or 'N/A' }}</span></span> </div>
+                                            <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">{{ device.name }} • <span style="color: #9ca3af; font-size: 0.85rem;">{{ device.ip }} • <span class="device-mac-display">{{ device.mac_address or 'N/A' }}</span>{% if device.device_type %} • <span style="color: #60a5fa; font-weight: 600;"><i class="bi bi-hdd-rack-fill"></i> {{ device.device_type }}</span>{% endif %}</span> </div>
                                         </div>
                                         <span class="device-status-badge" style="background: #6b7280; color: #fff; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; min-width: 75px; text-align: center;">
                                             <i class="bi bi-hourglass-split"></i> Checking...
@@ -1612,11 +1612,11 @@
                             <div class="device-list" id="device-list">
                                 {% if devices %}
                                     {% for device in devices %}
-                                    <div class="device-item" data-ip="{{ device.ip }}" data-team="{{ device.team_name or '' }}">
+                                    <div class="device-item" data-ip="{{ device.ip }}" data-team="{{ device.team_name or '' }}" data-device-type="{{ device.device_type or 'UNKNOWN' }}">
                                         <!-- Checkbox: Multi-select -->
                                         {% if current_user.is_admin %}
                                         <div style="display: flex; align-items: center; margin-right: 0.75rem;">
-                                            <input type="checkbox" class="device-checkbox" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" 
+                                            <input type="checkbox" class="device-checkbox" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" data-device-type="{{ device.device_type or 'UNKNOWN' }}"
                                                    onchange="updateDeviceSelectionCount()" 
                                                    style="width: 18px; height: 18px; cursor: pointer;">
                                         </div>
@@ -1630,6 +1630,9 @@
                                                 </small>
                                                 <small class="device-item-detail">
                                                     <i class="bi bi-ethernet"></i> {{ device.mac_address or 'N/A' }}
+                                                </small>
+                                                <small class="device-item-detail" style="color: #60a5fa; font-weight: 600;">
+                                                    <i class="bi bi-hdd-rack-fill"></i> {{ device.device_type or 'UNKNOWN' }}
                                                 </small>
                                             </div>
                                             {% if device.team_name %}<small class="device-item-team"><i class="bi bi-people"></i> {{ device.team_name }}</small>{% endif %}
@@ -1678,9 +1681,10 @@
 
                         <div class="device-form-group">
                             <label for="device-type" class="device-form-label">Device Type <span class="text-danger">*</span></label>
-                            <select class="form-select device-form-select" id="device-type" required>
+                            <select class="form-select device-form-select" id="device-type" onchange="toggleDeviceTypeFields()" required>
                                 <option value="XUMO">XUMO</option>
                                 <option value="SKY STREAM">SKY STREAM</option>
+                                <option value="GDF_RACK">GDF_RACK</option>
                             </select>
                         </div>
 
@@ -3559,6 +3563,14 @@
                 console.warn('AI checkpoint save warning:', checkpointError);
                 updateAiAgentVisualStatus('Checkpoint warning');
             }
+        }
+        
+        // Toggle device type specific fields
+        function toggleDeviceTypeFields() {
+            const deviceType = document.getElementById('device-type').value;
+            console.log('Device type changed to:', deviceType);
+            // Currently no special fields needed for different device types in the main form
+            // This is a placeholder for future device-type-specific fields
         }
         
         // Setup device form submission handler
