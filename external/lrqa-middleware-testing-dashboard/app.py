@@ -100,10 +100,17 @@ MAX_AI_SEQUENCE_STEPS = 80
 app = Flask(__name__)
 
 # ===== DATABASE CONFIGURATION =====
-from config.flask_database import DatabaseConfig, init_database_for_flask
+from config.flask_database import DatabaseConfig, init_database_for_flask, initialize_database_on_startup
 db_config = DatabaseConfig()
 init_database_for_flask(app, db_config)
 print("✓ Database initialized for Flask")
+
+# Initialize database tables on startup
+try:
+    initialize_database_on_startup(app)
+    print("✓ Database tables created/verified")
+except Exception as e:
+    print(f"⚠ Warning: Database table initialization: {str(e)}")
 # ===== END DATABASE CONFIGURATION =====
 
 app.secret_key = os.environ.get('SECRET_KEY', 'rdke-qa-dashboard-secret-key-change-in-production')
