@@ -3920,58 +3920,80 @@
         
         // Handle adding GDF_RACK device
         function handleAddRackDevice() {
+            // Get form values
+            const rpiIpValue = document.getElementById('rpi-ip').value.trim();
+            const rpiPortValue = document.getElementById('rpi-port').value.trim();
+            const rpiUsernameValue = document.getElementById('rpi-username').value.trim();
+            const rpiPasswordValue = document.getElementById('rpi-password').value.trim();
+            
             const rackDeviceData = {
-                name: document.getElementById('rack-device-name').value,
-                ip: document.getElementById('rack-device-ip').value,
-                device_type: document.getElementById('rack-device-type').value,
-                mac_address: document.getElementById('rack-device-mac').value,
-                location: document.getElementById('rack-device-location').value,
-                team_name: document.getElementById('rack-device-team').value,
+                name: document.getElementById('rack-device-name').value.trim(),
+                ip: document.getElementById('rack-device-ip').value.trim(),
+                device_type: document.getElementById('rack-device-type').value.trim(),
+                mac_address: document.getElementById('rack-device-mac').value.trim(),
+                location: document.getElementById('rack-device-location').value.trim(),
+                team_name: document.getElementById('rack-device-team').value.trim(),
                 username: 'root',
                 is_rack_device: true,
                 rpi_config: {
-                    rpi_ip: document.getElementById('rpi-ip').value,
-                    rpi_port: parseInt(document.getElementById('rpi-port').value),
-                    rpi_username: document.getElementById('rpi-username').value,
-                    rpi_password: document.getElementById('rpi-password').value
+                    rpi_ip: rpiIpValue,
+                    rpi_port: rpiPortValue ? parseInt(rpiPortValue) : null,
+                    rpi_username: rpiUsernameValue,
+                    rpi_password: rpiPasswordValue
                 },
                 rack_device: {
-                    lab_device_ip: document.getElementById('rack-device-ip').value,
-                    lab_device_port: parseInt(document.getElementById('rack-device-port').value),
-                    lab_device_username: document.getElementById('rack-device-username').value
+                    lab_device_ip: document.getElementById('rack-device-ip').value.trim(),
+                    lab_device_port: document.getElementById('rack-device-port').value.trim() ? parseInt(document.getElementById('rack-device-port').value.trim()) : null,
+                    lab_device_username: document.getElementById('rack-device-username').value.trim()
                 }
             };
             
             // Validate required fields
             const requiredFields = ['name', 'ip', 'device_type', 'mac_address', 'location', 'team_name'];
-            const rpiRequiredFields = ['rpi_ip', 'rpi_port', 'rpi_username', 'rpi_password'];
             
             for (let field of requiredFields) {
                 if (!rackDeviceData[field]) {
-                    alert(`Please fill in all required device fields`);
+                    alert(`❌ ${field.replace(/_/g, ' ').toUpperCase()}: This field is required`);
                     return;
                 }
             }
             
-            for (let field of rpiRequiredFields) {
-                if (!rackDeviceData.rpi_config[field.replace('rpi_', '')]) {
-                    alert(`Please fill in all required R-Pi configuration fields`);
-                    return;
-                }
+            // Validate R-Pi configuration fields
+            if (!rackDeviceData.rpi_config.rpi_ip) {
+                alert(`❌ R-Pi IP Address: This field is required`);
+                return;
+            }
+            if (!rackDeviceData.rpi_config.rpi_port || isNaN(rackDeviceData.rpi_config.rpi_port)) {
+                alert(`❌ R-Pi SSH Port: This field is required (must be a number)`);
+                return;
+            }
+            if (!rackDeviceData.rpi_config.rpi_username) {
+                alert(`❌ R-Pi Username: This field is required`);
+                return;
+            }
+            if (!rackDeviceData.rpi_config.rpi_password) {
+                alert(`❌ R-Pi Password: This field is required`);
+                return;
             }
             
             // Validate IP format
             if (!/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(rackDeviceData.ip)) {
-                alert('Please enter a valid lab device IP address');
+                alert('❌ Lab Device IP: Please enter a valid IP address (e.g., 10.0.0.28)');
                 return;
             }
             
             if (!/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(rackDeviceData.rpi_config.rpi_ip)) {
-                alert('Please enter a valid R-Pi IP address');
+                alert('❌ R-Pi IP: Please enter a valid IP address (e.g., 10.138.17.42)');
                 return;
             }
             
-            console.log('➕ Adding GDF_RACK device...', rackDeviceData);
+            console.log('✅ All validations passed! Adding GDF_RACK device...', rackDeviceData);
+            console.log('R-Pi Config Details:', {
+                rpi_ip: rackDeviceData.rpi_config.rpi_ip,
+                rpi_port: rackDeviceData.rpi_config.rpi_port,
+                rpi_username: rackDeviceData.rpi_config.rpi_username,
+                rpi_password: '***'
+            });
             
             fetch('/api/devices', {
                 method: 'POST',
@@ -3989,8 +4011,8 @@
                 return response.json();
             })
             .then(data => {
-                console.log('API Response:', data);
-                showNotification(`✅ GDF_RACK device added successfully`, 'success');
+                console.log('✅ API Response:', data);
+                showNotification(`✅ GDF_RACK device added successfully!`, 'success');
                 
                 // Reset form
                 document.getElementById('rack-device-name').value = '';
