@@ -12,7 +12,14 @@ from models.database import Session, Device as DBDevice
 
 class Device:
     """Device model for managing test device data"""
-    
+
+    # Tracks the most recent persistence path used by save_all().
+    _last_persistence_status = {
+        'database_available': False,
+        'mode': 'unknown',
+        'error': None
+    }
+
     def __init__(self, ip: str, name: str, username: str, password: str, 
                  port: int = 10022, ir_config: Optional[Dict] = None, mac_address: str = None, vnc_url: str = None,
                  use_jump_host: bool = False, jump_host_config: Optional[Dict] = None, device_type: str = None, location: str = None, team_name: str = None,
@@ -166,10 +173,15 @@ class Device:
         from sqlalchemy.exc import OperationalError, IntegrityError
         session = Session()
         database_available = False
+        db_error = None
         
         try:
+            # Track desired active device IPs so removed devices can be deactivated in DB.
+            active_ips = set()
+
             for device in devices:
                 storage_data = device.to_storage_dict()
+                active_ips.add(storage_data['ip'])
                 row = session.query(DBDevice).filter_by(ip=storage_data['ip']).first()
                 if row is None:
                     row = DBDevice(
@@ -186,6 +198,8 @@ class Device:
                         use_jump_host=storage_data['use_jump_host'],
                         jump_host_config=storage_data['jump_host_config'],
                         ir_config=storage_data['ir_config'],
+                        is_rack_device=storage_data['is_rack_device'],
+                        rpi_config=storage_data['rpi_config'],
                         is_active=storage_data.get('is_active', True)
                     )
                     session.add(row)
@@ -202,21 +216,43 @@ class Device:
                     row.use_jump_host = storage_data['use_jump_host']
                     row.jump_host_config = storage_data['jump_host_config']
                     row.ir_config = storage_data['ir_config']
+                    row.is_rack_device = storage_data['is_rack_device']
+                    row.rpi_config = storage_data['rpi_config']
                     row.is_active = storage_data.get('is_active', True)
+
+            # Persist deletions by deactivating any currently-active DB rows not in active_ips.
+            if active_ips:
+                session.query(DBDevice).filter(
+                    DBDevice.is_active.is_(True),
+                    ~DBDevice.ip.in_(list(active_ips))
+                ).update({'is_active': False}, synchronize_session=False)
+            else:
+                # If the list is empty, all rows should be inactive.
+                session.query(DBDevice).filter(
+                    DBDevice.is_active.is_(True)
+                ).update({'is_active': False}, synchronize_session=False)
 
             session.commit()
             database_available = True
+            Device._last_persistence_status = {
+                'database_available': True,
+                'mode': 'database+json',
+                'error': None
+            }
             print("✅ [Database] Devices saved to PostgreSQL")
         except OperationalError as e:
             session.rollback()
+            db_error = str(e)
             print(f"⚠️  [Database] Connection error - falling back to JSON: {str(e)}")
             database_available = False
         except IntegrityError as e:
             session.rollback()
+            db_error = str(e)
             print(f"⚠️  [Database] Integrity error - falling back to JSON: {str(e)}")
             database_available = False
         except Exception as e:
             session.rollback()
+            db_error = str(e)
             print(f"⚠️  [Database] Error - falling back to JSON: {str(e)}")
             database_available = False
         finally:
@@ -228,6 +264,11 @@ class Device:
             with open(DEVICES_FILE, 'w') as f:
                 json.dump(devices_data, f, indent=4)
             if not database_available:
+                Device._last_persistence_status = {
+                    'database_available': False,
+                    'mode': 'json-only',
+                    'error': db_error
+                }
                 print("✅ [JSON] Devices saved to JSON file (database unavailable)")
             else:
                 print("✅ [JSON] Devices synced to JSON file")
@@ -235,7 +276,11 @@ class Device:
             print(f"❌ [ERROR] Failed to save to JSON file: {str(e)}")
             if not database_available:
                 raise Exception(f"Failed to save devices - both database and JSON failed: {str(e)}") from e
-    
+
+    @staticmethod
+    def get_last_persistence_status() -> Dict:
+        """Get latest save persistence status for API/debug reporting."""
+        return dict(Device._last_persistence_status)
     @staticmethod
     def find_by_ip(ip: str) -> Optional['Device']:
         """Find device by IP address"""
@@ -255,12 +300,34 @@ class Device:
         return None
     
     @staticmethod
-    def add(device: 'Device') -> bool:
-        """Add a new device"""
+    def find_by_ip_and_mac(ip: str, mac_address: str) -> Optional['Device']:
+        """Find device by IP and MAC address combination"""
         devices = Device.load_all()
-        # Check if device already exists
-        if any(d.ip == device.ip or d.original_ip == device.original_ip for d in devices):
-            return False
+        for device in devices:
+            # Check if both IP and MAC match
+            if (device.ip == ip or device.original_ip == ip) and device.mac_address == mac_address:
+                return device
+        return None
+    
+    @staticmethod
+    def add(device: 'Device') -> bool:
+        """Add a new device - returns True if successful, False if duplicate (by IP or MAC)"""
+        devices = Device.load_all()
+        
+        # Check if device already exists by IP alone
+        for d in devices:
+            if d.ip == device.ip or d.original_ip == device.original_ip:
+                # Return the existing device as a dict to indicate conflict
+                # This will be handled specially in the controller
+                return False
+        
+        # Check if device with same MAC already exists
+        if device.mac_address:
+            for d in devices:
+                if d.mac_address and d.mac_address == device.mac_address:
+                    # MAC already exists with different IP - also a conflict
+                    return False
+        
         devices.append(device)
         Device.save_all(devices)
         return True

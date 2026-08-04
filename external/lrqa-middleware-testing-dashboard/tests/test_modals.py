@@ -92,16 +92,18 @@ class TestDeviceAPI:
         assert response.status_code in [400, 401, 500]
 
     def test_add_device(self, client, authenticated_user):
-        """Test adding a new device"""
+        """Test adding a new device via /api/devices (DeviceController)"""
+        # Note: Now using DeviceController.add_device format instead of modal format
         response = client.post('/api/devices', json={
-            'device_name': 'Test Device',
+            'name': 'Test Device',
             'device_type': 'rdk_box',
-            'ssh_host': '192.168.1.100',
-            'ssh_port': '10022',
-            'ssh_username': 'root',
-            'ssh_password': 'password',
+            'ip': '192.168.1.100',
+            'port': 10022,
+            'username': 'root',
+            'password': 'password',
             'location': 'Test Location',
-            'is_active': True
+            'mac_address': '00:11:22:33:44:55',
+            'team_name': 'Default'
         })
         
         assert response.status_code == 201 or response.status_code == 401

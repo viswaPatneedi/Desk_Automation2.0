@@ -127,44 +127,15 @@ def test_ssh_connection():
         logger.error(f"Error in test_ssh_connection: {str(e)}")
         return error_response(str(e), 500)
 
-@modal_api.route('/devices', methods=['POST'])
-@modal_login_required
-def add_device():
-    """Add new device"""
-    try:
-        data = request.get_json()
-
-        # Validate required fields
-        required_fields = ['device_name', 'device_type', 'ssh_host', 'ssh_username', 'ssh_password']
-        for field in required_fields:
-            if not data.get(field):
-                return error_response(f'Missing required field: {field}')
-
-        # Create device
-        device = Device(
-            device_name=data['device_name'],
-            device_type=data['device_type'],
-            ssh_host=data['ssh_host'],
-            ssh_port=int(data.get('ssh_port', 10022)),
-            ssh_username=data['ssh_username'],
-            ssh_password=data['ssh_password'],
-            location=data.get('location'),
-            is_active=data.get('is_active', True),
-            owner_id=current_user.id if current_user else None,
-            team=data.get('team', 'Default')
-        )
-
-        device.save()
-
-        logger.info(f"✅ Device created: {device.device_name} ({device.ssh_host})")
-        return success_response({
-            'device_id': device.device_id,
-            'device_name': device.device_name
-        }, 'Device added successfully'), 201
-
-    except Exception as e:
-        logger.error(f"Error adding device: {str(e)}")
-        return error_response(str(e), 500)
+# NOTE: POST /api/devices is handled by DeviceController.add_device() in app.py
+# This modal endpoint is redundant and disabled to avoid route conflicts.
+# The form sends: name, ip, device_type, mac_address, location, username, password
+# which matches the DeviceController.add_device() signature, not modal style.
+# @modal_api.route('/devices', methods=['POST'])
+# @modal_login_required
+# def add_device():
+#     """Add new device"""
+#     (disabled - use DeviceController.add_device)
 
 @modal_api.route('/devices/<device_id>', methods=['GET'])
 @modal_login_required

@@ -80,8 +80,10 @@ class DeviceController:
                     if field not in data:
                         return jsonify({'error': f'Missing required RACK field: {field}'}), 400
                 
+                # Check R-Pi configuration in rpi_config nested object
+                rpi_config = data.get('rpi_config', {})
                 for field in rpi_required_fields:
-                    if field not in data:
+                    if field not in rpi_config or not rpi_config[field]:
                         return jsonify({'error': f'Missing R-Pi configuration: {field}'}), 400
             else:
                 # DESK device validation
@@ -100,11 +102,13 @@ class DeviceController:
             # Build R-Pi config for RACK devices
             rpi_config = {}
             if is_rack_device:
+                # Extract R-Pi config from nested structure (frontend sends it in rpi_config object)
+                rpi_config_data = data.get('rpi_config', {})
                 rpi_config = {
-                    'rpi_ip': data.get('rpi_ip'),
-                    'rpi_port': data.get('rpi_port', 60201),
-                    'rpi_username': data.get('rpi_username'),
-                    'rpi_password': data.get('rpi_password')
+                    'rpi_ip': rpi_config_data.get('rpi_ip'),
+                    'rpi_port': rpi_config_data.get('rpi_port', 60201),
+                    'rpi_username': rpi_config_data.get('rpi_username'),
+                    'rpi_password': rpi_config_data.get('rpi_password')
                 }
 
             # Create device object
@@ -133,7 +137,26 @@ class DeviceController:
                     'device': device.to_dict()
                 }), 201
             else:
-                return jsonify({'error': 'Device with this IP already exists'}), 409
+                # Device already exists - find and return the existing device details
+                # Check by both IP and MAC
+                device_ip = data.get('ip', '') if not is_rack_device else data.get('lab_ip', '')
+                mac_address = data.get('mac_address', '')
+                
+                existing_device = None
+                if mac_address:
+                    existing_device = Device.find_by_ip_and_mac(device_ip, mac_address)
+                
+                if not existing_device:
+                    existing_device = Device.find_by_ip(device_ip)
+                
+                if existing_device:
+                    return jsonify({
+                        'error': 'Device with this IP and/or MAC address already exists',
+                        'conflict': True,
+                        'existing_device': existing_device.to_dict()
+                    }), 409
+                else:
+                    return jsonify({'error': 'Device with this IP already exists'}), 409
         except Exception as e:
             error_msg = str(e)
             print(f"❌ Error in add_device: {error_msg}")
@@ -165,7 +188,16 @@ class DeviceController:
             return jsonify({'error': 'Device IP is required'}), 400
         
         if Device.delete(device_ip):
-            return jsonify({'message': 'Device deleted successfully', 'success': True})
+            persistence = Device.get_last_persistence_status()
+            print(
+                f"🗑️ [DELETE] ip={device_ip} persisted_via={persistence.get('mode')} "
+                f"db_available={persistence.get('database_available')}"
+            )
+            return jsonify({
+                'message': 'Device deleted successfully',
+                'success': True,
+                'persistence': persistence
+            })
         else:
             return jsonify({'error': 'Device not found'}, 404), 404
     
@@ -202,22 +234,30 @@ class DeviceController:
                 failed_ips.append(device_ip)
                 print(f"❌ Exception deleting device {device_ip}: {str(e)}")
         
+        persistence = Device.get_last_persistence_status()
+        print(
+            f"🗑️ [DELETE-MULTI] deleted={deleted_count} failed={failed_count} "
+            f"persisted_via={persistence.get('mode')} db_available={persistence.get('database_available')}"
+        )
+
         return jsonify({
             'success': True,
             'message': f'Deleted {deleted_count} device(s)',
             'deleted_count': deleted_count,
             'failed_count': failed_count,
-            'failed_ips': failed_ips
+            'failed_ips': failed_ips,
+            'persistence': persistence
         })
     @staticmethod
     def update_device():
-        """PUT /api/devices - Update a device"""
+        """PUT /api/devices - Update a device (DESK or RACK)"""
         try:
             data = request.json
             old_ip = data.get('old_ip')
+            is_rack_device = data.get('is_rack_device', False)
             
             # Validate required fields
-            required_fields = ['ip', 'name']
+            required_fields = ['name']
             for field in required_fields:
                 if field not in data:
                     return jsonify({'error': f'Missing required field: {field}'}), 400
@@ -231,8 +271,13 @@ class DeviceController:
             if not existing_device:
                 return jsonify({'error': 'Device not found'}), 404
             
+            # Get device IP based on device type (RACK uses lab_ip, DESK uses ip)
+            device_ip = data.get('lab_ip', '') if is_rack_device else data.get('ip', '')
+            
+            if not device_ip:
+                return jsonify({'error': f'Missing required field: {"lab_ip" if is_rack_device else "ip"}'}), 400
+            
             # Get all fields with fallbacks to existing device
-            device_ip = data['ip']
             device_name = data['name']
             username = existing_device.username  # Keep existing username
             password = existing_device.password  # Keep existing password
@@ -242,11 +287,29 @@ class DeviceController:
             team_name = data.get('team_name', existing_device.team_name)
             mac_address = data.get('mac_address', existing_device.mac_address)
             ir_config = data.get('ir_config', existing_device.ir_config)
+            
+            # Handle R-Pi config for RACK devices
+            rpi_config = existing_device.rpi_config
+            if is_rack_device:
+                rpi_config_data = data.get('rpi_config', {})
+                if rpi_config_data:
+                    rpi_config = {
+                        'rpi_ip': rpi_config_data.get('rpi_ip', rpi_config.get('rpi_ip') if rpi_config else ''),
+                        'rpi_port': rpi_config_data.get('rpi_port', rpi_config.get('rpi_port', 60201) if rpi_config else 60201),
+                        'rpi_username': rpi_config_data.get('rpi_username', rpi_config.get('rpi_username', 'pi') if rpi_config else 'pi'),
+                        'rpi_password': rpi_config_data.get('rpi_password', rpi_config.get('rpi_password') if rpi_config else '')
+                    }
 
             # Check if new IP already exists (and it's not the old IP)
             if device_ip != old_ip:
                 if Device.find_by_ip(device_ip):
                     return jsonify({'error': 'Device with this IP already exists'}), 409
+            
+            # Override username/password/port for RACK devices from lab credentials
+            if is_rack_device:
+                username = data.get('lab_username', existing_device.username)
+                password = data.get('lab_password', existing_device.password)
+                port = data.get('lab_port', existing_device.port)
             
             # Create updated device object
             device = Device(
@@ -264,7 +327,7 @@ class DeviceController:
                 location=location,
                 team_name=team_name,
                 is_rack_device=existing_device.is_rack_device,
-                rpi_config=existing_device.rpi_config
+                rpi_config=rpi_config
             )
             
             # Update device

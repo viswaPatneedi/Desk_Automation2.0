@@ -3870,47 +3870,47 @@
                 },
                 body: JSON.stringify(deviceData)
             })
-            .then(response => {
-                // Check HTTP status code first
-                if (!response.ok) {
-                    // Try to get error message from response
-                    return response.json().then(data => {
-                        throw new Error(data.error || data.message || `HTTP ${response.status}`);
+            .then(response => response.json().then(data => ({status: response.status, data: data})))
+            .then(({status, data}) => {
+                if (status >= 200 && status < 300) {
+                    // Success
+                    console.log('API Response:', data);
+                    const action = isUpdate ? 'updated' : 'added';
+                    showNotification(`✅ Device ${action} successfully`, 'success');
+                    
+                    // Reset form
+                    document.getElementById('device-name').value = '';
+                    document.getElementById('device-ip').value = '';
+                    document.getElementById('device-type').value = 'XUMO';
+                    document.getElementById('device-mac').value = '';
+                    document.getElementById('device-location').value = 'US';
+                    document.getElementById('device-team').value = '';
+                    document.getElementById('ir-device-ip').value = '';
+                    document.getElementById('ir-device-port').value = '';
+                    const irConnectorEl = document.getElementById('ir-connector');
+                    if (irConnectorEl) irConnectorEl.value = '';
+                    document.getElementById('add-device-btn').removeAttribute('data-edit-ip');
+                    document.getElementById('add-device-btn').innerHTML = '<i class="bi bi-plus-lg"></i> Add Device';
+                    
+                    updateDeviceCountBadge();
+                    
+                    // Switch back to devices tab to show the result
+                    const devicesTabBtn = document.querySelectorAll('.device-management-tab-btn')[0];
+                    if (devicesTabBtn) {
+                        switchDeviceTab('devices', devicesTabBtn);
+                    }
+                    
+                    // Refresh device list from backend WITHOUT closing modal
+                    refreshDeviceListFromBackend().then(() => {
+                        console.log('✅ Device list refreshed in modal - keeping modal open');
                     });
+                } else if (status === 409 && data.conflict && data.existing_device) {
+                    // Conflict - show existing device details
+                    showExistingDeviceDetails(data.existing_device);
+                } else {
+                    // Other error
+                    throw new Error(data.error || data.message || `HTTP ${status}`);
                 }
-                return response.json();
-            })
-            .then(data => {
-                console.log('API Response:', data);
-                const action = isUpdate ? 'updated' : 'added';
-                showNotification(`✅ Device ${action} successfully`, 'success');
-                
-                // Reset form
-                document.getElementById('device-name').value = '';
-                document.getElementById('device-ip').value = '';
-                document.getElementById('device-type').value = 'XUMO';
-                document.getElementById('device-mac').value = '';
-                document.getElementById('device-location').value = 'US';
-                document.getElementById('device-team').value = '';
-                document.getElementById('ir-device-ip').value = '';
-                document.getElementById('ir-device-port').value = '';
-                const irConnectorEl = document.getElementById('ir-connector');
-                if (irConnectorEl) irConnectorEl.value = '';
-                document.getElementById('add-device-btn').removeAttribute('data-edit-ip');
-                document.getElementById('add-device-btn').innerHTML = '<i class="bi bi-plus-lg"></i> Add Device';
-                
-                updateDeviceCountBadge();
-                
-                // Switch back to devices tab to show the result
-                const devicesTabBtn = document.querySelectorAll('.device-management-tab-btn')[0];
-                if (devicesTabBtn) {
-                    switchDeviceTab('devices', devicesTabBtn);
-                }
-                
-                // Refresh device list from backend WITHOUT closing modal
-                refreshDeviceListFromBackend().then(() => {
-                    console.log('✅ Device list refreshed in modal - keeping modal open');
-                });
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -3920,6 +3920,9 @@
         
         // Handle adding GDF_RACK device
         function handleAddRackDevice() {
+            // Check if editing existing device
+            const editIp = document.getElementById('add-rack-device-btn').getAttribute('data-edit-ip');
+            
             // Get form values
             const rpiIpValue = document.getElementById('rpi-ip').value.trim();
             const rpiPortValue = document.getElementById('rpi-port').value.trim();
@@ -3948,6 +3951,11 @@
                     rpi_password: rpiPasswordValue
                 }
             };
+            
+            // For updates, include the old IP so the controller knows which device to update
+            if (editIp) {
+                rackDeviceData.old_ip = editIp;
+            }
             
             // Validate required fields
             const requiredFields = ['name', 'lab_ip', 'device_type', 'mac_address', 'location', 'team_name'];
@@ -3994,7 +4002,11 @@
                 return;
             }
             
-            console.log('✅ All validations passed! Adding GDF_RACK device...', rackDeviceData);
+            // Determine if adding new or updating
+            const isUpdate = !!editIp;
+            const method = isUpdate ? 'PUT' : 'POST';
+            
+            console.log(isUpdate ? '🔄 Updating GDF_RACK device...' : '✅ Adding GDF_RACK device...', rackDeviceData);
             console.log('R-Pi Config Details:', {
                 rpi_ip: rackDeviceData.rpi_config.rpi_ip,
                 rpi_port: rackDeviceData.rpi_config.rpi_port,
@@ -4008,55 +4020,166 @@
             });
             
             fetch('/api/devices', {
-                method: 'POST',
+                method: method,
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(rackDeviceData)
             })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.error || data.message || `HTTP ${response.status}`);
+            .then(response => response.json().then(data => ({status: response.status, data: data})))
+            .then(({status, data}) => {
+                if (status >= 200 && status < 300) {
+                    // Success
+                    console.log('✅ API Response:', data);
+                    const action = isUpdate ? 'updated' : 'added';
+                    showNotification(`✅ GDF_RACK device ${action} successfully!`, 'success');
+                    
+                    // Reset form
+                    document.getElementById('rack-device-name').value = '';
+                    document.getElementById('rack-device-ip').value = '';
+                    document.getElementById('rack-device-type').value = '';
+                    document.getElementById('rack-device-mac').value = '';
+                    document.getElementById('rack-device-location').value = '';
+                    document.getElementById('rack-device-team').value = '';
+                    document.getElementById('rack-device-port').value = '10022';
+                    document.getElementById('rack-device-username').value = 'root';
+                    document.getElementById('rpi-ip').value = '';
+                    document.getElementById('rpi-port').value = '60201';
+                    document.getElementById('rpi-username').value = 'pi';
+                    document.getElementById('rpi-password').value = '';
+                    
+                    // Reset button state after update
+                    const addRackBtn = document.getElementById('add-rack-device-btn');
+                    if (isUpdate && addRackBtn) {
+                        addRackBtn.removeAttribute('data-edit-ip');
+                        addRackBtn.textContent = 'Add GDF_RACK Device';
+                    }
+                    
+                    updateDeviceCountBadge();
+                    
+                    // Switch back to devices tab to show the result
+                    const devicesTabBtn = document.querySelectorAll('.device-management-tab-btn')[0];
+                    if (devicesTabBtn) {
+                        switchDeviceTab('devices', devicesTabBtn);
+                    }
+                    
+                    // Refresh device list from backend WITHOUT closing modal
+                    refreshDeviceListFromBackend().then(() => {
+                        console.log(`✅ GDF_RACK Device list refreshed in modal - device ${action}`);
                     });
+                } else if (status === 409 && data.conflict && data.existing_device) {
+                    // Conflict - show existing device details
+                    showExistingDeviceDetails(data.existing_device);
+                } else {
+                    // Other error
+                    throw new Error(data.error || data.message || `HTTP ${status}`);
                 }
-                return response.json();
-            })
-            .then(data => {
-                console.log('✅ API Response:', data);
-                showNotification(`✅ GDF_RACK device added successfully!`, 'success');
-                
-                // Reset form
-                document.getElementById('rack-device-name').value = '';
-                document.getElementById('rack-device-ip').value = '';
-                document.getElementById('rack-device-type').value = '';
-                document.getElementById('rack-device-mac').value = '';
-                document.getElementById('rack-device-location').value = '';
-                document.getElementById('rack-device-team').value = '';
-                document.getElementById('rack-device-port').value = '10022';
-                document.getElementById('rack-device-username').value = 'root';
-                document.getElementById('rpi-ip').value = '';
-                document.getElementById('rpi-port').value = '60201';
-                document.getElementById('rpi-username').value = 'pi';
-                document.getElementById('rpi-password').value = '';
-                
-                updateDeviceCountBadge();
-                
-                // Switch back to devices tab to show the result
-                const devicesTabBtn = document.querySelectorAll('.device-management-tab-btn')[0];
-                if (devicesTabBtn) {
-                    switchDeviceTab('devices', devicesTabBtn);
-                }
-                
-                // Refresh device list from backend WITHOUT closing modal
-                refreshDeviceListFromBackend().then(() => {
-                    console.log('✅ GDF_RACK Device list refreshed in modal - keeping modal open');
-                });
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('❌ Error adding GDF_RACK device: ' + error.message);
+                const actionText = isUpdate ? 'updating' : 'adding';
+                alert(`❌ Error ${actionText} GDF_RACK device: ` + error.message);
             });
+        }
+        
+        // Display existing device details when duplicate found
+        function showExistingDeviceDetails(device) {
+            const deviceType = device.is_rack_device ? '🔧 GDF_RACK' : '🖥️ DESK';
+            
+            let details = `
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <h5 style="margin-bottom: 10px;">⚠️ Device Already Exists</h5>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 8px; font-weight: bold; width: 150px;">Device Type:</td>
+                        <td style="padding: 8px;">${deviceType}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 8px; font-weight: bold;">Name:</td>
+                        <td style="padding: 8px;"><strong>${device.name}</strong></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 8px; font-weight: bold;">IP Address:</td>
+                        <td style="padding: 8px;"><code>${device.ip}</code></td>
+                    </tr>`;
+            
+            if (device.mac_address) {
+                details += `
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 8px; font-weight: bold;">MAC Address:</td>
+                        <td style="padding: 8px;"><code>${device.mac_address}</code></td>
+                    </tr>`;
+            }
+            
+            details += `
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 8px; font-weight: bold;">Device Type:</td>
+                        <td style="padding: 8px;">${device.device_type || 'N/A'}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 8px; font-weight: bold;">Location:</td>
+                        <td style="padding: 8px;">${device.location || 'N/A'}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 8px; font-weight: bold;">Team:</td>
+                        <td style="padding: 8px;">${device.team_name || 'N/A'}</td>
+                    </tr>`;
+            
+            if (device.is_rack_device && device.rpi_config) {
+                details += `
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 8px; font-weight: bold;">R-Pi IP:</td>
+                        <td style="padding: 8px;"><code>${device.rpi_config.rpi_ip || 'N/A'}</code></td>
+                    </tr>`;
+            }
+            
+            details += `
+                </table>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-sm btn-warning" style="flex: 1;" onclick="editDevice('${device.ip}')">
+                    <i class="bi bi-pencil"></i> Edit This Device
+                </button>
+                <button class="btn btn-sm btn-secondary" style="flex: 1;" onclick="dismissDuplicateMessage()">
+                    <i class="bi bi-x-lg"></i> Dismiss
+                </button>
+            </div>
+            `;
+            
+            // Show in alert-style message
+            const alertDiv = document.createElement('div');
+            alertDiv.id = 'duplicate-device-alert';
+            alertDiv.className = 'alert alert-warning alert-dismissible fade show';
+            alertDiv.setAttribute('role', 'alert');
+            alertDiv.style.marginBottom = '20px';
+            alertDiv.innerHTML = details;
+            
+            // Insert at the top of the device management modal
+            const deviceModal = document.getElementById('deviceManagementModal');
+            if (deviceModal) {
+                const modalBody = deviceModal.querySelector('.modal-body');
+                if (modalBody) {
+                    // Remove previous duplicate alert if exists
+                    const existingAlert = modalBody.querySelector('#duplicate-device-alert');
+                    if (existingAlert) existingAlert.remove();
+                    
+                    // Insert new alert at the beginning
+                    modalBody.insertBefore(alertDiv, modalBody.firstChild);
+                    
+                    // Scroll to make alert visible
+                    alertDiv.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+                }
+            }
+        }
+        
+        // Dismiss duplicate device message
+        function dismissDuplicateMessage() {
+            const alert = document.getElementById('duplicate-device-alert');
+            if (alert) {
+                alert.style.transition = 'opacity 0.3s';
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            }
         }
         
         // Update device count in navbar
@@ -9083,29 +9206,63 @@
                 .then(data => {
                     if (data.success && data.device) {
                         const device = data.device;
-                        // Populate form with device data (use correct field names)
-                        document.getElementById('device-name').value = device.name || '';
-                        document.getElementById('device-ip').value = device.ip || '';
-                        document.getElementById('device-type').value = device.device_type || 'XUMO';
-                        document.getElementById('device-mac').value = device.mac_address || '';
-                        document.getElementById('device-location').value = device.location || 'US';
-                        document.getElementById('device-team').value = device.team_name || '';
                         
-                        // IR Configuration fields
-                        const irConfig = device.ir_config || {};
-                        document.getElementById('ir-device-ip').value = irConfig.itach_ip || '';
-                        document.getElementById('ir-device-port').value = irConfig.itach_port || '';
-                        document.getElementById('ir-connector').value = irConfig.ir_port || '';
-                        
-                        // Change button text to Update
-                        const addBtn = document.getElementById('add-device-btn');
-                        addBtn.innerHTML = '<i class="bi bi-check-lg"></i> Update Device';
-                        addBtn.setAttribute('data-edit-ip', deviceIp);
-                        
-                        // Switch to Add New Device tab
-                        const addFormTabBtn = document.querySelectorAll('.device-management-tab-btn')[1];
-                        if (addFormTabBtn) {
-                            switchDeviceTab('add-form', addFormTabBtn);
+                        // Check if this is a RACK device
+                        if (device.is_rack_device) {
+                            console.log('🖊️ Editing GDF_RACK device...');
+                            // Populate RACK device form
+                            document.getElementById('rack-device-name').value = device.name || '';
+                            document.getElementById('rack-device-ip').value = device.ip || '';
+                            document.getElementById('rack-device-type').value = device.device_type || '';
+                            document.getElementById('rack-device-mac').value = device.mac_address || '';
+                            document.getElementById('rack-device-location').value = device.location || 'US';
+                            document.getElementById('rack-device-team').value = device.team_name || '';
+                            document.getElementById('rack-device-port').value = device.port || 10022;
+                            document.getElementById('rack-device-username').value = device.username || 'root';
+                            
+                            // Populate R-Pi configuration
+                            const rpiConfig = device.rpi_config || {};
+                            document.getElementById('rpi-ip').value = rpiConfig.rpi_ip || '';
+                            document.getElementById('rpi-port').value = rpiConfig.rpi_port || 60201;
+                            document.getElementById('rpi-username').value = rpiConfig.rpi_username || 'pi';
+                            document.getElementById('rpi-password').value = rpiConfig.rpi_password || '';
+                            
+                            // Change button text to Update and set edit flag
+                            const addRackBtn = document.getElementById('add-rack-device-btn');
+                            addRackBtn.innerHTML = '<i class="bi bi-check-lg"></i> Update GDF_RACK Device';
+                            addRackBtn.setAttribute('data-edit-ip', deviceIp);
+                            
+                            // Switch to GDF_RACK Device form tab
+                            const rackFormTabBtn = document.querySelectorAll('.device-management-tab-btn')[2];
+                            if (rackFormTabBtn) {
+                                switchDeviceTab('add-rack-form', rackFormTabBtn);
+                            }
+                        } else {
+                            console.log('🖊️ Editing DESK device...');
+                            // Populate DESK device form
+                            document.getElementById('device-name').value = device.name || '';
+                            document.getElementById('device-ip').value = device.ip || '';
+                            document.getElementById('device-type').value = device.device_type || 'XUMO';
+                            document.getElementById('device-mac').value = device.mac_address || '';
+                            document.getElementById('device-location').value = device.location || 'US';
+                            document.getElementById('device-team').value = device.team_name || '';
+                            
+                            // IR Configuration fields
+                            const irConfig = device.ir_config || {};
+                            document.getElementById('ir-device-ip').value = irConfig.itach_ip || '';
+                            document.getElementById('ir-device-port').value = irConfig.itach_port || '';
+                            document.getElementById('ir-connector').value = irConfig.ir_port || '';
+                            
+                            // Change button text to Update
+                            const addBtn = document.getElementById('add-device-btn');
+                            addBtn.innerHTML = '<i class="bi bi-check-lg"></i> Update Device';
+                            addBtn.setAttribute('data-edit-ip', deviceIp);
+                            
+                            // Switch to Add New Device tab
+                            const addFormTabBtn = document.querySelectorAll('.device-management-tab-btn')[1];
+                            if (addFormTabBtn) {
+                                switchDeviceTab('add-form', addFormTabBtn);
+                            }
                         }
                         
                         console.log('✅ Device loaded for editing:', device);

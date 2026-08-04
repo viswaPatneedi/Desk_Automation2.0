@@ -1,165 +1,5 @@
 [
     {
-        "ip": "10.0.0.102",
-        "name": "WestingHouse-4K-DESK",
-        "username": "root",
-        "password": "",
-        "port": 10022,
-        "ir_config": {
-            "itach_ip": "10.0.0.142",
-            "itach_port": 4998,
-            "ir_port": "2"
-        },
-        "mac_address": "58:41:46:5C:E4:B4",
-        "vnc_url": "http://10.0.0.101:5800/",
-        "use_jump_host": false,
-        "jump_host_config": {},
-        "device_type": "XUMO",
-        "location": "US",
-        "team_name": "LRQA",
-        "is_active": true
-    },
-    {
-        "ip": "10.0.0.233",
-        "name": "SHARP-4K",
-        "username": "root",
-        "password": "",
-        "port": 10022,
-        "ir_config": {
-            "itach_ip": "10.0.0.30",
-            "itach_port": 4998,
-            "ir_port": "3"
-        },
-        "mac_address": "58:41:46:C6:11:DE",
-        "vnc_url": "http://10.0.0.232:5800/",
-        "use_jump_host": false,
-        "jump_host_config": {},
-        "device_type": "XUMO",
-        "location": "US",
-        "team_name": "LRQA",
-        "is_active": true
-    },
-    {
-        "ip": "10.0.0.95",
-        "name": "CELLO-SKY",
-        "username": "root",
-        "password": "",
-        "port": 10022,
-        "ir_config": {
-            "itach_ip": "10.0.0.142",
-            "itach_port": 4998,
-            "ir_port": "1"
-        },
-        "mac_address": "FC:D2:90:00:09:AC",
-        "vnc_url": "http://10.0.0.95:5800/",
-        "use_jump_host": false,
-        "jump_host_config": {},
-        "device_type": "SKY STREAM",
-        "location": "US",
-        "team_name": "LRQA",
-        "is_active": true
-    },
-    {
-        "ip": "10.0.0.28",
-        "name": "ELE_X3",
-        "username": "root",
-        "password": "",
-        "port": 10022,
-        "ir_config": {
-            "itach_ip": "10.0.0.30",
-            "itach_port": 4998,
-            "ir_port": "1"
-        },
-        "mac_address": "A8:4A:63:00:D0:6B",
-        "vnc_url": "http://10.0.0.28:5800/",
-        "use_jump_host": false,
-        "jump_host_config": {},
-        "device_type": "XUMO",
-        "location": "US",
-        "team_name": "LRQA",
-        "is_active": true
-    },
-    {
-        "ip": "10.0.0.61",
-        "name": "ROGERS-WST-RTK-IUIv2",
-        "username": "root",
-        "password": "",
-        "port": 10022,
-        "ir_config": {
-            "itach_ip": "10.0.0.30",
-            "itach_port": 4998,
-            "ir_port": "2"
-        },
-        "mac_address": "F4:6C:68:13:A2:5A",
-        "vnc_url": "http://10.0.0.61:5800/",
-        "use_jump_host": false,
-        "jump_host_config": {},
-        "device_type": "XUMO",
-        "location": "US",
-        "team_name": "LRQA",
-        "is_active": true
-    },
-    {
-        "ip": "10.0.0.166",
-        "name": "SKY-LLAMA-G2",
-        "username": "root",
-        "password": "",
-        "port": 10022,
-        "ir_config": {
-            "itach_ip": "10.0.0.142",
-            "itach_port": 4998,
-            "ir_port": "2"
-        },
-        "mac_address": "04:B8:6A:78:39:7B",
-        "vnc_url": "http://10.0.0.166:5800/",
-        "use_jump_host": false,
-        "jump_host_config": {},
-        "device_type": "SKY STREAM",
-        "location": "US",
-        "team_name": "LRQA",
-        "is_active": true
-    },
-    {
-        "ip": "10.0.0.230",
-        "name": "SKY-XIONE-UK",
-        "username": "root",
-        "password": "",
-        "port": 10022,
-        "ir_config": {
-            "itach_ip": "10.0.0.30",
-            "itach_port": 4998,
-            "ir_port": "1"
-        },
-        "mac_address": "D4:52:EE:DC:EF:A3",
-        "vnc_url": "http://10.0.0.230:5800/",
-        "use_jump_host": false,
-        "jump_host_config": {},
-        "device_type": "SKY STREAM",
-        "location": "US",
-        "team_name": "LRQA",
-        "is_active": true
-    },
-    {
-        "ip": "10.0.0.148",
-        "name": "SKY-XIONE-DE",
-        "username": "root",
-        "password": "",
-        "port": 10022,
-        "ir_config": {
-            "itach_ip": "10.0.0.142",
-            "itach_port": 4998,
-            "ir_port": "2"
-        },
-        "mac_address": "D4:52:EE:B7:3F:3E",
-        "vnc_url": "http://10.0.0.148:5800/",
-        "use_jump_host": false,
-        "jump_host_config": {},
-        "device_type": "SKY STREAM",
-        "location": "US",
-        "team_name": "LRQA",
-        "is_active": true
-    },
-    {
         "ip": "10.0.0.250",
         "name": "ELEMENT_A4K",
         "username": "root",
@@ -177,98 +17,31 @@
         "device_type": "XUMO",
         "location": "US",
         "team_name": "LRQA",
+        "is_rack_device": false,
+        "rpi_config": {},
         "is_active": true
     },
     {
-        "ip": "10.0.0.141",
-        "name": "SKY_ALPACA_IT-141",
-        "username": "root",
-        "password": "",
-        "port": 10022,
-        "ir_config": {
-            "itach_ip": "10.0.0.30",
-            "itach_port": 4998,
-            "ir_port": "2"
-        },
-        "mac_address": "D4:DA:CD:FF:C5:50",
-        "vnc_url": "http://10.0.0.141:5800/",
-        "use_jump_host": false,
-        "jump_host_config": {},
-        "device_type": "SKY STREAM",
-        "location": "US",
-        "team_name": "LRQA",
-        "is_active": true
-    },
-    {
-        "ip": "10.0.0.252",
-        "name": "SKY_ALPACA_IT-252",
-        "username": "root",
-        "password": "",
-        "port": 10022,
-        "ir_config": {
-            "itach_ip": "10.0.0.30",
-            "itach_port": 4998,
-            "ir_port": "1"
-        },
-        "mac_address": "D4:DA:CD:FF:AE:F4",
-        "vnc_url": "http://10.0.0.252:5800/",
-        "use_jump_host": false,
-        "jump_host_config": {},
-        "device_type": "SKY STREAM",
-        "location": "US",
-        "team_name": "LRQA",
-        "is_active": true
-    },
-    {
-        "ip": "10.0.0.75",
-        "name": "SKY-UK-NEW",
+        "ip": "10.0.0.140",
+        "name": "DT_LAB_SKY_XIONE-UK-0D_AB",
         "username": "root",
         "password": "",
         "port": 10022,
         "ir_config": {},
-        "mac_address": "D4:52:EE:D7:81:41",
-        "vnc_url": "http://10.0.0.75:5800/",
+        "mac_address": "04:B8:6A:16:0D:AB",
+        "vnc_url": "http://10.0.0.140:5800/",
         "use_jump_host": false,
         "jump_host_config": {},
         "device_type": "SKY STREAM",
         "location": "US",
         "team_name": "LRQA",
-        "is_active": true
-    },
-    {
-        "ip": "10.0.0.91",
-        "name": "ROGERS-IUIv2-NEW",
-        "username": "root",
-        "password": "",
-        "port": 10022,
-        "ir_config": {},
-        "mac_address": "F4:6C:68:11:57:7A",
-        "vnc_url": "http://10.0.0.91:5800/",
-        "use_jump_host": false,
-        "jump_host_config": {},
-        "device_type": "XUMO",
-        "location": "US",
-        "team_name": "LRQA",
-        "is_active": true
-    },
-    {
-        "ip": "10.0.0.156",
-        "name": "BCM Rogers IUIv2",
-        "username": "root",
-        "password": "",
-        "port": 10022,
-        "ir_config": {
-            "itach_ip": "10.0.0.30",
-            "itach_port": 4998,
-            "ir_port": "1"
+        "is_rack_device": true,
+        "rpi_config": {
+            "rpi_ip": "10.138.17.42",
+            "rpi_port": 60201,
+            "rpi_username": "pi",
+            "rpi_password": "Eastcoast-Goldfish-Progress"
         },
-        "mac_address": "F0:46:3B:5B:F9:8D",
-        "vnc_url": "http://10.0.0.156:5800/",
-        "use_jump_host": false,
-        "jump_host_config": {},
-        "device_type": "XUMO",
-        "location": "US",
-        "team_name": "LRQA",
         "is_active": true
     }
 ]
