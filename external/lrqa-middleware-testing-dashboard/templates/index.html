@@ -11760,79 +11760,79 @@
     {% if show_welcome_popup %}
     <div class="modal fade" id="welcomePopupModal" tabindex="-1" aria-labelledby="welcomePopupLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 15px;">
+            <div class="modal-content" style="background: linear-gradient(135deg, #374151 0%, #1f2937 100%); border: 1px solid #4b5563; border-radius: 15px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
                 <!-- Close Button -->
                 <button type="button" class="btn-close btn-close-white position-absolute" style="top: 15px; right: 15px; z-index: 10;" data-bs-dismiss="modal" aria-label="Close" id="welcomePopupCloseBtn"></button>
                 
                 <!-- Modal Header -->
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title text-white font-weight-bold" id="welcomePopupLabel" style="font-size: 1.8rem; letter-spacing: 0.5px;">
+                <div class="modal-header border-0 pb-0" style="border-bottom: 1px solid #4b5563;">
+                    <h5 class="modal-title text-light font-weight-bold" id="welcomePopupLabel" style="font-size: 1.8rem; letter-spacing: 0.5px; color: #e5e7eb !important;">
                         👋 Welcome to RDK-E Middleware Dashboard 2.0
                     </h5>
                 </div>
 
                 <!-- Modal Body -->
-                <div class="modal-body text-white pb-0">
-                    <p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 1.5rem;">
-                        Welcome, <strong>{{ current_user.name }}</strong>! We're thrilled to have you on board. Let's explore the powerful features of our integrated testing platform.
+                <div class="modal-body pb-0" style="color: #d1d5db;">
+                    <p style="font-size: 1.1rem; line-height: 1.6; margin-bottom: 1.5rem; color: #e5e7eb;">
+                        Welcome, <strong style="color: #f3f4f6;">{{ current_user.name }}</strong>! We're thrilled to have you on board. Let's explore the powerful features of our integrated testing platform.
                     </p>
 
                     <!-- Features Grid -->
                     <div class="row g-3 mb-3">
                         <!-- Feature 1: Device Management -->
                         <div class="col-md-6">
-                            <div class="card bg-white bg-opacity-10 border-0 rounded-3 h-100" style="backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+                            <div class="card bg-opacity-10 border-0 rounded-3 h-100" style="background: rgba(107, 114, 128, 0.15); border: 1px solid #4b5563;">
                                 <div class="card-body p-4">
                                     <div style="font-size: 2rem; margin-bottom: 0.5rem;">📱</div>
-                                    <h6 class="card-title text-white font-weight-bold">Device Management</h6>
-                                    <p class="card-text small text-white-50">Register and manage your devices, including DESK and GDF_RACK configurations with SSH tunneling.</p>
+                                    <h6 class="card-title font-weight-bold" style="color: #e5e7eb;">Device Management</h6>
+                                    <p class="card-text small" style="color: #9ca3af;">Register and manage your devices, including DESK and GDF_RACK configurations with SSH tunneling.</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Feature 2: Test Execution -->
                         <div class="col-md-6">
-                            <div class="card bg-white bg-opacity-10 border-0 rounded-3 h-100" style="backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+                            <div class="card bg-opacity-10 border-0 rounded-3 h-100" style="background: rgba(107, 114, 128, 0.15); border: 1px solid #4b5563;">
                                 <div class="card-body p-4">
                                     <div style="font-size: 2rem; margin-bottom: 0.5rem;">▶️</div>
-                                    <h6 class="card-title text-white font-weight-bold">Test Execution</h6>
-                                    <p class="card-text small text-white-50">Execute predefined test methods on your devices and track real-time progress.</p>
+                                    <h6 class="card-title font-weight-bold" style="color: #e5e7eb;">Test Execution</h6>
+                                    <p class="card-text small" style="color: #9ca3af;">Execute predefined test methods on your devices and track real-time progress.</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Feature 3: Job Monitoring -->
                         <div class="col-md-6">
-                            <div class="card bg-white bg-opacity-10 border-0 rounded-3 h-100" style="backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+                            <div class="card bg-opacity-10 border-0 rounded-3 h-100" style="background: rgba(107, 114, 128, 0.15); border: 1px solid #4b5563;">
                                 <div class="card-body p-4">
                                     <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
-                                    <h6 class="card-title text-white font-weight-bold">Job Monitoring</h6>
-                                    <p class="card-text small text-white-50">Monitor job queues, track execution status, and analyze comprehensive logs.</p>
+                                    <h6 class="card-title font-weight-bold" style="color: #e5e7eb;">Job Monitoring</h6>
+                                    <p class="card-text small" style="color: #9ca3af;">Monitor job queues, track execution status, and analyze comprehensive logs.</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Feature 4: Sequences & Automation -->
                         <div class="col-md-6">
-                            <div class="card bg-white bg-opacity-10 border-0 rounded-3 h-100" style="backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2);">
+                            <div class="card bg-opacity-10 border-0 rounded-3 h-100" style="background: rgba(107, 114, 128, 0.15); border: 1px solid #4b5563;">
                                 <div class="card-body p-4">
                                     <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚙️</div>
-                                    <h6 class="card-title text-white font-weight-bold">Sequences & Automation</h6>
-                                    <p class="card-text small text-white-50">Create and manage test sequences with AI learning capabilities.</p>
+                                    <h6 class="card-title font-weight-bold" style="color: #e5e7eb;">Sequences & Automation</h6>
+                                    <p class="card-text small" style="color: #9ca3af;">Create and manage test sequences with AI learning capabilities.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Quick Tips -->
-                    <div class="alert alert-info border-0 rounded-3 text-dark" style="background: rgba(255,255,255,0.15);">
-                        <strong>💡 Quick Tip:</strong> Start by exploring the Device Management modal to register your first device!
+                    <div class="alert border-0 rounded-3 mb-0" style="background: rgba(107, 114, 128, 0.2); border: 1px solid #4b5563; color: #d1d5db;">
+                        <strong style="color: #e5e7eb;">💡 Quick Tip:</strong> Start by exploring the Device Management modal to register your first device!
                     </div>
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-light px-4" id="startUsingDashboardBtn">
+                <div class="modal-footer border-0 pt-3" style="border-top: 1px solid #4b5563;">
+                    <button type="button" class="btn px-4" id="startUsingDashboardBtn" style="background: #6b7280; color: #f3f4f6; border: none; font-weight: 600; transition: all 0.3s;">
                         Start Using Dashboard →
                     </button>
                 </div>
@@ -11840,6 +11840,60 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Welcome Popup Styles -->
+    <style>
+        /* Welcome Popup Modal Styles */
+        #welcomePopupModal .modal-content {
+            transition: all 0.3s ease;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+            backdrop-filter: blur(5px);
+        }
+
+        #welcomePopupModal .card {
+            transition: all 0.3s ease;
+        }
+
+        #welcomePopupModal .card:hover {
+            background: rgba(107, 114, 128, 0.25) !important;
+            border-color: #6b7280 !important;
+            transform: translateY(-2px);
+        }
+
+        #startUsingDashboardBtn {
+            background: #6b7280 !important;
+            color: #f3f4f6 !important;
+            border: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        #startUsingDashboardBtn:hover {
+            background: #4b5563 !important;
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.4);
+            transform: translateY(-1px);
+        }
+
+        #startUsingDashboardBtn:active {
+            transform: translateY(0);
+        }
+
+        /* Welcome modal fade in animation */
+        #welcomePopupModal.show .modal-dialog {
+            animation: welcomeSlideIn 0.4s ease;
+        }
+
+        @keyframes welcomeSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+    </style>
 
     <!-- Welcome Popup JavaScript Controller -->
     <script>
