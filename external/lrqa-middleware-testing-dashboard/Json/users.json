@@ -10,7 +10,8 @@
     "is_admin": true,
     "is_super_admin": true,
     "is_team_admin": true,
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "welcome_popup_shown": true
   },
   "landel334": {
     "user_id": "landel334",
@@ -23,7 +24,8 @@
     "is_admin": false,
     "is_super_admin": false,
     "is_team_admin": false,
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "welcome_popup_shown": false
   },
   "rnagal741": {
     "user_id": "rnagal741",
@@ -36,7 +38,8 @@
     "is_admin": false,
     "is_super_admin": false,
     "is_team_admin": false,
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "welcome_popup_shown": false
   },
   "lsampa662": {
     "user_id": "lsampa662",
@@ -49,7 +52,8 @@
     "is_admin": false,
     "is_super_admin": false,
     "is_team_admin": false,
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "welcome_popup_shown": false
   },
   "bsatya541": {
     "user_id": "bsatya541",
@@ -62,7 +66,8 @@
     "is_admin": false,
     "is_super_admin": false,
     "is_team_admin": false,
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "welcome_popup_shown": false
   },
   "nnair424": {
     "user_id": "nnair424",
@@ -75,7 +80,8 @@
     "is_admin": false,
     "is_super_admin": false,
     "is_team_admin": false,
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "welcome_popup_shown": false
   },
   "tganes096": {
     "user_id": "tganes096",
@@ -88,7 +94,8 @@
     "is_admin": false,
     "is_super_admin": false,
     "is_team_admin": false,
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "welcome_popup_shown": false
   },
   "rsamue292": {
     "user_id": "rsamue292",
@@ -101,7 +108,8 @@
     "is_admin": false,
     "is_super_admin": false,
     "is_team_admin": false,
-    "team_name": ""
+    "team_name": "",
+    "welcome_popup_shown": false
   },
   "drajan661": {
     "user_id": "drajan661",
@@ -114,6 +122,7 @@
     "is_admin": false,
     "is_super_admin": false,
     "is_team_admin": false,
-    "team_name": "abcd"
+    "team_name": "abcd",
+    "welcome_popup_shown": false
   }
 }

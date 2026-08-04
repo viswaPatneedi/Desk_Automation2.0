@@ -11913,7 +11913,7 @@
         const closeBtn = document.getElementById('welcomePopupCloseBtn');
         if (closeBtn) {
             closeBtn.addEventListener('click', function() {
-                markWelcomePopupShown();
+                closeWelcomePopup();
             });
         }
 
@@ -11921,37 +11921,57 @@
         const startBtn = document.getElementById('startUsingDashboardBtn');
         if (startBtn) {
             startBtn.addEventListener('click', function() {
-                markWelcomePopupShown();
+                closeWelcomePopup();
             });
         }
 
-        // Function to mark popup as shown
-        function markWelcomePopupShown() {
-            fetch('/api/welcome-popup/mark-shown', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log('✅ Welcome popup marked as shown');
-                    // Hide the modal if it's still open
-                    const welcomeModal = bootstrap.Modal.getInstance(document.getElementById('welcomePopupModal'));
-                    if (welcomeModal) {
-                        welcomeModal.hide();
+        // Function to close popup immediately and mark as shown in background
+        function closeWelcomePopup() {
+            // Close modal IMMEDIATELY for best UX
+            const welcomeModal = bootstrap.Modal.getInstance(document.getElementById('welcomePopupModal'));
+            if (welcomeModal) {
+                welcomeModal.hide();
+            }
+            
+            // Mark as shown in background WITHOUT waiting (non-blocking)
+            // Use sendBeacon for fastest async tracking (even survives page unload)
+            try {
+                navigator.sendBeacon('/api/welcome-popup/mark-shown', JSON.stringify({}));
+                console.log('✅ Welcome popup marked as shown (background)');
+            } catch (error) {
+                // Fallback: use fetch with timeout if sendBeacon not available
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+                
+                fetch('/api/welcome-popup/mark-shown', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    signal: controller.signal
+                })
+                .then(response => response.json())
+                .then(data => {
+                    clearTimeout(timeout);
+                    if (data.success) {
+                        console.log('✅ Welcome popup marked as shown (fetch)');
                     }
-                }
-            })
-            .catch(error => console.error('Error marking welcome popup:', error));
+                })
+                .catch(error => {
+                    clearTimeout(timeout);
+                    console.warn('⚠️ Could not mark welcome popup (will show again on next login):', error);
+                });
+            }
         }
 
-        // Add event listener to modal hide event
+        // Add event listener to modal hide event as backup
         const welcomePopupElement = document.getElementById('welcomePopupModal');
         if (welcomePopupElement) {
             welcomePopupElement.addEventListener('hidden.bs.modal', function() {
-                markWelcomePopupShown();
+                // Backup: ensure it's marked in case user closed via ESC or backdrop
+                try {
+                    navigator.sendBeacon('/api/welcome-popup/mark-shown', JSON.stringify({}));
+                } catch (e) {
+                    // Silent fail on backup
+                }
             });
         }
     </script>

@@ -26,6 +26,7 @@ import signal
 import atexit
 import random
 import smtplib
+import sys
 from collections import Counter, defaultdict
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -2374,17 +2375,33 @@ def auth_status():
 @app.route('/api/welcome-popup/mark-shown', methods=['POST'])
 @login_required
 def mark_welcome_popup_shown():
-    """Mark that user has seen the welcome popup"""
+    """Mark that user has seen the welcome popup - Optimized for speed"""
     try:
-        # Get current user and update welcome_popup_shown flag
-        current_user.welcome_popup_shown = True
-        current_user.save()
+        import threading
         
+        # Mark flag immediately for this request
+        current_user.welcome_popup_shown = True
+        
+        # Save user in background thread to avoid blocking response
+        def save_user_async():
+            try:
+                current_user.save()
+                print(f"✅ [WELCOME] User {current_user.ntid} marked as seen welcome popup", file=sys.stderr)
+            except Exception as e:
+                print(f"⚠️  [WELCOME] Failed to save user: {e}", file=sys.stderr)
+        
+        # Start async save - don't wait for it
+        save_thread = threading.Thread(target=save_user_async, daemon=True)
+        save_thread.start()
+        
+        # Return immediately without waiting for save to complete
         return jsonify({
             'success': True,
             'message': 'Welcome popup marked as shown'
-        })
+        }), 200
     except Exception as e:
+        import sys
+        print(f"❌ [WELCOME] Error: {e}", file=sys.stderr)
         return jsonify({
             'success': False,
             'error': str(e)
