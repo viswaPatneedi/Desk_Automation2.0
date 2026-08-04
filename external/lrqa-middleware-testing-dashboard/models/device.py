@@ -23,7 +23,7 @@ class Device:
     def __init__(self, ip: str, name: str, username: str, password: str, 
                  port: int = 10022, ir_config: Optional[Dict] = None, mac_address: str = None, vnc_url: str = None,
                  use_jump_host: bool = False, jump_host_config: Optional[Dict] = None, device_type: str = None, location: str = None, team_name: str = None,
-                 is_rack_device: bool = False, rpi_config: Optional[Dict] = None):
+                 is_rack_device: bool = False, rpi_config: Optional[Dict] = None, ir_blaster_config: Optional[Dict] = None, power_control_config: Optional[Dict] = None):
         self.original_ip = ip  # Store original IP for VNC URL generation
         self.ip = ip
         self.name = name
@@ -40,6 +40,8 @@ class Device:
         self.team_name = team_name or ''
         self.is_rack_device = is_rack_device
         self.rpi_config = rpi_config or {}
+        self.ir_blaster_config = ir_blaster_config or {}
+        self.power_control_config = power_control_config or {}
     
     @property
     def vnc_url(self) -> str:
@@ -63,7 +65,9 @@ class Device:
             'location': self.location,
             'team_name': self.team_name,
             'is_rack_device': self.is_rack_device,
-            'rpi_config': self.rpi_config
+            'rpi_config': self.rpi_config,
+            'ir_blaster_config': self.ir_blaster_config,
+            'power_control_config': self.power_control_config
         }
 
     def to_storage_dict(self) -> Dict:
@@ -84,6 +88,8 @@ class Device:
             'team_name': self.team_name,
             'is_rack_device': self.is_rack_device,
             'rpi_config': self.rpi_config,
+            'ir_blaster_config': self.ir_blaster_config,
+            'power_control_config': self.power_control_config,
             'is_active': True
         }
     
@@ -115,7 +121,9 @@ class Device:
             location=data.get('location', ''),
             team_name=data.get('team_name', ''),
             is_rack_device=data.get('is_rack_device', False),
-            rpi_config=data.get('rpi_config', {})
+            rpi_config=data.get('rpi_config', {}),
+            ir_blaster_config=data.get('ir_blaster_config', {}),
+            power_control_config=data.get('power_control_config', {})
         )
         # Apply tunnel mode connection parameters if enabled
         if TUNNEL_MODE:
@@ -409,6 +417,67 @@ class Device:
                 
         except Exception as e:
             return False, f"Jump host error: {str(e)}"
+    
+    def validate_connection_via_rpi(self, rpi_ip: str) -> tuple[bool, str]:
+        """Validate device connection via R-Pi tunnel
+        
+        First connects to R-Pi, then checks if device is reachable from R-Pi
+        """
+        import paramiko
+        
+        # Get R-Pi credentials from rpi_config
+        if not self.rpi_config:
+            return False, "R-Pi configuration not found"
+        
+        rpi_username = self.rpi_config.get('rpi_username', 'pi')
+        rpi_password = self.rpi_config.get('rpi_password', '')
+        rpi_port = self.rpi_config.get('rpi_port', 22)
+        
+        if not rpi_password:
+            return False, "R-Pi password not configured"
+        
+        try:
+            # Step 1: Connect to R-Pi
+            print(f"🔗 [R-Pi] Connecting to R-Pi at {rpi_ip}:{rpi_port}...")
+            ssh_rpi = paramiko.SSHClient()
+            ssh_rpi.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_rpi.connect(rpi_ip, port=int(rpi_port), username=rpi_username, 
+                           password=rpi_password, timeout=10)
+            print(f"✅ [R-Pi] Connected to R-Pi successfully")
+            
+            # Step 2: From R-Pi, check device connectivity via ping or SSH
+            print(f"🔍 [Device] Checking device {self.ip} connectivity from R-Pi...")
+            
+            # Try SSH connection to device from R-Pi
+            stdin, stdout, stderr = ssh_rpi.exec_command(
+                f'timeout 5 ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no '
+                f'-o UserKnownHostsFile=/dev/null -p {self.port} '
+                f'{self.username}@{self.ip} "echo alive"',
+                timeout=15
+            )
+            
+            output = stdout.read().decode('utf-8', errors='ignore').strip()
+            error = stderr.read().decode('utf-8', errors='ignore').strip()
+            return_code = stdout.channel.recv_exit_status()
+            
+            ssh_rpi.close()
+            
+            if return_code == 0 and 'alive' in output:
+                print(f"✅ [Device] Device {self.ip} is ACTIVE (reachable from R-Pi)")
+                return True, f"Device is active (via R-Pi {rpi_ip})"
+            else:
+                print(f"❌ [Device] Device {self.ip} is INACTIVE or unreachable from R-Pi")
+                return False, f"Device unreachable from R-Pi {rpi_ip}"
+                
+        except paramiko.AuthenticationException as e:
+            print(f"❌ [R-Pi] Authentication failed for R-Pi {rpi_ip}: {str(e)}")
+            return False, f"R-Pi authentication failed: {str(e)}"
+        except paramiko.SSHException as e:
+            print(f"❌ [R-Pi] SSH error connecting to R-Pi {rpi_ip}: {str(e)}")
+            return False, f"R-Pi SSH error: {str(e)}"
+        except Exception as e:
+            print(f"❌ [Connection] Error validating via R-Pi: {str(e)}")
+            return False, f"R-Pi validation error: {str(e)}"
     
     def fetch_mac_address(self) -> Optional[str]:
         """Fetch MAC address from device using SSH"""

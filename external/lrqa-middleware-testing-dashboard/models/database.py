@@ -116,6 +116,9 @@ class Device(Base):
     # GDF_RACK device support
     is_rack_device = Column(Boolean, default=False)
     rpi_config = Column(JSON)
+    # IR Blaster and Power Control configurations (optional)
+    ir_blaster_config = Column(JSON)
+    power_control_config = Column(JSON)
     created_by = Column(Integer, ForeignKey('users.id'))
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
@@ -151,6 +154,8 @@ class Device(Base):
             'ir_config': self.ir_config,
             'is_rack_device': self.is_rack_device,
             'rpi_config': self.rpi_config,
+            'ir_blaster_config': self.ir_blaster_config,
+            'power_control_config': self.power_control_config,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'is_active': self.is_active
         }

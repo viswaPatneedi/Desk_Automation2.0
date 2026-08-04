@@ -919,7 +919,7 @@
         }
     </style>
 </head>
-<body>
+<body data-is-admin="{{ 'true' if current_user.is_admin else 'false' }}">
     <!-- Navbar -->
     <nav class="navbar navbar-custom navbar-expand-lg sticky-top">
         <div class="container-fluid px-4">
@@ -1386,10 +1386,10 @@
                                     {% if devices %}
                                         {% for device in devices %}
                                         {% if not device.is_rack_device %}
-                                        <div class="device-row" data-device-ip="{{ device.ip }}" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; border: 1px solid #475569; transition: all 0.3s ease; order: 0;">
+                                        <div class="device-row" data-device-ip="{{ device.ip }}" data-device-location="{{ device.location or 'N/A' }}" data-rpi-ip="{{ device.rpi_config.rpi_ip or '' }}" data-is-rack="false" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; border: 1px solid #475569; transition: all 0.3s ease; order: 0;">
                                             <input type="checkbox" class="form-check-input device-checkbox" id="device-{{ device.ip }}" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" style="margin-right: 1rem; width: 18px; height: 18px; cursor: pointer;">
                                             <div style="flex: 1;">
-                                                <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">{{ device.name }} • <span style="color: #9ca3af; font-size: 0.85rem;">{{ device.ip }} • <span class="device-mac-display">{{ device.mac_address or 'N/A' }}</span></span> </div>
+                                                <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">{{ device.name }} • <span style="color: #9ca3af; font-size: 0.85rem;">{{ device.ip }} • {{ device.location or 'N/A' }} • <span class="device-mac-display">{{ device.mac_address or 'N/A' }}</span></span> </div>
                                             </div>
                                             <span class="device-status-badge" style="background: #6b7280; color: #fff; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; min-width: 75px; text-align: center;">
                                                 <i class="bi bi-hourglass-split"></i> Checking...
@@ -1413,10 +1413,10 @@
                                     {% if devices %}
                                         {% for device in devices %}
                                         {% if device.is_rack_device %}
-                                        <div class="device-row" data-device-ip="{{ device.ip }}" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; border: 1px solid #f59e0b33; transition: all 0.3s ease; order: 0;">
+                                        <div class="device-row" data-device-ip="{{ device.ip }}" data-device-location="{{ device.location or 'N/A' }}" data-rpi-ip="{{ device.rpi_config.rpi_ip or '' }}" data-is-rack="true" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; border: 1px solid #f59e0b33; transition: all 0.3s ease; order: 0;">
                                             <input type="checkbox" class="form-check-input device-checkbox" id="device-{{ device.ip }}" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" style="margin-right: 1rem; width: 18px; height: 18px; cursor: pointer;">
                                             <div style="flex: 1;">
-                                                <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">{{ device.name }} • <span style="color: #9ca3af; font-size: 0.85rem;">Lab: {{ device.ip }} via R-Pi {{ device.rpi_ip or 'N/A' }}</span> </div>
+                                                <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">{{ device.name }} • <span style="color: #9ca3af; font-size: 0.85rem;">Lab: {{ device.ip }} • {{ device.location or 'N/A' }} • <span class="device-mac-display">{{ device.mac_address or 'N/A' }}</span></span> </div>
                                             </div>
                                             <span class="device-status-badge" style="background: #f59e0b; color: #000; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; min-width: 75px; text-align: center;">
                                                 <i class="bi bi-hourglass-split"></i> Checking...
@@ -1605,10 +1605,7 @@
                             <i class="bi bi-list-check"></i> Registered Devices
                         </button>
                         <button class="device-management-tab-btn" onclick="switchDeviceTab('add-form', this)">
-                            <i class="bi bi-desktop"></i> Add DESK Device
-                        </button>
-                        <button class="device-management-tab-btn" onclick="switchDeviceTab('add-rack-form', this)">
-                            <i class="bi bi-hdd-rack-fill"></i> Add GDF_RACK Device
+                            <i class="bi bi-plus-circle-fill"></i> Add New Device
                         </button>
                     </div>
 
@@ -1651,55 +1648,13 @@
                         {% endif %}
                             
                         <div class="device-list" id="device-list">
-                            <!-- DESK Devices Section -->
+                            <!-- DESK Devices Section - Grouped by Location -->
                             <div style="margin-bottom: 2rem;">
                                 <h6 style="color: #10b981; margin-bottom: 1rem; font-weight: 600; border-bottom: 2px solid #10b981; padding-bottom: 0.5rem;">
                                     <i class="bi bi-desktop"></i> DESK Devices
                                 </h6>
                                 <div id="desk-devices-list">
-                                {% if devices %}
-                                    {% for device in devices %}
-                                    {% if not device.is_rack_device %}
-                                    <div class="device-item" data-ip="{{ device.ip }}" data-team="{{ device.team_name or '' }}">
-                                        <!-- Checkbox: Multi-select -->
-                                        {% if current_user.is_admin %}
-                                        <div style="display: flex; align-items: center; margin-right: 0.75rem;">
-                                            <input type="checkbox" class="device-checkbox" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" 
-                                                   onchange="updateDeviceSelectionCount()" 
-                                                   style="width: 18px; height: 18px; cursor: pointer;">
-                                        </div>
-                                        {% endif %}
-                                        <!-- Left Side: Device Info -->
-                                        <div class="device-item-info">
-                                            <h6 class="device-item-name">{{ device.name }}</h6>
-                                            <div class="device-item-details">
-                                                <small class="device-item-detail">
-                                                    <i class="bi bi-geo-alt-fill"></i> {{ device.ip }}
-                                                </small>
-                                                <small class="device-item-detail">
-                                                    <i class="bi bi-ethernet"></i> {{ device.mac_address or 'N/A' }}
-                                                </small>
-                                            </div>
-                                            {% if device.team_name %}<small class="device-item-team"><i class="bi bi-people"></i> {{ device.team_name }}</small>{% endif %}
-                                        </div>
-                                        <!-- Right Side: Action Buttons -->
-                                        <div class="device-item-actions">
-                                            <button class="btn btn-info btn-sm" onclick="showMethodExecutionModal('{{ device.ip }}')" title="Execute Method on Device">
-                                                <i class="bi bi-play-circle"></i>
-                                            </button>
-                                            <button class="btn btn-warning btn-sm" onclick="editDevice('{{ device.ip }}')" title="Edit Device">
-                                                <i class="bi bi-pencil-square"></i>
-                                            </button>
-                                            {% if current_user.is_admin %}
-                                            <button class="btn btn-danger btn-sm" onclick="removeDevice('{{ device.ip }}')" title="Delete Device">
-                                                <i class="bi bi-trash-fill"></i>
-                                            </button>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    {% endif %}
-                                    {% endfor %}
-                                {% endif %}
+                                <!-- Location groups will be rendered by JavaScript -->
                                 </div>
                                 <div id="desk-devices-empty" style="color: #9ca3af; text-align: center; padding: 2rem; display: none;">
                                     <i class="bi bi-inbox"></i> No DESK devices registered yet
@@ -1773,6 +1728,17 @@
                         </h6>
                         
                         <div class="form-scrollable">
+                        <!-- Device Category Selector -->
+                        <div class="device-form-group">
+                            <label for="device-category" class="device-form-label">Device Category <span class="text-danger">*</span></label>
+                            <select class="form-select device-form-select" id="device-category" required onchange="toggleDeviceFields()">
+                                <option value="desk">Desk Device</option>
+                                <option value="lab">Lab Device</option>
+                            </select>
+                        </div>
+
+                        <!-- Desk Device Fields -->
+                        <div id="desk-device-fields">
                         <div class="device-form-group">
                             <label for="device-name" class="device-form-label">Device Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control device-form-input" id="device-name" placeholder="e.g., Living Room TV" required>
@@ -1799,15 +1765,58 @@
                         <div class="device-form-group">
                             <label for="device-location" class="device-form-label">Device Location <span class="text-danger">*</span></label>
                             <select class="form-select device-form-select" id="device-location" required>
-                                <option value="IND">IND</option>
-                                <option value="US" selected>US</option>
-                                <option value="UK">UK</option>
+                                <optgroup label="India">
+                                    <option value="IND:BLR">INDIA : BLR (Bengaluru)</option>
+                                    <option value="IND:CHN">INDIA : CHN (Chennai)</option>
+                                    <option value="IND:MUM">INDIA : MUM (Mumbai)</option>
+                                    <option value="IND:DEL">INDIA : DEL (Delhi)</option>
+                                </optgroup>
+                                <optgroup label="US">
+                                    <option value="US:NYC" selected>US : NYC (New York)</option>
+                                    <option value="US:LAX">US : LAX (Los Angeles)</option>
+                                    <option value="US:CHI">US : CHI (Chicago)</option>
+                                </optgroup>
+                                <optgroup label="UK">
+                                    <option value="UK:LON">UK : LON (London)</option>
+                                    <option value="UK:MAN">UK : MAN (Manchester)</option>
+                                </optgroup>
                             </select>
                         </div>
 
                         <div class="device-form-group">
                             <label for="device-team" class="device-form-label">Team Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control device-form-input" id="device-team" placeholder="e.g., QA Team" required>
+                        </div>
+
+                        <!-- R-Pi Tunnel Configuration Section for DESK Devices -->
+                        <div style="background: #1f2937; border: 1px solid #374151; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                            <h6 style="color: #60a5fa; margin-bottom: 1rem; font-weight: 600;">
+                                <i class="bi bi-cpu"></i> Raspberry Pi (Tunnel Host) Configuration <small style="font-size: 0.85rem; color: #9ca3af;">(Required for remote access)</small>
+                            </h6>
+                            <p style="color: #9ca3af; font-size: 0.9rem; margin-bottom: 1rem;">
+                                <i class="bi bi-info-circle"></i> Application will SSH through R-Pi tunnel to reach DESK device
+                            </p>
+                            
+                            <div class="device-form-group">
+                                <label for="desk-rpi-ip" class="device-form-label">R-Pi IP Address <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control device-form-input" id="desk-rpi-ip" placeholder="e.g., 10.138.17.42" required>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="desk-rpi-port" class="device-form-label">R-Pi SSH Port <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control device-form-input" id="desk-rpi-port" placeholder="e.g., 22" value="22" required>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="desk-rpi-username" class="device-form-label">R-Pi Username <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control device-form-input" id="desk-rpi-username" placeholder="e.g., pi" value="pi" required>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="desk-rpi-password" class="device-form-label">R-Pi Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control device-form-input" id="desk-rpi-password" placeholder="Enter R-Pi password" required>
+                                <small style="color: #9ca3af; display: block; margin-top: 0.25rem;">Password will be encrypted before storage</small>
+                            </div>
                         </div>
 
                         <!-- IR Configuration - Optional Section -->
@@ -1837,111 +1846,12 @@
                             </div>
                         </div>
 
+                        </div>
+                        <!-- End Desk Device Fields -->
+
                         <div style="margin-top: 1.2rem;">
                             <button id="add-device-btn" class="btn btn-success btn-custom w-100" style="padding: 0.6rem; font-weight: 600; font-size: 0.95rem;">
                                 <i class="bi bi-plus-lg"></i> Add Device
-                            </button>
-                        </div>
-                        </div>
-                    </div>
-
-                    <!-- Tab: Add GDF_RACK Device Form -->
-                    <div id="add-rack-form-tab" class="device-management-tab-content">
-                        <h6 class="device-list-section-title">
-                            <i class="bi bi-hdd-rack-fill"></i> Add GDF_RACK Device (Lab Device via R-Pi Tunnel)
-                        </h6>
-                        <p style="color: #9ca3af; font-size: 0.9rem; margin-bottom: 1.5rem;">
-                            <i class="bi bi-info-circle"></i> GDF_RACK devices are located in the lab and accessible through a Raspberry Pi tunnel.
-                        </p>
-                        
-                        <div class="form-scrollable">
-                        <!-- Raspberry Pi Configuration Section -->
-                        <div style="background: #1f2937; border: 1px solid #374151; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                            <h6 style="color: #60a5fa; margin-bottom: 1rem; font-weight: 600;">
-                                <i class="bi bi-cpu"></i> Raspberry Pi (Tunnel Host) Configuration
-                            </h6>
-                            
-                            <div class="device-form-group">
-                                <label for="rpi-ip" class="device-form-label">R-Pi IP Address <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control device-form-input" id="rpi-ip" placeholder="e.g., 10.138.17.42" required>
-                            </div>
-
-                            <div class="device-form-group">
-                                <label for="rpi-port" class="device-form-label">R-Pi SSH Port <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control device-form-input" id="rpi-port" placeholder="e.g., 60201" value="60201" required>
-                            </div>
-
-                            <div class="device-form-group">
-                                <label for="rpi-username" class="device-form-label">R-Pi Username <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control device-form-input" id="rpi-username" placeholder="e.g., pi" value="pi" required>
-                            </div>
-
-                            <div class="device-form-group">
-                                <label for="rpi-password" class="device-form-label">R-Pi Password <span class="text-danger">*</span></label>
-                                <input type="password" class="form-control device-form-input" id="rpi-password" placeholder="Enter R-Pi password" required>
-                                <small style="color: #9ca3af; display: block; margin-top: 0.25rem;">Password will be encrypted before storage</small>
-                            </div>
-                        </div>
-
-                        <!-- Lab Device Configuration Section -->
-                        <div style="background: #1f2937; border: 1px solid #374151; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                            <h6 style="color: #fbbf24; margin-bottom: 1rem; font-weight: 600;">
-                                <i class="bi bi-tv"></i> Lab Device Configuration
-                            </h6>
-                            
-                            <div class="device-form-group">
-                                <label for="rack-device-name" class="device-form-label">Device Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control device-form-input" id="rack-device-name" placeholder="e.g., Lab-XUMO-01" required>
-                            </div>
-
-                            <div class="device-form-group">
-                                <label for="rack-device-type" class="device-form-label">LAB Device Type <span class="text-danger">*</span></label>
-                                <select class="form-select device-form-select" id="rack-device-type" required>
-                                    <option value="">-- Select Device Type --</option>
-                                    <option value="XUMO">XUMO</option>
-                                    <option value="SKY STREAM">SKY STREAM</option>
-                                </select>
-                            </div>
-
-                            <div class="device-form-group">
-                                <label for="rack-device-ip" class="device-form-label">Lab Device IP Address <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control device-form-input" id="rack-device-ip" placeholder="e.g., 10.0.0.28" required>
-                            </div>
-
-                            <div class="device-form-group">
-                                <label for="rack-device-port" class="device-form-label">Lab Device SSH Port <span class="text-danger">*</span></label>
-                                <input type="number" class="form-control device-form-input" id="rack-device-port" placeholder="e.g., 10022" value="10022" required>
-                            </div>
-
-                            <div class="device-form-group">
-                                <label for="rack-device-username" class="device-form-label">Lab Device SSH Username <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control device-form-input" id="rack-device-username" placeholder="e.g., root" value="root" required>
-                            </div>
-
-                            <div class="device-form-group">
-                                <label for="rack-device-mac" class="device-form-label">Device MAC Address <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control device-form-input" id="rack-device-mac" placeholder="e.g., 1C:2F:A2:30:35:B6" required>
-                            </div>
-
-                            <div class="device-form-group">
-                                <label for="rack-device-location" class="device-form-label">Location / Lab <span class="text-danger">*</span></label>
-                                <select class="form-select device-form-select" id="rack-device-location" required>
-                                    <option value="">-- Select Location --</option>
-                                    <option value="IND">IND (India)</option>
-                                    <option value="US">US</option>
-                                    <option value="UK">UK</option>
-                                </select>
-                            </div>
-
-                            <div class="device-form-group">
-                                <label for="rack-device-team" class="device-form-label">Team Name <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control device-form-input" id="rack-device-team" placeholder="e.g., QA Team" required>
-                            </div>
-                        </div>
-
-                        <div style="margin-top: 1.2rem;">
-                            <button id="add-rack-device-btn" class="btn btn-success btn-custom w-100" style="padding: 0.6rem; font-weight: 600; font-size: 0.95rem;">
-                                <i class="bi bi-plus-lg"></i> Add GDF_RACK Device
                             </button>
                         </div>
                         </div>
@@ -3814,6 +3724,12 @@
                 return el ? el.value : '';
             };
             
+            // Collect R-Pi tunnel configuration (now REQUIRED for DESK devices)
+            const rpiIp = getElementValue('desk-rpi-ip');
+            const rpiPort = getElementValue('desk-rpi-port');
+            const rpiUsername = getElementValue('desk-rpi-username');
+            const rpiPassword = getElementValue('desk-rpi-password');
+            
             // Collect form data with correct field names
             const deviceData = {
                 name: getElementValue('device-name'),
@@ -3823,7 +3739,14 @@
                 location: getElementValue('device-location'),
                 team_name: getElementValue('device-team'),
                 username: 'root',
-                ir_config: {}
+                ir_config: {},
+                is_rack_device: false,
+                rpi_config: {
+                    rpi_ip: rpiIp,
+                    rpi_port: rpiPort ? parseInt(rpiPort) : null,
+                    rpi_username: rpiUsername || 'pi',
+                    rpi_password: rpiPassword
+                }
             };
             
             // Only add IR config if any field is filled
@@ -3841,13 +3764,25 @@
             
             // Validate required fields
             if (!deviceData.name || !deviceData.ip || !deviceData.mac_address || !deviceData.team_name) {
-                alert('Please fill in all required fields (Name, IP, MAC, Team)');
+                alert('❌ Please fill in all required fields (Name, IP, MAC, Team)');
+                return;
+            }
+            
+            // Validate R-Pi configuration (REQUIRED)
+            if (!rpiIp || !rpiPort || !rpiUsername || !rpiPassword) {
+                alert('❌ R-Pi tunnel configuration is REQUIRED. Please fill in all R-Pi fields (IP, Port, Username, Password)');
                 return;
             }
             
             // Validate IP format
             if (!/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(deviceData.ip)) {
-                alert('Please enter a valid IP address');
+                alert('❌ Please enter a valid device IP address');
+                return;
+            }
+            
+            // Validate R-Pi IP format
+            if (!/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(rpiIp)) {
+                alert('❌ Please enter a valid R-Pi IP address');
                 return;
             }
             
@@ -3883,8 +3818,12 @@
                     document.getElementById('device-ip').value = '';
                     document.getElementById('device-type').value = 'XUMO';
                     document.getElementById('device-mac').value = '';
-                    document.getElementById('device-location').value = 'US';
+                    document.getElementById('device-location').value = 'US:NYC';
                     document.getElementById('device-team').value = '';
+                    document.getElementById('desk-rpi-ip').value = '';
+                    document.getElementById('desk-rpi-port').value = '22';
+                    document.getElementById('desk-rpi-username').value = 'pi';
+                    document.getElementById('desk-rpi-password').value = '';
                     document.getElementById('ir-device-ip').value = '';
                     document.getElementById('ir-device-port').value = '';
                     const irConnectorEl = document.getElementById('ir-connector');
@@ -3929,6 +3868,18 @@
             const rpiUsernameValue = document.getElementById('rpi-username').value.trim();
             const rpiPasswordValue = document.getElementById('rpi-password').value.trim();
             
+            // Get IR Blaster values (optional)
+            const irBlasterIpValue = document.getElementById('rack-ir-blaster-ip').value.trim();
+            const irBlasterPortValue = document.getElementById('rack-ir-blaster-port').value.trim();
+            const irConnectorValue = document.getElementById('rack-ir-connector').value.trim();
+            
+            // Get Power Control values (optional)
+            const powerTypeValue = document.getElementById('rack-power-type').value.trim();
+            const powerIpValue = document.getElementById('rack-power-ip').value.trim();
+            const powerOutletValue = document.getElementById('rack-power-outlet').value.trim();
+            const powerUsernameValue = document.getElementById('rack-power-username').value.trim();
+            const powerPasswordValue = document.getElementById('rack-power-password').value.trim();
+            
             const rackDeviceData = {
                 name: document.getElementById('rack-device-name').value.trim(),
                 // For RACK devices, controller expects 'lab_ip' not 'ip'
@@ -3949,7 +3900,21 @@
                     rpi_port: rpiPortValue ? parseInt(rpiPortValue) : null,
                     rpi_username: rpiUsernameValue,
                     rpi_password: rpiPasswordValue
-                }
+                },
+                // IR Blaster configuration (optional)
+                ir_blaster_config: irBlasterIpValue ? {
+                    ir_blaster_ip: irBlasterIpValue,
+                    ir_blaster_port: irBlasterPortValue ? parseInt(irBlasterPortValue) : 4998,
+                    ir_connector: irConnectorValue || '1'
+                } : null,
+                // Power Control configuration (optional)
+                power_control_config: powerTypeValue ? {
+                    power_type: powerTypeValue,
+                    power_ip: powerIpValue,
+                    power_outlet: powerOutletValue,
+                    power_username: powerUsernameValue || null,
+                    power_password: powerPasswordValue || null
+                } : null
             };
             
             // For updates, include the old IP so the controller knows which device to update
@@ -4002,6 +3967,34 @@
                 return;
             }
             
+            // Validate IR Blaster configuration (if provided)
+            if (rackDeviceData.ir_blaster_config) {
+                if (!/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(rackDeviceData.ir_blaster_config.ir_blaster_ip)) {
+                    alert('❌ IR Blaster IP: Please enter a valid IP address (e.g., 10.0.0.50)');
+                    return;
+                }
+                if (!rackDeviceData.ir_blaster_config.ir_blaster_port || isNaN(rackDeviceData.ir_blaster_config.ir_blaster_port)) {
+                    alert('❌ IR Blaster Port: Please enter a valid port number');
+                    return;
+                }
+            }
+            
+            // Validate Power Control configuration (if provided)
+            if (rackDeviceData.power_control_config) {
+                if (!rackDeviceData.power_control_config.power_ip) {
+                    alert('❌ Power Device IP: This field is required when Power Control Type is selected');
+                    return;
+                }
+                if (!/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(rackDeviceData.power_control_config.power_ip)) {
+                    alert('❌ Power Device IP: Please enter a valid IP address (e.g., 10.0.0.51)');
+                    return;
+                }
+                if (!rackDeviceData.power_control_config.power_outlet) {
+                    alert('❌ Power Outlet / Port Number: This field is required when Power Control Type is selected');
+                    return;
+                }
+            }
+            
             // Determine if adding new or updating
             const isUpdate = !!editIp;
             const method = isUpdate ? 'PUT' : 'POST';
@@ -4047,6 +4040,16 @@
                     document.getElementById('rpi-port').value = '60201';
                     document.getElementById('rpi-username').value = 'pi';
                     document.getElementById('rpi-password').value = '';
+                    // Reset IR Blaster fields
+                    document.getElementById('rack-ir-blaster-ip').value = '';
+                    document.getElementById('rack-ir-blaster-port').value = '4998';
+                    document.getElementById('rack-ir-connector').value = '';
+                    // Reset Power Control fields
+                    document.getElementById('rack-power-type').value = '';
+                    document.getElementById('rack-power-ip').value = '';
+                    document.getElementById('rack-power-outlet').value = '';
+                    document.getElementById('rack-power-username').value = '';
+                    document.getElementById('rack-power-password').value = '';
                     
                     // Reset button state after update
                     const addRackBtn = document.getElementById('add-rack-device-btn');
@@ -4332,8 +4335,16 @@
             const modal = document.getElementById('deviceManagementModal');
             const bootstrapModal = new bootstrap.Modal(modal);
             
-            // Refresh device display to show DESK and GDF_RACK sections correctly
-            updateDeviceListDisplay();
+            // Fetch and render devices with location grouping
+            fetch('/api/devices', { credentials: 'include' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.devices) {
+                        renderGroupedDeskDevices(data.devices);
+                        renderRackDevices(data.devices);
+                    }
+                })
+                .catch(err => console.error('❌ Error fetching devices:', err));
             
             bootstrapModal.show();
         }
@@ -4375,6 +4386,190 @@
             }
             
             console.log('✅ Device list display updated');
+        }
+        
+        // Helper: Parse location code to display name
+        function parseLocationDisplay(locationCode) {
+            const locationMap = {
+                'IND:BLR': { display: 'INDIA : BLR', name: '(Bengaluru)' },
+                'IND:CHN': { display: 'INDIA : CHN', name: '(Chennai)' },
+                'IND:MUM': { display: 'INDIA : MUM', name: '(Mumbai)' },
+                'IND:DEL': { display: 'INDIA : DEL', name: '(Delhi)' },
+                'US:NYC': { display: 'US : NYC', name: '(New York)' },
+                'US:LAX': { display: 'US : LAX', name: '(Los Angeles)' },
+                'US:CHI': { display: 'US : CHI', name: '(Chicago)' },
+                'UK:LON': { display: 'UK : LON', name: '(London)' },
+                'UK:MAN': { display: 'UK : MAN', name: '(Manchester)' }
+            };
+            
+            return locationMap[locationCode] || { display: locationCode, name: '' };
+        }
+        
+        // Helper: Group DESK devices by location
+        function groupDevicesByLocation(devices) {
+            const grouped = {};
+            const deskDevices = devices.filter(d => !d.is_rack_device);
+            
+            deskDevices.forEach(device => {
+                const location = device.location || 'US:NYC';
+                if (!grouped[location]) {
+                    grouped[location] = [];
+                }
+                grouped[location].push(device);
+            });
+            
+            return grouped;
+        }
+        
+        // Render DESK devices grouped by location
+        function renderGroupedDeskDevices(devices) {
+            const deskListDiv = document.getElementById('desk-devices-list');
+            if (!deskListDiv) return;
+            
+            const groupedDevices = groupDevicesByLocation(devices);
+            const locationKeys = Object.keys(groupedDevices).sort();
+            
+            if (locationKeys.length === 0) {
+                deskListDiv.innerHTML = '';
+                const emptyDiv = document.getElementById('desk-devices-empty');
+                if (emptyDiv) emptyDiv.style.display = 'block';
+                return;
+            }
+            
+            let html = '';
+            
+            locationKeys.forEach(locationCode => {
+                const locationInfo = parseLocationDisplay(locationCode);
+                const devicesInLocation = groupedDevices[locationCode];
+                
+                html += `
+                    <div style="margin-bottom: 1.5rem;">
+                        <h6 style="color: #60a5fa; font-size: 0.95rem; font-weight: 600; margin-bottom: 0.75rem; padding-left: 0.5rem; border-left: 3px solid #60a5fa;">
+                            <i class="bi bi-geo-alt"></i> ${locationInfo.display} <span style="color: #9ca3af; font-size: 0.85rem;">${locationInfo.name}</span>
+                        </h6>
+                        <div style="margin-left: 1rem;">
+                `;
+                
+                devicesInLocation.forEach(device => {
+                    const isAdmin = document.body.getAttribute('data-is-admin') === 'true';
+                    html += `
+                        <div class="device-item" data-ip="${device.ip}" data-team="${device.team_name || ''}">
+                            ${isAdmin ? `
+                                <div style="display: flex; align-items: center; margin-right: 0.75rem;">
+                                    <input type="checkbox" class="device-checkbox" value="${device.ip}" data-device-name="${device.name}" data-device-mac="${device.mac_address || 'N/A'}" 
+                                           onchange="updateDeviceSelectionCount()" 
+                                           style="width: 18px; height: 18px; cursor: pointer;">
+                                </div>
+                            ` : ''}
+                            <div class="device-item-info">
+                                <h6 class="device-item-name">${device.name}</h6>
+                                <div class="device-item-details">
+                                    <small class="device-item-detail">
+                                        <i class="bi bi-geo-alt-fill"></i> ${device.ip}
+                                    </small>
+                                    <small class="device-item-detail">
+                                        <i class="bi bi-ethernet"></i> ${device.mac_address || 'N/A'}
+                                    </small>
+                                    ${device.rpi_config && device.rpi_config.rpi_ip ? `
+                                        <small class="device-item-detail">
+                                            <i class="bi bi-cpu"></i> Via R-Pi: ${device.rpi_config.rpi_ip}:${device.rpi_config.rpi_port || 22}
+                                        </small>
+                                    ` : ''}
+                                </div>
+                                ${device.team_name ? `<small class="device-item-team"><i class="bi bi-people"></i> ${device.team_name}</small>` : ''}
+                            </div>
+                            <div class="device-item-actions">
+                                <button class="btn btn-info btn-sm" onclick="showMethodExecutionModal('${device.ip}')" title="Execute Method on Device">
+                                    <i class="bi bi-play-circle"></i>
+                                </button>
+                                <button class="btn btn-warning btn-sm" onclick="editDevice('${device.ip}')" title="Edit Device">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                ${isAdmin ? `
+                                    <button class="btn btn-danger btn-sm" onclick="removeDevice('${device.ip}')" title="Delete Device">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            deskListDiv.innerHTML = html;
+            
+            const emptyDiv = document.getElementById('desk-devices-empty');
+            if (emptyDiv) emptyDiv.style.display = 'none';
+        }
+        
+        // Render GDF_RACK devices
+        function renderRackDevices(devices) {
+            const rackListDiv = document.getElementById('rack-devices-list');
+            if (!rackListDiv) return;
+            
+            const rackDevices = devices.filter(d => d.is_rack_device);
+            
+            if (rackDevices.length === 0) {
+                rackListDiv.innerHTML = '';
+                const emptyDiv = document.getElementById('rack-devices-empty');
+                if (emptyDiv) emptyDiv.style.display = 'block';
+                return;
+            }
+            
+            let html = '';
+            const isAdmin = document.body.getAttribute('data-is-admin') === 'true';
+            
+            rackDevices.forEach(device => {
+                html += `
+                    <div class="device-item" data-ip="${device.ip}" data-team="${device.team_name || ''}" data-is-rack="true">
+                        ${isAdmin ? `
+                            <div style="display: flex; align-items: center; margin-right: 0.75rem;">
+                                <input type="checkbox" class="device-checkbox" value="${device.ip}" data-device-name="${device.name}" data-device-mac="${device.mac_address || 'N/A'}" 
+                                       onchange="updateDeviceSelectionCount()" 
+                                       style="width: 18px; height: 18px; cursor: pointer;">
+                            </div>
+                        ` : ''}
+                        <div class="device-item-info">
+                            <h6 class="device-item-name">${device.name}</h6>
+                            <div class="device-item-details">
+                                <small class="device-item-detail">
+                                    <i class="bi bi-tv"></i> Lab Device: ${device.ip}
+                                </small>
+                                <small class="device-item-detail">
+                                    <i class="bi bi-cpu"></i> Via R-Pi: ${(device.rpi_config && device.rpi_config.rpi_ip ? device.rpi_config.rpi_ip : 'N/A')}:${(device.rpi_config && device.rpi_config.rpi_port ? device.rpi_config.rpi_port : 60201)}
+                                </small>
+                                <small class="device-item-detail">
+                                    <i class="bi bi-ethernet"></i> ${device.mac_address || 'N/A'}
+                                </small>
+                            </div>
+                            ${device.team_name ? `<small class="device-item-team"><i class="bi bi-people"></i> ${device.team_name}</small>` : ''}
+                        </div>
+                        <div class="device-item-actions">
+                            <button class="btn btn-info btn-sm" onclick="showMethodExecutionModal('${device.ip}')" title="Execute Method on Device">
+                                <i class="bi bi-play-circle"></i>
+                            </button>
+                            <button class="btn btn-warning btn-sm" onclick="editDevice('${device.ip}')" title="Edit Device">
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            ${isAdmin ? `
+                                <button class="btn btn-danger btn-sm" onclick="removeDevice('${device.ip}')" title="Delete Device">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            rackListDiv.innerHTML = html;
+            
+            const emptyDiv = document.getElementById('rack-devices-empty');
+            if (emptyDiv) emptyDiv.style.display = 'none';
         }
         
         // NEW: Refresh device list from backend to remove deleted devices
@@ -4481,6 +4676,11 @@
                         console.warn('⚠️  No devices available after refresh');
                         deviceSelector.innerHTML = '<p style="color: #9ca3af; margin: 0; text-align: center; padding: 1rem;">No devices available</p>';
                     }
+                    
+                    // Also update the device management lists (DESK and RACK grouped by location)
+                    renderGroupedDeskDevices(data.devices);
+                    renderRackDevices(data.devices);
+                    console.log('✅ Device lists rendered with location grouping');
                 })
                 .catch(error => {
                     console.error('❌ Error refreshing device list:', error);
@@ -4585,6 +4785,9 @@
                         statusBadge.style.background = '#6b7280';
                         
                         // Check SSH connectivity
+                        const rpiIp = row.getAttribute('data-rpi-ip');
+                        const isRack = row.getAttribute('data-is-rack') === 'true';
+                        
                         fetch('/api/test_connection', {
                             method: 'POST',
                             headers: {
@@ -4592,7 +4795,9 @@
                             },
                             credentials: 'include',
                             body: JSON.stringify({
-                                device_ip: deviceIp
+                                device_ip: deviceIp,
+                                rpi_ip: rpiIp,
+                                is_rack_device: isRack
                             })
                         })
                         .then(response => response.json())
@@ -9198,6 +9403,21 @@
             }
         }
         
+        function toggleDeviceFields() {
+            const category = document.getElementById('device-category').value;
+            const deskFields = document.getElementById('desk-device-fields');
+            
+            if (category === 'desk') {
+                // Show desk device fields
+                deskFields.style.display = 'block';
+                console.log('✅ Showing Desk Device fields');
+            } else if (category === 'lab') {
+                // Lab device fields visible (for future implementation)
+                deskFields.style.display = 'block';
+                console.log('✅ Showing Lab Device fields');
+            }
+        }
+        
         function editDevice(deviceIp) {
             console.log('🖊️ Editing device:', deviceIp);
             // Fetch device details
@@ -9227,6 +9447,20 @@
                             document.getElementById('rpi-username').value = rpiConfig.rpi_username || 'pi';
                             document.getElementById('rpi-password').value = rpiConfig.rpi_password || '';
                             
+                            // Populate IR Blaster configuration
+                            const irBlasterConfig = device.ir_blaster_config || {};
+                            document.getElementById('rack-ir-blaster-ip').value = irBlasterConfig.ir_blaster_ip || '';
+                            document.getElementById('rack-ir-blaster-port').value = irBlasterConfig.ir_blaster_port || 4998;
+                            document.getElementById('rack-ir-connector').value = irBlasterConfig.ir_connector || '';
+                            
+                            // Populate Power Control configuration
+                            const powerConfig = device.power_control_config || {};
+                            document.getElementById('rack-power-type').value = powerConfig.power_type || '';
+                            document.getElementById('rack-power-ip').value = powerConfig.power_ip || '';
+                            document.getElementById('rack-power-outlet').value = powerConfig.power_outlet || '';
+                            document.getElementById('rack-power-username').value = powerConfig.power_username || '';
+                            document.getElementById('rack-power-password').value = powerConfig.power_password || '';
+                            
                             // Change button text to Update and set edit flag
                             const addRackBtn = document.getElementById('add-rack-device-btn');
                             addRackBtn.innerHTML = '<i class="bi bi-check-lg"></i> Update GDF_RACK Device';
@@ -9244,8 +9478,15 @@
                             document.getElementById('device-ip').value = device.ip || '';
                             document.getElementById('device-type').value = device.device_type || 'XUMO';
                             document.getElementById('device-mac').value = device.mac_address || '';
-                            document.getElementById('device-location').value = device.location || 'US';
+                            document.getElementById('device-location').value = device.location || 'US:NYC';
                             document.getElementById('device-team').value = device.team_name || '';
+                            
+                            // Populate R-Pi tunnel configuration (REQUIRED for DESK devices)
+                            const rpiConfig = device.rpi_config || {};
+                            document.getElementById('desk-rpi-ip').value = rpiConfig.rpi_ip || '';
+                            document.getElementById('desk-rpi-port').value = rpiConfig.rpi_port || 22;
+                            document.getElementById('desk-rpi-username').value = rpiConfig.rpi_username || 'pi';
+                            document.getElementById('desk-rpi-password').value = rpiConfig.rpi_password || '';
                             
                             // IR Configuration fields
                             const irConfig = device.ir_config || {};

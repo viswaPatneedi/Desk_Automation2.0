@@ -70,21 +70,23 @@ class DeviceController:
             # Check if this is a RACK device
             is_rack_device = data.get('is_rack_device', False)
             
+            # R-Pi configuration is now REQUIRED for both DESK and RACK devices
+            rpi_required_fields = ['rpi_ip', 'rpi_username', 'rpi_password']
+            rpi_config_data = data.get('rpi_config', {})
+            
+            # Validate R-Pi configuration (required for both device types)
+            for field in rpi_required_fields:
+                if field not in rpi_config_data or not rpi_config_data[field]:
+                    return jsonify({'error': f'Missing R-Pi tunnel configuration: {field}'}), 400
+            
             # Validate required fields based on device type
             if is_rack_device:
                 # RACK device validation
                 required_fields = ['name', 'device_type', 'location']
-                rpi_required_fields = ['rpi_ip', 'rpi_username', 'rpi_password']
                 
                 for field in required_fields:
                     if field not in data:
                         return jsonify({'error': f'Missing required RACK field: {field}'}), 400
-                
-                # Check R-Pi configuration in rpi_config nested object
-                rpi_config = data.get('rpi_config', {})
-                for field in rpi_required_fields:
-                    if field not in rpi_config or not rpi_config[field]:
-                        return jsonify({'error': f'Missing R-Pi configuration: {field}'}), 400
             else:
                 # DESK device validation
                 required_fields = ['name', 'device_type', 'mac_address', 'location']
@@ -99,17 +101,13 @@ class DeviceController:
             else:
                 team_name = getattr(current_user, 'team_name', '')
 
-            # Build R-Pi config for RACK devices
-            rpi_config = {}
-            if is_rack_device:
-                # Extract R-Pi config from nested structure (frontend sends it in rpi_config object)
-                rpi_config_data = data.get('rpi_config', {})
-                rpi_config = {
-                    'rpi_ip': rpi_config_data.get('rpi_ip'),
-                    'rpi_port': rpi_config_data.get('rpi_port', 60201),
-                    'rpi_username': rpi_config_data.get('rpi_username'),
-                    'rpi_password': rpi_config_data.get('rpi_password')
-                }
+            # Build R-Pi config for both DESK and RACK devices
+            rpi_config = {
+                'rpi_ip': rpi_config_data.get('rpi_ip'),
+                'rpi_port': rpi_config_data.get('rpi_port', 22 if not is_rack_device else 60201),
+                'rpi_username': rpi_config_data.get('rpi_username', 'pi'),
+                'rpi_password': rpi_config_data.get('rpi_password')
+            }
 
             # Create device object
             device = Device(
@@ -127,7 +125,9 @@ class DeviceController:
                 location=data.get('location', ''),
                 team_name=team_name,
                 is_rack_device=is_rack_device,
-                rpi_config=rpi_config
+                rpi_config=rpi_config,
+                ir_blaster_config=data.get('ir_blaster_config', {}),
+                power_control_config=data.get('power_control_config', {})
             )
 
             # Add device
@@ -288,17 +288,16 @@ class DeviceController:
             mac_address = data.get('mac_address', existing_device.mac_address)
             ir_config = data.get('ir_config', existing_device.ir_config)
             
-            # Handle R-Pi config for RACK devices
+            # Handle R-Pi config for both DESK and RACK devices
             rpi_config = existing_device.rpi_config
-            if is_rack_device:
-                rpi_config_data = data.get('rpi_config', {})
-                if rpi_config_data:
-                    rpi_config = {
-                        'rpi_ip': rpi_config_data.get('rpi_ip', rpi_config.get('rpi_ip') if rpi_config else ''),
-                        'rpi_port': rpi_config_data.get('rpi_port', rpi_config.get('rpi_port', 60201) if rpi_config else 60201),
-                        'rpi_username': rpi_config_data.get('rpi_username', rpi_config.get('rpi_username', 'pi') if rpi_config else 'pi'),
-                        'rpi_password': rpi_config_data.get('rpi_password', rpi_config.get('rpi_password') if rpi_config else '')
-                    }
+            rpi_config_data = data.get('rpi_config', {})
+            if rpi_config_data:
+                rpi_config = {
+                    'rpi_ip': rpi_config_data.get('rpi_ip', rpi_config.get('rpi_ip') if rpi_config else ''),
+                    'rpi_port': rpi_config_data.get('rpi_port', rpi_config.get('rpi_port', 22 if not is_rack_device else 60201) if rpi_config else (22 if not is_rack_device else 60201)),
+                    'rpi_username': rpi_config_data.get('rpi_username', rpi_config.get('rpi_username', 'pi') if rpi_config else 'pi'),
+                    'rpi_password': rpi_config_data.get('rpi_password', rpi_config.get('rpi_password') if rpi_config else '')
+                }
 
             # Check if new IP already exists (and it's not the old IP)
             if device_ip != old_ip:
@@ -327,7 +326,9 @@ class DeviceController:
                 location=location,
                 team_name=team_name,
                 is_rack_device=existing_device.is_rack_device,
-                rpi_config=rpi_config
+                rpi_config=rpi_config,
+                ir_blaster_config=data.get('ir_blaster_config', existing_device.ir_blaster_config),
+                power_control_config=data.get('power_control_config', existing_device.power_control_config)
             )
             
             # Update device
@@ -353,9 +354,11 @@ class DeviceController:
     
     @staticmethod
     def test_connection():
-        """POST /api/test_connection - Test SSH connection to device"""
+        """POST /api/test_connection - Test device connection via R-Pi or direct SSH"""
         data = request.json
         device_ip = data.get('device_ip')
+        rpi_ip = data.get('rpi_ip')
+        is_rack_device = data.get('is_rack_device', False)
         
         if not device_ip:
             return jsonify({'error': 'Device IP is required'}), 400
@@ -364,7 +367,13 @@ class DeviceController:
         if not device:
             return jsonify({'error': 'Device not found'}), 404
         
-        success, message = device.validate_connection()
+        # If R-Pi IP is provided, validate via R-Pi first, then check device status through R-Pi
+        if rpi_ip and (is_rack_device or device.rpi_config):
+            success, message = device.validate_connection_via_rpi(rpi_ip)
+        else:
+            # Direct SSH connection (fallback if no R-Pi info)
+            success, message = device.validate_connection()
+        
         return jsonify({
             'success': success,
             'message': message

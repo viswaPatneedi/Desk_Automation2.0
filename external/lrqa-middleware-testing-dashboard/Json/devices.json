@@ -15,10 +15,17 @@
         "use_jump_host": false,
         "jump_host_config": {},
         "device_type": "XUMO",
-        "location": "US",
+        "location": "US:NYC",
         "team_name": "LRQA",
         "is_rack_device": false,
-        "rpi_config": {},
+        "rpi_config": {
+            "rpi_ip": "71.230.73.95",
+            "rpi_port": 22,
+            "rpi_username": "lrqa",
+            "rpi_password": "Viswa123!"
+        },
+        "ir_blaster_config": {},
+        "power_control_config": {},
         "is_active": true
     },
     {
@@ -42,6 +49,8 @@
             "rpi_username": "pi",
             "rpi_password": "Eastcoast-Goldfish-Progress"
         },
+        "ir_blaster_config": {},
+        "power_control_config": {},
         "is_active": true
     }
 ]
