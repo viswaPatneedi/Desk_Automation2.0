@@ -1376,17 +1376,17 @@
                                     <i class="bi bi-arrow-clockwise" id="refresh-icon"></i> Check Status
                                 </button>
                             </div>
-                            <div id="device-selector" style="border: 1px solid #6b7280; border-radius: 6px; padding: 0.75rem; max-height: 300px; overflow-y: auto;">
+                            <div id="device-selector" style="border: 1px solid #6b7280; border-radius: 6px; padding: 0.75rem; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column;">
                                 <!-- DESK Devices Section -->
-                                <div style="margin-bottom: 1rem;">
+                                <div style="margin-bottom: 1rem; display: flex; flex-direction: column;">
                                     <div style="color: #10b981; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">
                                         <i class="bi bi-desktop"></i> DESK Devices
                                     </div>
-                                    <div id="desk-device-selector">
+                                    <div id="desk-device-selector" style="display: flex; flex-direction: column; gap: 0.5rem;">
                                     {% if devices %}
                                         {% for device in devices %}
                                         {% if not device.is_rack_device %}
-                                        <div class="device-row" data-device-ip="{{ device.ip }}" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; margin-bottom: 0.5rem; border: 1px solid #475569;">
+                                        <div class="device-row" data-device-ip="{{ device.ip }}" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; border: 1px solid #475569; transition: all 0.3s ease; order: 0;">
                                             <input type="checkbox" class="form-check-input device-checkbox" id="device-{{ device.ip }}" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" style="margin-right: 1rem; width: 18px; height: 18px; cursor: pointer;">
                                             <div style="flex: 1;">
                                                 <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">{{ device.name }} • <span style="color: #9ca3af; font-size: 0.85rem;">{{ device.ip }} • <span class="device-mac-display">{{ device.mac_address or 'N/A' }}</span></span> </div>
@@ -1405,15 +1405,15 @@
                                 </div>
 
                                 <!-- GDF_RACK Devices Section -->
-                                <div style="margin-bottom: 1rem; border-top: 1px solid #475569; padding-top: 1rem;">
+                                <div style="margin-bottom: 1rem; border-top: 1px solid #475569; padding-top: 1rem; display: flex; flex-direction: column;">
                                     <div style="color: #f59e0b; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.9rem;">
                                         <i class="bi bi-hdd-rack-fill"></i> GDF_RACK Devices (Lab)
                                     </div>
-                                    <div id="rack-device-selector">
+                                    <div id="rack-device-selector" style="display: flex; flex-direction: column; gap: 0.5rem;">
                                     {% if devices %}
                                         {% for device in devices %}
                                         {% if device.is_rack_device %}
-                                        <div class="device-row" data-device-ip="{{ device.ip }}" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; margin-bottom: 0.5rem; border: 1px solid #f59e0b33;">
+                                        <div class="device-row" data-device-ip="{{ device.ip }}" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; border: 1px solid #f59e0b33; transition: all 0.3s ease; order: 0;">
                                             <input type="checkbox" class="form-check-input device-checkbox" id="device-{{ device.ip }}" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" style="margin-right: 1rem; width: 18px; height: 18px; cursor: pointer;">
                                             <div style="flex: 1;">
                                                 <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">{{ device.name }} • <span style="color: #9ca3af; font-size: 0.85rem;">Lab: {{ device.ip }} via R-Pi {{ device.rpi_ip or 'N/A' }}</span> </div>
@@ -4594,84 +4594,68 @@
         // Reorganize device list to show Active devices first, then Busy devices, then Inactive devices
         function reorganizeDeviceList(container, activeDevices, busyDevices = [], inactiveDevices) {
             console.log(`📊 Reorganizing device list: ${activeDevices.length} active, ${busyDevices.length} busy, ${inactiveDevices.length} inactive`);
+            console.log('🎯 Preserving DESK/GDF_RACK structure - organizing by device type and status');
             
-            // Clear container
-            const existingContent = container.innerHTML;
-            container.innerHTML = '';
+            // Get DESK and GDF_RACK device selectors
+            const deskSelector = document.getElementById('desk-device-selector');
+            const rackSelector = document.getElementById('rack-device-selector');
             
-            // Add "ACTIVE DEVICES" section
-            if (activeDevices.length > 0) {
-                const activeSection = document.createElement('div');
-                activeSection.style.marginBottom = '1rem';
-                activeSection.innerHTML = '<div style="color: #10b981; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem;"><i class="bi bi-check-circle-fill"></i> ACTIVE DEVICES</div>';
-                
-                activeDevices.forEach(({ row }) => {
-                    const clonedRow = row.cloneNode(true);
-                    const checkbox = clonedRow.querySelector('.device-checkbox');
-                    const originalCheckbox = row.querySelector('.device-checkbox');
-                    if (checkbox && originalCheckbox) {
-                        // Preserve checked state
-                        checkbox.checked = originalCheckbox.checked;
-                        console.log(`  ${originalCheckbox.getAttribute('data-device-name')}: checked=${checkbox.checked}`);
-                        checkbox.disabled = false;
-                        checkbox.style.cursor = 'pointer';
-                    }
-                    activeSection.appendChild(clonedRow);
-                });
-                
-                container.appendChild(activeSection);
+            if (!deskSelector || !rackSelector) {
+                console.warn('⚠️  Device selectors not found - skipping reorganization');
+                return;
             }
             
-            // Add "BUSY DEVICES" section
-            if (busyDevices.length > 0) {
-                const busySection = document.createElement('div');
-                busySection.style.marginBottom = '1rem';
-                busySection.innerHTML = '<div style="color: #fbbf24; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem;"><i class="bi bi-hourglass-split"></i> BUSY DEVICES (Executing)</div>';
+            // Helper function to reorganize devices within a section
+            function reorganizeSection(selector, sectionName) {
+                const deviceRows = Array.from(selector.querySelectorAll('.device-row'));
                 
-                busyDevices.forEach(({ row }) => {
-                    const clonedRow = row.cloneNode(true);
-                    const checkbox = clonedRow.querySelector('.device-checkbox');
-                    const originalCheckbox = row.querySelector('.device-checkbox');
-                    if (checkbox && originalCheckbox) {
-                        // Preserve checked state
-                        checkbox.checked = originalCheckbox.checked;
-                        console.log(`  ${originalCheckbox.getAttribute('data-device-name')}: checked=${checkbox.checked}`);
-                        checkbox.disabled = false;
-                        checkbox.style.cursor = 'pointer';
+                if (deviceRows.length === 0) {
+                    console.log(`ℹ️  ${sectionName}: No devices in section`);
+                    return;
+                }
+                
+                // Map devices by status
+                const deskActive = [];
+                const deskBusy = [];
+                const deskInactive = [];
+                
+                deviceRows.forEach(row => {
+                    const status = row.getAttribute('data-device-status') || 'unknown';
+                    const ip = row.getAttribute('data-device-ip');
+                    
+                    if (status === 'active') {
+                        deskActive.push({ row, ip });
+                    } else if (status === 'busy') {
+                        deskBusy.push({ row, ip });
+                    } else {
+                        deskInactive.push({ row, ip });
                     }
-                    busySection.appendChild(clonedRow);
                 });
                 
-                container.appendChild(busySection);
-            }
-            
-            // Add "INACTIVE DEVICES" section
-            if (inactiveDevices.length > 0) {
-                const inactiveSection = document.createElement('div');
-                inactiveSection.style.marginTop = '1rem';
-                inactiveSection.innerHTML = '<div style="color: #ef4444; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem;"><i class="bi bi-x-circle-fill"></i> INACTIVE DEVICES</div>';
+                console.log(`  ${sectionName}: ${deskActive.length} active, ${deskBusy.length} busy, ${deskInactive.length} inactive`);
                 
-                inactiveDevices.forEach(({ row }) => {
-                    const clonedRow = row.cloneNode(true);
-                    const checkbox = clonedRow.querySelector('.device-checkbox');
-                    const originalCheckbox = row.querySelector('.device-checkbox');
-                    if (checkbox && originalCheckbox) {
-                        // Preserve checked state
-                        checkbox.checked = originalCheckbox.checked;
-                        console.log(`  ${originalCheckbox.getAttribute('data-device-name')}: checked=${checkbox.checked}`);
-                        // Allow selection of inactive devices
-                        checkbox.disabled = false;
-                        checkbox.style.cursor = 'pointer';
-                        checkbox.style.opacity = '1';
-                        checkbox.title = 'Device is currently inactive - you can still queue jobs for it';
-                    }
-                    inactiveSection.appendChild(clonedRow);
+                // Reorder: Active > Busy > Inactive
+                const sortedDevices = [...deskActive, ...deskBusy, ...deskInactive];
+                
+                // Clear and rebuild section maintaining order
+                const fragment = document.createDocumentFragment();
+                sortedDevices.forEach((device, index) => {
+                    device.row.style.order = index;
+                    fragment.appendChild(device.row);
                 });
                 
-                container.appendChild(inactiveSection);
+                // Clear selector and re-append in order
+                selector.innerHTML = '';
+                selector.appendChild(fragment);
+                
+                console.log(`✅ ${sectionName}: Reorganized with Active → Busy → Inactive order`);
             }
             
-            console.log('✅ Device list reorganized - Checkbox states preserved!');
+            // Reorganize DESK and GDF_RACK sections independently
+            reorganizeSection(deskSelector, '📱 DESK Devices');
+            reorganizeSection(rackSelector, '🖥️  GDF_RACK Devices');
+            
+            console.log('✅ Device list reorganized while preserving DESK/GDF_RACK structure!');
         }
         
         // Drag and Drop - Allow dragging methods
