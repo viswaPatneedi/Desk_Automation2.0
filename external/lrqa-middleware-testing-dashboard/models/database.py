@@ -23,7 +23,7 @@ DB_HOST = os.environ.get('DB_HOST', 'localhost')
 DB_PORT = os.environ.get('DB_PORT', '5432')
 DB_NAME = os.environ.get('DB_NAME', 'lrqa_v2')  # Match Flask config default
 DB_USER = os.environ.get('DB_USER', 'lrqa')  # Changed from 'postgres' to 'lrqa'
-DB_PASSWORD = os.environ.get('DB_PASSWORD', 'lrqa_password')  # Changed from 'postgres' to 'lrqa_password'
+DB_PASSWORD = os.environ.get('DB_PASSWORD', 'lrqa_password')  # Correct password
 
 # Build DATABASE_URL from individual components OR use provided DATABASE_URL
 DATABASE_URL = os.environ.get(
@@ -119,6 +119,7 @@ class Device(Base):
     # IR Blaster and Power Control configurations (optional)
     ir_blaster_config = Column(JSON)
     power_control_config = Column(JSON)
+    shared_with_teams = Column(JSON, default={})
     created_by = Column(Integer, ForeignKey('users.id'))
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))

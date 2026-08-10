@@ -43,7 +43,7 @@ def check_ssh_connectivity(device_ip, port=10022, username="root", password="", 
         return False
 
 
-def execute_standby_deep_sleep_ir_control_process(device_ip, port, username, password, iteration=1, device_name="Device", combined_method_name=None, remote_type=None, job_id=None, timeout_seconds=600):
+def execute_standby_deep_sleep_ir_control_process(device_ip, port, username, password, iteration=1, device_name="Device", combined_method_name=None, remote_type=None, job_id=None, timeout_seconds=600, tunnel_service=None):
     """
     Execute Standby & Deep Sleep IR Control method with timeout protection
     

@@ -1,36 +1,7 @@
 [
     {
-        "ip": "10.0.0.250",
-        "name": "ELEMENT_A4K",
-        "username": "root",
-        "password": "",
-        "port": 10022,
-        "ir_config": {
-            "itach_ip": "10.0.0.50",
-            "itach_port": 4998,
-            "ir_port": "3"
-        },
-        "mac_address": "1C:2F:A2:30:35:B6",
-        "vnc_url": "http://10.0.0.250:5800/",
-        "use_jump_host": false,
-        "jump_host_config": {},
-        "device_type": "XUMO",
-        "location": "US:NYC",
-        "team_name": "LRQA",
-        "is_rack_device": false,
-        "rpi_config": {
-            "rpi_ip": "71.230.73.95",
-            "rpi_port": 22,
-            "rpi_username": "lrqa",
-            "rpi_password": "Viswa123!"
-        },
-        "ir_blaster_config": {},
-        "power_control_config": {},
-        "is_active": true
-    },
-    {
         "ip": "10.0.0.140",
-        "name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+        "name": "DT-XIONE_UK-0D-AB",
         "username": "root",
         "password": "",
         "port": 10022,
@@ -40,17 +11,101 @@
         "use_jump_host": false,
         "jump_host_config": {},
         "device_type": "SKY STREAM",
-        "location": "US",
+        "location": "USA:DT-LAB-PHILLY",
         "team_name": "LRQA",
         "is_rack_device": true,
         "rpi_config": {
             "rpi_ip": "10.138.17.42",
             "rpi_port": 60201,
-            "rpi_username": "pi",
-            "rpi_password": "Eastcoast-Goldfish-Progress"
+            "rpi_password": "Eastcoast-Goldfish-Progress",
+            "rpi_username": "pi"
         },
         "ir_blaster_config": {},
         "power_control_config": {},
+        "created_by": "",
+        "shared_with_teams": {},
+        "is_active": true
+    },
+    {
+        "ip": "10.0.0.28",
+        "name": "DT-XIONE_UK-17-97",
+        "username": "root",
+        "password": "",
+        "port": 10022,
+        "ir_config": {},
+        "mac_address": "04:B8:6A:14:17:97",
+        "vnc_url": "http://10.0.0.28:5800/",
+        "use_jump_host": false,
+        "jump_host_config": {},
+        "device_type": "SKY STREAM",
+        "location": "USA:DT-LAB-PHILLY",
+        "team_name": "LRQA",
+        "is_rack_device": true,
+        "rpi_config": {
+            "rpi_ip": "10.138.17.42",
+            "rpi_port": 60201,
+            "rpi_password": "Eastcoast-Goldfish-Progress",
+            "rpi_username": "pi"
+        },
+        "ir_blaster_config": {},
+        "power_control_config": {},
+        "created_by": "",
+        "shared_with_teams": {},
+        "is_active": true
+    },
+    {
+        "ip": "10.0.0.199",
+        "name": "DT-XIONE_UK-5D-54",
+        "username": "root",
+        "password": "",
+        "port": 10022,
+        "ir_config": {},
+        "mac_address": "04:B8:6A:14:5D:54",
+        "vnc_url": "http://10.0.0.199:5800/",
+        "use_jump_host": false,
+        "jump_host_config": {},
+        "device_type": "SKY STREAM",
+        "location": "USA:DT-LAB-PHILLY",
+        "team_name": "LRQA",
+        "is_rack_device": true,
+        "rpi_config": {
+            "rpi_ip": "10.138.17.42",
+            "rpi_port": 60201,
+            "rpi_password": "Eastcoast-Goldfish-Progress",
+            "rpi_username": "pi"
+        },
+        "ir_blaster_config": {},
+        "power_control_config": {},
+        "created_by": "",
+        "shared_with_teams": {
+            "Dev_QA": "use"
+        },
+        "is_active": true
+    },
+    {
+        "ip": "10.0.0.250",
+        "name": "ELEMENT_A4K",
+        "username": "root",
+        "password": "",
+        "port": 10022,
+        "ir_config": {
+            "ir_port": "3",
+            "itach_ip": "10.0.0.50",
+            "itach_port": 4998
+        },
+        "mac_address": "1C:2F:A2:30:35:B6",
+        "vnc_url": "http://10.0.0.250:5800/",
+        "use_jump_host": false,
+        "jump_host_config": {},
+        "device_type": "XUMO",
+        "location": "US",
+        "team_name": "LRQA",
+        "is_rack_device": false,
+        "rpi_config": {},
+        "ir_blaster_config": {},
+        "power_control_config": {},
+        "created_by": "",
+        "shared_with_teams": {},
         "is_active": true
     }
 ]

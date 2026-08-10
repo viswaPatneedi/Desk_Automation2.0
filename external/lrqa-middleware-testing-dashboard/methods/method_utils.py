@@ -176,14 +176,26 @@ def log_message(message, write_to_file=True, log_callback=None):
         print(formatted_message)
 
 def fetch_build_details(ssh, log_callback=None):
-    """Fetch build details from device using cat /version.txt"""
+    """Fetch build details from device using cat /version.txt
+    
+    This executes on the device via R-Pi SSH tunnel.
+    Command flow: Flask → R-Pi tunnel → Device SSH → cat /version.txt
+    """
     def log(message):
         log_message(message, log_callback=log_callback)
     
     try:
         log("Fetching build details from device...")
+        log("  Executing: cat /version.txt on device via R-Pi tunnel")
+        
         stdin, stdout, stderr = ssh.exec_command("cat /version.txt")
+        
+        # Read both stdout and stderr to diagnose issues
         build_info = stdout.read().decode('utf-8', errors='ignore').strip()
+        error_output = stderr.read().decode('utf-8', errors='ignore').strip()
+        
+        if error_output:
+            log(f"⚠ SSH Command stderr: {error_output[:200]}")
         
         if build_info:
             log("✓ Build Details:")
@@ -192,9 +204,11 @@ def fetch_build_details(ssh, log_callback=None):
             return build_info
         else:
             log("⚠ No build details found in /version.txt")
+            log("  (File may not exist or device/R-Pi tunnel not responding)")
             return None
     except Exception as e:
         log(f"⚠ Error fetching build details: {e}")
+        log(f"  (Check if R-Pi SSH tunnel is properly established)")
         return None
 
 def activate_screencapture_service(ssh, log_callback=None, timeout=10):

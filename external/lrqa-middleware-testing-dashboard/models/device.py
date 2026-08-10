@@ -3,6 +3,7 @@ Device Model - Represents a test device entity
 Handles device data persistence and validation
 """
 
+from __future__ import annotations
 import json
 import os
 from typing import List, Dict, Optional
@@ -23,7 +24,8 @@ class Device:
     def __init__(self, ip: str, name: str, username: str, password: str, 
                  port: int = 10022, ir_config: Optional[Dict] = None, mac_address: str = None, vnc_url: str = None,
                  use_jump_host: bool = False, jump_host_config: Optional[Dict] = None, device_type: str = None, location: str = None, team_name: str = None,
-                 is_rack_device: bool = False, rpi_config: Optional[Dict] = None, ir_blaster_config: Optional[Dict] = None, power_control_config: Optional[Dict] = None):
+                 is_rack_device: bool = False, rpi_config: Optional[Dict] = None, ir_blaster_config: Optional[Dict] = None, power_control_config: Optional[Dict] = None,
+                 created_by: str = None, shared_with_teams: Optional[Dict] = None):
         self.original_ip = ip  # Store original IP for VNC URL generation
         self.ip = ip
         self.name = name
@@ -42,6 +44,8 @@ class Device:
         self.rpi_config = rpi_config or {}
         self.ir_blaster_config = ir_blaster_config or {}
         self.power_control_config = power_control_config or {}
+        self.created_by = created_by or ''  # Track device creator for permissions
+        self.shared_with_teams = shared_with_teams or {}  # {team_name: access_level}
     
     @property
     def vnc_url(self) -> str:
@@ -67,7 +71,9 @@ class Device:
             'is_rack_device': self.is_rack_device,
             'rpi_config': self.rpi_config,
             'ir_blaster_config': self.ir_blaster_config,
-            'power_control_config': self.power_control_config
+            'power_control_config': self.power_control_config,
+            'created_by': self.created_by,
+            'shared_with_teams': self.shared_with_teams
         }
 
     def to_storage_dict(self) -> Dict:
@@ -90,6 +96,8 @@ class Device:
             'rpi_config': self.rpi_config,
             'ir_blaster_config': self.ir_blaster_config,
             'power_control_config': self.power_control_config,
+            'created_by': self.created_by,
+            'shared_with_teams': self.shared_with_teams,
             'is_active': True
         }
     
@@ -123,7 +131,9 @@ class Device:
             is_rack_device=data.get('is_rack_device', False),
             rpi_config=data.get('rpi_config', {}),
             ir_blaster_config=data.get('ir_blaster_config', {}),
-            power_control_config=data.get('power_control_config', {})
+            power_control_config=data.get('power_control_config', {}),
+            created_by=data.get('created_by', ''),
+            shared_with_teams=data.get('shared_with_teams', {})
         )
         # Apply tunnel mode connection parameters if enabled
         if TUNNEL_MODE:
@@ -161,18 +171,32 @@ class Device:
                         'location': row.location,
                         'team_name': row.team_name,
                         'is_rack_device': getattr(row, 'is_rack_device', False),
-                        'rpi_config': getattr(row, 'rpi_config', {}) or {}
+                        'rpi_config': getattr(row, 'rpi_config', {}) or {},
+                        'ir_blaster_config': getattr(row, 'ir_blaster_config', {}) or {},
+                        'power_control_config': getattr(row, 'power_control_config', {}) or {},
+                        'created_by': getattr(row, 'created_by', ''),
+                        'shared_with_teams': getattr(row, 'shared_with_teams', {}) or {}
                     }))
+                print(f"✅ Loaded {len(devices)} devices from database")
                 return devices
-        except Exception:
+        except Exception as e:
+            print(f"❌ Error loading from database: {e}")
             pass
         finally:
             session.close()
 
+        # Fallback to JSON
         if os.path.exists(DEVICES_FILE):
-            with open(DEVICES_FILE, 'r') as f:
-                devices_data = json.load(f)
-                return [Device.from_dict(d) for d in devices_data]
+            print(f"📄 Loading devices from JSON fallback: {DEVICES_FILE}")
+            try:
+                with open(DEVICES_FILE, 'r') as f:
+                    devices_data = json.load(f)
+                    print(f"✅ Loaded {len(devices_data)} devices from JSON")
+                    return [Device.from_dict(d) for d in devices_data]
+            except Exception as e:
+                print(f"❌ Error loading JSON: {e}")
+        
+        print(f"⚠️  No devices found!")
         return []
     
     @staticmethod
@@ -208,6 +232,7 @@ class Device:
                         ir_config=storage_data['ir_config'],
                         is_rack_device=storage_data['is_rack_device'],
                         rpi_config=storage_data['rpi_config'],
+                        shared_with_teams=storage_data.get('shared_with_teams', {}),
                         is_active=storage_data.get('is_active', True)
                     )
                     session.add(row)
@@ -226,19 +251,23 @@ class Device:
                     row.ir_config = storage_data['ir_config']
                     row.is_rack_device = storage_data['is_rack_device']
                     row.rpi_config = storage_data['rpi_config']
+                    row.shared_with_teams = storage_data.get('shared_with_teams', {})
                     row.is_active = storage_data.get('is_active', True)
 
             # Persist deletions by deactivating any currently-active DB rows not in active_ips.
+            print(f"🔍 [Database] Active IPs to keep: {active_ips}")
             if active_ips:
-                session.query(DBDevice).filter(
+                deactivated = session.query(DBDevice).filter(
                     DBDevice.is_active.is_(True),
                     ~DBDevice.ip.in_(list(active_ips))
                 ).update({'is_active': False}, synchronize_session=False)
+                print(f"🗑️  [Database] Deactivated {deactivated} devices")
             else:
                 # If the list is empty, all rows should be inactive.
-                session.query(DBDevice).filter(
+                deactivated = session.query(DBDevice).filter(
                     DBDevice.is_active.is_(True)
                 ).update({'is_active': False}, synchronize_session=False)
+                print(f"🗑️  [Database] Deactivated all {deactivated} devices (empty list)")
 
             session.commit()
             database_available = True
@@ -252,16 +281,22 @@ class Device:
             session.rollback()
             db_error = str(e)
             print(f"⚠️  [Database] Connection error - falling back to JSON: {str(e)}")
+            print(f"    Error type: OperationalError")
             database_available = False
         except IntegrityError as e:
             session.rollback()
             db_error = str(e)
             print(f"⚠️  [Database] Integrity error - falling back to JSON: {str(e)}")
+            print(f"    Error type: IntegrityError")
             database_available = False
         except Exception as e:
             session.rollback()
             db_error = str(e)
             print(f"⚠️  [Database] Error - falling back to JSON: {str(e)}")
+            print(f"    Error type: {type(e).__name__}")
+            print(f"    Full traceback: ")
+            import traceback
+            traceback.print_exc()
             database_available = False
         finally:
             session.close()
@@ -363,22 +398,130 @@ class Device:
         return False
     
     def validate_connection(self) -> tuple[bool, str]:
-        """Validate SSH connection to device"""
-        # Use jump host if configured
+        """
+        Unified device validation mechanism:
+        1. If R-Pi config is available, connect via R-Pi tunnel (works for both Desk and Rack devices)
+        2. Fallback to direct SSH if no R-Pi config
+        
+        This standardized approach works for:
+        - Desktop devices with R-Pi gateway
+        - Rack devices via R-Pi tunnel
+        - Direct devices (fallback only)
+        """
+        # PRIORITY 1: Use R-Pi tunnel if R-Pi config is configured
+        if self.rpi_config and self.rpi_config.get('rpi_ip'):
+            rpi_ip = self.rpi_config.get('rpi_ip')
+            return self._validate_via_rpi(rpi_ip)
+        
+        # PRIORITY 2: Use jump host if configured
         if self.use_jump_host and self.jump_host_config:
             return self._validate_via_jump_host()
         
-        # Direct SSH connection (existing logic)
-        import paramiko
+        # FALLBACK: Direct SSH connection
+        return self._validate_direct_ssh()
+    
+    def _validate_direct_ssh(self) -> tuple[bool, str]:
+        """
+        Direct SSH connection to device (fallback method) - supports passwordless SSH
+        
+        Added: SSH options to handle host key verification gracefully for connectivity checks
+        """
+        import subprocess
         try:
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh.connect(self.ip, port=self.port, username=self.username, 
-                       password=self.password, timeout=10)
-            ssh.close()
-            return True, "Connection successful"
+            # SSH options to handle connectivity checks:
+            # -o StrictHostKeyChecking=accept-new  → Accept new keys automatically
+            # -o UserKnownHostsFile=/dev/null      → Ignore known_hosts conflicts
+            # This prevents "Device Inactive" status due to known_hosts issues
+            ssh_command = (
+                f'timeout 5 ssh '
+                f'-o StrictHostKeyChecking=accept-new '
+                f'-o UserKnownHostsFile=/dev/null '
+                f'-p {self.port} {self.username}@{self.ip} "echo alive"'
+            )
+            result = subprocess.run(ssh_command, shell=True, capture_output=True, timeout=10, text=True)
+            
+            if result.returncode == 0 and 'alive' in result.stdout:
+                return True, "✅ Device is ACTIVE (direct connection)"
+            else:
+                return False, f"❌ Direct connection failed: {result.stderr or 'No response'}"
+        except subprocess.TimeoutExpired:
+            return False, "❌ Direct connection timed out"
         except Exception as e:
-            return False, str(e)
+            return False, f"❌ Direct connection failed: {str(e)}"
+    
+    def _validate_via_rpi(self, rpi_ip: str) -> tuple[bool, str]:
+        """
+        Unified R-Pi tunnel validation for both Desktop and Rack devices
+        
+        Connection Flow:
+        1. SSH to R-Pi using rpi_config credentials
+        2. From R-Pi, SSH to device using device credentials
+        3. Execute "echo alive" to verify device is reachable
+        
+        Fixed: Includes SSH options to bypass host key verification issues
+        """
+        import paramiko
+        
+        # Validate R-Pi configuration
+        if not self.rpi_config:
+            return False, "❌ R-Pi configuration not found"
+        
+        rpi_username = self.rpi_config.get('rpi_username', 'pi')
+        rpi_password = self.rpi_config.get('rpi_password', '')
+        rpi_port = self.rpi_config.get('rpi_port', 22)
+        
+        if not rpi_password:
+            return False, "❌ R-Pi password not configured"
+        
+        try:
+            # STEP 1: Connect to R-Pi
+            print(f"🔗 [R-Pi] Connecting to R-Pi at {rpi_ip}:{rpi_port}...")
+            ssh_rpi = paramiko.SSHClient()
+            ssh_rpi.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh_rpi.connect(rpi_ip, port=int(rpi_port), username=rpi_username, 
+                           password=rpi_password, timeout=10)
+            print(f"✅ [R-Pi] Connected to R-Pi successfully")
+            
+            # STEP 2: From R-Pi, SSH to device and verify connectivity
+            print(f"🔍 [Device] Checking device {self.ip}:{self.port} connectivity from R-Pi...")
+            
+            # Execute SSH command from R-Pi to device with timeout
+            # IMPORTANT: Added SSH options to bypass host key verification issues:
+            #   -o StrictHostKeyChecking=accept-new  → Accept new keys but verify known hosts
+            #   -o UserKnownHostsFile=/dev/null      → Ignore known_hosts to avoid conflicts
+            #   This fixes: "Device shows Inactive when SSH known_hosts has issues"
+            ssh_command = (
+                f'timeout 5 ssh '
+                f'-o StrictHostKeyChecking=accept-new '
+                f'-o UserKnownHostsFile=/dev/null '
+                f'-p {self.port} {self.username}@{self.ip} "echo alive"'
+            )
+            
+            stdin, stdout, stderr = ssh_rpi.exec_command(ssh_command, timeout=15)
+            output = stdout.read().decode('utf-8', errors='ignore').strip()
+            error = stderr.read().decode('utf-8', errors='ignore').strip()
+            return_code = stdout.channel.recv_exit_status()
+            
+            ssh_rpi.close()
+            
+            # STEP 3: Evaluate result
+            if return_code == 0 and 'alive' in output:
+                print(f"✅ [Device] Device {self.ip} is ACTIVE (via R-Pi {rpi_ip})")
+                return True, f"✅ Device is ACTIVE (via R-Pi {rpi_ip})"
+            else:
+                print(f"❌ [Device] Device {self.ip} is INACTIVE or unreachable from R-Pi")
+                error_detail = error if error else "No response from device (may indicate host key verification issue - run manual SSH to clear known_hosts)"
+                return False, f"❌ Device unreachable from R-Pi {rpi_ip}: {error_detail}"
+                
+        except paramiko.AuthenticationException as e:
+            print(f"❌ [R-Pi] Authentication failed for R-Pi {rpi_ip}: {str(e)}")
+            return False, f"❌ R-Pi authentication failed: {str(e)}"
+        except paramiko.SSHException as e:
+            print(f"❌ [R-Pi] SSH error connecting to R-Pi {rpi_ip}: {str(e)}")
+            return False, f"❌ R-Pi SSH error: {str(e)}"
+        except Exception as e:
+            print(f"❌ [Connection] Error during R-Pi validation: {str(e)}")
+            return False, f"❌ R-Pi validation error: {str(e)}"
     
     def _validate_via_jump_host(self) -> tuple[bool, str]:
         """Validate connection via jump host"""
@@ -419,65 +562,20 @@ class Device:
             return False, f"Jump host error: {str(e)}"
     
     def validate_connection_via_rpi(self, rpi_ip: str) -> tuple[bool, str]:
-        """Validate device connection via R-Pi tunnel
-        
-        First connects to R-Pi, then checks if device is reachable from R-Pi
         """
-        import paramiko
+        Deprecated: Use validate_connection() instead for unified handling
         
-        # Get R-Pi credentials from rpi_config
-        if not self.rpi_config:
-            return False, "R-Pi configuration not found"
+        This method is kept for backward compatibility.
+        The main validate_connection() now handles R-Pi automatically.
         
-        rpi_username = self.rpi_config.get('rpi_username', 'pi')
-        rpi_password = self.rpi_config.get('rpi_password', '')
-        rpi_port = self.rpi_config.get('rpi_port', 22)
+        If called explicitly with rpi_ip, it updates rpi_config temporarily and validates.
+        """
+        # Temporarily set rpi_ip in config if not already set
+        if not self.rpi_config.get('rpi_ip'):
+            self.rpi_config['rpi_ip'] = rpi_ip
         
-        if not rpi_password:
-            return False, "R-Pi password not configured"
-        
-        try:
-            # Step 1: Connect to R-Pi
-            print(f"🔗 [R-Pi] Connecting to R-Pi at {rpi_ip}:{rpi_port}...")
-            ssh_rpi = paramiko.SSHClient()
-            ssh_rpi.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            ssh_rpi.connect(rpi_ip, port=int(rpi_port), username=rpi_username, 
-                           password=rpi_password, timeout=10)
-            print(f"✅ [R-Pi] Connected to R-Pi successfully")
-            
-            # Step 2: From R-Pi, check device connectivity via ping or SSH
-            print(f"🔍 [Device] Checking device {self.ip} connectivity from R-Pi...")
-            
-            # Try SSH connection to device from R-Pi
-            stdin, stdout, stderr = ssh_rpi.exec_command(
-                f'timeout 5 ssh -o ConnectTimeout=5 -o StrictHostKeyChecking=no '
-                f'-o UserKnownHostsFile=/dev/null -p {self.port} '
-                f'{self.username}@{self.ip} "echo alive"',
-                timeout=15
-            )
-            
-            output = stdout.read().decode('utf-8', errors='ignore').strip()
-            error = stderr.read().decode('utf-8', errors='ignore').strip()
-            return_code = stdout.channel.recv_exit_status()
-            
-            ssh_rpi.close()
-            
-            if return_code == 0 and 'alive' in output:
-                print(f"✅ [Device] Device {self.ip} is ACTIVE (reachable from R-Pi)")
-                return True, f"Device is active (via R-Pi {rpi_ip})"
-            else:
-                print(f"❌ [Device] Device {self.ip} is INACTIVE or unreachable from R-Pi")
-                return False, f"Device unreachable from R-Pi {rpi_ip}"
-                
-        except paramiko.AuthenticationException as e:
-            print(f"❌ [R-Pi] Authentication failed for R-Pi {rpi_ip}: {str(e)}")
-            return False, f"R-Pi authentication failed: {str(e)}"
-        except paramiko.SSHException as e:
-            print(f"❌ [R-Pi] SSH error connecting to R-Pi {rpi_ip}: {str(e)}")
-            return False, f"R-Pi SSH error: {str(e)}"
-        except Exception as e:
-            print(f"❌ [Connection] Error validating via R-Pi: {str(e)}")
-            return False, f"R-Pi validation error: {str(e)}"
+        # Use the new unified R-Pi validation
+        return self._validate_via_rpi(rpi_ip)
     
     def fetch_mac_address(self) -> Optional[str]:
         """Fetch MAC address from device using SSH"""

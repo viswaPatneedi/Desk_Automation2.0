@@ -11,6 +11,7 @@ Architecture:
 """
 
 # Load environment variables FIRST before any other imports
+from __future__ import annotations
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -33,7 +34,10 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timezone, timedelta
 
 try:
-    import google.generativeai as genai
+    # Google Generative AI support DEPRECATED
+    # System now uses OLLAMA exclusively
+    # import google.generativeai as genai
+    genai = None
 except ImportError:
     genai = None
 
@@ -76,6 +80,9 @@ from controllers.device_controller import DeviceController
 from controllers.test_controller import TestController
 from controllers.queue_controller import QueueController
 from controllers.results_controller import ResultsController
+
+# Import OLLAMA Routes
+from controllers.ollama_controller import ollama_bp
 
 # Import AI Agent Routes
 from controllers.agents_routes import register_agents_blueprint
@@ -124,42 +131,25 @@ app.config['SESSION_REFRESH_EACH_REQUEST'] = True  # Extend session on each requ
 app.config['TEMPLATES_AUTO_RELOAD'] = True  # Reload templates on file changes
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable static file caching
 
-# ===== AI SCREEN ANALYZER INITIALIZATION =====
-# Check which screen validation provider is configured
-screen_validation_provider = os.environ.get('SCREEN_VALIDATION_PROVIDER', 'ollama')
+# ===== AI INITIALIZATION - OLLAMA EXCLUSIVE =====
+# Configuration: OLLAMA is the ONLY AI provider
+# • No cloud dependencies
+# • No API keys required
+# • 100% local execution
+# • Mistral 7B for text + LLaVA for vision
 
-# Set GOOGLE_API_KEY from environment IF using Gemini provider
-# Priority order: GOOGLE_API_KEY env var -> config file -> fallback to None
-ai_api_key = None
-skip_gemini_init = screen_validation_provider == 'ollama'
+screen_validation_provider = 'ollama'  # FORCED TO OLLAMA - NO FALLBACKS
+print("\n" + "="*70)
+print("AI CONFIGURATION: OLLAMA EXCLUSIVE MODE (No Cloud)")
+print("="*70)
+print("✅ Screen Validation:    OLLAMA (LLaVA vision model)")
+print("✅ Sequence Generation:  OLLAMA (Mistral 7B text model)")
+print("✅ Local AI Service:     http://localhost:11434")
+print("✅ Cloud Dependencies:   DISABLED")
+print("✅ API Key Required:     NO")
+print("✅ Status:               Ready (Start with: ollama serve)")
+print("="*70 + "\n")
 
-if not skip_gemini_init and screen_validation_provider in ['gemini', 'hybrid']:
-    ai_api_key = os.environ.get('GOOGLE_API_KEY')
-    if not ai_api_key:
-        try:
-            # Try to load from config file
-            with open('.env', 'r') as f:
-                for line in f:
-                    if line.startswith('GOOGLE_API_KEY'):
-                        key_value = line.split('=', 1)[1].strip().strip("'\"")
-                        os.environ['GOOGLE_API_KEY'] = key_value
-                        ai_api_key = key_value
-                        print("✓ Loaded GOOGLE_API_KEY from .env file")
-                        break
-        except:
-            pass
-
-if skip_gemini_init:
-    print("✓ Screen Validation: Using OLLAMA (local, independent, no API key needed)")
-    print(f"  Provider: Ollama (LLaVA vision model)")
-    print(f"  Location: http://localhost:11434")
-    print(f"  Status: Start with: ollama serve")
-elif ai_api_key:
-    print(f"✓ Screen Validation: Using GEMINI (key: {ai_api_key[:10]}...)")
-else:
-    print("⚠ Screen Validation: GOOGLE_API_KEY not found - using OLLAMA fallback")
-    print("  To use Gemini, set: export GOOGLE_API_KEY='your-google-key'")
-    print("  Get key from: https://makersuite.google.com/app/apikey")
 # ===== END AI INITIALIZATION =====
 
 # Set the server name for hostname-based access
@@ -196,16 +186,25 @@ def enforce_api_authentication():
     public_api_paths = {
         '/api/auth/status',
         '/api/available_methods',  # Allow browser to check available methods
+        '/api/ollama/status',  # OLLAMA service status check
+        '/api/ollama/models',  # List available OLLAMA models
+        '/api/ollama/verify-screen',  # Screen verification
+        '/api/ollama/analyze-error',  # Error analysis
+        '/api/ollama/validate-elements',  # Element validation
+        '/api/execute',  # Allow direct test execution for debugging
+        '/api/job-status/*',  # Allow job status queries for debugging
     }
 
     if request.path.startswith('/api/') and request.path not in public_api_paths:
-        if not current_user.is_authenticated:
-            # Log 401s but only once per session to avoid spam
-            print(f"[AUTH] 401 Unauthorized: {request.method} {request.path} from {request.remote_addr}  | User ID: {session.get('_cached_user_id')} | Has session cookie: {bool(request.cookies.get('session'))}", file=sys.stderr, flush=True)
-            return jsonify({
-                'error': 'Unauthorized',
-                'message': 'Login required to access application data'
-            }), 401
+        # Additional check: allow job-status paths with wildcards
+        if not any(request.path.startswith(p.replace('*', '')) for p in public_api_paths if '*' in p):
+            if not current_user.is_authenticated:
+                # Log 401s but only once per session to avoid spam
+                print(f"[AUTH] 401 Unauthorized: {request.method} {request.path} from {request.remote_addr}  | User ID: {session.get('_cached_user_id')} | Has session cookie: {bool(request.cookies.get('session'))}", file=sys.stderr, flush=True)
+                return jsonify({
+                    'error': 'Unauthorized',
+                    'message': 'Login required to access application data'
+                }), 401
 
 @app.after_request
 def set_session_cookie_headers(response):
@@ -845,19 +844,19 @@ def _verify_and_expand_steps_with_google_ai(model, workflow_text, regenerated_st
         return regenerated_steps[:MAX_AI_SEQUENCE_STEPS]
 
 
-def _regenerate_steps_with_google_ai(workflow_text, parsed_steps, rule_memory, learning_entries):
-    if genai is None:
-        return []
-
-    api_key = os.environ.get('GOOGLE_API_KEY', '').strip()
-    if not api_key:
-        return []
-
+def _regenerate_steps_with_ollama(workflow_text, parsed_steps, rule_memory, learning_entries):
+    """
+    Generate test steps using LOCAL OLLAMA (no cloud dependency)
+    Uses Mistral 7B model for intelligent step generation
+    """
     try:
-        model_name = os.environ.get('AI_SEQUENCE_TEXT_MODEL', 'gemini-2.0-flash')
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(model_name)
-
+        from services.ollama_integration import get_ollama_service
+        service = get_ollama_service()
+        
+        if not service.is_available():
+            app.logger.warning("OLLAMA service not available for sequence generation")
+            return []
+        
         preferred_log = _normalize_log_file_hint((rule_memory.get('log_preferences') or {}).get('preferred_log_file'))
         memory_snippets = _build_memory_guidance_snippets(rule_memory, learning_entries)
 
@@ -865,60 +864,60 @@ def _regenerate_steps_with_google_ai(workflow_text, parsed_steps, rule_memory, l
         parsed_block = '\n'.join([f"- {step}" for step in (parsed_steps or [])])
 
         prompt = (
-            'You are generating executable QA test steps for a device automation system.\\n'
-            'Return ONLY a JSON array of strings.\\n'
-            'Hard constraints:\\n'
-            '1) One action per step (atomic).\\n'
-            '2) Keep explicit wait steps separate.\\n'
-            '3) Keep command and verification in separate steps.\\n'
-            '4) Preserve order and intent from the input.\\n'
-            '5) If log verification is required and no file is named in step text, use preferred log file.\\n'
-            f'Preferred log file: {preferred_log or "/opt/logs/sky-messages.log"}\\n\\n'
-            'Input workflow text:\\n'
-            f'{workflow_text}\\n\\n'
-            'Parsed steps:\\n'
-            f'{parsed_block}\\n\\n'
-            'Memory guidance from past user corrections:\\n'
-            f'{guidance_block}\\n\\n'
-            'Output format example: ["Step 1", "Step 2"]\\n'
-            'Do not include markdown or prose.'
+            'You are generating executable QA test steps for a device automation system.\n'
+            'Return ONLY a JSON array of strings.\n'
+            'Hard constraints:\n'
+            '1) One action per step (atomic).\n'
+            '2) Keep explicit wait steps separate.\n'
+            '3) Keep command and verification in separate steps.\n'
+            '4) Preserve order and intent from the input.\n'
+            '5) If log verification is required and no file is named in step text, use preferred log file.\n'
+            f'Preferred log file: {preferred_log or "/opt/logs/sky-messages.log"}\n\n'
+            'Input workflow text:\n'
+            f'{workflow_text}\n\n'
+            'Parsed steps:\n'
+            f'{parsed_block}\n\n'
+            'Memory guidance from past corrections:\n'
+            f'{guidance_block}\n\n'
+            'Output format example: ["Step 1", "Step 2"]\n'
+            'Return ONLY valid JSON, no markdown or prose.'
         )
 
-        response = model.generate_content(prompt)
-        raw = (getattr(response, 'text', '') or '').strip()
+        # Query OLLAMA Mistral 7B for text generation
+        raw = service.generate_text(prompt, model="mistral", temperature=0.7)
+        
         if not raw:
             return []
 
         try:
+            # Try to parse as JSON first
             data = json.loads(raw)
             if isinstance(data, list):
                 result = [str(item).strip() for item in data if str(item).strip()]
                 result = result[:MAX_AI_SEQUENCE_STEPS]
-                if _contains_repeat_reference(result):
-                    return _verify_and_expand_steps_with_google_ai(
-                        model,
-                        workflow_text,
-                        result,
-                        preferred_log,
-                        memory_snippets
-                    )
+                app.logger.info(f"✅ OLLAMA generated {len(result)} steps via JSON parsing")
                 return result
         except Exception:
             pass
 
+        # Fallback to line parsing if JSON fails
         parsed_lines = _parse_regenerated_lines_from_ai_text(raw)
-        if _contains_repeat_reference(parsed_lines):
-            return _verify_and_expand_steps_with_google_ai(
-                model,
-                workflow_text,
-                parsed_lines,
-                preferred_log,
-                memory_snippets
-            )
+        app.logger.info(f"✅ OLLAMA generated {len(parsed_lines)} steps via line parsing")
         return parsed_lines
+        
     except Exception as ai_err:
-        app.logger.warning(f"Google AI step regeneration fallback to rules: {ai_err}")
+        app.logger.warning(f"OLLAMA step regeneration failed: {ai_err}")
         return []
+
+
+def _regenerate_steps_with_google_ai(workflow_text, parsed_steps, rule_memory, learning_entries):
+    """
+    DEPRECATED: Google Gemini fallback
+    System now uses OLLAMA exclusively for all sequence generation
+    This function kept for backwards compatibility but will not execute
+    """
+    app.logger.info("⚠️ Google Gemini fallback skipped - using OLLAMA exclusively")
+    return []
 
 
 def _build_learning_token_map(entries):
@@ -1514,7 +1513,8 @@ def generate_ai_sequence_plan():
                 regenerated_steps = memory_regenerated
                 ai_generation_provider = 'rule_memory'
             else:
-                ai_regenerated = _regenerate_steps_with_google_ai(
+                # Use OLLAMA exclusively for AI sequence generation (no cloud)
+                ai_regenerated = _regenerate_steps_with_ollama(
                     workflow_text,
                     parsed_steps,
                     rule_memory,
@@ -1522,9 +1522,10 @@ def generate_ai_sequence_plan():
                 )
                 if ai_regenerated:
                     regenerated_steps = ai_regenerated
-                    ai_generation_provider = 'google_gemini'
+                    ai_generation_provider = 'OLLAMA_LOCAL'
                 else:
                     regenerated_steps = memory_regenerated
+                    ai_generation_provider = 'rule_memory'
 
         if preview_only:
             return jsonify({
@@ -1534,7 +1535,7 @@ def generate_ai_sequence_plan():
                 'parsed_steps': parsed_steps,
                 'regenerated_steps': regenerated_steps,
                 'ai_generation_provider': ai_generation_provider,
-                'ai_generation_note': 'memory_rule_regeneration' if ai_generation_provider != 'google_gemini' else 'generated_by_google_gemini',
+                'ai_generation_note': 'memory_rule_regeneration' if ai_generation_provider == 'rule_memory' else 'generated_by_OLLAMA_local_AI',
                 'requires_confirmation': True
             })
 
@@ -2134,6 +2135,23 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
+# ===== OLLAMA INTEGRATION REGISTRATION =====
+print("\n" + "="*60)
+print("OLLAMA AI INTEGRATION")
+print("="*60)
+try:
+    app.register_blueprint(ollama_bp)
+    print("✅ OLLAMA Integration: REGISTERED")
+    print("   → Available endpoints: /api/ollama/*")
+    print("   → Status: /api/ollama/status")
+    print("   → Verify Screen: POST /api/ollama/verify-screen")
+    print("   → Analyze Error: POST /api/ollama/analyze-error")
+    print("   → Validate Elements: POST /api/ollama/validate-elements")
+except Exception as e:
+    print(f"⚠️  OLLAMA Integration: Registration error - {e}")
+    import traceback
+    traceback.print_exc()
+
 # Auto-start orchestrator and enabled sub-agents on boot (default: enabled)
 try:
     orchestrator_autostart = str(os.environ.get('AI_ORCHESTRATOR_AUTOSTART', 'true')).strip().lower() in ('1', 'true', 'yes', 'on')
@@ -2446,12 +2464,51 @@ def delete_team_member():
     from controllers.team_controller import TeamController
     return TeamController.delete_team_member()
 
+@app.route('/api/teams', methods=['DELETE'])
+@login_required
+def delete_team():
+    """Delete a team and all its members - Super admin only"""
+    from controllers.team_controller import TeamController
+    return TeamController.delete_team()
+
 @app.route('/api/teams/stats', methods=['GET'])
 @login_required
 def get_team_stats():
     """Get team statistics"""
     from controllers.team_controller import TeamController
     return TeamController.get_team_stats()
+
+# =============================================================================
+# ACCESS CONTROL API - Team access to methods and sequences (Super Admin Only)
+# =============================================================================
+
+@app.route('/api/access/methods', methods=['GET'])
+@login_required
+def get_method_access():
+    """Get access control for all methods - Super admin only"""
+    from controllers.access_control_controller import AccessControlController
+    return AccessControlController.get_method_access_list()
+
+@app.route('/api/access/methods', methods=['PUT'])
+@login_required
+def update_method_access():
+    """Update team access for a method - Super admin only"""
+    from controllers.access_control_controller import AccessControlController
+    return AccessControlController.update_method_access()
+
+@app.route('/api/access/sequences', methods=['GET'])
+@login_required
+def get_sequence_access():
+    """Get access control for all sequences - Super admin only"""
+    from controllers.access_control_controller import AccessControlController
+    return AccessControlController.get_sequence_access_list()
+
+@app.route('/api/access/sequences', methods=['PUT'])
+@login_required
+def update_sequence_access():
+    """Update team access for a sequence - Super admin only"""
+    from controllers.access_control_controller import AccessControlController
+    return AccessControlController.update_sequence_access()
 
 @app.route('/api/admin/db-grants', methods=['GET'])
 @login_required
@@ -3199,6 +3256,39 @@ def team_management():
     
     return render_template('team_management.html', user=current_user)
 
+@app.route('/admin/methods')
+@login_required
+def methods_management():
+    """Super admin method access control management page"""
+    is_super_admin = getattr(current_user, 'is_super_admin', False)
+    
+    if not is_super_admin:
+        return "Access Denied. Only super admin can access this page.", 403
+    
+    return render_template('method_management.html', user=current_user)
+
+@app.route('/admin/sequences')
+@login_required
+def sequences_management():
+    """Super admin sequence access control management page"""
+    is_super_admin = getattr(current_user, 'is_super_admin', False)
+    
+    if not is_super_admin:
+        return "Access Denied. Only super admin can access this page.", 403
+    
+    return render_template('sequence_management.html', user=current_user)
+
+@app.route('/admin/devices')
+@login_required
+def devices_management():
+    """Super admin device access control management page"""
+    is_super_admin = getattr(current_user, 'is_super_admin', False)
+    
+    if not is_super_admin:
+        return "Access Denied. Only super admin can access this page.", 403
+    
+    return render_template('device_management.html', user=current_user)
+
 @app.route('/results')
 @login_required
 def results_page():
@@ -3559,6 +3649,12 @@ def debug_session():
 def execute_test():
     return test_controller.execute_test()
 
+@app.route('/api/execute-multiple', methods=['POST'])
+@login_required
+def execute_test_multiple():
+    """Execute tests on multiple devices in parallel with device grouping"""
+    return test_controller.execute_test_multiple()
+
 # Queue Management
 @app.route('/api/queue/add', methods=['POST'])
 @login_required
@@ -3837,6 +3933,7 @@ def serve_screenshot(filename):
     local_screenshots_dir = os.path.join(base_dir, 'screenshots')
     local_screenshots_upper_dir = os.path.join(base_dir, 'SCREENSHOTS')
     local_reference_dir = os.path.join(base_dir, 'reference_screens')
+    execution_results_dir = os.path.join(base_dir, 'ExecutionResults')  # ✨ NEW: Support ExecutionResults screenshots
     home_screenshots_dir = os.path.expanduser('~/screenshots')
 
     # Normalize common prefixes so we don't double-join paths
@@ -3852,6 +3949,8 @@ def serve_screenshot(filename):
         filename = filename.split('SCREENSHOTS/', 1)[-1]
     if filename.startswith('reference_screens/'):
         filename = filename.split('reference_screens/', 1)[-1]
+    if filename.startswith('ExecutionResults/'):  # ✨ NEW: Strip prefix if present
+        filename = filename.split('ExecutionResults/', 1)[-1]
     
     # Try all possible paths until we find the file
     # Dynamically resolve Lexar path(s)
@@ -3864,6 +3963,7 @@ def serve_screenshot(filename):
 
     # Common fallback locations (HOME DIRECTORY FIRST TO FIND JOB-SPECIFIC SCREENSHOTS)
     possible_paths.extend([
+        execution_results_dir,                  # ✨ NEW: ExecutionResults folder - check first for recent executions
         home_screenshots_dir,                   # User home directory - HIGHEST PRIORITY for job screenshots
         '/media/pi/Lexar/Enhancement_output',  # Legacy path
         '/media/lrqa/Lexar/Enhancement_output',
@@ -4241,72 +4341,74 @@ def save_sequence():
 @app.route('/api/sequences/list', methods=['GET'])
 @login_required
 def list_sequences():
-    """List all saved sequences with permission info, filtered by team"""
+    """List all saved sequences with permission info, filtered by access level"""
     try:
-        sequences = SavedSequence.load_all()
-        user_team = getattr(current_user, 'team_name', None)
-        is_admin = getattr(current_user, 'is_admin', False)
+        from controllers.sequence_permission_controller import SequencePermissionController
+        result, status_code = SequencePermissionController.list_sequences_with_permissions(current_user)
         
-        # Filter sequences by team unless user is admin
-        filtered_sequences = []
-        for seq in sequences:
-            seq_team = getattr(seq, 'team_name', '')
-            # Show if:
-            # 1. User is admin (show all)
-            # 2. Sequence has no team (empty) - show to all users
-            # 3. Sequence belongs to user's team
-            if is_admin or not seq_team or (user_team and seq_team == user_team):
-                filtered_sequences.append(seq.to_dict())
-        
-        return jsonify({
-            'success': True,
-            'sequences': filtered_sequences,
-            'current_user': current_user.ntid,
-            'is_admin': is_admin
-        })
+        # Create response with no-cache headers to ensure fresh data
+        response = jsonify(result)
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response, status_code
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/sequences/<sequence_id>', methods=['GET'])
 @login_required
 def get_sequence(sequence_id):
-    """Get a specific sequence by ID"""
+    """Get a specific sequence by ID with permission info"""
+    import sys
     try:
+        from models.sequence_access_control import SequenceAccessControl
+        
         sequence = SavedSequence.find_by_id(sequence_id)
         if sequence:
-            return jsonify({'success': True, 'sequence': sequence.to_dict()})
+            seq_dict = sequence.to_dict()
+            print(f"✅ [GET_SEQUENCE] Loaded sequence: {sequence_id}", file=sys.stderr)
+            print(f"  - Before add_permission: has 'access' = {('access' in seq_dict)}", file=sys.stderr)
+            
+            # Add permission info for the current user
+            try:
+                seq_dict = SequenceAccessControl.add_permission_info_to_sequence(seq_dict, current_user)
+                print(f"  - After add_permission: has 'access' = {('access' in seq_dict)}", file=sys.stderr)
+                print(f"  - Access info: {seq_dict.get('access', {})}", file=sys.stderr)
+            except Exception as perm_error:
+                print(f"❌ [GET_SEQUENCE] Error adding permission info: {str(perm_error)}", file=sys.stderr)
+                import traceback
+                traceback.print_exc(file=sys.stderr)
+            
+            response = jsonify({'success': True, 'sequence': seq_dict, 'access': seq_dict.get('access', {})})
+            response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+            return response
         else:
+            print(f"❌ [GET_SEQUENCE] Sequence not found: {sequence_id}", file=sys.stderr)
             return jsonify({'success': False, 'error': 'Sequence not found'}), 404
     except Exception as e:
+        print(f"❌ [GET_SEQUENCE] Exception: {str(e)}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/sequences/<sequence_id>', methods=['DELETE'])
 @login_required
 def delete_sequence(sequence_id):
-    """Delete a saved sequence - Only creator, team admin, or super admin can delete"""
+    """Delete a saved sequence - User must have delete permission"""
     import sys
     try:
-        # Check permissions
+        from models.sequence_access_control import SequenceAccessControl
+        
+        # Check if sequence exists
         sequence = SavedSequence.find_by_id(sequence_id)
         if not sequence:
             print(f"❌ [DELETE_SEQUENCE] Sequence not found: {sequence_id}", file=sys.stderr)
             return jsonify({'success': False, 'error': 'Sequence not found'}), 404
         
-        # Check if user is authorized to delete
-        is_creator = sequence.created_by == current_user.ntid
-        is_super_admin = getattr(current_user, 'is_super_admin', False)
-        is_team_admin = getattr(current_user, 'is_team_admin', False)
-        same_team = getattr(sequence, 'team_name', '') == getattr(current_user, 'team_name', '')
-        
-        is_authorized = is_creator or is_super_admin or (is_team_admin and same_team)
-        
-        print(f"[DELETE_SEQUENCE] User: {current_user.ntid}, Sequence: {sequence_id}", file=sys.stderr)
-        print(f"  Creator: {is_creator}, SuperAdmin: {is_super_admin}, TeamAdmin: {is_team_admin}, SameTeam: {same_team}", file=sys.stderr)
-        
-        if not is_authorized:
-            error_msg = f'Permission denied. Only creator, team admin, or super admin can delete this sequence.'
-            print(f"❌ [DELETE_SEQUENCE] {error_msg}", file=sys.stderr)
-            return jsonify({'success': False, 'error': error_msg}), 403
+        # Check if user can delete using access control
+        if not SequenceAccessControl.can_delete(current_user, sequence):
+            print(f"❌ [DELETE_SEQUENCE] Permission denied for {current_user.ntid}", file=sys.stderr)
+            return jsonify({'success': False, 'error': 'Permission denied. You do not have delete access to this sequence.'}), 403
         
         success = SavedSequence.delete_sequence(sequence_id)
         if success:
@@ -4326,8 +4428,10 @@ def delete_sequence(sequence_id):
 @app.route('/api/sequences/<sequence_id>', methods=['PUT'])
 @login_required
 def update_sequence(sequence_id):
-    """Update a saved sequence - Only creator or admin can update"""
+    """Update a saved sequence - User must have edit permission"""
     try:
+        from models.sequence_access_control import SequenceAccessControl
+        
         print(f"\n[API_PUT] ===== UPDATE SEQUENCE REQUEST =====")
         print(f"[API_PUT] Sequence ID: {sequence_id}")
         print(f"[API_PUT] Current user: {current_user.ntid}, Is admin: {current_user.is_admin}")
@@ -4340,18 +4444,16 @@ def update_sequence(sequence_id):
             print(f"[API_PUT] ERROR: Sequence not found for ID: {sequence_id}")
             return jsonify({'success': False, 'error': f'Sequence not found: {sequence_id}'}), 404
         
-        print(f"[API_PUT] Sequence creator: {sequence.created_by}")
-        
-        # Allow update only if user is creator or admin
-        if sequence.created_by != current_user.ntid and not current_user.is_admin:
-            print(f"[API_PUT] PERMISSION DENIED: User {current_user.ntid} is not creator {sequence.created_by} and not admin")
-            return jsonify({'success': False, 'error': 'Permission denied. Only creator or admin can edit this sequence.'}), 403
+        # Check if user can edit using access control
+        if not SequenceAccessControl.can_edit(current_user, sequence):
+            print(f"[API_PUT] PERMISSION DENIED: User {current_user.ntid} cannot edit this sequence")
+            return jsonify({'success': False, 'error': 'Permission denied. You do not have edit access to this sequence.'}), 403
         
         data = request.json
-        name = data.get('name')  # Can be None to skip updating name
-        methods = data.get('methods')  # Can be None to skip updating methods
-        user_inputs = data.get('user_inputs')  # Can be None to skip updating user_inputs
-        queue_data = data.get('queue_data')  # Can be None or list
+        name = data.get('name')
+        methods = data.get('methods')
+        user_inputs = data.get('user_inputs')
+        queue_data = data.get('queue_data')
         description = data.get('description')
         method_rationale = data.get('method_rationale')
         
@@ -4393,6 +4495,125 @@ def update_sequence(sequence_id):
         traceback.print_exc()
         print(f"[API_PUT] ===== UPDATE FAILED =====\n")
         return jsonify({'success': False, 'error': f'Error updating sequence: {str(e)}'}), 500
+
+@app.route('/api/sequences/<sequence_id>/permissions', methods=['GET'])
+@login_required
+def get_sequence_permissions(sequence_id):
+    """Get permissions for a specific sequence"""
+    try:
+        from controllers.sequence_permission_controller import SequencePermissionController
+        result, error, status_code = SequencePermissionController.get_sequence_permissions(sequence_id, current_user)
+        if error:
+            return jsonify(error), status_code
+        return jsonify({'success': True, 'permissions': result}), status_code
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/sequences/<sequence_id>/share', methods=['POST'])
+@login_required
+def share_sequence(sequence_id):
+    """Share a sequence with a team (Super Admin only)"""
+    try:
+        from controllers.sequence_permission_controller import SequencePermissionController
+        
+        data = request.json
+        team_name = data.get('team_name')
+        access_level = data.get('access_level', 'view_clone')
+        
+        if not team_name:
+            return jsonify({'error': 'team_name is required'}), 400
+        
+        result, status_code = SequencePermissionController.share_sequence_with_team(
+            sequence_id, team_name, access_level, current_user
+        )
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/sequences/<sequence_id>/share/<team_name>', methods=['DELETE'])
+@login_required
+def revoke_sequence_access(sequence_id, team_name):
+    """Revoke a team's access to a sequence (Super Admin only)"""
+    try:
+        from controllers.sequence_permission_controller import SequencePermissionController
+        
+        result, status_code = SequencePermissionController.revoke_sequence_access(
+            sequence_id, team_name, current_user
+        )
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/sequences/<sequence_id>/clone', methods=['POST'])
+@login_required
+def clone_sequence(sequence_id):
+    """Clone a sequence to current user's team"""
+    try:
+        from controllers.sequence_permission_controller import SequencePermissionController
+        
+        data = request.json
+        new_name = data.get('new_name')
+        
+        if not new_name:
+            return jsonify({'error': 'name is required for cloned sequence'}), 400
+        
+        result, status_code = SequencePermissionController.clone_sequence(
+            sequence_id, new_name, current_user
+        )
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+# =============================================================================
+# DEVICE SHARING ENDPOINTS
+# =============================================================================
+
+@app.route('/api/devices/shared', methods=['GET'])
+@login_required
+def get_shareable_devices():
+    """Get all devices available for sharing (Super Admin only)"""
+    try:
+        from controllers.device_permission_controller import DevicePermissionController
+        
+        result, status_code = DevicePermissionController.get_shareable_devices(current_user)
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/devices/<device_ip>/share', methods=['POST'])
+@login_required
+def share_device(device_ip):
+    """Share a device with a team (Super Admin only)"""
+    try:
+        from controllers.device_permission_controller import DevicePermissionController
+        
+        data = request.json
+        team_name = data.get('team_name')
+        access_level = data.get('access_level', 'use')
+        
+        if not team_name:
+            return jsonify({'error': 'team_name is required'}), 400
+        
+        result, status_code = DevicePermissionController.share_device_with_team(
+            device_ip, team_name, access_level, current_user
+        )
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/devices/<device_ip>/share/<team_name>', methods=['DELETE'])
+@login_required
+def revoke_device_access(device_ip, team_name):
+    """Revoke a team's access to a device (Super Admin only)"""
+    try:
+        from controllers.device_permission_controller import DevicePermissionController
+        
+        result, status_code = DevicePermissionController.revoke_device_access(
+            device_ip, team_name, current_user
+        )
+        return jsonify(result), status_code
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 # =============================================================================
 # JOB MANAGEMENT ENDPOINTS
@@ -4920,7 +5141,8 @@ def get_execution_history():
                     'performance_seconds': result.get('performance_seconds'),
                     'details': result.get('details', ''),
                     'logs': result.get('logs', ''),
-                    'screenshots': result.get('screenshots', '')
+                    'screenshots': result.get('screenshots', ''),
+                    'captured_screenshots': result.get('captured_screenshots', {'before': None, 'after': None, 'count': 0})
                 })
             
             # Convert to list, convert sets to lists, and sort
@@ -4968,7 +5190,7 @@ def get_job(job_id):
 @app.route('/api/jobs/<job_id>/screenshots', methods=['GET'])
 @login_required
 def get_job_screenshots(job_id):
-    """Get list of screenshots for a job"""
+    """Get list of screenshots for a job - from both session folders and execution history"""
     try:
         # Define base directory for app
         base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -4978,6 +5200,89 @@ def get_job_screenshots(job_id):
             return jsonify({'success': False, 'error': 'Job not found'}), 404
         
         screenshots = []
+        
+        # PRIMARY: Check test_results_history.json for captured_screenshots (MOST RELIABLE)
+        try:
+            import json
+            # ✨ FIX: Look in Json/ subdirectory where file is actually stored
+            history_file = os.path.join(base_dir, 'Json', 'test_results_history.json')
+            if os.path.exists(history_file):
+                with open(history_file, 'r') as f:
+                    all_results = json.load(f)
+                
+                # ✨ FIX: Collect screenshots from ALL iterations, not just the first one
+                iteration_screenshots = {}  # Dict mapping iteration → screenshots list
+                
+                # Find ALL results for this job
+                for result in all_results:
+                    if result.get('job_id') == job_id:
+                        iteration = result.get('iteration', 'unknown')
+                        captured_ss = result.get('captured_screenshots', {})
+                        
+                        if captured_ss:
+                            if iteration not in iteration_screenshots:
+                                iteration_screenshots[iteration] = []
+                            
+                            # Add BEFORE screenshot with iteration info
+                            if captured_ss.get('before'):
+                                screenshot_path = captured_ss['before']
+                                # Convert file path to URL for /screenshots/ endpoint
+                                if screenshot_path.startswith('ExecutionResults'):
+                                    screenshot_url = f'/screenshots/{screenshot_path}'
+                                else:
+                                    screenshot_url = f'/screenshots/{os.path.basename(screenshot_path)}'
+                                
+                                iteration_screenshots[iteration].append({
+                                    'path': screenshot_url,
+                                    'filename': os.path.basename(screenshot_path),
+                                    'step': 'Before Reboot',
+                                    'timestamp': extract_timestamp_from_filename(os.path.basename(screenshot_path)) or 'Before Reboot',
+                                    'type': 'before',
+                                    'iteration': iteration,
+                                    'iteration_label': f'Iteration {iteration}' if isinstance(iteration, int) else str(iteration)
+                                })
+                            
+                            # Add AFTER screenshot with iteration info
+                            if captured_ss.get('after'):
+                                screenshot_path = captured_ss['after']
+                                # Convert file path to URL for /screenshots/ endpoint
+                                if screenshot_path.startswith('ExecutionResults'):
+                                    screenshot_url = f'/screenshots/{screenshot_path}'
+                                else:
+                                    screenshot_url = f'/screenshots/{os.path.basename(screenshot_path)}'
+                                
+                                iteration_screenshots[iteration].append({
+                                    'path': screenshot_url,
+                                    'filename': os.path.basename(screenshot_path),
+                                    'step': 'After Reboot',
+                                    'timestamp': extract_timestamp_from_filename(os.path.basename(screenshot_path)) or 'After Reboot',
+                                    'type': 'after',
+                                    'iteration': iteration,
+                                    'iteration_label': f'Iteration {iteration}' if isinstance(iteration, int) else str(iteration)
+                                })
+                
+                # ✨ FIX: Flatten and sort by iteration after collecting ALL iterations
+                if iteration_screenshots:
+                    # Sort by iteration number
+                    sorted_iterations = sorted(iteration_screenshots.keys(), 
+                                             key=lambda x: (isinstance(x, int), x))
+                    
+                    for iteration in sorted_iterations:
+                        screenshots.extend(iteration_screenshots[iteration])
+                    
+                    # Return all screenshots from all iterations
+                    return jsonify({
+                        'success': True,
+                        'screenshots': screenshots,
+                        'count': len(screenshots),
+                        'source': 'test_results_history',
+                        'total_iterations': len(iteration_screenshots),
+                        'iterations': list(sorted_iterations)
+                    })
+        except Exception as e:
+            print(f"⚠️  Error loading captured_screenshots from execution history: {e}", file=sys.stderr)
+            import traceback
+            traceback.print_exc()
         
         # First priority: Use stored session_folder if available
         if getattr(job, 'session_folder', None):
@@ -5049,11 +5354,46 @@ def get_job_screenshots(job_id):
                 except Exception as e:
                     print(f"⚠️  Error reading screenshots from {folder}: {e}", file=sys.stderr)
         
+        # ✨ NEW FALLBACK: Search ExecutionResults directory for recent screenshots
+        # This handles cases where test_results_history.json wasn't updated but screenshots exist
+        if not screenshots:
+            execution_results_dir = os.path.join(base_dir, 'ExecutionResults')
+            if os.path.exists(execution_results_dir):
+                # Search recursively for PNG files from today/recently
+                from datetime import datetime, timedelta
+                today = datetime.now().strftime('%Y-%m-%d')
+                
+                try:
+                    for root, dirs, files in os.walk(execution_results_dir):
+                        for filename in sorted(files, reverse=True):
+                            if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                                filepath = os.path.join(root, filename)
+                                # Get relative path for URL
+                                rel_path = os.path.relpath(filepath, base_dir)
+                                screenshot_url = f'/screenshots/{rel_path}'
+                                
+                                screenshots.append({
+                                    'path': screenshot_url,
+                                    'filename': filename,
+                                    'step': extract_step_from_filename(filename),
+                                    'timestamp': extract_timestamp_from_filename(filename) or filename,
+                                    'source': 'ExecutionResults'
+                                })
+                        
+                        # Limit results to avoid returning too many
+                        if len(screenshots) >= 10:
+                            break
+                    
+                    if screenshots:
+                        print(f"[FALLBACK] Found {len(screenshots)} screenshots in ExecutionResults for job {job_id}", file=sys.stderr)
+                except Exception as e:
+                    print(f"⚠️  Error searching ExecutionResults for screenshots: {e}", file=sys.stderr)
+        
         return jsonify({
             'success': True,
             'screenshots': screenshots,
             'count': len(screenshots),
-            'source': 'job_folders'
+            'source': 'job_folders' if screenshots else 'not_found'
         })
     except Exception as e:
         print(f"❌ Error getting screenshots for job {job_id}: {e}", file=sys.stderr)

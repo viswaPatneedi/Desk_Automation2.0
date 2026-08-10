@@ -19,12 +19,12 @@ from methods.method_utils import log_message, create_execution_log_path
 # Import IR utilities
 from config.config_ir_blaster import get_ir_config_for_device, generate_ir_code, send_ir_command
 
-def execute_ir_test_process(device_ip, port, username, password, iteration=1, device_name="Device", selected_keys=None, combined_method_name=None, remote_type_override=None, device_type=None, key_delay=0.5):
+def execute_ir_test_process(device_ip, port, username, password, iteration=1, device_name="Device", selected_keys=None, combined_method_name=None, remote_type_override=None, device_type=None, key_delay=0.5, is_rack_device=False, device_mac_address=None, rpi_config=None):
     """
     Execute IR Command Test Process:
-    Step 1: Send IR command(s) blindly using device-specific IR configuration (no SSH needed)
-    Step 2: Optionally verify via SSH if device is accessible
-    Step 3: Check device logs (/opt/logs/sky-messages.log) for keycode logs (if SSH available)
+    Step 1: Route to appropriate handler based on device type (DESK vs GDF_RACK)
+    Step 2: For DESK devices: Send IR command(s) using iTach IR blaster
+    Step 3: For GDF_RACK devices: Send IR commands via GDF ECATS REST API
     
     This method is designed to send IR commands WITHOUT requiring SSH connection first.
     Useful for waking up devices from DeepSleep or sending IR commands blindly.
@@ -35,7 +35,36 @@ def execute_ir_test_process(device_ip, port, username, password, iteration=1, de
         remote_type_override: Optional remote type to use instead of device default
         device_type: Optional device type for automatic remote type detection (e.g., 'XUMO', 'SKY STREAM')
         key_delay: Delay in seconds between sending each IR key (default: 0.5s)
+        is_rack_device: Boolean indicating if device is a GDF_RACK device
+        device_mac_address: MAC address of device (required for GDF_RACK devices)
     """
+    
+    # Route to GDF handler if this is a rack device with MAC address
+    if is_rack_device and device_mac_address:
+        try:
+            from methods.method_gdf_ir_test import execute_gdf_ir_test_process
+            log_message(f"\n[IR ROUTING] Device is GDF_RACK - routing to GDF IR handler")
+            return execute_gdf_ir_test_process(
+                device_mac_address, selected_keys or ['HOME', 'POWER'], 
+                device_type, iteration, key_delay, 
+                gdf_api_endpoint=None, device_name=device_name,
+                rpi_config=rpi_config,  # Pass R-Pi config for SSH verification
+                device_ip=device_ip,
+                device_username=username,
+                device_password=password
+            )
+        except ImportError as e:
+            log_message(f"❌ ERROR: Could not import GDF IR handler: {e}")
+            log_message(f"   Falling back to DESK IR handler (this may not work for rack devices)")
+        except Exception as e:
+            log_message(f"❌ ERROR in GDF IR handler: {e}")
+            log_message(f"   Falling back to DESK IR handler")
+            import traceback
+            log_message(f"   Traceback: {traceback.format_exc()}")
+    
+    # DESK device logic (or fallback for rack devices if GDF routing failed)
+    log_message(f"\n[IR ROUTING] Using DESK IR handler (iTach-based)")
+    
     # Default to both keys if none specified
     if not selected_keys:
         selected_keys = ['HOME', 'POWER']

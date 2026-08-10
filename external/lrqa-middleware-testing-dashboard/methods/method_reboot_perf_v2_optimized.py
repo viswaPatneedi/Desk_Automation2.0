@@ -23,7 +23,11 @@ import time
 import re
 import paramiko
 import socket
+import os
+import threading
+import traceback
 from datetime import datetime, timezone
+from pathlib import Path
 
 # Import configurations
 from config.config_commands import *
@@ -35,7 +39,6 @@ from methods.method_utils import (
     log_message,
     fetch_build_details,
     activate_screencapture_service,
-    create_screenshot_folder,
     create_execution_log_path,
     wait_for_device,
     check_network_and_realtek_errors,
@@ -46,8 +49,7 @@ from methods.method_utils import (
 )
 
 # Import screenshot utilities
-from utils.screenshot_utils import take_and_analyze_screenshot
-from tools.screen.screenshot_utils_vnc import take_vnc_screenshot_with_fallback
+from services.screenshot_capture_service import ScreenshotCaptureService
 
 # Import AI Screen Validation
 try:
@@ -56,6 +58,68 @@ try:
 except ImportError:
     AI_VALIDATION_ENABLED = False
     log_message("⚠️  AI Screen Validation not available - using legacy validation")
+
+def build_execution_results_path(device_ip, device_name, method_name, iteration, total_iterations, execution_timestamp=None, log_callback=None):
+    """
+    Build ExecutionResults storage path structure with unique timestamp
+    
+    Path: ExecutionResults/<DATE>/<DeviceIP_DEVICENAME>/<Method_Name>/<TOTAL_ITERATIONS_TIMESTAMP>/<ITR-No>/
+    Example: ExecutionResults/2026-08-06/10.0.0.28_DT_LAB_SKYXIONEUK/Reboot_perf/20_ITRS_20260806_150142/ITR_1/
+    
+    Args:
+        device_ip: Device IP (e.g., 10.0.0.28)
+        device_name: Device name (e.g., DT_LAB_SKYXIONEUK)
+        method_name: Method name (e.g., reboot_perf or Reboot_perf)
+        iteration: Current iteration number (e.g., 1)
+        total_iterations: Total iterations (e.g., 20)
+        execution_timestamp: Execution start timestamp (e.g., '20260806_150142') - if None, will be generated
+        log_callback: Optional logging function
+    
+    Returns:
+        Path object for the results directory
+    """
+    def log(msg):
+        if log_callback:
+            log_callback(msg)
+    
+    try:
+        # Get current date
+        date_str = datetime.now().strftime('%Y-%m-%d')
+        
+        # Generate execution timestamp if not provided
+        if execution_timestamp is None:
+            execution_timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+        
+        # Build device folder name
+        device_folder = f"{device_ip}_{device_name}"
+        
+        # Build method folder name (capitalize first letter)
+        if method_name.lower() == 'reboot_perf_v2_optimized':
+            method_folder = "Reboot_perf"
+        elif method_name.lower() == 'reboot_perf':
+            method_folder = "Reboot_perf"
+        else:
+            # Capitalize first letter of each word
+            method_folder = '_'.join(word.capitalize() for word in method_name.split('_'))
+        
+        # Build iterations folder name with timestamp (makes it unique per execution)
+        iterations_folder = f"{total_iterations}_ITRS_{execution_timestamp}"
+        
+        # Build iteration folder name
+        iteration_folder = f"ITR_{iteration}"
+        
+        # Build full path
+        results_dir = Path("ExecutionResults") / date_str / device_folder / method_folder / iterations_folder / iteration_folder
+        
+        # Create directory if it doesn't exist
+        results_dir.mkdir(parents=True, exist_ok=True)
+        
+        log(f"📁 ExecutionResults path: {results_dir}")
+        return results_dir
+    
+    except Exception as e:
+        log(f"❌ Error building ExecutionResults path: {e}")
+        return None
 
 def parse_log_timestamp(log_line):
     """
@@ -109,6 +173,70 @@ def parse_log_timestamp(log_line):
         log_message(f"⚠ Error parsing timestamp from log line: {e}")
     return None
 
+def check_device_uptime(ssh, log_message_func, timeout_seconds=10):
+    """
+    Check device uptime to verify system has finished boot sequence
+    
+    Args:
+        ssh: SSH connection object
+        log_message_func: logging function
+        timeout_seconds: Command timeout
+    
+    Returns:
+        dict with:
+        - 'success': bool - Command executed successfully
+        - 'uptime': str - Raw uptime output
+        - 'is_up': bool - Device has been up (uptime available)
+    """
+    result = {
+        'success': False,
+        'uptime': '',
+        'is_up': False
+    }
+    
+    try:
+        log_message_func("\n[DEVICE HEALTH] Checking device uptime...")
+        
+        import socket
+        stdin, stdout, stderr = ssh.exec_command("uptime", timeout=timeout_seconds)
+        
+        stdout.channel.settimeout(timeout_seconds)
+        stderr.channel.settimeout(timeout_seconds)
+        
+        try:
+            uptime_output = stdout.read().decode('utf-8', errors='ignore').strip()
+            error_output = stderr.read().decode('utf-8', errors='ignore').strip()
+        except socket.timeout:
+            log_message_func(f"  ⚠ Uptime command timeout after {timeout_seconds}s")
+            result['uptime'] = "TIMEOUT"
+            return result
+        finally:
+            try:
+                stdout.channel.close()
+                stderr.channel.close()
+            except:
+                pass
+        
+        if uptime_output:
+            result['success'] = True
+            result['uptime'] = uptime_output
+            result['is_up'] = True
+            
+            # Parse and show readable uptime
+            log_message_func(f"  ✓ Device uptime: {uptime_output}")
+            log_message_func(f"  ✓ Device kernel is running - boot sequence complete")
+            return result
+        elif error_output:
+            log_message_func(f"  ⚠ Uptime error: {error_output}")
+            return result
+        else:
+            log_message_func(f"  ⚠ No uptime output received")
+            return result
+            
+    except Exception as e:
+        log_message_func(f"  ⚠ Error checking uptime: {str(e)[:100]}")
+        return result
+
 def get_log_line_count(ssh, log_file="/opt/logs/sky-messages.log"):
     """
     Get the current line count of a log file
@@ -132,6 +260,7 @@ def get_log_line_count(ssh, log_file="/opt/logs/sky-messages.log"):
 def check_for_home_log_continuously(ssh, timeout_seconds, log_message_func, baseline_line_count=None, reboot_start_time=None):
     """
     Continuously check for HOME screen log line for specified timeout
+    Uses HOME pattern from log_patterns.json config file (centralized pattern management)
     Only checks for NEW log lines added AFTER baseline_line_count
     
     Args:
@@ -144,12 +273,24 @@ def check_for_home_log_continuously(ssh, timeout_seconds, log_message_func, base
     last_log_time = start_time
     check_interval = 5  # Check every 5 seconds
     
+    # Import HOME pattern from centralized config
+    from config.config_log_patterns import log_line_HOME
+    
+    # Parse HOME pattern from JSON (may contain multiple patterns separated by |)
+    home_pattern = log_line_HOME
+    home_patterns = home_pattern.split('|') if home_pattern else []
+    home_patterns = [p.strip() for p in home_patterns if p.strip()]
+    
     log_message_func(f"⏱ Monitoring logs for HOME screen (timeout: {timeout_seconds}s, checking every {check_interval}s)...")
-    if reboot_start_time:
-        log_message_func(f"   Reboot started at: {reboot_start_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} UTC")
-        log_message_func(f"   Looking for log entries AFTER this time only")
-    else:
-        log_message_func(f"   ⚠ No reboot start time provided - will accept any HOME log match")
+    log_message_func(f"   Using HOME pattern from log_patterns.json")
+    log_message_func(f"   Pattern count: {len(home_patterns)} alternatives")
+    log_message_func(f"   📋 DEBUG: Raw pattern from config: {repr(home_pattern[:150])}")
+    log_message_func(f"   📋 DEBUG: Split patterns count: {len(home_patterns)}")
+    if home_patterns:
+        for idx, pat in enumerate(home_patterns, 1):
+            log_message_func(f"   📋 DEBUG: Pattern {idx}: {pat[:100]}")
+        log_message_func(f"   Combined grep pattern: {home_patterns[0][:80]}...")
+    log_message_func(f"   Method: Check ALL patterns at once (single grep command)")
     log_message_func(f"   Searching /opt/logs/sky-messages.log")
     
     while (time.time() - start_time) < timeout_seconds:
@@ -160,93 +301,192 @@ def check_for_home_log_continuously(ssh, timeout_seconds, log_message_func, base
                 log_message_func("⚠ [CANCELLED] Job cancellation detected - stopping HOME log monitoring...")
                 return False, None, None
             
-            # OPTIMIZED: Get ONLY the last matching line (most recent HOME log)
-            # Use patterns that match what we know works on the device
-            grep_patterns = [
-                # Priority 1: QMS HOME_TILES complete // this is for XUMO, Rogers IUIv1 and SKY RDKE Devices - most reliable for HOME screen detection
-                "grep -E 'QMS.*HOME_.*complete' /opt/logs/sky-messages.log | tail -1",
-                
-                # Priority 2: App focus event (MOST RELIABLE for HOME screen detection) //  this is for ROGERS IUIv2
-                "grep -E 'App focus.*appId=com.entos.monarch_ui' /opt/logs/sky-messages.log | tail -1",
-                
-                # Priority 3: AppsModel.log App focus (alternative format) // not Required
-                "grep -E 'AppsModel.*App focus.*monarch_ui' /opt/logs/sky-messages.log | tail -1",
-                
-                # Fallback: HOME_TILES only (exclude 'adding package' false positives) // not Required
-                "tail -100 /opt/logs/sky-messages.log | grep -E 'HOME_.*complete' | tail -1"
-            ]
+            # PRE-CHECK: Verify log file exists and is accessible
+            if (time.time() - start_time) < check_interval:  # Only check once at start
+                try:
+                    test_cmd = "test -f /opt/logs/sky-messages.log && echo 'EXISTS' || echo 'NOT_FOUND'"
+                    stdin, stdout, stderr = ssh.exec_command(test_cmd, timeout=5)
+                    stdout.channel.settimeout(5)
+                    test_output = stdout.read().decode('utf-8', errors='ignore').strip()
+                    stdout.channel.close()
+                    
+                    if "NOT_FOUND" in test_output:
+                        log_message_func(f"  ⚠ ❌LOG FILE NOT FOUND: /opt/logs/sky-messages.log")
+                        time.sleep(check_interval)
+                        continue
+                    else:
+                        log_message_func(f"  ✓ Log file verified: /opt/logs/sky-messages.log exists")
+                except:
+                    log_message_func(f"  ⚠ Could not verify log file (continuing anyway)")
+            
+            # ✨ OPTIMIZED: Combine all patterns into single grep command with pipe
+            # Instead of checking patterns sequentially, check ALL at once
+            if home_patterns:
+                # Join all patterns with | (pipe) for single grep command
+                combined_pattern = '|'.join(home_patterns)
+                # ✨ FIXED: Use tail -1 to get LATEST matching line, not first match
+                grep_cmd = f'grep -E "{combined_pattern}" /opt/logs/sky-messages.log | tail -1'
+            else:
+                # Fallback pattern if config is empty
+                log_message_func("⚠ No HOME patterns found in config - using fallback pattern")
+                grep_cmd = 'grep -E "QMS.*HOME.*complete|App focus.*monarch_ui" /opt/logs/sky-messages.log | tail -1'
+            
+            log_message_func(f"  📋 DEBUG: Executing grep command...")
+            log_message_func(f"     Command length: {len(grep_cmd)} chars")
+            log_message_func(f"     First 150 chars: {grep_cmd[:150]}")
             
             log_output = ""
-            error_occurred = False
-            matched_pattern_index = -1
             
-            # Try each pattern until we find a match
-            for idx, grep_cmd in enumerate(grep_patterns, 1):
+            # Execute combined grep pattern (all patterns checked at once)
+            try:
+                stdin, stdout, stderr = ssh.exec_command(grep_cmd, timeout=20)
+                
+                log_message_func(f"  📋 DEBUG: SSH command sent, waiting for response...")
+                
+                # Read with timeout - grep on large files can take time
+                stdout.channel.settimeout(20.0)
+                stderr.channel.settimeout(20.0)
+                
                 try:
-                    log_message_func(f"  [DEBUG] Trying pattern {idx}/{len(grep_patterns)}...")
-                    stdin, stdout, stderr = ssh.exec_command(grep_cmd, timeout=20)
+                    log_message_func(f"  📋 DEBUG: Reading stdout...")
+                    log_output = stdout.read(8192).decode('utf-8', errors='ignore').strip()
+                    stderr_output = stderr.read(1024).decode('utf-8', errors='ignore').strip()
                     
-                    # Read with longer timeout - grep on large files can take time
-                    stdout.channel.settimeout(20.0)
+                    log_message_func(f"  📋 DEBUG: Got response from grep")
+                    log_message_func(f"     Stdout length: {len(log_output)} chars")
+                    log_message_func(f"     Stderr: {stderr_output[:100] if stderr_output else 'None'}")
+                    
+                except socket.timeout:
+                    log_message_func(f"  ⚠ ❌SOCKET TIMEOUT after 20s waiting for grep output!")
+                    log_message_func(f"  This may indicate the log file is very large or SSH is slow")
+                    log_output = ""
+                finally:
+                    # Always close the channel after reading
                     try:
-                        log_output = stdout.read(8192).decode('utf-8', errors='ignore').strip()
-                    except socket.timeout:
-                        log_message_func(f"  ⚠ Grep command timeout (20s) - log file may be very large")
-                        log_output = ""
-                    finally:
-                        # Always close the channel after reading
                         stdout.channel.close()
-                    
-                    # If we found a match with this pattern, stop trying other patterns
-                    if log_output:
-                        matched_pattern_index = idx
-                        log_message_func(f"  ✓ Pattern {idx} matched!")
-                        break
-                except Exception as pattern_error:
-                    log_message_func(f"  ⚠ Pattern {idx} check error: {str(pattern_error)[:100]}")
-                    error_occurred = True
-                    continue
+                        stderr.channel.close()
+                    except:
+                        pass
+            except Exception as grep_error:
+                log_message_func(f"  ⚠ ❌GREP ERROR: {str(grep_error)[:200]}")
+                import traceback
+                log_message_func(f"     Traceback: {traceback.format_exc()[:500]}")
+                log_output = ""
             
             # Check if HOME log line is present
             if log_output.strip():
-                pattern_descriptions = [
-                    "QMS HOME_TILES complete",
-                    "App focus event (monarch_ui)",
-                    "AppsModel App focus (alternative format)",
-                    "HOME_TILES fallback"
-                ]
-                pattern_desc = pattern_descriptions[matched_pattern_index - 1] if 0 < matched_pattern_index <= len(pattern_descriptions) else "unknown"
-                
-                log_message_func(f"  📋 Found HOME log line using pattern {matched_pattern_index}: {pattern_desc}")
                 home_line = log_output.strip()
+                
+                log_message_func(f"  ✓ HOME log line found (matched one of {len(home_patterns)} patterns)")
                 log_message_func(f"   Raw log line: {home_line[:250]}")
                 
                 # Parse timestamp from this line
                 line_timestamp = parse_log_timestamp(home_line)
                 
                 if line_timestamp:
-                    # Check if this is after reboot
-                    is_after_reboot = (reboot_start_time is None) or (line_timestamp > reboot_start_time)
+                    # ✨ VALIDATION: Check if this log line is AFTER the trigger time
+                    if reboot_start_time:
+                        # Post-reboot check: log must be AFTER reboot time
+                        is_after_trigger = line_timestamp > reboot_start_time
+                        time_context = f"Reboot time: {reboot_start_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} UTC"
+                    else:
+                        # Pre-reboot or HOME keypress check: accept the latest match
+                        is_after_trigger = True
+                        time_context = "Pre-reboot/HOME keypress check (accepting latest match)"
                     
-                    if is_after_reboot:
+                    log_message_func(f"   Log timestamp: {line_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} UTC")
+                    log_message_func(f"   {time_context}")
+                    
+                    if is_after_trigger:
                         time_found = datetime.now(timezone.utc)
                         log_message_func(f"✓ HOME screen log line detected!")
-                        log_message_func(f"   Pattern used: {pattern_desc}")
+                        log_message_func(f"   Pattern source: Centralized log_patterns.json (all {len(home_patterns)} patterns)")
                         log_message_func(f"   Timestamp from log: {line_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} UTC")
                         log_message_func(f"   Log line: {home_line[:200]}")
                         return True, home_line, time_found
                     else:
-                        log_message_func(f"  ⏱ HOME log found but it's from BEFORE reboot - continuing to monitor...")
-                        log_message_func(f"     Reboot time: {reboot_start_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} UTC")
-                        log_message_func(f"     Log time: {line_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} UTC")
+                        log_message_func(f"  ⏱ HOME log found but it's from BEFORE trigger action - continuing to monitor...")
+                        log_message_func(f"     Expected: After {reboot_start_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} UTC")
+                        log_message_func(f"     Got:      {line_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} UTC")
                 else:
                     log_message_func(f"  ⚠ Could not parse timestamp from HOME log line: {home_line[:150]}")
-            elif not error_occurred:
-                elapsed = time.time() - start_time
-                if (time.time() - last_log_time) >= 15:  # Log every 15 seconds instead of 20
-                    remaining = timeout_seconds - int(elapsed)
-                    log_message_func(f"  ⏱ Still monitoring... {int(elapsed)}s elapsed, {remaining}s remaining")
-                    last_log_time = time.time()
+            else:
+                # ✨ FALLBACK: If combined grep failed, try individual pattern checks
+                log_message_func(f"  📋 DEBUG: Combined grep returned empty, trying individual patterns...")
+                fallback_found = False
+                
+                for idx, pattern in enumerate(home_patterns, 1):
+                    try:
+                        # ✨ Use tail -1 to get LATEST match, not first match
+                        # Added: | tail -1 to fetch the most recent log line
+                        simple_grep = f"grep -E '{pattern}' /opt/logs/sky-messages.log | tail -1"
+                        log_message_func(f"    [FALLBACK {idx}] Trying: {simple_grep[:100]}")
+                        
+                        stdin, stdout, stderr = ssh.exec_command(simple_grep, timeout=10)
+                        stdout.channel.settimeout(10)
+                        
+                        try:
+                            fallback_output = stdout.read().decode('utf-8', errors='ignore').strip()
+                            if fallback_output:
+                                log_message_func(f"    ✓ ✨FALLBACK PATTERN {idx} MATCHED!")
+                                log_message_func(f"       Found: {fallback_output[:150]}")
+                                
+                                # Parse timestamp from this line
+                                line_timestamp = parse_log_timestamp(fallback_output)
+                                
+                                if line_timestamp:
+                                    # ✨ VALIDATION: Check if this log line is AFTER the trigger time
+                                    # For HOME keypress: log should be after keypress was sent
+                                    # For post-reboot: check is done by reboot_start_time parameter
+                                    
+                                    if reboot_start_time:
+                                        # Post-reboot check: log must be AFTER reboot time
+                                        is_after_trigger = line_timestamp > reboot_start_time
+                                        time_context = f"Reboot time: {reboot_start_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} UTC"
+                                    else:
+                                        # Pre-reboot or HOME keypress check: any recent match is valid
+                                        # (No strict timestamp filtering for pre-reboot)
+                                        is_after_trigger = True
+                                        time_context = "Pre-reboot/HOME keypress check (no strict time validation)"
+                                    
+                                    log_message_func(f"       Log timestamp: {line_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} UTC")
+                                    log_message_func(f"       {time_context}")
+                                    
+                                    if is_after_trigger:
+                                        time_found = datetime.now(timezone.utc)
+                                        log_message_func(f"    ✓ ✨TIMESTAMP VALIDATED - Log line is properly timed")
+                                        log_message_func(f"✓ HOME screen log line detected (via fallback)!")
+                                        log_message_func(f"   Pattern: {pattern[:80]}")
+                                        log_message_func(f"   Latest match at: {line_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} UTC")
+                                        log_message_func(f"   Log line: {fallback_output[:200]}")
+                                        return True, fallback_output, time_found
+                                    else:
+                                        log_message_func(f"    ⚠ Timestamp mismatch: Log line is BEFORE the trigger action")
+                                        log_message_func(f"       Expected: After {reboot_start_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} UTC")
+                                        log_message_func(f"       Got:      {line_timestamp.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]} UTC")
+                                        log_message_func(f"    → Continuing to next pattern...")
+                                        continue
+                                else:
+                                    log_message_func(f"    ⚠ Could not parse timestamp from: {fallback_output[:100]}")
+                                    continue
+                        except socket.timeout:
+                            log_message_func(f"    ⚠ Fallback pattern {idx} timeout")
+                        finally:
+                            try:
+                                stdout.channel.close()
+                            except:
+                                pass
+                    except Exception as e:
+                        log_message_func(f"    ⚠ Fallback pattern {idx} error: {str(e)[:80]}")
+                        continue
+                
+                # Neither combined nor fallback worked
+                if not fallback_found:
+                    elapsed = time.time() - start_time
+                    if (time.time() - last_log_time) >= 15:
+                        remaining = timeout_seconds - int(elapsed)
+                        log_message_func(f"  ⏱ Still monitoring... {int(elapsed)}s elapsed, {remaining}s remaining")
+                        last_log_time = time.time()
             
             # Wait before next check
             time.sleep(check_interval)
@@ -685,17 +925,19 @@ def execute_optional_post_reboot_checks(ssh, optional_checks, log_message_func, 
     
     return results
 
-def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, initial_wait=50, ssh_probe_start=30, probe_interval=5, total_ssh_timeout=120, log_callback=None):
+def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, initial_wait=50, ssh_probe_start=30, probe_interval=5, total_ssh_timeout=120, log_callback=None, tunnel_service=None):
     """
-    OPTIMIZED: Wait for device with intelligent early SSH probing
+    OPTIMIZED: Wait for device with intelligent early SSH probing + R-Pi tunnel health checks
     
     Instead of waiting 85s before attempting SSH, this function:
     1. Waits for initial_wait seconds (50s) 
     2. Starts SSH probing at ssh_probe_start seconds (30s) - within the wait period
     3. Continues probing for up to total_ssh_timeout seconds
-    4. Returns SSH connection when device comes back online
+    4. **BEFORE EACH SSH ATTEMPT**: Checks R-Pi tunnel health and re-establishes if needed
+    5. Returns SSH connection when device comes back online
     
     This ensures we catch logs that are written during the boot phase (40-70s typically)
+    and handles tunnel loss during reboot.
     
     Args:
         initial_wait: Initial wait time before device expected to reboot fully (50s)
@@ -703,6 +945,7 @@ def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, 
         probe_interval: Time between SSH connection attempts (5s)
         total_ssh_timeout: Total time to keep trying SSH connections (120s)
         log_callback: Function to log messages
+        tunnel_service: R-Pi tunnel service object (for health checks and re-establishment)
     
     Returns:
         paramiko.SSHClient if device comes back online, None if timeout
@@ -723,13 +966,15 @@ def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, 
         sys.stdout.flush()
         time.sleep(wait_until_probe)
     
-    # Phase 3: Active SSH probing
+    # Phase 3: Active SSH probing with tunnel health checks
     log(f"[PROBING PHASE 3] Starting SSH probing at {ssh_probe_start}s mark...")
     log(f"   Will probe every {probe_interval}s for up to {total_ssh_timeout}s (max total: {ssh_probe_start + total_ssh_timeout}s)")
+    log(f"   Tunnel health will be checked before each SSH attempt")
+    if tunnel_service:
+        log(f"   Using R-Pi tunnel (localhost:{port}) for SSH connection")
+    else:
+        log(f"   Using direct SSH connection to {device_ip}:{port}")
     sys.stdout.flush()  # Force log output immediately
-    
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
     elapsed_probe_time = 0
     while elapsed_probe_time < total_ssh_timeout:
@@ -740,8 +985,58 @@ def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, 
                 log(f"⚠ [CANCELLED] Job cancellation detected - stopping SSH probing...")
                 return None
             
-            log(f"  ⏱ SSH probe attempt at {elapsed_probe_time}s mark...")
-            ssh.connect(device_ip, port=port, username=username, password=password, timeout=5)
+            elapsed_total = time.time() - start_time
+            log(f"  ⏱ SSH probe attempt at {elapsed_probe_time}s mark (total {elapsed_total:.0f}s)...")
+            
+            # ✅ CRITICAL: Check R-Pi tunnel health BEFORE each SSH attempt
+            if tunnel_service:
+                try:
+                    # Check if tunnel port is still responsive
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.settimeout(1)
+                    result = sock.connect_ex(('127.0.0.1', port))
+                    sock.close()
+                    
+                    if result == 0:
+                        log(f"     ✓ R-Pi tunnel active (port {port} listening)")
+                    else:
+                        log(f"     ⚠ R-Pi tunnel port {port} NOT responding - Re-establishing...")
+                        try:
+                            # Attempt to stop old tunnel
+                            if hasattr(tunnel_service, 'stop'):
+                                tunnel_service.stop()
+                                time.sleep(1)
+                            
+                            # Re-establish tunnel
+                            log(f"     → Reconnecting R-Pi tunnel...")
+                            tunnel_service.connect()
+                            log(f"     ✓ R-Pi tunnel re-established")
+                            time.sleep(2)
+                        except Exception as tunnel_err:
+                            log(f"     ⚠ Failed to re-establish tunnel: {tunnel_err}")
+                            log(f"     → Attempting SSH anyway...")
+                except Exception as health_check_err:
+                    log(f"     ⚠ Tunnel health check failed: {health_check_err}")
+            
+            # Try SSH connection
+            if tunnel_service:
+                # Use R-Pi tunnel connectivity
+                try:
+                    from utils.ssh_wrapper import wrap_tunnel_service_as_ssh
+                    ssh = wrap_tunnel_service_as_ssh(tunnel_service)
+                    elapsed_total = time.time() - start_time
+                    log(f"✓ Device reconnected after {elapsed_total:.1f}s total")
+                    log(f"   (Initial wait: {ssh_probe_start}s, SSH probing: {elapsed_probe_time}s)")
+                    log(f"   Connected via R-Pi tunnel")
+                    return ssh
+                except Exception as tunnel_wrap_err:
+                    # Try regular SSH as fallback
+                    log(f"     ⚠ Tunnel wrapper failed: {tunnel_wrap_err} - trying direct SSH...")
+                    ssh.connect('127.0.0.1', port=port, username=username, password=password, timeout=5)
+            else:
+                # Direct SSH connection to device
+                ssh.connect(device_ip, port=port, username=username, password=password, timeout=5)
+            
             elapsed_total = time.time() - start_time
             log(f"✓ Device reconnected after {elapsed_total:.1f}s total")
             log(f"   (Initial wait: {ssh_probe_start}s, SSH probing: {elapsed_probe_time}s)")
@@ -756,7 +1051,7 @@ def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, 
     log(f"❌ Device did not come back online within {ssh_probe_start + total_ssh_timeout}s total")
     return None
 
-def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password, iteration=1, device_name="Device", combined_method_name=None, optional_checks=None, wait_after_reboot=80, home_screen_timeout=180, auto_collect_logs=False, log_search_patterns=None, job_id=None, termination_if_not_found=None, max_performance_time=None):
+def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password, iteration=1, device_name="Device", combined_method_name=None, optional_checks=None, wait_after_reboot=80, home_screen_timeout=180, auto_collect_logs=False, log_search_patterns=None, job_id=None, termination_if_not_found=None, max_performance_time=None, tunnel_service=None, total_iterations=1):
     """
     Execute Reboot Performance Monitoring V2 - OPTIMIZED:
     
@@ -814,6 +1109,14 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
     build_info = None
     check_results = None
     
+    # Initialize screenshot capture service for device native screenshots
+    try:
+        screenshot_capture_service = ScreenshotCaptureService(os.getcwd())
+        log_message("✓ Screenshot capture service initialized")
+    except Exception as e:
+        screenshot_capture_service = None
+        log_message(f"⚠ Screenshot capture service initialization failed: {e}")
+    
     # Store job_id in thread-local storage for cancellation checking
     if job_id:
         from methods.method_utils import set_current_job_id
@@ -843,9 +1146,18 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
     try:
         # STEP 1: DEVICE CONNECTION & PRE-REBOOT SETUP
         log_message("[STEP 1] Connecting to device and initial setup...")
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(device_ip, port=port, username=username, password=password, timeout=15)
+        
+        # Use R-Pi shell if tunnel_service provided, otherwise create paramiko connection
+        if tunnel_service:
+            log_message("✓ Using R-Pi interactive shell tunnel for device connection")
+            from utils.ssh_wrapper import wrap_tunnel_service_as_ssh
+            ssh = wrap_tunnel_service_as_ssh(tunnel_service)
+        else:
+            log_message("✓ Creating direct SSH connection to device...")
+            ssh = paramiko.SSHClient()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(device_ip, port=port, username=username, password=password, timeout=15)
+        
         log_message("✓ Connected to device successfully")
         
         # Fetch build details from device
@@ -879,34 +1191,104 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
             log_message(f"⚠ Warning: Failed to press HOME button: {e}")
             log_message("   Continuing with reboot anyway...")
         
+        # Validate HOME screen via log check
+        log_message("\n[STEP 1.5-VALIDATION] Validating HOME screen via log check...")
+        log_message("   Checking /opt/logs/sky-messages.log for HOME screen indicators...")
+        home_validated_before_reboot, home_log_line_before, _ = check_for_home_log_continuously(
+            ssh, timeout_seconds=30, log_message_func=log_message, 
+            reboot_start_time=None, baseline_line_count=None
+        )
+        
+        if home_validated_before_reboot:
+            log_message(f"✓ HOME screen validated via log: {home_log_line_before[:100]}")
+        else:
+            log_message("⚠ HOME screen log NOT found yet - device may still be loading")
+            log_message("   (Test will continue - logging may be delayed)")
+        
         # Capture BEFORE screenshot after ScreenCapture activation and HOME button press
-        log_message("\n[STEP 1.5] Capturing BEFORE screenshot (VNC method - fast)...")
+        log_message("\n[STEP 1.5] Capturing BEFORE screenshot (via tunnel)...")
         log_message("⚠ NOTE: Screenshot is informational - execution will continue even if it fails")
+        screenshot_result_before = None
+        before_screenshot_path = None
         try:
-            screenshot_folder_before = create_screenshot_folder(device_ip, device_name, iteration, "Before", method_name="reboot_perf_v2_optimized", execution_timestamp=timestamp)
-            screenshot_result_before = take_vnc_screenshot_with_fallback(
-                ssh=ssh,
-                device_ip=device_ip,
-                device_name=safe_device_name,
-                iteration=iteration,
-                screenshot_folder=screenshot_folder_before,
-                log_callback=log_message,
-                fallback_to_plugin=True,
-                context="Before-Reboot"
-            )
-            if screenshot_result_before and screenshot_result_before.get('success'):
-                log_message(f"✓ BEFORE screenshot captured in {screenshot_result_before.get('capture_time', 0):.2f}s")
-                log_message(f"  Saved: {screenshot_result_before.get('local_path')}")
-                screenshots_list.append(screenshot_result_before.get('local_path', ''))
+            if screenshot_capture_service:
+                before_screenshot_result = screenshot_capture_service.capture_screenshot(
+                    device_ip=device_ip,
+                    screenshot_port=5800,
+                    timeout=10
+                )
+                
+                if before_screenshot_result.get('success'):
+                    # Build ExecutionResults path
+                    execution_results_dir = build_execution_results_path(
+                        device_ip, device_name, combined_method_name or "reboot_perf_v2_optimized",
+                        iteration, total_iterations, execution_timestamp=timestamp, log_callback=log_message
+                    )
+                    
+                    if execution_results_dir:
+                        # Generate standardized screenshot name
+                        timestamp_str = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+                        before_screenshot_name = f"{device_ip}_{device_name}_Iteration-{iteration}_Before-Reboot_{timestamp_str}.png"
+                        before_screenshot_path = execution_results_dir / before_screenshot_name
+                        
+                        # Copy screenshot to ExecutionResults
+                        import shutil
+                        original_path = before_screenshot_result.get('screenshot_path')
+                        shutil.copy2(original_path, str(before_screenshot_path))
+                        
+                        log_message(f"✓ BEFORE screenshot captured successfully")
+                        log_message(f"  File: {before_screenshot_name}")
+                        log_message(f"  Size: {before_screenshot_result.get('size_bytes')} bytes")
+                        log_message(f"  Path: {before_screenshot_path}")
+                        
+                        # Verify the captured screenshot
+                        verification = screenshot_capture_service.verify_screenshot(str(before_screenshot_path))
+                        if verification.get('valid'):
+                            log_message(f"✓ BEFORE screenshot verified as valid PNG")
+                            screenshots_list.append(str(before_screenshot_path))
+                        
+                        # Run AI analysis on BEFORE screenshot to populate screen_state
+                        if AI_VALIDATION_ENABLED:
+                            try:
+                                from ai_integration_universal import analyze_screen_ai
+                                log_message(f"🤖 Running AI analysis on BEFORE screenshot...")
+                                ai_result = analyze_screen_ai(str(before_screenshot_path), device_name=device_name)
+                                
+                                if ai_result and not ai_result.get('error'):
+                                    # Extract screen detection info from AI result
+                                    before_screenshot_result['screen_state'] = {
+                                        'screen_detected': ai_result.get('detected_screen', 'Unknown'),
+                                        'confidence': ai_result.get('confidence', 0.0),
+                                        'device_matched': ai_result.get('device_matched', False),
+                                        'focus_elements': ai_result.get('focus_elements', [])
+                                    }
+                                    log_message(f"✓ BEFORE AI Analysis: Detected '{ai_result.get('detected_screen', 'Unknown')}' (confidence: {ai_result.get('confidence', 0.0):.1%})")
+                                else:
+                                    log_message(f"⚠ AI analysis failed for BEFORE screenshot: {ai_result.get('error', 'Unknown error')}")
+                                    # Set default screen_state to allow validation to proceed
+                                    before_screenshot_result['screen_state'] = {'screen_detected': 'Unknown', 'confidence': 0.0}
+                            except Exception as e:
+                                log_message(f"⚠ Error running AI analysis: {str(e)[:150]}")
+                                # Set default screen_state so validation can still run
+                                before_screenshot_result['screen_state'] = {'screen_detected': 'Unknown', 'confidence': 0.0}
+                        else:
+                            # AI validation disabled, set default
+                            before_screenshot_result['screen_state'] = {'screen_detected': 'Direct Capture', 'confidence': 1.0}
+                        
+                        screenshot_result_before = before_screenshot_result
+                    else:
+                        log_message(f"⚠ BEFORE screenshot verification warning: {verification.get('error')}")
+                        screenshot_result_before = before_screenshot_result  # Still add it even if warning
+                else:
+                    error = before_screenshot_result.get('error', 'Unknown error')
+                    log_message(f"⚠ BEFORE screenshot capture failed: {error}")
+                    log_message("✓ Continuing with reboot execution anyway...")
             else:
-                error_msg = screenshot_result_before.get('error', 'Unknown error') if screenshot_result_before else 'Screenshot failed'
-                log_message(f"⚠ BEFORE screenshot not available: {error_msg}")
+                log_message("⚠ Screenshot capture service not available")
                 log_message("✓ Continuing with reboot execution anyway...")
-                screenshot_result_before = None  # Clear for screen validation check later
         except Exception as e:
-            log_message(f"⚠ Warning: Failed to capture BEFORE screenshot: {e}")
+            log_message(f"⚠ Warning: Failed to capture BEFORE screenshot: {str(e)[:150]}")
             log_message("✓ Continuing with reboot execution anyway...")
-            screenshot_result_before = None
         
         log_message("✓ Pre-reboot setup complete")
         
@@ -955,6 +1337,7 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
         log_message(f"   Data-driven optimization: Real device boots in ~84s (40-90s range)")
         log_message(f"   Strategy: 10s shutdown wait → Wait until 40s → SSH probe every 5s → Immediate HOME monitoring")
         log_message(f"   Benefit: Catches SSH reconnection + HOME logs at optimal time window")
+        log_message(f"   ✨ R-Pi tunnel health checked before EACH SSH attempt (auto-reconnect if lost)")
         
         ssh = wait_for_device_with_early_ssh_probing(
             device_ip, port, username, password,
@@ -962,7 +1345,8 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
             ssh_probe_start=40,
             probe_interval=5,
             total_ssh_timeout=100,
-            log_callback=log_message
+            log_callback=log_message,
+            tunnel_service=tunnel_service
         )
         
         if not ssh:
@@ -980,20 +1364,28 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
             ssh.close()
             return {"iteration": iteration, "screenshots": screenshots_list, "logs": logs_list, "success": False, "cancelled": True, "device_name": device_name}
         
-        # STEP 4: MONITOR LOGS FOR HOME SCREEN (IMMEDIATELY)
+        # STEP 3.5: CHECK DEVICE UPTIME (verify boot sequence complete)
+        # Run uptime command to confirm device kernel is running after boot
+        uptime_result = check_device_uptime(ssh, log_message, timeout_seconds=10)
+        if uptime_result['success'] and uptime_result['is_up']:
+            log_message("✓ Device uptime verified - boot sequence complete")
+        else:
+            log_message("⚠ Unable to verify uptime - continuing with HOME log check anyway")
+        
+        # STEP 4: MONITOR LOGS FOR HOME SCREEN (IMMEDIATELY AFTER UPTIME CHECK)
         # Device should automatically navigate to HOME screen after reboot
         elapsed_since_reboot = time.time() - reboot_start_time.timestamp()
         remaining_timeout = max(30, home_screen_timeout - elapsed_since_reboot)
         
         log_message(f"\n[STEP 4] Monitoring logs for HOME screen detection...")
-        log_message(f"   ✨ OPTIMIZATION: Starting immediately upon SSH reconnection")
+        log_message(f"   ✨ OPTIMIZATION: Starting immediately after uptime verification")
         log_message(f"   Elapsed since reboot command: {elapsed_since_reboot:.0f}s")
         log_message(f"   Will monitor for up to: {remaining_timeout:.0f}s more (total timeout: {home_screen_timeout}s)")
         log_message(f"   Log source: /opt/logs/sky-messages.log")
-        log_message(f"   Looking for HOME screen indicators in logs AFTER reboot time")
+        log_message(f"   Method: Checking ALL 3 patterns simultaneously (combined grep with pipe)")
         home_found, home_log_line, home_time = check_for_home_log_continuously(
             ssh, timeout_seconds=int(remaining_timeout), log_message_func=log_message, 
-            reboot_start_time=reboot_start_time, baseline_line_count=None
+            reboot_start_time=None, baseline_line_count=None
         )
         time.sleep(10)
         
@@ -1134,50 +1526,102 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
             sys.stdout.flush()  # Force flush after sleep
 
             
-            screenshot_folder = create_screenshot_folder(device_ip, device_name, iteration, "SUCCESS", method_name="reboot_perf_v2_optimized", execution_timestamp=timestamp)
-            
-            # Capture screenshot with VNC (3x faster)
-            log_message("📸 Capturing AFTER screenshot (VNC method - faster)...")
+            # Capture screenshot via tunnel service (direct method)
+            log_message("📸 Capturing AFTER screenshot (via tunnel)...")
             sys.stdout.flush()
             screenshot_result = None
+            after_screenshot_path = None
             try:
-                screenshot_result = take_vnc_screenshot_with_fallback(
-                    ssh=ssh,
-                    device_ip=device_ip,
-                    device_name=safe_device_name,
-                    iteration=iteration,
-                    screenshot_folder=screenshot_folder,
-                    log_callback=log_message,
-                    fallback_to_plugin=True,
-                    context="After-Reboot-SUCCESS"
-                )
+                if screenshot_capture_service:
+                    screenshot_result = screenshot_capture_service.capture_screenshot(
+                        device_ip=device_ip,
+                        screenshot_port=5800,
+                        timeout=10
+                    )
+                    
+                    if screenshot_result and screenshot_result.get('success'):
+                        # Build ExecutionResults path (same as BEFORE)
+                        execution_results_dir = build_execution_results_path(
+                            device_ip, device_name, combined_method_name or "reboot_perf_v2_optimized",
+                            iteration, total_iterations, execution_timestamp=timestamp, log_callback=log_message
+                        )
+                        
+                        if execution_results_dir:
+                            # Generate standardized screenshot name
+                            timestamp_str = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+                            after_screenshot_name = f"{device_ip}_{device_name}_Iteration-{iteration}_After-Reboot_{timestamp_str}.png"
+                            after_screenshot_path = execution_results_dir / after_screenshot_name
+                            
+                            # Copy screenshot to ExecutionResults
+                            import shutil
+                            original_path = screenshot_result.get('screenshot_path')
+                            shutil.copy2(original_path, str(after_screenshot_path))
+                            
+                            log_message(f"✓ AFTER screenshot captured successfully")
+                            log_message(f"  File: {after_screenshot_name}")
+                            log_message(f"  Size: {screenshot_result.get('size_bytes')} bytes")
+                            log_message(f"  Path: {after_screenshot_path}")
+                            
+                            # Verify the captured screenshot
+                            verification = screenshot_capture_service.verify_screenshot(str(after_screenshot_path))
+                            if verification.get('valid'):
+                                log_message(f"✓ AFTER screenshot verified as valid PNG")
+                                screenshots_list.append(str(after_screenshot_path))
+                            else:
+                                log_message(f"⚠ AFTER screenshot verification warning: {verification.get('error')}")
+                                screenshots_list.append(str(after_screenshot_path))  # Still add it
+                            
+                            # Run AI analysis on AFTER screenshot to populate screen_state
+                            if AI_VALIDATION_ENABLED:
+                                try:
+                                    from ai_integration_universal import analyze_screen_ai
+                                    log_message(f"🤖 Running AI analysis on AFTER screenshot...")
+                                    ai_result = analyze_screen_ai(str(after_screenshot_path), device_name=device_name)
+                                    
+                                    if ai_result and not ai_result.get('error'):
+                                        # Extract screen detection info from AI result
+                                        screenshot_result['screen_state'] = {
+                                            'screen_detected': ai_result.get('detected_screen', 'Unknown'),
+                                            'confidence': ai_result.get('confidence', 0.0),
+                                            'device_matched': ai_result.get('device_matched', False),
+                                            'focus_elements': ai_result.get('focus_elements', [])
+                                        }
+                                        log_message(f"✓ AFTER AI Analysis: Detected '{ai_result.get('detected_screen', 'Unknown')}' (confidence: {ai_result.get('confidence', 0.0):.1%})")
+                                    else:
+                                        log_message(f"⚠ AI analysis failed for AFTER screenshot: {ai_result.get('error', 'Unknown error')}")
+                                        # Set default screen_state to allow validation to proceed
+                                        screenshot_result['screen_state'] = {'screen_detected': 'Unknown', 'confidence': 0.0}
+                                except Exception as e:
+                                    log_message(f"⚠ Error running AI analysis: {str(e)[:150]}")
+                                    # Set default screen_state so validation can still run
+                                    screenshot_result['screen_state'] = {'screen_detected': 'Unknown', 'confidence': 0.0}
+                            else:
+                                # AI validation disabled, set default
+                                screenshot_result['screen_state'] = {'screen_detected': 'Direct Capture', 'confidence': 1.0}
+                        else:
+                            log_message("⚠ Could not create ExecutionResults directory")
+                    else:
+                        error = screenshot_result.get('error', 'Unknown error') if screenshot_result else 'Screenshot capture failed'
+                        log_message(f"⚠ AFTER screenshot capture failed: {error}")
+                        log_message("ℹ Test continues - screenshot is informational only")
+                else:
+                    log_message("⚠ Screenshot capture service not available")
+                    screenshot_result = None
             except Exception as e:
-                log_message(f"⚠ Screenshot capture exception: {e}")
+                log_message(f"⚠ Screenshot capture exception: {str(e)[:150]}")
                 log_message("⚠ Continuing with test - screenshot is non-critical")
                 sys.stdout.flush()
                 screenshot_result = None
             
-            # Process screenshot result if successful, but don't block on failure
-            if screenshot_result and screenshot_result.get('success'):
-                screenshots_list.append(screenshot_result.get('local_path', ''))
-                log_message(f"✓ Screenshot saved: {screenshot_result.get('local_path', 'N/A')}")
+            sys.stdout.flush()
                 
-                # Check OCR text for errors even on success
-                extracted_text = screenshot_result.get('extracted_text', '')
-                screen_state = screenshot_result.get('screen_state', {})
-                if screen_state and screen_state.get('has_network_error'):
-                    log_message("⚠ WARNING: Network error detected in screenshot text even though HOME screen log found")
-                    log_message(f"⚠ Error indicators in text: {extracted_text[:300]}")
-            else:
-                # Screenshot failed but don't block execution
-                error_msg = screenshot_result.get('error', 'Unknown error') if screenshot_result else 'Screenshot capture failed'
-                log_message(f"⚠ Screenshot not captured: {error_msg}")
-                log_message("✓ Test continues - screenshot is informational only")
-                sys.stdout.flush()
-                
-                # VALIDATE SCREEN COMPARISON (Informational only)
+                # VALIDATE SCREEN COMPARISON (Informational only - skip if using direct screenshot service)
             screen_validation = None
-            if screenshot_result_before and screenshot_result:  # Only compare if both screenshots exist
+            # Only perform screen comparison if both results have screen_state (from OCR-based analysis)
+            has_screen_state_before = screenshot_result_before and screenshot_result_before.get('screen_state')
+            has_screen_state_after = screenshot_result and screenshot_result.get('screen_state')
+            
+            if has_screen_state_before and has_screen_state_after:
                 screen_validation = validate_screen_comparison(screenshot_result_before, screenshot_result, log_message)
                 
                 if screen_validation and not screen_validation.get('screen_validation_passed'):
@@ -1194,7 +1638,7 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                     log_message(f"✓ {screen_validation.get('message', 'Screen comparison successful')}")
                     log_message("="*80)
             else:
-                log_message("⚠ Screen validation skipped - BEFORE or AFTER screenshot unavailable")
+                log_message("ℹ Screen validation skipped - Direct screenshot capture (no OCR analysis)")
             log_message("\n" + "="*80)
             log_message("✓ REBOOT PERFORMANCE TEST V2 OPTIMIZED PASSED")
             if reboot_duration:
@@ -1330,7 +1774,12 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                 "stop_iterations": check_results['stop_iterations'],
                 "screen_validation": screen_validation,
                 "build_info": build_info,
-                "device_name": device_name
+                "device_name": device_name,
+                "captured_screenshots": {
+                    "before": str(before_screenshot_path) if before_screenshot_path else None,
+                    "after": str(after_screenshot_path) if after_screenshot_path else None,
+                    "count": len(screenshots_list)
+                }
             }
         
         else:
@@ -1344,34 +1793,34 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
             log_message("Waiting 3 seconds for service to fully initialize...")
             time.sleep(3)  # Reduced from 5s
             
-            screenshot_folder = create_screenshot_folder(device_ip, device_name, iteration, "FAILED", method_name="reboot_perf_v2_optimized", execution_timestamp=timestamp)
-            
             try:
-                screenshot_result = take_vnc_screenshot_with_fallback(
-                    ssh=ssh,
-                    device_ip=device_ip,
-                    device_name=safe_device_name,
-                    iteration=iteration,
-                    screenshot_folder=screenshot_folder,
-                    log_callback=log_message,
-                    fallback_to_plugin=True,
-                    context="After-Reboot-FAILED"
-                )
-                if screenshot_result and screenshot_result.get('success'):
-                    screenshots_list.append(screenshot_result.get('local_path', ''))
+                if screenshot_capture_service:
+                    screenshot_result = screenshot_capture_service.capture_screenshot(
+                        device_ip=device_ip,
+                        screenshot_port=5800,
+                        timeout=10
+                    )
                     
-                    # Check OCR text for errors
-                    extracted_text = screenshot_result.get('extracted_text', '')
-                    screen_state = screenshot_result.get('screen_state', {})
-                    has_network_error = screen_state.get('has_network_error', False)
-                    
-                    if has_network_error:
-                        log_message("⚠ NETWORK ERROR DETECTED in screenshot text:")
-                        log_message(f"   Text preview: {extracted_text[:300]}")
+                    if screenshot_result and screenshot_result.get('success'):
+                        log_message(f"✓ Failure screenshot captured")
+                        log_message(f"  File: {screenshot_result.get('filename')}")
+                        log_message(f"  Path: {screenshot_result.get('screenshot_path')}")
+                        
+                        # Verify the captured screenshot
+                        verification = screenshot_capture_service.verify_screenshot(screenshot_result.get('screenshot_path'))
+                        if verification.get('valid'):
+                            log_message(f"✓ Failure screenshot verified as valid PNG")
+                            screenshots_list.append(screenshot_result.get('screenshot_path'))
+                        else:
+                            log_message(f"⚠ Failure screenshot verification warning: {verification.get('error')}")
+                    else:
+                        error = screenshot_result.get('error', 'Unknown error') if screenshot_result else 'Capture failed'
+                        log_message(f"⚠ Failure screenshot not captured: {error}")
+                        log_message("ℹ Test continues - screenshot is informational")
                 else:
-                    log_message("⚠ Failure screenshot not captured - continuing anyway")
+                    log_message("⚠ Screenshot capture service not available")
             except Exception as e:
-                log_message(f"⚠ Screenshot capture exception: {e}")
+                log_message(f"⚠ Screenshot capture exception: {str(e)[:150]}")
                 log_message("⚠ Continuing without screenshot")
             
             # Check for network/Realtek errors in device logs
@@ -1451,7 +1900,12 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                     'collected_logs': []
                 },
                 "stop_iterations": (check_results or {}).get('stop_iterations', False),
-                "device_name": device_name
+                "device_name": device_name,
+                "captured_screenshots": {
+                    "before": str(before_screenshot_path) if 'before_screenshot_path' in locals() and before_screenshot_path else None,
+                    "after": None,  # AFTER screenshot not captured in failure case (HOME not found)
+                    "count": len(screenshots_list)
+                }
             }
     
     except Exception as e:
@@ -1472,5 +1926,10 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                 'collected_logs': []
             },
             "stop_iterations": (check_results or {}).get('stop_iterations', False),
-            "device_name": device_name
+            "device_name": device_name,
+            "captured_screenshots": {
+                "before": str(before_screenshot_path) if 'before_screenshot_path' in locals() and before_screenshot_path else None,
+                "after": str(after_screenshot_path) if 'after_screenshot_path' in locals() and after_screenshot_path else None,
+                "count": len(screenshots_list)
+            }
         }

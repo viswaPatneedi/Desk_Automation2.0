@@ -21,10 +21,34 @@ class DeviceController:
         DeviceLock.cleanup_expired_locks()
         user_team = getattr(current_user, 'team_name', None)
         is_admin = getattr(current_user, 'is_admin', False)
+        
+        print(f"🔍 get_devices() - User: {current_user.ntid} | Team: {user_team} | Admin: {is_admin}")
+        print(f"📊 Total devices in system: {len(devices)}")
+        
         for device in devices:
-            # Only show devices for user's team unless admin
-            if not is_admin and user_team and device.team_name != user_team:
+            # Check if user should see this device
+            can_see_device = False
+            see_reason = ""
+            
+            # Admins can see all devices
+            if is_admin:
+                can_see_device = True
+                see_reason = "ADMIN"
+            # Users can see devices from their own team
+            elif user_team and device.team_name == user_team:
+                can_see_device = True
+                see_reason = f"OWN_TEAM ({user_team})"
+            # Users can see devices shared with their team
+            elif user_team and device.shared_with_teams and user_team in device.shared_with_teams:
+                can_see_device = True
+                see_reason = f"SHARED ({device.shared_with_teams[user_team]})"
+            
+            if not can_see_device:
+                print(f"  ❌ {device.name} ({device.ip}) - Team: {device.team_name} (HIDDEN - user team: {user_team})")
                 continue
+            
+            print(f"  ✅ {device.name} ({device.ip}) - Team: {device.team_name} ({see_reason})")
+                
             device_dict = device.to_dict()
             # Add lock status
             lock = DeviceLock.get_device_lock(device.ip)
@@ -58,6 +82,8 @@ class DeviceController:
                 device_dict['total_iterations'] = None
             
             device_list.append(device_dict)
+        
+        print(f"📤 Returning {len(device_list)} devices to user")
         return jsonify({'success': True, 'devices': device_list})
     
     @staticmethod
@@ -174,11 +200,14 @@ class DeviceController:
     
     @staticmethod
     def delete_device():
-        """DELETE /api/devices - Delete a device (admin only)"""
+        """DELETE /api/devices - Delete a device with role-based permissions"""
         from flask_login import current_user
         
-        # Check if user is admin
-        if not getattr(current_user, 'is_admin', False):
+        # Check if user has ANY admin role
+        is_super_admin = getattr(current_user, 'is_super_admin', False)
+        is_team_admin = getattr(current_user, 'is_team_admin', False)
+        
+        if not (is_super_admin or is_team_admin):
             return jsonify({'error': 'Only administrators can delete devices'}), 403
         
         data = request.json
@@ -187,10 +216,37 @@ class DeviceController:
         if not device_ip:
             return jsonify({'error': 'Device IP is required'}), 400
         
+        # Get the device to check permissions
+        device = Device.find_by_ip(device_ip)
+        if not device:
+            return jsonify({'error': 'Device not found'}), 404
+        
+        # Authorization check
+        if is_super_admin:
+            # Super admin can delete any device
+            print(f"🗑️ [DELETE] Super Admin {current_user.ntid} deleting device {device_ip}")
+        elif is_team_admin:
+            # Team admin can only delete devices from their team that are NOT shared
+            user_team = getattr(current_user, 'team_name', '')
+            device_owner_team = device.team_name
+            shared_teams = device.shared_with_teams or {}
+            
+            if device_owner_team != user_team:
+                return jsonify({'error': 'You can only delete devices from your team'}), 403
+            
+            if shared_teams and len(shared_teams) > 0:
+                return jsonify({
+                    'error': 'Cannot delete device that is shared with other teams. Unshare first.',
+                    'shared_with': list(shared_teams.keys())
+                }), 403
+            
+            print(f"🗑️ [DELETE] Team Admin {current_user.ntid} (team: {user_team}) deleting device {device_ip}")
+        
         if Device.delete(device_ip):
             persistence = Device.get_last_persistence_status()
             print(
-                f"🗑️ [DELETE] ip={device_ip} persisted_via={persistence.get('mode')} "
+                f"✅ Device deleted successfully: {device_ip} "
+                f"persisted_via={persistence.get('mode')} "
                 f"db_available={persistence.get('database_available')}"
             )
             return jsonify({
@@ -199,15 +255,18 @@ class DeviceController:
                 'persistence': persistence
             })
         else:
-            return jsonify({'error': 'Device not found'}, 404), 404
+            return jsonify({'error': 'Failed to delete device'}), 500
     
     @staticmethod
     def delete_multiple_devices():
-        """POST /api/devices/delete-multiple - Delete multiple devices (admin only)"""
+        """POST /api/devices/delete-multiple - Delete multiple devices with role-based permissions"""
         from flask_login import current_user
         
-        # Check if user is admin
-        if not getattr(current_user, 'is_admin', False):
+        # Check if user has ANY admin role
+        is_super_admin = getattr(current_user, 'is_super_admin', False)
+        is_team_admin = getattr(current_user, 'is_team_admin', False)
+        
+        if not (is_super_admin or is_team_admin):
             return jsonify({'error': 'Only administrators can delete devices'}), 403
         
         data = request.json
@@ -219,12 +278,45 @@ class DeviceController:
         deleted_count = 0
         failed_count = 0
         failed_ips = []
+        unauthorized_ips = []
         
         for device_ip in device_ips:
             try:
+                # Get the device to check permissions
+                device = Device.find_by_ip(device_ip)
+                if not device:
+                    failed_count += 1
+                    failed_ips.append(device_ip)
+                    print(f"❌ Device not found: {device_ip}")
+                    continue
+                
+                # Authorization check
+                if is_super_admin:
+                    # Super admin can delete any device
+                    pass
+                elif is_team_admin:
+                    # Team admin can only delete devices from their team that are NOT shared
+                    user_team = getattr(current_user, 'team_name', '')
+                    device_owner_team = device.team_name
+                    shared_teams = device.shared_with_teams or {}
+                    
+                    if device_owner_team != user_team:
+                        unauthorized_ips.append(device_ip)
+                        failed_count += 1
+                        print(f"❌ Unauthorized: {device_ip} (device team: {device_owner_team}, your team: {user_team})")
+                        continue
+                    
+                    if shared_teams and len(shared_teams) > 0:
+                        unauthorized_ips.append(device_ip)
+                        failed_count += 1
+                        print(f"❌ Cannot delete shared device: {device_ip} (shared with: {list(shared_teams.keys())})")
+                        continue
+                
+                # Delete the device
                 if Device.delete(device_ip):
                     deleted_count += 1
-                    print(f"✅ Deleted device: {device_ip}")
+                    admin_type = "Super Admin" if is_super_admin else "Team Admin"
+                    print(f"✅ {admin_type} deleted device: {device_ip}")
                 else:
                     failed_count += 1
                     failed_ips.append(device_ip)
@@ -235,17 +327,19 @@ class DeviceController:
                 print(f"❌ Exception deleting device {device_ip}: {str(e)}")
         
         persistence = Device.get_last_persistence_status()
+        admin_type = "Super Admin" if is_super_admin else "Team Admin"
         print(
-            f"🗑️ [DELETE-MULTI] deleted={deleted_count} failed={failed_count} "
+            f"🗑️ [{admin_type}] deleted={deleted_count} failed={failed_count} unauthorized={len(unauthorized_ips)} "
             f"persisted_via={persistence.get('mode')} db_available={persistence.get('database_available')}"
         )
 
         return jsonify({
-            'success': True,
-            'message': f'Deleted {deleted_count} device(s)',
+            'success': deleted_count > 0,
+            'message': f'Deleted {deleted_count} device(s)' if deleted_count > 0 else 'No devices deleted',
             'deleted_count': deleted_count,
             'failed_count': failed_count,
             'failed_ips': failed_ips,
+            'unauthorized_ips': unauthorized_ips if unauthorized_ips else None,
             'persistence': persistence
         })
     @staticmethod
@@ -354,11 +448,18 @@ class DeviceController:
     
     @staticmethod
     def test_connection():
-        """POST /api/test_connection - Test device connection via R-Pi or direct SSH"""
+        """
+        POST /api/test_connection - Unified device connection validation
+        
+        Uses automatic mechanism:
+        1. If R-Pi config is available → Connect via R-Pi tunnel
+        2. If Jump host configured → Connect via jump host
+        3. Fallback → Direct SSH connection
+        
+        This unified approach works for both Desktop and Rack devices
+        """
         data = request.json
         device_ip = data.get('device_ip')
-        rpi_ip = data.get('rpi_ip')
-        is_rack_device = data.get('is_rack_device', False)
         
         if not device_ip:
             return jsonify({'error': 'Device IP is required'}), 400
@@ -367,12 +468,10 @@ class DeviceController:
         if not device:
             return jsonify({'error': 'Device not found'}), 404
         
-        # If R-Pi IP is provided, validate via R-Pi first, then check device status through R-Pi
-        if rpi_ip and (is_rack_device or device.rpi_config):
-            success, message = device.validate_connection_via_rpi(rpi_ip)
-        else:
-            # Direct SSH connection (fallback if no R-Pi info)
-            success, message = device.validate_connection()
+        # Use unified validation mechanism
+        # - Automatically uses R-Pi if configured
+        # - Falls back to direct SSH otherwise
+        success, message = device.validate_connection()
         
         return jsonify({
             'success': success,

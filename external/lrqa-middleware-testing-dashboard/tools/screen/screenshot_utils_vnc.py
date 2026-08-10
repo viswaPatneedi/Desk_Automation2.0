@@ -28,9 +28,34 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def is_tunnel_port_available(port=5800, host='127.0.0.1'):
+    """
+    Check if a tunnel port is available on localhost.
+    This indicates that SSHTunnelForwarder has set up port forwarding.
+    
+    Args:
+        port: Port number to check (default: 5800)
+        host: Host to check (default: 127.0.0.1)
+    
+    Returns:
+        bool: True if port is listening on localhost
+    """
+    import socket
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(0.5)
+            result = s.connect_ex((host, port))
+            return result == 0  # 0 means connection successful
+    except Exception:
+        return False
+
+
 def get_vnc_screenshot_url(device_ip, device_name, iteration, timestamp=None, vnc_port=5800):
     """
     Generate VNC screenshot URL from SkyWebVNC server.
+    
+    When tunnel is active (SSHTunnelForwarder), uses localhost:5800 forwarded port.
+    Otherwise, uses device IP directly.
     
     Args:
         device_ip: IP address of the device (e.g., "10.0.0.195")
@@ -45,16 +70,26 @@ def get_vnc_screenshot_url(device_ip, device_name, iteration, timestamp=None, vn
     Note:
         The VNC web server serves screenshots via a static endpoint.
         The endpoint always returns the current frame buffer as PNG.
-        No custom naming/parameters are supported.
+        
+        TUNNEL SUPPORT:
+        - If SSHTunnelForwarder has forwarded the VNC port to localhost,
+          this function detects it and uses 127.0.0.1:5800 instead of device_ip
+        - This ensures VNC access works through the tunnel
     
     Example:
         >>> get_vnc_screenshot_url("10.0.0.195", "SKY-GLASS-G1", 49)
-        'http://10.0.0.195:5800/screenshot.png'
+        'http://127.0.0.1:5800/screenshot.png'  # If tunnel is active
+        # or
+        'http://10.0.0.195:5800/screenshot.png'  # If direct access
     """
-    # SkyWebVNC server uses a static endpoint for screenshots
-    # The device_name and iteration parameters are for reference/logging only
-    # The VNC server always returns the current frame buffer as PNG
-    url = f"http://{device_ip}:{vnc_port}/screenshot.png"
+    # Check if tunnel port is available on localhost
+    # This indicates SSHTunnelForwarder has set up port forwarding
+    if is_tunnel_port_available(port=vnc_port, host='127.0.0.1'):
+        # Tunnel active: Use localhost forwarded port
+        url = f"http://127.0.0.1:{vnc_port}/screenshot.png"
+    else:
+        # Tunnel not active or unavailable: Use device IP directly
+        url = f"http://{device_ip}:{vnc_port}/screenshot.png"
     
     return url
 
@@ -376,34 +411,98 @@ def take_vnc_screenshot_with_fallback(
     step=None
 ):
     """
-    Take screenshot using VNC first, with automatic fallback to ScreenCapture plugin if VNC fails.
+    Take screenshot using ScreenCapture plugin when SSH tunnel available.
+    Falls back to VNC only if no SSH connection and direct access available.
 
-    This provides the best of both worlds:
-    - Fast VNC capture when available
-    - Fallback to ScreenCapture plugin when VNC is unavailable
+    Architecture:
+    - If SSH connection available (tunnel devices): Use ScreenCapture plugin DIRECTLY
+    - If SSH not available (local devices): Try VNC first, then fallback to plugin
+    
+    This prioritizes ScreenCapture plugin for tunnel devices because:
+    - VNC port is on device IP:5800 (not accessible through Flask server)
+    - SSH tunnel already established for command execution
+    - ScreenCapture plugin already activated on device
+    - All operations happen on device, retrieved via SFTP
 
     Args:
-        ssh: Active SSH connection (needed for fallback only)
+        ssh: Active SSH connection (used for ScreenCapture plugin when available)
         device_ip: IP address of device
         device_name: Device name
         iteration: Iteration number
         screenshot_folder: Folder to save screenshot
         vnc_port: VNC port (default: 5800)
         log_callback: Logging callback
-        fallback_to_plugin: If True, fall back to ScreenCapture plugin on VNC failure
+        fallback_to_plugin: If True, uses ScreenCapture plugin as primary method for tunnel devices
         context: Context label for naming (e.g., "Before", "After-Reboot-SUCCESS", "After-Reboot-FAILED")
         app_name: App name for reference screen matching (e.g., 'netflix')
         step: Step number for UI display (e.g., 0, 1, 2)
     
     Returns:
-        dict: Same as take_vnc_screenshot()
+        dict: Screenshot result with success/error details
     """
     def log(msg):
         if log_callback:
             log_callback(msg)
     
-    # Try VNC first
-    log("[SCREENSHOT] Attempting VNC-based capture (fast method)...")
+    # PRIORITY 1: If SSH tunnel available, use ScreenCapture plugin directly
+    # (VNC won't work on tunnel devices - port is at device IP:5800, not accessible from Flask server)
+    if ssh and fallback_to_plugin:
+        log("[SCREENSHOT] Using ScreenCapture plugin (SSH tunnel available)...")
+        try:
+            from utils.screenshot_utils import take_and_analyze_screenshot
+            
+            screenshot_name = f"{device_ip}_{device_name}_Iteration-{iteration}"
+            plugin_result = take_and_analyze_screenshot(
+                ssh, screenshot_name, device_ip,
+                log_callback=log_callback,
+                screenshot_folder=screenshot_folder,
+                after_reboot=False
+            )
+            
+            if plugin_result.get('success'):
+                log("[SCREENSHOT] ✓ ScreenCapture plugin successful!")
+                return {
+                    'success': True,
+                    'local_path': plugin_result.get('local_path'),
+                    'url': plugin_result.get('screenshot_url'),
+                    'file_size': 0,  # Not available from plugin result
+                    'dimensions': None,
+                    'screen_state': plugin_result.get('screen_state'),
+                    'error': None,
+                    'capture_time': 0,
+                    'method': 'ScreenCapture-Plugin'
+                }
+            else:
+                error_msg = plugin_result.get('error', 'ScreenCapture plugin failed')
+                log(f"[SCREENSHOT] ⚠ ScreenCapture plugin failed: {error_msg}")
+                return {
+                    'success': False,
+                    'local_path': None,
+                    'url': None,
+                    'file_size': 0,
+                    'dimensions': None,
+                    'screen_state': None,
+                    'error': error_msg,
+                    'capture_time': 0,
+                    'method': 'ScreenCapture-Plugin'
+                }
+        except Exception as plugin_err:
+            log(f"[SCREENSHOT] ⚠ ScreenCapture plugin error: {plugin_err}")
+            return {
+                'success': False,
+                'local_path': None,
+                'url': None,
+                'file_size': 0,
+                'dimensions': None,
+                'screen_state': None,
+                'error': str(plugin_err),
+                'capture_time': 0,
+                'method': 'ScreenCapture-Plugin'
+            }
+    
+    # PRIORITY 2: If no SSH or SSH available but fallback=False, try VNC
+    # (For local devices with direct network access)
+    log("[SCREENSHOT] Attempting VNC-based capture (direct device access)...")
     result = take_vnc_screenshot(
         device_ip, device_name, iteration,
         screenshot_folder=screenshot_folder,
@@ -419,42 +518,8 @@ def take_vnc_screenshot_with_fallback(
         log("[SCREENSHOT] ✓ VNC capture successful!")
         return result
     
-    # VNC failed, try fallback
-    if fallback_to_plugin and ssh:
-        log(f"[SCREENSHOT] ⚠ VNC failed ({result['error']}), falling back to ScreenCapture plugin...")
-        try:
-            from utils.screenshot_utils import take_and_analyze_screenshot
-            
-            screenshot_name = f"{device_ip}_{device_name}_Iteration-{iteration}"
-            plugin_result = take_and_analyze_screenshot(
-                ssh, screenshot_name, device_ip,
-                log_callback=log_callback,
-                screenshot_folder=screenshot_folder,
-                after_reboot=False
-            )
-            
-            if plugin_result.get('success'):
-                log("[SCREENSHOT] ✓ ScreenCapture plugin fallback successful!")
-                return {
-                    'success': True,
-                    'local_path': plugin_result.get('local_path'),
-                    'url': plugin_result.get('screenshot_url'),
-                    'file_size': 0,  # Not available from plugin result
-                    'dimensions': None,
-                    'screen_state': plugin_result.get('screen_state'),
-                    'error': None,
-                    'capture_time': 0,
-                    'method': 'ScreenCapture-Plugin'
-                }
-            else:
-                log(f"[SCREENSHOT] ❌ Both VNC and plugin methods failed")
-                return result  # Return original VNC error
-        except Exception as fallback_err:
-            log(f"[SCREENSHOT] ⚠ Fallback error: {fallback_err}")
-            return result
-    
-    # No fallback available
-    log(f"[SCREENSHOT] ❌ VNC capture failed, no fallback available")
+    # VNC failed and no SSH to fallback
+    log(f"[SCREENSHOT] ❌ VNC capture failed: {result['error']}")
     return result
 
 

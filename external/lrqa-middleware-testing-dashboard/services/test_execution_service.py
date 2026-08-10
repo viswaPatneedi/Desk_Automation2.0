@@ -3,6 +3,7 @@ Test Execution Service - Business logic for test execution
 Orchestrates test method execution and result management
 """
 
+from __future__ import annotations
 import threading
 import os
 import time as time_module
@@ -13,7 +14,10 @@ from models.test_result import TestResult
 from models.job import Job
 from models.device_lock import DeviceLock
 from utils.device_lock_manager import DeviceLockManager
-from services.gdf_rack_tunnel_service import GDFRackTunnelService
+from services.gdf_rpi_shell_service import GDFRPiShellService
+from services.gdf_rpi_direct_shell_service import GDFRPiDirectShellService
+from services.tunnel_coordinator import get_tunnel_coordinator
+from services.tunnel_group_coordinator import get_tunnel_group_coordinator
 from methods.method_reboot import execute_reboot_process
 from methods.method_deepsleep import execute_deepsleep_process
 from methods.method_ir_test import execute_ir_test_process
@@ -36,6 +40,237 @@ from methods.method_maintenance_CURL_deepsleep_wakeup import execute_maintenance
 from methods.method_deepsleep_maintenance_wakeup import execute_deepsleep_maintenance_wakeup_process
 from methods.method_netflix_playback import netflix_playback
 
+# ✨ GLOBAL SHARED TUNNEL REGISTRY
+# This MUST be global (not instance-level) because each job runs in a separate thread
+# with its own TestExecutionService instance
+_ACTIVE_TUNNELS = {}  # Global dict: {device_ip: {tunnel_service, rpi_ip, job_id, ...}}
+_TUNNEL_LOCK = threading.RLock()  # Thread-safe access to _ACTIVE_TUNNELS
+
+def register_tunnel(device_ip: str, tunnel_data: Dict):
+    """Register a tunnel in the global registry (thread-safe)"""
+    with _TUNNEL_LOCK:
+        _ACTIVE_TUNNELS[device_ip] = tunnel_data
+        print(f"✅ [TUNNEL-REGISTRY] Registered tunnel for device {device_ip}: {tunnel_data.get('rpi_ip')}")
+
+def get_tunnel(device_ip: str) -> Optional[Dict]:
+    """Get a tunnel from the global registry (thread-safe)"""
+    with _TUNNEL_LOCK:
+        return _ACTIVE_TUNNELS.get(device_ip)
+
+def find_companion_tunnel(device_ip: str, target_rpi_ip: str) -> Optional[Dict]:
+    """Find a companion device's tunnel on the same R-Pi (thread-safe)"""
+    with _TUNNEL_LOCK:
+        for dev_ip, tunnel_data in _ACTIVE_TUNNELS.items():
+            if (dev_ip != device_ip and 
+                tunnel_data.get('rpi_ip') == target_rpi_ip and
+                'tunnel_service' in tunnel_data):
+                print(f"✨ [TUNNEL-REGISTRY] Found companion tunnel from device {dev_ip} for R-Pi {target_rpi_ip}")
+                return tunnel_data
+        return None
+
+def unregister_tunnel(device_ip: str):
+    """Remove a tunnel from the global registry (thread-safe)"""
+    with _TUNNEL_LOCK:
+        if device_ip in _ACTIVE_TUNNELS:
+            del _ACTIVE_TUNNELS[device_ip]
+            print(f"✅ [TUNNEL-REGISTRY] Unregistered tunnel for device {device_ip}")
+
+
+# ✨ GLOBAL SHARED R-Pi DIRECT SHELL REGISTRY
+# Maps R-Pi IP → shared GDFRPiDirectShellService connection
+# Used when multiple devices on same R-Pi execute simultaneously
+_SHARED_RPI_CONNECTIONS = {}  # Global dict: {rpi_key: {service, rpi_ip, ref_count, job_ids, ...}}
+_SHARED_RPI_LOCK = threading.RLock()  # Thread-safe access
+
+
+def _get_rpi_connection_key(rpi_config: Dict) -> str:
+    """
+    Generate unique key for R-Pi connection (based on credentials)
+    Different devices with same R-Pi credentials share one connection
+    
+    Args:
+        rpi_config: R-Pi configuration dict
+    
+    Returns:
+        Unique key for this R-Pi connection
+    """
+    rpi_ip = rpi_config.get('rpi_ip', '')
+    rpi_port = str(rpi_config.get('rpi_port', 60201))
+    rpi_username = rpi_config.get('rpi_username', '')
+    return f"{rpi_username}@{rpi_ip}:{rpi_port}"
+
+
+def get_or_create_shared_rpi_connection(rpi_config: Dict, device_identifier: str = "Device",
+                                       job_id: Optional[str] = None) -> Tuple[bool, str, Optional[GDFRPiDirectShellService]]:
+    """
+    Get or create a SHARED R-Pi connection for multiple devices
+    
+    When multiple devices have the same R-Pi credentials:
+    - First device creates the connection
+    - Other devices REUSE it
+    - Connection closes only when no devices need it
+    
+    Args:
+        rpi_config: R-Pi configuration dict
+        device_identifier: Device name/ID for logging
+        job_id: Job ID for tracking reference
+    
+    Returns:
+        Tuple of (success: bool, message: str, service: GDFRPiDirectShellService or None)
+    """
+    if not rpi_config:
+        return False, "Missing R-Pi configuration", None
+    
+    connection_key = _get_rpi_connection_key(rpi_config)
+    
+    with _SHARED_RPI_LOCK:
+        # Check if connection already exists
+        if connection_key in _SHARED_RPI_CONNECTIONS:
+            conn_data = _SHARED_RPI_CONNECTIONS[connection_key]
+            service = conn_data.get('service')
+            
+            if service and service.is_healthy():
+                # Reuse existing healthy connection
+                if job_id:
+                    conn_data['job_ids'].add(job_id)
+                conn_data['ref_count'] += 1
+                msg = (
+                    f"✅ [SHARED-R-Pi] Reusing existing connection to {connection_key} "
+                    f"(ref_count: {conn_data['ref_count']})"
+                )
+                print(msg)
+                return True, msg, service
+            else:
+                # Connection exists but is dead - remove it
+                if service:
+                    try:
+                        service.disconnect()
+                    except:
+                        pass
+                del _SHARED_RPI_CONNECTIONS[connection_key]
+        
+        # Create new shared connection
+        print(f"📡 [SHARED-R-Pi] Creating new shared connection to {connection_key}")
+        service = GDFRPiDirectShellService(rpi_config, device_identifier)
+        
+        # Connect
+        success, msg = service.connect()
+        if not success:
+            return False, f"Failed to connect: {msg}", None
+        
+        # Register in shared connections
+        job_ids = {job_id} if job_id else set()
+        _SHARED_RPI_CONNECTIONS[connection_key] = {
+            'service': service,
+            'rpi_ip': rpi_config.get('rpi_ip'),
+            'ref_count': 1,
+            'job_ids': job_ids,
+            'created_at': time_module.time()
+        }
+        
+        success_msg = f"✅ [SHARED-R-Pi] Created shared connection to {connection_key}"
+        print(success_msg)
+        return True, success_msg, service
+
+
+def release_shared_rpi_connection(rpi_config: Dict, job_id: Optional[str] = None) -> Tuple[bool, str]:
+    """
+    Release reference to shared R-Pi connection
+    
+    Connection closes only when ref_count reaches 0 (no more devices using it)
+    
+    Args:
+        rpi_config: R-Pi configuration dict
+        job_id: Job ID that's releasing the connection
+    
+    Returns:
+        Tuple of (success: bool, message: str)
+    """
+    if not rpi_config:
+        return True, "No R-Pi config"
+    
+    connection_key = _get_rpi_connection_key(rpi_config)
+    
+    with _SHARED_RPI_LOCK:
+        if connection_key not in _SHARED_RPI_CONNECTIONS:
+            return True, "Connection not in registry"
+        
+        conn_data = _SHARED_RPI_CONNECTIONS[connection_key]
+        service = conn_data.get('service')
+        
+        # Decrement ref count
+        conn_data['ref_count'] -= 1
+        
+        # Remove job ID if provided
+        if job_id and job_id in conn_data['job_ids']:
+            conn_data['job_ids'].discard(job_id)
+        
+        print(f"📡 [SHARED-R-Pi] Released connection to {connection_key} (ref_count: {conn_data['ref_count']})")
+        
+        # Close connection if no more references
+        if conn_data['ref_count'] <= 0:
+            if service:
+                try:
+                    service.disconnect()
+                except Exception as e:
+                    print(f"⚠️  [SHARED-R-Pi] Error disconnecting: {str(e)}")
+            
+            del _SHARED_RPI_CONNECTIONS[connection_key]
+            msg = f"✅ [SHARED-R-Pi] Closed connection to {connection_key} (ref_count reached 0)"
+            print(msg)
+            return True, msg
+        else:
+            msg = f"ℹ️  [SHARED-R-Pi] Connection kept alive (ref_count: {conn_data['ref_count']})"
+            return True, msg
+
+
+def check_devices_share_rpi(devices: List[Device]) -> bool:
+    """
+    Check if all devices have the same R-Pi credentials
+    
+    Args:
+        devices: List of Device objects
+    
+    Returns:
+        True if all devices share same R-Pi (or no devices), False otherwise
+    """
+    if not devices or len(devices) <= 1:
+        return True
+    
+    first_device = devices[0]
+    if not first_device.rpi_config:
+        return False
+    
+    first_key = _get_rpi_connection_key(first_device.rpi_config)
+    
+    for device in devices[1:]:
+        if not device.rpi_config:
+            return False
+        device_key = _get_rpi_connection_key(device.rpi_config)
+        if device_key != first_key:
+            return False
+    
+    return True
+
+
+def get_shared_rpi_for_devices(devices: List[Device]) -> Optional[Dict]:
+    """
+    Get shared R-Pi config if all devices have same credentials
+    
+    Args:
+        devices: List of Device objects
+    
+    Returns:
+        R-Pi config dict if all devices share same R-Pi, None otherwise
+    """
+    if not check_devices_share_rpi(devices):
+        return None
+    
+    if not devices or not devices[0].rpi_config:
+        return None
+    
+    return devices[0].rpi_config
+
 class TestExecutionService:
     """Service for managing test execution"""
     
@@ -49,11 +284,171 @@ class TestExecutionService:
         self.last_method_result = {}  # Store last method result for passing data between methods
         self.voice_command_text = {}  # Store voice command text per device
         self.cross_method_data = {}  # Store persistent data across method executions (e.g., flux_server_ip_port)
-        self.active_tunnels = {}  # Store active GDF_RACK tunnel services by device IP
+        # NOTE: active_tunnels is now GLOBAL (_ACTIVE_TUNNELS) for thread-safety across parallel jobs
     
-    def establish_tunnel_for_device(self, device: Device, log_service=None) -> Tuple[bool, str, Optional[GDFRackTunnelService]]:
+    def _get_companion_jobs_on_same_rpi(self, device: Device) -> List[Job]:
+        """
+        Find companion jobs running on devices sharing the same R-Pi backend
+        
+        Args:
+            device: Current device
+            
+        Returns:
+            List of Job objects for devices on same R-Pi (excluding current job)
+        """
+        if not device.rpi_config:
+            return []
+        
+        device_rpi_ip = device.rpi_config.get('rpi_ip')
+        if not device_rpi_ip:
+            return []
+        
+        # Load all jobs
+        all_jobs = Job.load_all()
+        companion_jobs = []
+        
+        # Find all devices on same R-Pi
+        all_devices = Device.load_all()
+        same_rpi_devices = [
+            d for d in all_devices 
+            if d.rpi_config and d.rpi_config.get('rpi_ip') == device_rpi_ip and d.ip != device.ip
+        ]
+        
+        # Find jobs for those devices that are currently running/pending
+        for other_device in same_rpi_devices:
+            for job in all_jobs:
+                if (job.device_ip == other_device.ip and 
+                    job.status in ['pending', 'running', 'queued']):
+                    companion_jobs.append(job)
+        
+        return companion_jobs
+    
+    def _check_for_shared_tunnel(self, device: Device, job_id: Optional[str] = None) -> Optional[Dict]:
+        """
+        Check if companion jobs on same R-Pi have an established tunnel we can share
+        
+        Args:
+            device: Current device
+            job_id: Current job ID
+            
+        Returns:
+            Tunnel data dict if found and can be shared, None otherwise
+        """
+        # Check if any companion device already has an established tunnel
+        if not device.rpi_config:
+            return None
+        
+        device_rpi_ip = device.rpi_config.get('rpi_ip')
+        if not device_rpi_ip:
+            return None
+        
+        # Look for existing tunnels in the active_tunnels dictionary
+        # for devices on same R-Pi
+        all_devices = Device.load_all()
+        same_rpi_devices = [
+            d for d in all_devices 
+            if d.rpi_config and d.rpi_config.get('rpi_ip') == device_rpi_ip
+        ]
+        
+        for companion_device in same_rpi_devices:
+            if companion_device.ip in self.active_tunnels:
+                tunnel_data = self.active_tunnels[companion_device.ip]
+                # Make sure it's a valid tunnel (not stale)
+                if isinstance(tunnel_data, dict) and 'tunnel_service' in tunnel_data:
+                    print(f"📡 [SHARED-TUNNEL] Found existing tunnel from {companion_device.name} - reusing for {device.name}")
+                    return tunnel_data
+        
+        return None
+    
+    def _wait_for_shared_tunnel(self, device: Device, timeout_seconds: int = 15) -> Optional[Dict]:
+        """
+        Wait for a companion device's tunnel to become available for sharing
+        Looks for tunnels in any state: acquiring, pending, or established
+        
+        Args:
+            device: Current device
+            timeout_seconds: How long to wait for companion tunnel to appear
+            
+        Returns:
+            Tunnel data if found and established, None if we should acquire our own
+        """
+        if not device.rpi_config:
+            return None
+        
+        device_rpi_ip = device.rpi_config.get('rpi_ip')
+        if not device_rpi_ip:
+            return None
+        
+        import time
+        from datetime import datetime, timedelta
+        
+        # Get all devices on same R-Pi
+        all_devices = Device.load_all()
+        same_rpi_devices = [
+            d for d in all_devices 
+            if d.rpi_config and d.rpi_config.get('rpi_ip') == device_rpi_ip and d.ip != device.ip
+        ]
+        
+        if not same_rpi_devices:
+            print(f"   ℹ️  No companion devices on R-Pi {device_rpi_ip}")
+            return None
+        
+        print(f"   🔍 Companion devices: {[d.name for d in same_rpi_devices]}")
+        
+        # Wait for companion tunnel to appear/complete
+        wait_until = datetime.utcnow() + timedelta(seconds=timeout_seconds)
+        attempt = 0
+        
+        while datetime.utcnow() < wait_until:
+            attempt += 1
+            
+            # ✨ CHECK GLOBAL TUNNEL REGISTRY for companion tunnel (any state)
+            for companion_device in same_rpi_devices:
+                tunnel_data = find_companion_tunnel(device.ip, device_rpi_ip)
+                if tunnel_data:
+                    # Found a tunnel from companion - check its state
+                    tunnel_status = tunnel_data.get('status', 'unknown')
+                    tunnel_service = tunnel_data.get('tunnel_service')
+                    
+                    if tunnel_status == 'acquiring':
+                        # Companion is still acquiring the tunnel - wait for it to complete
+                        remaining = (wait_until - datetime.utcnow()).total_seconds()
+                        print(f"   ⏳ Attempt {attempt}: Companion tunnel ACQUIRING status... ({remaining:.1f}s)")
+                        time.sleep(1)  # Short wait before checking again
+                        continue
+                    elif tunnel_service:
+                        # Tunnel is established and has service object - REUSE IT!
+                        print(f"✨ [SHARED-TUNNEL v4] SUCCESS! REUSING established tunnel after {attempt} attempts")
+                        return tunnel_data
+            
+            # Check for active companion jobs
+            all_jobs = Job.load_all()
+            companion_jobs = [
+                j for j in all_jobs
+                if j.device_ip in [d.ip for d in same_rpi_devices] and
+                j.status in ['running', 'pending', 'queued']
+            ]
+            
+            if companion_jobs:
+                remaining = (wait_until - datetime.utcnow()).total_seconds()
+                print(f"   ⏳ Attempt {attempt}: Companion job(s) active - waiting for tunnel... ({remaining:.1f}s)")
+                time.sleep(2)
+            else:
+                print(f"   ✓ No active companion jobs - will acquire own tunnel")
+                return None
+        
+        print(f"   ⏰ Timeout waiting for companion tunnel - will acquire own tunnel")
+        return None
+
+    
+    def establish_tunnel_for_device(self, device: Device, log_service=None) -> Tuple[bool, str, Optional[GDFRPiDirectShellService]]:
         """
         Establish tunnel for RACK device if needed
+        
+        Supports three approaches (in order of preference):
+        1. ✨ NEW: Reuse shared R-Pi direct connection (pre-created for multiple devices)
+        2. Wait for companion device's tunnel (group execution)
+        3. Create exclusive tunnel for this device (single device execution)
         
         Args:
             device: Device object (may be RACK or DESK)
@@ -70,6 +465,116 @@ class TestExecutionService:
             return False, "RACK device missing R-Pi configuration", None
         
         try:
+            rpi_ip = device.rpi_config.get('rpi_ip', 'unknown')
+            connection_key = _get_rpi_connection_key(device.rpi_config)
+            
+            # ✨ APPROACH 1: CHECK FOR PRE-CREATED SHARED R-Pi CONNECTION
+            # When multiple devices execute together, a shared connection might already exist
+            print(f"\n📡 [TUNNEL-STRATEGY] Step 1: Checking for pre-created shared R-Pi connection...")
+            
+            with _SHARED_RPI_LOCK:
+                if connection_key in _SHARED_RPI_CONNECTIONS:
+                    conn_data = _SHARED_RPI_CONNECTIONS[connection_key]
+                    service = conn_data.get('service')
+                    
+                    if service and service.is_healthy():
+                        # ✅ SHARED CONNECTION FOUND AND HEALTHY - USE IT!
+                        msg = (
+                            f"✅ [TUNNEL-STRATEGY] Found pre-created shared R-Pi connection to {rpi_ip} - "
+                            f"REUSING for parallel execution with other devices"
+                        )
+                        print(msg)
+                        if log_service:
+                            log_service.log(f"\n{msg}")
+                        
+                        # Increment ref count for this device
+                        conn_data['ref_count'] += 1
+                        job_id = getattr(self, 'current_job_id', 'unknown')
+                        if job_id:
+                            conn_data['job_ids'].add(job_id)
+                        
+                        # Register this device as using the shared connection
+                        register_tunnel(device.ip, {
+                            'tunnel_service': service,
+                            'rpi_ip': rpi_ip,
+                            'shared': True,
+                            'direct_shell': True,  # Flag indicating NEW direct shell approach
+                            'job_id': job_id
+                        })
+                        
+                        return True, msg, service
+            
+            # ✨ APPROACH 2: WAIT FOR COMPANION DEVICE'S TUNNEL (GROUP EXECUTION)
+            # Before trying to acquire exclusive tunnel, check if companion is already establishing one
+            # This prevents the "exclusive lock" problem where both jobs compete
+            print(f"📡 [TUNNEL-STRATEGY] Step 2: Checking for companion device tunnel on same R-Pi...")
+            shared_tunnel_data = self._wait_for_shared_tunnel(device, timeout_seconds=15)
+            
+            if shared_tunnel_data:
+                # Tunnel is already being established by companion - REUSE IT
+                tunnel_service = shared_tunnel_data.get('tunnel_service')
+                msg = f"✅ [TUNNEL-STRATEGY] Reusing companion's tunnel to R-Pi ({rpi_ip}) - parallel execution enabled"
+                if log_service:
+                    log_service.log(f"\n{msg}")
+                else:
+                    print(msg)
+                
+                # Register this device as using the shared tunnel (global registry)
+                register_tunnel(device.ip, {
+                    'tunnel_service': tunnel_service,
+                    'rpi_ip': rpi_ip,
+                    'shared': True,
+                    'job_id': getattr(self, 'current_job_id', 'unknown')
+                })
+                
+                return True, msg, tunnel_service
+            
+            # ✨ APPROACH 3: ACQUIRE EXCLUSIVE TUNNEL FOR THIS DEVICE (SINGLE DEVICE EXECUTION)
+            # No companion tunnel found - acquire exclusive tunnel for this device
+            print(f"📡 [TUNNEL-STRATEGY] Step 3: Acquiring exclusive tunnel for single device...")
+            
+            # Get R-Pi IP from config
+            tunnel_coordinator = get_tunnel_coordinator()
+            
+            # ✨ REGISTER A "PENDING" TUNNEL IMMEDIATELY
+            # This signals to other jobs that we're acquiring a tunnel, even before connection succeeds
+            # Other jobs will wait for this to become a full tunnel rather than competing for exclusive lock
+            register_tunnel(device.ip, {
+                'tunnel_service': None,  # Not connected yet
+                'rpi_ip': rpi_ip,
+                'status': 'acquiring',  # Flag: this tunnel client is in progress
+                'job_id': getattr(self, 'current_job_id', 'unknown')
+            })
+            print(f"✅ [TUNNEL-REGISTRY] Registered PENDING tunnel for {device.name} on R-Pi {rpi_ip}")
+            
+            # Try to acquire exclusive access to this R-Pi
+            acquire_msg = f"[TUNNEL] Attempting to acquire exclusive tunnel access to R-Pi {rpi_ip}..."
+            if log_service:
+                log_service.log(acquire_msg)
+            else:
+                print(acquire_msg)
+            
+            acquired, acquire_result = tunnel_coordinator.acquire_tunnel(
+                rpi_ip=rpi_ip,
+                job_id=getattr(self, 'current_job_id', 'unknown'),
+                device_name=device.name,
+                timeout=60  # Max 60 seconds to wait
+            )
+            
+            if log_service:
+                log_service.log(acquire_result)
+            
+            if not acquired:
+                # Failed to acquire tunnel - another job has it
+                # Clean up the pending tunnel registration we created
+                unregister_tunnel(device.ip)
+                error_msg = f"❌ Could not acquire R-Pi tunnel after waiting 60 seconds. Job queue may be congested. Please retry."
+                if log_service:
+                    log_service.log(f"\n{error_msg}")
+                else:
+                    print(error_msg)
+                return False, error_msg, None
+            
             # Build lab device config from device object
             lab_device_config = {
                 'lab_ip': device.ip or '10.0.0.28',  # Default lab IP if not set
@@ -79,14 +584,19 @@ class TestExecutionService:
                 'device_name': device.name
             }
             
-            # Create tunnel service
-            tunnel_service = GDFRackTunnelService(device.rpi_config, lab_device_config)
+            # Create R-Pi shell service (maintains interactive session)
+            tunnel_service = GDFRPiShellService(device.rpi_config, lab_device_config)
             
-            # Establish tunnel connection
+            # Establish R-Pi session
             success, msg = tunnel_service.connect()
             if success:
-                # Store tunnel for later cleanup
-                self.active_tunnels[device.ip] = tunnel_service
+                # Store tunnel in global registry for companion devices to find
+                register_tunnel(device.ip, {
+                    'tunnel_service': tunnel_service,
+                    'rpi_ip': rpi_ip,
+                    'job_id': getattr(self, 'current_job_id', 'unknown')
+                })
+                
                 status_msg = f"✅ Tunnel established to {device.name} via R-Pi"
                 if log_service:
                     log_service.log(status_msg)
@@ -94,6 +604,16 @@ class TestExecutionService:
                     print(status_msg)
                 return True, status_msg, tunnel_service
             else:
+                # Tunnel connection failed - release the lock we acquired and unregister pending tunnel
+                tunnel_coordinator.release_tunnel(
+                    rpi_ip=rpi_ip,
+                    job_id=getattr(self, 'current_job_id', 'unknown'),
+                    device_name=device.name
+                )
+                
+                # Clean up the pending tunnel registration
+                unregister_tunnel(device.ip)
+                
                 error_msg = f"❌ Tunnel connection failed: {msg}"
                 if log_service:
                     log_service.log(error_msg)
@@ -107,6 +627,23 @@ class TestExecutionService:
                 log_service.log(error_msg)
             else:
                 print(error_msg)
+            
+            # Clean up pending tunnel registration first
+            unregister_tunnel(device.ip)
+            
+            # Try to release tunnel if we acquired it
+            try:
+                if device.rpi_config:
+                    rpi_ip = device.rpi_config.get('rpi_ip', 'unknown')
+                    tunnel_coordinator = get_tunnel_coordinator()
+                    tunnel_coordinator.release_tunnel(
+                        rpi_ip=rpi_ip,
+                        job_id=getattr(self, 'current_job_id', 'unknown'),
+                        device_name=device.name
+                    )
+            except:
+                pass
+            
             return False, error_msg, None
     
     def cleanup_tunnel_for_device(self, device_ip: str, log_service=None):
@@ -117,13 +654,37 @@ class TestExecutionService:
             device_ip: IP address of device
             log_service: Optional log service for logging
         """
-        if device_ip not in self.active_tunnels:
+        if not get_tunnel(device_ip):
             return
         
         try:
-            tunnel = self.active_tunnels[device_ip]
-            tunnel.disconnect()
-            del self.active_tunnels[device_ip]
+            tunnel_info = get_tunnel(device_ip)
+            
+            # Handle both old format (just tunnel_service) and new format (dict)
+            if isinstance(tunnel_info, dict):
+                tunnel_service = tunnel_info.get('tunnel_service')
+                rpi_ip = tunnel_info.get('rpi_ip')
+                job_id = tunnel_info.get('job_id', 'unknown')
+            else:
+                # Old format - backward compatibility
+                tunnel_service = tunnel_info
+                rpi_ip = None
+                job_id = 'unknown'
+            
+            # Disconnect tunnel service
+            if tunnel_service:
+                tunnel_service.disconnect()
+            
+            # ✨ NEW: Release tunnel coordinator lock if we have R-Pi info
+            if rpi_ip:
+                tunnel_coordinator = get_tunnel_coordinator()
+                tunnel_coordinator.release_tunnel(
+                    rpi_ip=rpi_ip,
+                    job_id=job_id,
+                    device_name=device_ip
+                )
+            
+            unregister_tunnel(device_ip)
             msg = f"✅ Tunnel cleaned up for device {device_ip}"
             if log_service:
                 log_service.log(msg)
@@ -139,8 +700,10 @@ class TestExecutionService:
     def get_connection_params_for_device(self, device: Device) -> Dict[str, any]:
         """
         Get connection parameters for device (DESK or RACK)
-        For RACK devices, returns localhost with forwarded ports
-        For DESK devices, returns direct connection params
+        
+        For RACK devices with R-Pi tunnel: Returns actual device IP (tunnel_service handles SSH)
+        For RACK devices without tunnel: Returns localhost with forwarded ports
+        For DESK devices: Returns direct connection params
         
         Args:
             device: Device object
@@ -149,10 +712,16 @@ class TestExecutionService:
             Dict with keys: ip, port, username, password
         """
         if device.is_rack_device:
-            # RACK device - use forwarded localhost connection
+            # RACK device - use actual device IP
+            # Note: When using R-Pi tunnel service, tunnel_service handles the SSH connection
+            # and port forwarding. The device_ip should still be the actual device IP for:
+            # - Build details fetching
+            # - Screenshot naming and URLs
+            # - Logging and file paths
+            # - Device identification
             return {
-                'ip': '127.0.0.1',
-                'port': 10022,
+                'ip': device.ip,  # Use actual device IP (not 127.0.0.1)
+                'port': device.port,
                 'username': device.username or 'root',
                 'password': device.password
             }
@@ -251,8 +820,22 @@ class TestExecutionService:
         return True
     
     def _execute_queue_sequence(self, device: Device, execution_queue: List[dict], iterations: int, 
-                               job_id: Optional[str] = None, sequence_name: Optional[str] = None):
-        """Execute queue sequence with individual inputs (internal)"""
+                               job_id: Optional[str] = None, sequence_name: Optional[str] = None,
+                               skip_tunnel_lifecycle: bool = False):
+        """
+        Execute queue sequence with individual inputs (internal)
+        
+        Args:
+            device: Device to execute on
+            execution_queue: List of test methods
+            iterations: Number of iterations
+            job_id: Job ID for tracking
+            sequence_name: Sequence name for folder naming
+            skip_tunnel_lifecycle: If True, skip tunnel acquire/release (group-managed)
+        """
+        # ✨ Store job ID for tunnel coordinator
+        self.current_job_id = job_id or 'unknown'
+        
         print(f"🔧 [DEBUG] _execute_queue_sequence started for job {job_id}")
         from services.log_service import LogService
         import threading
@@ -347,8 +930,22 @@ class TestExecutionService:
                 )
             
             # ✨ ESTABLISH TUNNEL FOR RACK DEVICES ✨
+            # Special handling: IR_test doesn't need tunnel (uses HTTP API)
+            # Only establish tunnel for methods that require SSH
             tunnel_service = None
-            if device.is_rack_device:
+            needs_ssh_tunnel = False
+            tunnel_established_at_group_level = skip_tunnel_lifecycle
+            
+            # Check if execution queue contains non-IR_test methods
+            for queue_item in execution_queue:
+                method = queue_item.get('method', '')
+                if method != 'ir_test':
+                    needs_ssh_tunnel = True
+                    break
+            
+            if device.is_rack_device and needs_ssh_tunnel and not skip_tunnel_lifecycle:
+                # Normal flow: establish tunnel for this device
+                log_service.log(f"\n[TUNNEL] Execution queue contains SSH-based methods - establishing R-Pi tunnel...")
                 tunnel_success, tunnel_msg, tunnel_service = self.establish_tunnel_for_device(device, log_service)
                 if not tunnel_success:
                     log_service.log(f"\n❌ CRITICAL: Failed to establish R-Pi tunnel")
@@ -361,6 +958,27 @@ class TestExecutionService:
                         DeviceLock.unlock_device(device.ip)
                     raise RuntimeError(f"GDF_RACK tunnel establishment failed: {tunnel_msg}")
                 log_service.log(f"\n{tunnel_msg}")
+            elif device.is_rack_device and needs_ssh_tunnel and skip_tunnel_lifecycle:
+                # Group execution flow: tunnel already established at group level
+                log_service.log(f"\n[TUNNEL] Using group-level tunnel (skip_tunnel_lifecycle=True)")
+                # Retrieve tunnel service from global registry
+                tunnel_service_data = get_tunnel(device.ip)
+                tunnel_service = tunnel_service_data.get('tunnel_service') if tunnel_service_data else None
+                if not tunnel_service:
+                    error_msg = f"Tunnel service not found in active_tunnels for group-level execution"
+                    log_service.log(f"\n❌ CRITICAL: {error_msg}")
+                    if job_id:
+                        Job.update_job_status(job_id, 'failed', 
+                            end_time=datetime.now(timezone.utc).isoformat(),
+                            log_file_path=log_file_path
+                        )
+                        DeviceLock.unlock_device(device.ip)
+                    raise RuntimeError(error_msg)
+                log_service.log(f"✅ Group tunnel service retrieved successfully")
+                tunnel_established_at_group_level = True
+            elif device.is_rack_device and not needs_ssh_tunnel:
+                log_service.log(f"\n[TUNNEL] Execution queue is IR_test only - tunnel not required (uses HTTP API)")
+                log_service.log(f"[TUNNEL] IR commands will be sent via GDF API without R-Pi tunnel")
             
             for i in range(start_iteration, iterations):
                 # Check if job has been cancelled
@@ -670,7 +1288,8 @@ class TestExecutionService:
                             conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             has_deepsleep=has_deepsleep,
-                            job_id=job_id
+                            job_id=job_id,
+                            tunnel_service=tunnel_service
                         )
                         # --- Screenshot capture after navigation step ---
                         if method_result is not None and method in ["reboot", "deepsleep", "status", "ir_test", "voice_command", "send_remote_keys"]:
@@ -808,7 +1427,8 @@ class TestExecutionService:
                             home_screen_timeout=home_screen_timeout,
                             auto_collect_logs=auto_collect_logs,
                             log_search_patterns=log_search_patterns,
-                            job_id=job_id
+                            job_id=job_id,
+                            tunnel_service=tunnel_service
                         )
                     elif method == "trail_method":
                         # Trail Method - Cloned from Reboot Performance V2 Optimized
@@ -982,7 +1602,8 @@ class TestExecutionService:
                             conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             remote_type=remote_type_standby,
-                            job_id=job_id
+                            job_id=job_id,
+                            tunnel_service=tunnel_service
                         )
                     elif method == "status":
                         import paramiko
@@ -1004,14 +1625,31 @@ class TestExecutionService:
                             method_result = {"iteration": i + 1, "screenshots": [], "logs": [], "success": False}
                         time_module.sleep(2)
                     elif method == "ir_test":
-                        log_service.log(f"IR Keys for this instance: {', '.join(ir_keys)}")
-                        log_service.log(f"IR Key Delay: {ir_key_delay} seconds")
+                        log_service.log(f"\n[IR TEST] Starting IR command test...")
+                        log_service.log(f"[IR TEST] Device Type: {device.device_type}")
+                        log_service.log(f"[IR TEST] Is Rack Device: {device.is_rack_device}")
+                        
+                        if device.is_rack_device:
+                            log_service.log(f"[IR TEST] Using GDF HTTP API (no SSH tunnel required)")
+                            log_service.log(f"[IR TEST] Device MAC: {device.mac_address}")
+                        else:
+                            log_service.log(f"[IR TEST] Using iTach IR Blaster (direct LAN)")
+                        
+                        log_service.log(f"[IR TEST] IR Keys: {', '.join(ir_keys)}")
+                        log_service.log(f"[IR TEST] Key Delay: {ir_key_delay} seconds")
                         if remote_type:
-                            log_service.log(f"IR Remote Type for this instance: {remote_type}")
+                            log_service.log(f"[IR TEST] Remote Type: {remote_type}")
+                        
+                        # Note: For GDF_RACK devices, R-Pi config is used for SSH verification AFTER IR commands.
+                        # SSH verification: waits 5-10s, then checks device logs for keycode evidence.
                         method_result = execute_ir_test_process(
                             conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, ir_keys, combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
-                            remote_type_override=remote_type, key_delay=ir_key_delay
+                            remote_type_override=remote_type, key_delay=ir_key_delay,
+                            is_rack_device=device.is_rack_device,
+                            device_mac_address=device.mac_address,
+                            device_type=device.device_type,
+                            rpi_config=device.rpi_config  # Pass R-Pi config for SSH verification after IR
                         )
                     elif method == "voice_command":
                         if not voice_text:
@@ -1020,7 +1658,8 @@ class TestExecutionService:
                         log_service.log(f"Voice command for this instance: \"{voice_text}\"")
                         method_result = execute_voice_command_process(
                             conn_device_ip, conn_port, conn_username, conn_password,
-                            i + 1, device.name, voice_text, combined_method_name=combined_method_name if len(execution_queue) > 1 else None
+                            i + 1, device.name, voice_text, combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
+                            tunnel_service=tunnel_service
                         )
                     elif method == "send_remote_keys":
                         log_service.log(f"Remote Keys for this instance: {remote_keys}")
@@ -1725,7 +2364,8 @@ class TestExecutionService:
                             build_info=method_result.get('build_info', None),
                             tiles_summary=method_result.get('tiles_summary', None),
                             rdk_milestones_log=method_result.get('rdk_milestones_log', None),
-                            boot_type=method_result.get('boot_type', None)
+                            boot_type=method_result.get('boot_type', None),
+                            captured_screenshots=method_result.get('captured_screenshots', None)  # ← NEW: Pass captured screenshots
                         )
                         log_service.log(f"[RESULT-SAVE-1-DONE] Individual result saved")
 
@@ -1816,12 +2456,14 @@ class TestExecutionService:
                         optional_checks = None
                         build_info = None
                         tiles_summary = None
+                        captured_screenshots = None
                         for res in iteration_method_results:
                             if res.get('method') and 'reboot' in res.get('method', '').lower():
                                 # This is a reboot method, extract performance data
                                 perf_seconds = res.get('performance_seconds')
                                 optional_checks = res.get('optional_checks')
                                 build_info = res.get('build_info')
+                                captured_screenshots = res.get('captured_screenshots')  # ← NEW: Extract from reboot method
                             if res.get('method') and 'navigate' in res.get('method', '').lower():
                                 # This is a navigate method, extract tiles data
                                 tiles_summary = res.get('tiles_summary')
@@ -1842,7 +2484,8 @@ class TestExecutionService:
                             performance_seconds=perf_seconds,
                             optional_checks=optional_checks,
                             build_info=build_info,
-                            tiles_summary=tiles_summary
+                            tiles_summary=tiles_summary,
+                            captured_screenshots=captured_screenshots  # ← NEW: Pass captured screenshots from sequence
                         )
                         log_service.log(f"[RESULT-SAVE-2-DONE] Consolidated sequence result saved")
                     except Exception as save_error:
@@ -1926,8 +2569,11 @@ class TestExecutionService:
                         final_status = 'failed'
             
             # ✨ CLEANUP TUNNEL FOR RACK DEVICES ✨
-            if device.is_rack_device:
+            # Only cleanup if we established the tunnel (not group-level management)
+            if device.is_rack_device and not skip_tunnel_lifecycle:
                 self.cleanup_tunnel_for_device(device.ip, log_service)
+            elif device.is_rack_device and skip_tunnel_lifecycle:
+                log_service.log(f"[TUNNEL] Skipping cleanup (tunnel managed at group level)")
             
             if job_id:
                 Job.update_job_status(
@@ -2119,7 +2765,11 @@ class TestExecutionService:
                 elif method == "ir_test":
                     execute_ir_test_process(
                         device.ip, device.port, device.username, device.password,
-                        i + 1, device.name, selected_ir_keys
+                        i + 1, device.name, selected_ir_keys,
+                        is_rack_device=device.is_rack_device,
+                        device_mac_address=device.mac_address,
+                        device_type=device.device_type,
+                        rpi_config=device.rpi_config  # Pass R-Pi config for SSH verification
                     )
                 elif method == "voice_command":
                     # Use stored voice text or provided voice text
@@ -2141,7 +2791,7 @@ class TestExecutionService:
                   build_info: Optional[str] = None, tiles_summary: Optional[dict] = None,
                   rdk_milestones_log: Optional[str] = None, boot_type: Optional[str] = None,
                   device_name: Optional[str] = None, username: Optional[str] = None,
-                  sequence_name: Optional[str] = None):
+                  sequence_name: Optional[str] = None, captured_screenshots: Optional[dict] = None):
         """Add a test result with full metadata preservation"""
         result_device_ip = device_ip or self.last_device_ip or 'N/A'
         result_method = method or self.last_method or 'unknown'
@@ -2180,7 +2830,8 @@ class TestExecutionService:
             build_info=build_info,
             tiles_summary=tiles_summary,
             rdk_milestones_log=rdk_milestones_log,
-            boot_type=boot_type
+            boot_type=boot_type,
+            captured_screenshots=captured_screenshots  # ← NEW: Include captured screenshots
         )
         print(f"[DEBUG] Saving result for job_id={job_id}, device_ip={result_device_ip}, device_name={result_device_name}, iteration={iteration}, phase={phase}, status={status}")
         # Add to current execution results
@@ -2324,3 +2975,245 @@ class TestExecutionService:
         """Get results for specific device"""
         results = TestResult.get_by_device(device_ip)
         return [r.to_dict() for r in results]
+    
+    # ========================================================================
+    # MULTI-DEVICE GROUPED EXECUTION METHODS
+    # ========================================================================
+    
+    def execute_tests_for_multiple_devices(self, devices: List[Device], 
+                                          execution_queue: List[dict],
+                                          iterations: int,
+                                          job_id) -> Dict:
+        """
+        Execute tests on multiple devices with smart grouping by R-Pi backend
+        
+        Workflow:
+        1. Analyze devices and group by R-Pi config
+        2. For each group:
+           a. Acquire group-level lock (blocks other groups using same R-Pi)
+           b. Establish ONE tunnel for entire group
+           c. Launch execution threads for all devices in group (PARALLEL)
+           d. Wait for all devices in group to complete
+           e. Release group lock (allows other groups to proceed)
+        
+        Example:
+        - 4 devices: A (R-Pi X), B (R-Pi X), C (R-Pi Y), D (R-Pi Y)
+        - Groups created: [A,B] for R-Pi X, [C,D] for R-Pi Y
+        - Execution:
+          - Acquire lock for R-Pi X
+          - Start A and B in parallel (sharing tunnel)
+          - Simultaneously, acquire lock for R-Pi Y (different R-Pi)
+          - Start C and D in parallel
+          - Result: A, B, C, D all execute simultaneously!
+        
+        Args:
+            devices: List of Device objects to execute on
+            execution_queue: Test methods to execute
+            iterations: Number of iterations
+            job_id: Job ID(s) for tracking. Can be:
+                   - str: Single job_id (used for all devices - backward compat)
+                   - list: List of job_ids matching device order
+                   - dict: Mapping of device.name -> job_id
+        
+        Returns:
+            Dict with execution results for all devices
+        """
+        tunnel_group_coordinator = get_tunnel_group_coordinator()
+        
+        # Build device -> job_id mapping
+        device_job_mapping = {}
+        if isinstance(job_id, dict):
+            # Already a mapping
+            device_job_mapping = job_id
+        elif isinstance(job_id, list):
+            # List of job_ids in device order
+            for device, jid in zip(devices, job_id):
+                device_job_mapping[device.name] = jid
+        else:
+            # Single job_id string - use for all devices
+            for device in devices:
+                device_job_mapping[device.name] = job_id
+        
+        print(f"\n📋 [MULTI-DEVICE] Job ID Mapping:")
+        for dev_name, jid in device_job_mapping.items():
+            print(f"   {dev_name}: {jid}")
+        
+        # ========== PHASE 1: ANALYSIS ==========
+        print(f"\n{'='*80}")
+        print(f"PHASE 1: DEVICE GROUPING ANALYSIS")
+        print(f"{'='*80}")
+        
+        # Analyze and group devices by R-Pi config
+        groups = tunnel_group_coordinator.analyze_and_group_devices(devices)
+        
+        # Print execution plan
+        tunnel_group_coordinator.print_execution_plan()
+        
+        # Results tracking
+        all_results = {}
+        execution_threads = []
+        
+        # ========== PHASE 2: EXECUTION BY GROUP ==========
+        print(f"{'='*80}")
+        print(f"PHASE 2: GROUPED EXECUTION")
+        print(f"{'='*80}\n")
+        
+        # Each group can acquire lock independently and execute
+        for rpi_ip, group in groups.items():
+            group_thread = threading.Thread(
+                target=self._execute_group,
+                args=(group, execution_queue, iterations, device_job_mapping, tunnel_group_coordinator, all_results),
+                daemon=False,
+                name=f"GroupExec-{rpi_ip}"
+            )
+            group_thread.start()
+            execution_threads.append(group_thread)
+        
+        # Wait for all groups to complete
+        for thread in execution_threads:
+            thread.join()
+        
+        print(f"\n{'='*80}")
+        print(f"✅ ALL GROUPS COMPLETED")
+        print(f"{'='*80}\n")
+        
+        return all_results
+    
+    def _execute_group(self, group, execution_queue: List[dict], 
+                       iterations: int, device_job_mapping: Dict,
+                       tunnel_group_coordinator, results_dict: Dict):
+        """
+        Execute all devices in a group using shared tunnel
+        
+        Args:
+            group: TunnelGroup object with devices
+            execution_queue: Test methods to execute
+            iterations: Number of iterations
+            device_job_mapping: Dict mapping device name -> job_id
+            tunnel_group_coordinator: The coordinator instance
+            results_dict: Dict to store results
+        
+        Workflow:
+        1. Acquire group-level lock for R-Pi
+        2. Establish tunnel for group
+        3. Launch execution threads for all devices
+        4. Wait for devices to complete
+        5. Release group lock
+        """
+        rpi_ip = group.rpi_ip
+        
+        try:
+            # ========== ACQUIRE GROUP LOCK ==========
+            print(f"[GROUP-EXEC] {group.group_id}: Attempting to acquire lock for R-Pi {rpi_ip}...")
+            success, msg = tunnel_group_coordinator.acquire_tunnel_for_group(
+                rpi_ip=rpi_ip,
+                timeout=60
+            )
+            
+            if not success:
+                print(f"[GROUP-EXEC] ❌ {group.group_id}: Failed to acquire lock - timeout or conflict")
+                for device in group.devices:
+                    results_dict[device['name']] = {
+                        'status': 'failed',
+                        'reason': 'Could not acquire R-Pi tunnel access'
+                    }
+                return
+            
+            # ========== ESTABLISH TUNNEL ONCE FOR GROUP ==========
+            print(f"[GROUP-EXEC] {group.group_id}: Establishing tunnel to R-Pi {rpi_ip}...")
+            
+            # Get first device from group to establish tunnel
+            first_device = group.devices[0]['object']
+            tunnel_success, tunnel_msg, tunnel_service = self.establish_tunnel_for_device(first_device)
+            
+            if not tunnel_success:
+                print(f"[GROUP-EXEC] ❌ {group.group_id}: Failed to establish tunnel - {tunnel_msg}")
+                for device in group.devices:
+                    results_dict[device['name']] = {
+                        'status': 'failed',
+                        'reason': tunnel_msg
+                    }
+                return
+            
+            print(f"[GROUP-EXEC] ✅ {group.group_id}: Tunnel established - {len(group.devices)} devices will share it")
+            
+            # ========== EXECUTE DEVICES IN PARALLEL ==========
+            device_threads = []
+            
+            for device_dict in group.devices:
+                device = device_dict['object']
+                # Get the job_id for this specific device
+                device_job_id = device_job_mapping.get(device.name, None)
+                if not device_job_id:
+                    print(f"❌ [GROUP-EXEC] No job_id found for device {device.name}")
+                    results_dict[device.name] = {
+                        'status': 'failed',
+                        'reason': f'No job_id mapping for device {device.name}'
+                    }
+                    continue
+                
+                device_thread = threading.Thread(
+                    target=self._execute_single_device_with_shared_tunnel,
+                    args=(device, execution_queue, iterations, device_job_id, tunnel_service, results_dict),
+                    daemon=False,
+                    name=f"DeviceExec-{device.name}"
+                )
+                device_thread.start()
+                device_threads.append(device_thread)
+            
+            # Wait for all devices in group to complete
+            print(f"[GROUP-EXEC] {group.group_id}: Waiting for {len(device_threads)} devices to complete...")
+            for thread in device_threads:
+                thread.join()
+            
+            print(f"[GROUP-EXEC] ✅ {group.group_id}: All devices completed")
+            
+        finally:
+            # ========== RELEASE GROUP LOCK ==========
+            print(f"[GROUP-EXEC] {group.group_id}: Releasing lock for R-Pi {rpi_ip}...")
+            tunnel_group_coordinator.release_tunnel_for_group(rpi_ip)
+            print(f"[GROUP-EXEC] ✅ {group.group_id}: Lock released - other groups can now use R-Pi {rpi_ip}")
+    
+    def _execute_single_device_with_shared_tunnel(self, device: Device, 
+                                                  execution_queue: List[dict],
+                                                  iterations: int, job_id: str,
+                                                  tunnel_service, results_dict: Dict):
+        """
+        Execute tests on single device using a shared (already-established) tunnel
+        
+        Key Difference from standard execution:
+        - Tunnel already exists (established by group)
+        - Skip tunnel establishment/cleanup
+        - Just run the test methods
+        - Multiple devices can execute simultaneously (same tunnel)
+        """
+        
+        try:
+            print(f"[DEVICE-EXEC] {device.name}: Starting execution (using group tunnel)...")
+            
+            # Store tunnel for this device to use (global registry)
+            register_tunnel(device.ip, {'tunnel_service': tunnel_service})
+            
+            # Execute tests normally but with pre-established tunnel
+            result = self._execute_queue_sequence(
+                device=device,
+                execution_queue=execution_queue,
+                iterations=iterations,
+                job_id=job_id,
+                skip_tunnel_lifecycle=True  # Skip tunnel acquire/release (already managed at group level)
+            )
+            
+            results_dict[device.name] = result
+            print(f"[DEVICE-EXEC] ✅ {device.name}: Execution completed")
+            
+        except Exception as e:
+            error_msg = f"Exception during device execution: {str(e)}"
+            print(f"[DEVICE-EXEC] ❌ {device.name}: {error_msg}")
+            results_dict[device.name] = {
+                'status': 'failed',
+                'reason': error_msg
+            }
+        finally:
+            # Clean up tunnel reference (but don't release SSH tunnel - released at group level)
+            # Release tunnel from global registry
+            unregister_tunnel(device.ip)

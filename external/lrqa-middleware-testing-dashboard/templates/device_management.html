@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Device Access Control - Super Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: radial-gradient(circle at 10% 10%, rgba(14, 165, 233, 0.2), transparent 45%), #0b1220;
+            min-height: 100vh;
+            padding: 20px;
+            color: #e2e8f0;
+        }
+        .container {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #60a5fa;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        .header p {
+            color: #9ca3af;
+            margin: 0;
+            font-size: 0.95rem;
+        }
+        .device-card {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+        .device-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        .device-name {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #e2e8f0;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .device-icon {
+            color: #10b981;
+            font-size: 1.2em;
+        }
+        .device-meta {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            margin-bottom: 10px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .meta-item {
+            display: flex;
+            gap: 5px;
+        }
+        .meta-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .device-access {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px;
+            background: #0b1220;
+            border-radius: 5px;
+            border: 1px solid #374151;
+            margin-top: 10px;
+        }
+        .team-badge {
+            background: #3b82f6;
+            color: #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .access-level {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            font-weight: 500;
+        }
+        .edit-btn {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            background: #3b82f6;
+            color: #e2e8f0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .edit-btn:hover {
+            background: #1d4ed8;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+        .success {
+            background: #064e3b;
+            border: 1px solid #059669;
+            color: #d1fae5;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .error {
+            background: #7f1d1d;
+            border: 1px solid #dc2626;
+            color: #fecaca;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .navigation {
+            margin-bottom: 20px;
+        }
+        .navigation a {
+            color: #60a5fa;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+        .navigation a:hover {
+            text-decoration: underline;
+        }
+        .modal-backdrop-custom {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1050;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-backdrop-custom.show {
+            display: flex;
+        }
+        .modal-content-custom {
+            background: #111827;
+            border: 1px solid #374151;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header-custom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #3b82f6;
+        }
+        .modal-header-custom h4 {
+            color: #60a5fa;
+            margin: 0;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #9ca3af;
+        }
+        .close-btn:hover {
+            color: #e2e8f0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            color: #e2e8f0;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            background: #0b1220;
+            border: 1px solid #374151;
+            border-radius: 4px;
+            color: #e2e8f0;
+        }
+        .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        .team-option-group {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #0b1220;
+            border: 1px solid #374151;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            color: #e2e8f0;
+            gap: 10px;
+        }
+        .team-option-group input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+        .team-option-group label {
+            margin: 0;
+            cursor: pointer;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .team-option-group select {
+            margin: 0;
+            flex-grow: 1;
+        }
+        .modal-footer-custom {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #374151;
+        }
+        .btn-primary, .btn-secondary {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: #e2e8f0;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .btn-secondary {
+            background: #475569;
+            color: #e2e8f0;
+        }
+        .btn-secondary:hover {
+            background: #64748b;
+        }
+        .btn-danger {
+            background: #dc2626;
+            color: #e2e8f0;
+        }
+        .btn-danger:hover {
+            background: #991b1b;
+        }
+        .search-box {
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #0b1220;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            color: #e2e8f0;
+            width: 100%;
+            max-width: 300px;
+        }
+        .search-box::placeholder {
+            color: #6b7280;
+        }
+        .no-access {
+            color: #9ca3af;
+            font-style: italic;
+            padding: 10px;
+            background: #0b1220;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="navigation">
+            <a href="/">← Back to Dashboard</a> | <a href="/admin/teams">Teams</a> | <a href="/admin/sequences">Sequences</a>
+        </div>
+
+        <div class="header">
+            <h1>🖥️ Device Access Control (Super Admin)</h1>
+            <p>Control which teams can access specific devices</p>
+        </div>
+
+        <div id="message"></div>
+
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="searchBox" class="search-box" placeholder="Search devices...">
+        </div>
+
+        <div id="devicesContainer" class="loading show">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading devices...</p>
+        </div>
+    </div>
+
+    <!-- Edit Device Access Modal -->
+    <div id="editDeviceModal" class="modal-backdrop-custom">
+        <div class="modal-content-custom">
+            <div class="modal-header-custom">
+                <h4>Edit Device Access</h4>
+                <button class="close-btn" onclick="closeEditModal()">×</button>
+            </div>
+            <form id="editDeviceForm">
+                <div style="margin-bottom: 20px;">
+                    <strong style="color: #60a5fa; font-size: 1.1em;" id="deviceNameDisplay"></strong>
+                    <div style="font-size: 0.9rem; color: #9ca3af; margin-top: 5px;">
+                        <div>IP Address: <span id="deviceIP"></span></div>
+                        <div>Team: <span id="deviceTeam"></span></div>
+                        <div>Type: <span id="deviceType"></span></div>
+                        <div>Location: <span id="deviceLocation"></span></div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #e2e8f0; margin-bottom: 10px; display: block;">Teams with Access:</strong>
+                    <div id="teamsAccessContainer" style="max-height: 300px; overflow-y: auto;"></div>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #374151;">
+                        <strong style="color: #e2e8f0; margin-bottom: 10px; display: block;">Grant access to new team:</strong>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <select id="newTeamSelect">
+                                <option value="">Select a team...</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <select id="newAccessLevel">
+                                <option value="view">View Only (read-only)</option>
+                                <option value="use" selected>Use Device (full access)</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn-primary" onclick="addTeamAccess()" style="width: 100%; margin-top: 10px;">
+                            <i class="bi bi-plus-circle"></i> Grant Access
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-footer-custom">
+                    <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE = '/api';
+        let allDevices = [];
+        let allTeams = [];
+        let currentEditDevice = null;
+        let deviceAccessMap = {}; // Track access levels for devices
+
+        // Load devices
+        async function loadDevices() {
+            try {
+                const response = await fetch(`${API_BASE}/devices/shared`, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        showMessage('Access Denied. Only super admin can manage device sharing.', 'error');
+                    } else {
+                        showMessage('Error loading devices.', 'error');
+                    }
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('🔍 Full API Response from /api/devices/shared:', data);
+                console.log(`📊 Total devices returned: ${data.count || 0}`);
+                
+                allDevices = data.devices || [];
+                console.log('📋 All Devices:', allDevices.map(d => ({ name: d.name, ip: d.ip, team: d.team_name })));
+                
+                deviceAccessMap = {};
+                allDevices.forEach(device => {
+                    deviceAccessMap[device.ip] = device.shared_with_teams || {};
+                });
+                
+                renderDevices();
+            } catch (error) {
+                console.error('Error loading devices:', error);
+                showMessage('Error loading devices: ' + error.message, 'error');
+            }
+        }
+
+        // Fetch all teams for the dropdown
+        async function loadTeams() {
+            try {
+                const response = await fetch(`${API_BASE}/teams`, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    console.error('❌ Error loading teams, status:', response.status);
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('📡 Teams API Response:', data);
+                
+                // Extract team names from the response
+                if (data.teams && Array.isArray(data.teams)) {
+                    allTeams = data.teams.map(team => {
+                        if (typeof team === 'string') return team;
+                        if (team.team_name) return team.team_name;
+                        if (team.name) return team.name;
+                        return String(team);
+                    }).filter(t => t).sort();
+                } else if (data.data && Array.isArray(data.data)) {
+                    allTeams = data.data.map(team => {
+                        if (typeof team === 'string') return team;
+                        if (team.team_name) return team.team_name;
+                        if (team.name) return team.name;
+                        return String(team);
+                    }).filter(t => t).sort();
+                } else {
+                    console.warn('⚠️ Unexpected teams response format, trying alternative extraction...');
+                    // Try to extract from root level
+                    if (Array.isArray(data)) {
+                        allTeams = data.map(team => {
+                            if (typeof team === 'string') return team;
+                            if (team.team_name) return team.team_name;
+                            if (team.name) return team.name;
+                            return String(team);
+                        }).filter(t => t).sort();
+                    }
+                }
+                
+                console.log('✅ Loaded teams:', allTeams);
+            } catch (error) {
+                console.error('❌ Error loading teams:', error);
+            }
+        }
+
+        // Render devices
+        function renderDevices() {
+            const container = document.getElementById('devicesContainer');
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            
+            const filteredDevices = allDevices.filter(device => 
+                device.name.toLowerCase().includes(searchTerm) ||
+                device.ip.toLowerCase().includes(searchTerm) ||
+                device.team_name.toLowerCase().includes(searchTerm)
+            );
+
+            if (filteredDevices.length === 0) {
+                container.innerHTML = '<div class="loading">No devices found.</div>';
+                return;
+            }
+
+            container.innerHTML = filteredDevices.map(device => `
+                <div class="device-card">
+                    <div class="device-name">
+                        <i class="bi bi-hdd-rack-fill device-icon"></i>
+                        ${device.name}
+                    </div>
+                    <div class="device-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">IP:</span>
+                            <span>${device.ip}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Type:</span>
+                            <span>${device.device_type || 'N/A'}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Team:</span>
+                            <span>${device.team_name}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">Location:</span>
+                            <span>${device.location || 'N/A'}</span>
+                        </div>
+                    </div>
+                    <div class="device-access">
+                        ${device.team_name ? `
+                            <div class="team-badge" style="background: #059669;">
+                                <i class="bi bi-star-fill"></i>
+                                ${device.team_name}
+                                <span class="access-level">(Owner)</span>
+                            </div>
+                        ` : ''}
+                        ${Object.keys(device.shared_with_teams || {}).length > 0 
+                            ? Object.entries(device.shared_with_teams).map(([team, level]) => `
+                                <div class="team-badge">
+                                    <i class="bi bi-people-fill"></i>
+                                    ${team}
+                                    <span class="access-level">(${level})</span>
+                                </div>
+                            `).join('')
+                            : device.team_name ? '' : '<div class="no-access">Not shared with any teams</div>'
+                        }
+                    </div>
+                    <button class="edit-btn" onclick="openEditModal('${device.ip}')" style="margin-top: 10px;">
+                        <i class="bi bi-pencil-square"></i> Edit Access
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Open edit modal
+        async function openEditModal(deviceIp) {
+            currentEditDevice = allDevices.find(d => d.ip === deviceIp);
+            if (!currentEditDevice) return;
+
+            document.getElementById('deviceNameDisplay').textContent = currentEditDevice.name;
+            document.getElementById('deviceIP').textContent = currentEditDevice.ip;
+            document.getElementById('deviceTeam').textContent = currentEditDevice.team_name;
+            document.getElementById('deviceType').textContent = currentEditDevice.device_type || 'N/A';
+            document.getElementById('deviceLocation').textContent = currentEditDevice.location || 'N/A';
+
+            // Render current access (including primary team and shared teams)
+            const accessContainer = document.getElementById('teamsAccessContainer');
+            const sharedTeams = currentEditDevice.shared_with_teams || {};
+            
+            let accessHTML = '';
+            
+            // Show primary team (always has full access)
+            if (currentEditDevice.team_name) {
+                accessHTML += `
+                    <div class="team-option-group" style="background: #064e3b; border-color: #059669;">
+                        <span style="flex-grow: 1; color: #d1fae5;">
+                            <i class="bi bi-people-fill"></i> <strong>${currentEditDevice.team_name}</strong>
+                            <span style="color: #6ee7b7; font-size: 0.9em; margin-left: 5px;">(Owner - Full Access)</span>
+                        </span>
+                    </div>
+                `;
+            }
+            
+            // Show shared teams with removal option
+            if (Object.keys(sharedTeams).length > 0) {
+                accessHTML += Object.entries(sharedTeams).map(([team, level]) => `
+                    <div class="team-option-group">
+                        <span style="flex-grow: 1;">
+                            <i class="bi bi-people-fill"></i> ${team}
+                            <span style="color: #60a5fa; font-size: 0.9em;">(${level})</span>
+                        </span>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="removeTeamAccess('${team}')">
+                            <i class="bi bi-x-circle"></i> Remove
+                        </button>
+                    </div>
+                `).join('');
+            } else if (!currentEditDevice.team_name) {
+                accessHTML = '<div class="no-access">No teams have access to this device</div>';
+            }
+            
+            accessContainer.innerHTML = accessHTML;
+
+            // Populate team selector (exclude owner team and already shared teams)
+            const teamSelect = document.getElementById('newTeamSelect');
+            console.log('📋 All Teams:', allTeams);
+            console.log('🎯 Current Device:', currentEditDevice.name, 'Team:', currentEditDevice.team_name);
+            console.log('🔗 Shared With:', sharedTeams);
+            
+            const availableTeams = allTeams.filter(team => 
+                team !== currentEditDevice.team_name && !sharedTeams[team]
+            );
+            console.log('✅ Available Teams to Share:', availableTeams);
+            
+            teamSelect.innerHTML = '<option value="">Select a team...</option>' + 
+                availableTeams.map(team => 
+                    `<option value="${team}">${team}</option>`
+                ).join('');
+
+            document.getElementById('editDeviceModal').classList.add('show');
+        }
+
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById('editDeviceModal').classList.remove('show');
+            document.getElementById('editDeviceForm').reset();
+            currentEditDevice = null;
+        }
+
+        // Add team access
+        async function addTeamAccess() {
+            const teamSelect = document.getElementById('newTeamSelect');
+            const accessLevelSelect = document.getElementById('newAccessLevel');
+            const team = teamSelect.value;
+            const accessLevel = accessLevelSelect.value;
+
+            if (!team) {
+                showMessage('Please select a team', 'error');
+                return;
+            }
+
+            if (!currentEditDevice) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/devices/${currentEditDevice.ip}/share`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        team_name: team,
+                        access_level: accessLevel
+                    }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showMessage('Error: ' + (data.error || 'Failed to grant access'), 'error');
+                    return;
+                }
+
+                // Update local device
+                currentEditDevice.shared_with_teams[team] = accessLevel;
+                
+                // Refresh modal
+                await openEditModal(currentEditDevice.ip);
+                showMessage('✅ Access granted successfully', 'success');
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        // Remove team access
+        async function removeTeamAccess(team) {
+            if (!currentEditDevice) return;
+            
+            if (!confirm(`Remove access for ${team}?`)) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/devices/${currentEditDevice.ip}/share/${team}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showMessage('Error: ' + (data.error || 'Failed to revoke access'), 'error');
+                    return;
+                }
+
+                // Update local device
+                delete currentEditDevice.shared_with_teams[team];
+                
+                // Refresh modal
+                await openEditModal(currentEditDevice.ip);
+                showMessage('✅ Access revoked successfully', 'success');
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        // Show message
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                    messageDiv.className = '';
+                }, 3000);
+            }
+        }
+
+        // Handle Edit Device Form Submission (Save Changes)
+        function handleEditDeviceFormSubmit(event) {
+            event.preventDefault();  // Prevent default form submission
+            
+            if (!currentEditDevice) {
+                showMessage('❌ No device selected', 'error');
+                return;
+            }
+            
+            showMessage('✅ Device access settings saved successfully', 'success');
+            
+            // Close modal after short delay to show success message
+            setTimeout(() => {
+                closeEditModal();
+                // Reload devices to reflect any changes
+                loadDevices();
+            }, 1000);
+        }
+
+        // Search functionality
+        document.getElementById('searchBox').addEventListener('input', renderDevices);
+
+        // Initialize
+        async function initialize() {
+            console.log('🚀 Initializing device management page...');
+            
+            // Attach form submit handler
+            document.getElementById('editDeviceForm').addEventListener('submit', handleEditDeviceFormSubmit);
+            
+            await loadDevices();
+            console.log('📥 Devices loaded');
+            await loadTeams();
+            console.log('✅ Teams loaded');
+        }
+        
+        initialize();
+    </script>
+</body>
+</html>

@@ -7,40 +7,46 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: radial-gradient(circle at 10% 10%, rgba(14, 165, 233, 0.2), transparent 45%), #0b1220;
             min-height: 100vh;
             padding: 20px;
+            color: #e2e8f0;
         }
         .container {
-            background: white;
+            background: #111827;
+            border: 1px solid #1f2937;
             border-radius: 10px;
             padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
             max-width: 1200px;
+            margin: 0 auto;
         }
         .header {
-            border-bottom: 3px solid #667eea;
+            border-bottom: 2px solid #3b82f6;
             padding-bottom: 20px;
             margin-bottom: 30px;
         }
         .header h1 {
-            color: #667eea;
+            color: #60a5fa;
             margin-bottom: 5px;
+            font-weight: 700;
         }
         .header p {
-            color: #666;
+            color: #9ca3af;
             margin: 0;
+            font-size: 0.95rem;
         }
         .team-card {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
+            background: #1f2937;
+            border: 1px solid #374151;
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 20px;
-            transition: box-shadow 0.2s;
+            transition: all 0.2s;
         }
         .team-card:hover {
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
         }
         .team-header {
             display: flex;
@@ -51,7 +57,7 @@
         .team-name {
             font-size: 1.3em;
             font-weight: bold;
-            color: #333;
+            color: #e2e8f0;
         }
         .team-stats {
             display: flex;
@@ -59,27 +65,28 @@
             margin-top: 15px;
         }
         .stat {
-            background: white;
+            background: #0b1220;
             padding: 10px 15px;
             border-radius: 5px;
-            border-left: 3px solid #667eea;
+            border-left: 3px solid #3b82f6;
         }
         .stat-label {
             font-size: 0.85em;
-            color: #666;
+            color: #9ca3af;
         }
         .stat-value {
             font-size: 1.5em;
             font-weight: bold;
-            color: #667eea;
+            color: #60a5fa;
         }
         .member-list {
             margin-top: 15px;
         }
         .member-item {
-            background: white;
+            background: #0b1220;
             padding: 10px;
             border-radius: 5px;
+            border: 1px solid #374151;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -91,33 +98,34 @@
         }
         .member-ntid {
             font-weight: bold;
-            color: #333;
+            color: #e2e8f0;
         }
         .member-email {
             font-size: 0.85em;
-            color: #666;
+            color: #9ca3af;
         }
         .badge-admin {
-            background-color: #667eea;
-            color: white;
+            background-color: #3b82f6;
+            color: #e2e8f0;
             padding: 3px 8px;
             border-radius: 3px;
             font-size: 0.75em;
         }
         .form-section {
-            background: #f8f9fa;
+            background: #1f2937;
             padding: 25px;
             border-radius: 8px;
+            border: 1px solid #374151;
             margin-bottom: 30px;
         }
         .form-section h3 {
-            color: #667eea;
+            color: #60a5fa;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid #3b82f6;
         }
         .btn-primary-custom {
-            background: #667eea;
+            background: #3b82f6;
             border: none;
             padding: 10px 20px;
             border-radius: 5px;
@@ -126,28 +134,34 @@
             transition: background 0.2s;
         }
         .btn-primary-custom:hover {
-            background: #764ba2;
+            background: #1d4ed8;
         }
         .member-input-group {
-            background: white;
+            background: #0b1220;
             padding: 15px;
             border-radius: 5px;
+            border: 1px solid #374151;
             margin-bottom: 10px;
-            border: 1px solid #dee2e6;
         }
         .member-input-group input {
             width: 100%;
             padding: 8px;
             margin-bottom: 8px;
-            border: 1px solid #dee2e6;
+            background: #111827;
+            border: 1px solid #475569;
             border-radius: 4px;
+            color: #e2e8f0;
             font-size: 0.9em;
+        }
+        .member-input-group input::placeholder {
+            color: #6b7280;
         }
         .member-input-group label {
             display: flex;
             align-items: center;
             font-size: 0.9em;
             margin-bottom: 0;
+            color: #e2e8f0;
         }
         .member-input-group input[type="checkbox"] {
             width: auto;
@@ -155,9 +169,9 @@
             margin-bottom: 0;
         }
         .alert-info {
-            background: #e7f3ff;
-            border: 1px solid #b3d9ff;
-            color: #004085;
+            background: #1e3a5f;
+            border: 1px solid #1e40af;
+            color: #bfdbfe;
             padding: 12px;
             border-radius: 5px;
             margin-bottom: 20px;
@@ -166,22 +180,23 @@
             display: none;
             text-align: center;
             padding: 20px;
+            color: #9ca3af;
         }
         .loading.show {
             display: block;
         }
         .success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
+            background: #064e3b;
+            border: 1px solid #059669;
+            color: #d1fae5;
             padding: 12px;
             border-radius: 5px;
             margin-bottom: 20px;
         }
         .error {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
+            background: #7f1d1d;
+            border: 1px solid #dc2626;
+            color: #fecaca;
             padding: 12px;
             border-radius: 5px;
             margin-bottom: 20px;
@@ -190,7 +205,7 @@
             margin-bottom: 20px;
         }
         .navigation a {
-            color: #667eea;
+            color: #60a5fa;
             text-decoration: none;
             margin-right: 20px;
         }
@@ -215,7 +230,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.7);
             z-index: 999;
             align-items: center;
             justify-content: center;
@@ -224,12 +239,13 @@
             display: flex;
         }
         .modal-content-custom {
-            background: white;
+            background: #111827;
+            border: 1px solid #374151;
             padding: 30px;
             border-radius: 10px;
             width: 90%;
             max-width: 500px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
         .modal-header-custom {
             display: flex;
@@ -237,10 +253,10 @@
             align-items: center;
             margin-bottom: 20px;
             padding-bottom: 15px;
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid #3b82f6;
         }
         .modal-header-custom h4 {
-            color: #667eea;
+            color: #60a5fa;
             margin: 0;
         }
         .close-btn {
@@ -248,10 +264,10 @@
             border: none;
             font-size: 1.5em;
             cursor: pointer;
-            color: #666;
+            color: #9ca3af;
         }
         .close-btn:hover {
-            color: #333;
+            color: #e2e8f0;
         }
         .form-group-custom {
             margin-bottom: 15px;
@@ -259,20 +275,48 @@
         .form-group-custom label {
             display: block;
             margin-bottom: 5px;
-            color: #333;
+            color: #e2e8f0;
             font-weight: 500;
         }
         .form-group-custom input {
             width: 100%;
             padding: 8px;
-            border: 1px solid #dee2e6;
+            background: #0b1220;
+            border: 1px solid #475569;
             border-radius: 4px;
+            color: #e2e8f0;
             font-size: 0.9em;
+        }
+        .form-group-custom input::placeholder {
+            color: #6b7280;
+        }
+        .form-group-custom input:disabled {
+            background: #0b1220;
+            color: #6b7280;
+        }
+        .form-group-custom select {
+            width: 100%;
+            padding: 8px;
+            background: #0b1220;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            color: #e2e8f0;
+            font-size: 0.9em;
+        }
+        .form-group-custom select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+        }
+        .form-group-custom select option {
+            background: #111827;
+            color: #e2e8f0;
         }
         .checkbox-group {
             display: flex;
             align-items: center;
             margin-top: 15px;
+            color: #e2e8f0;
         }
         .checkbox-group input[type="checkbox"] {
             width: auto;
@@ -284,14 +328,14 @@
             justify-content: flex-end;
             margin-top: 20px;
             padding-top: 15px;
-            border-top: 1px solid #dee2e6;
+            border-top: 1px solid #374151;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="navigation">
-            <a href="/" class="btn btn-link">← Back to Dashboard</a>
+            <a href="/" class="btn btn-link">← Back to Dashboard</a> | <a href="/admin/methods">Methods</a> | <a href="/admin/sequences">Sequences</a>
         </div>
 
         <div class="header">
@@ -310,14 +354,14 @@
 
             <form id="createTeamForm">
                 <div class="mb-3">
-                    <label for="teamName" class="form-label">Team Name *</label>
-                    <input type="text" class="form-control" id="teamName" placeholder="e.g., LRQA, QA-India, QA-UK" required>
-                    <small class="form-text text-muted">Minimum 3 characters, letters and numbers only</small>
+                    <label for="teamName" class="form-label" style="color: #e2e8f0;">Team Name *</label>
+                    <input type="text" class="form-control" id="teamName" placeholder="e.g., LRQA, QA-India, QA-UK" required style="background: #0b1220; border: 1px solid #475569; color: #e2e8f0;">
+                    <small class="form-text" style="color: #9ca3af;">Minimum 3 characters, letters and numbers only</small>
                 </div>
 
                 <div class="mb-3">
-                    <label for="teamDescription" class="form-label">Description</label>
-                    <textarea class="form-control" id="teamDescription" rows="2" placeholder="Team purpose and location"></textarea>
+                    <label for="teamDescription" class="form-label" style="color: #e2e8f0;">Description</label>
+                    <textarea class="form-control" id="teamDescription" rows="2" placeholder="Team purpose and location" style="background: #0b1220; border: 1px solid #475569; color: #e2e8f0;"></textarea>
                 </div>
 
                 <div class="mb-3">
@@ -366,7 +410,7 @@
             <form id="editMemberForm">
                 <div class="form-group-custom">
                     <label for="editMemberNTID">NTID</label>
-                    <input type="text" id="editMemberNTID" disabled style="background: #f5f5f5;">
+                    <input type="text" id="editMemberNTID" disabled style="background: #0b1220; color: #6b7280;">
                 </div>
                 <div class="form-group-custom">
                     <label for="editMemberEmail">Email</label>
@@ -376,13 +420,19 @@
                     <label for="editMemberName">Full Name</label>
                     <input type="text" id="editMemberName">
                 </div>
+                <div class="form-group-custom">
+                    <label for="editMemberTeam">Team *</label>
+                    <select id="editMemberTeam" style="width: 100%; padding: 8px; background: #0b1220; border: 1px solid #475569; border-radius: 4px; color: #e2e8f0;" required>
+                        <option value="">-- Select Team --</option>
+                    </select>
+                </div>
                 <div class="checkbox-group">
                     <input type="checkbox" id="editMemberAdmin">
                     <label for="editMemberAdmin" style="margin: 0;">Make Team Admin</label>
                 </div>
                 <div class="modal-footer-custom">
-                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="background: #667eea; border: none;">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()" style="background: #475569; border: none; color: #e2e8f0;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background: #3b82f6; border: none; color: #fff;">Save Changes</button>
                 </div>
             </form>
         </div>
@@ -391,6 +441,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const API_BASE = '/api';
+        let allTeams = [];  // Store all teams globally for use in edit modal
 
         // Load teams
         async function loadTeams() {
@@ -410,7 +461,9 @@
                 const data = await response.json();
                 
                 if (data.success) {
+                    allTeams = data.teams;  // Store teams globally
                     displayTeams(data.teams);
+                    populateTeamDropdown(data.teams);  // Populate edit modal dropdown
                 } else {
                     showMessage(data.error || 'Failed to load teams', 'error');
                 }
@@ -418,6 +471,22 @@
                 console.error('Error loading teams:', error);
                 showMessage('Error loading teams: ' + error.message, 'error');
             }
+        }
+
+        function populateTeamDropdown(teams) {
+            const dropdown = document.getElementById('editMemberTeam');
+            if (!dropdown) return;
+            
+            // Clear existing options except the first placeholder
+            dropdown.innerHTML = '<option value="">-- Select Team --</option>';
+            
+            // Add all teams as options
+            teams.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team.team_name;
+                option.textContent = team.team_name + ` (${team.member_count} members)`;
+                dropdown.appendChild(option);
+            });
         }
 
         function displayTeams(teams) {
@@ -573,9 +642,32 @@
         }
 
         function deleteTeam(teamName) {
-            if (confirm(`Are you sure you want to delete team '${teamName}'?`)) {
-                // TODO: Implement delete team
-                showMessage('Delete team feature coming soon', 'error');
+            if (confirm(`Are you sure you want to delete team '${teamName}'? This will remove all team members.`)) {
+                deleteTeamConfirmed(teamName);
+            }
+        }
+
+        async function deleteTeamConfirmed(teamName) {
+            try {
+                // Delete endpoint expects team_name as query parameter
+                const response = await fetch(`${API_BASE}/teams?team_name=${encodeURIComponent(teamName)}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage(`✅ Team '${teamName}' deleted successfully with ${data.members_deleted} member(s) removed`, 'success');
+                    loadTeams();
+                } else {
+                    showMessage(data.error || 'Failed to delete team', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
             }
         }
 
@@ -590,9 +682,11 @@
             document.getElementById('editMemberNTID').value = member.ntid;
             document.getElementById('editMemberEmail').value = member.email;
             document.getElementById('editMemberName').value = member.name || member.ntid;
+            document.getElementById('editMemberTeam').value = teamName;  // Set current team
             document.getElementById('editMemberAdmin').checked = member.is_team_admin || false;
             
             document.getElementById('editMemberModal').classList.add('show');
+            console.log(`✅ Edit modal opened for ${member.ntid} in team ${teamName}`);
         }
 
         function closeEditModal() {
@@ -607,6 +701,7 @@
 
             const email = document.getElementById('editMemberEmail').value.trim();
             const name = document.getElementById('editMemberName').value.trim();
+            const newTeamName = document.getElementById('editMemberTeam').value.trim();
             const isAdmin = document.getElementById('editMemberAdmin').checked;
 
             if (!email) {
@@ -614,26 +709,43 @@
                 return;
             }
 
+            if (!newTeamName) {
+                showMessage('Team selection is required', 'error');
+                return;
+            }
+
             try {
+                const updateData = {
+                    ntid: currentEditMemberNTID,
+                    email,
+                    name,
+                    is_team_admin: isAdmin
+                };
+
+                // Add team_name only if it's different from current team
+                if (newTeamName !== currentEditTeamName) {
+                    updateData.team_name = newTeamName;
+                    console.log(`🔄 Changing user's team from '${currentEditTeamName}' to '${newTeamName}'`);
+                } else {
+                    console.log(`📝 Updating user without team change`);
+                }
+
                 const response = await fetch(`${API_BASE}/teams/members`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     credentials: 'include',
-                    body: JSON.stringify({
-                        team_name: currentEditTeamName,
-                        ntid: currentEditMemberNTID,
-                        email,
-                        name,
-                        is_team_admin: isAdmin
-                    })
+                    body: JSON.stringify(updateData)
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    showMessage(`✅ User '${currentEditMemberNTID}' updated successfully`, 'success');
+                    const action = newTeamName !== currentEditTeamName 
+                        ? `✅ User '${currentEditMemberNTID}' moved to team '${newTeamName}'` 
+                        : `✅ User '${currentEditMemberNTID}' updated successfully`;
+                    showMessage(action, 'success');
                     closeEditModal();
                     loadTeams();
                 } else {
@@ -651,16 +763,13 @@
             }
 
             try {
-                const response = await fetch(`${API_BASE}/teams/members`, {
+                // Delete endpoint expects ntid as query parameter
+                const response = await fetch(`${API_BASE}/teams/members?ntid=${encodeURIComponent(ntid)}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        team_name: teamName,
-                        ntid: ntid
-                    })
+                    credentials: 'include'
                 });
 
                 const data = await response.json();

@@ -3,12 +3,14 @@ Email Service - Handles all email notifications
 """
 import os
 import smtplib
+import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
 from datetime import datetime
 from typing import Optional, List
+import time
 
 
 class EmailService:
@@ -46,6 +48,9 @@ class EmailService:
       self.sender_password = os.environ.get('SENDER_PASSWORD', SENDER_PASSWORD)
       # Enable email only when Gmail SMTP is fully configured
       self.enabled = bool(EMAIL_ENABLED and self.sender_email and self.sender_password)
+      
+      # Threading lock to ensure thread-safe operations
+      self._lock = threading.Lock()
     
     def send_password_reset_email(self, recipient_email: str, code: str, name: str) -> tuple:
         """Send password reset email with 6-digit code"""
@@ -105,6 +110,8 @@ class EmailService:
         """
         Send test execution results email - AUTOMATICALLY TRIGGERED after execution
         
+        Sends email in a background thread to avoid blocking job completion.
+        
         Includes:
           - Device name and IP
           - Method(s) executed  
@@ -112,6 +119,23 @@ class EmailService:
           - Pass/Failed status
           - Execution duration
           - Log file attachments
+        """
+        # Send in background thread to not block job completion
+        thread = threading.Thread(
+            target=self._send_execution_results_email_async,
+            args=(recipient_email, job_data, log_file_paths),
+            daemon=True
+        )
+        thread.start()
+        
+        # Return immediately - email is being sent in background
+        return True, "Email queued for delivery (sending in background)"
+    
+    def _send_execution_results_email_async(self, recipient_email: str, job_data: dict, 
+                                           log_file_paths: List[str] = None):
+        """
+        Async implementation of send_execution_results_email
+        Runs in a background thread
         """
         try:
             msg = MIMEMultipart('mixed')
@@ -359,48 +383,82 @@ This email was sent automatically after execution completed.
                         except Exception as e:
                             print(f"Warning: Could not attach log file {log_file_path}: {e}")
             
-            return self._send_email(msg, recipient_email)
+            # Send email in async thread (this method is already running in a thread)
+            success, message = self._send_email(msg, recipient_email)
+            
+            if success:
+                print(f"✅ [ASYNC] Execution results email sent to {recipient_email}")
+            else:
+                print(f"❌ [ASYNC] Failed to send email to {recipient_email}: {message}")
         
         except Exception as e:
-            print(f"Error sending execution results email: {e}")
-            return False, str(e)
+            print(f"❌ [ASYNC] Error sending execution results email: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
     
     def _send_email(self, msg: MIMEMultipart, recipient: str) -> tuple:
-        """Internal method to send email via SMTP"""
+        """Internal method to send email via SMTP with retry logic"""
         if not self.enabled:
             print(f"⚠️ Email not configured. Would have sent to: {recipient}")
             print(f"   Subject: {msg['Subject']}")
             return True, "Email not configured (dev mode)"
         
-        try:
-            with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=10) as server:
-                # Only use STARTTLS and authentication for secure SMTP (port 587)
-                # Mail relay servers (port 25) typically don't require authentication
-                if self.smtp_port == 587:
-                    server.starttls()
-                    if self.sender_password:
-                        server.login(self.sender_email, self.sender_password)
+        # Retry configuration
+        max_retries = 3
+        retry_delays = [2, 5, 10]  # seconds between retries
+        timeout_seconds = 30  # Increased from 10 to 30 seconds for more stable connection
+        
+        for attempt in range(max_retries):
+            try:
+                print(f"📧 [ATTEMPT {attempt + 1}/{max_retries}] Connecting to {self.smtp_server}:{self.smtp_port} (timeout={timeout_seconds}s)")
                 
-                server.send_message(msg)
+                with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=timeout_seconds) as server:
+                    # Only use STARTTLS and authentication for secure SMTP (port 587)
+                    # Mail relay servers (port 25) typically don't require authentication
+                    if self.smtp_port == 587:
+                        print(f"📧 Starting TLS encryption...")
+                        server.starttls()
+                        if self.sender_password:
+                            print(f"📧 Authenticating with {self.sender_email}...")
+                            server.login(self.sender_email, self.sender_password)
+                    
+                    print(f"📧 Sending message to {recipient}...")
+                    server.send_message(msg)
+                
+                print(f"✅ Email sent successfully to {recipient}")
+                print(f"   Server: {self.smtp_server}:{self.smtp_port}")
+                return True, "Email sent successfully"
             
-            print(f"✅ Email sent successfully to {recipient}")
-            print(f"   Server: {self.smtp_server}:{self.smtp_port}")
-            return True, "Email sent successfully"
+            except (OSError, smtplib.SMTPServerDisconnected, TimeoutError) as e:
+                # Network/connection errors - retry
+                error_msg = f"Connection error (attempt {attempt + 1}/{max_retries}): {type(e).__name__}: {e}"
+                print(f"⚠️  {error_msg}")
+                
+                if attempt < max_retries - 1:
+                    wait_time = retry_delays[attempt]
+                    print(f"⏳ Retrying in {wait_time} seconds...")
+                    import time
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    return False, error_msg
+            
+            except smtplib.SMTPAuthenticationError as e:
+                error_msg = f"SMTP Authentication failed: {e}"
+                print(f"❌ {error_msg}")
+                return False, error_msg
+            
+            except smtplib.SMTPException as e:
+                error_msg = f"SMTP error: {e}"
+                print(f"❌ {error_msg}")
+                return False, error_msg
+            
+            except Exception as e:
+                error_msg = f"Unexpected error sending email: {type(e).__name__}: {e}"
+                print(f"❌ {error_msg}")
+                return False, error_msg
         
-        except smtplib.SMTPAuthenticationError as e:
-            error_msg = f"SMTP Authentication failed: {e}"
-            print(f"❌ {error_msg}")
-            return False, error_msg
-        
-        except smtplib.SMTPException as e:
-            error_msg = f"SMTP error: {e}"
-            print(f"❌ {error_msg}")
-            return False, error_msg
-        
-        except Exception as e:
-            error_msg = f"Unexpected error sending email: {e}"
-            print(f"❌ {error_msg}")
-            return False, error_msg
+        return False, "Failed to send email after all retry attempts"
     
     def send_custom_html_email(self, subject: str, html_content: str, recipient_email: str = None) -> tuple:
         """Send a custom HTML email (for recovery reports, etc.)"""
@@ -423,6 +481,71 @@ This email was sent automatically after execution completed.
         except Exception as e:
             print(f"Error sending custom email: {e}")
             return False, str(e)
+    
+    def test_smtp_connection(self) -> tuple:
+        """
+        Test SMTP connection without sending an email
+        Useful for diagnosing configuration issues
+        
+        Returns:
+            (success: bool, message: str)
+        """
+        print("\n" + "="*60)
+        print("SMTP CONNECTION TEST")
+        print("="*60)
+        
+        if not self.enabled:
+            msg = "Email service is disabled (missing SENDER_EMAIL or SENDER_PASSWORD)"
+            print(f"⚠️  {msg}")
+            return False, msg
+        
+        print(f"Testing connection to: {self.smtp_server}:{self.smtp_port}")
+        print(f"Auth Email: {self.sender_email}")
+        print(f"Timeout: 30 seconds")
+        print("-"*60)
+        
+        try:
+            print("Establishing connection...")
+            with smtplib.SMTP(self.smtp_server, self.smtp_port, timeout=30) as server:
+                print(f"✅ Connected to {self.smtp_server}:{self.smtp_port}")
+                
+                if self.smtp_port == 587:
+                    print("Starting TLS encryption...")
+                    server.starttls()
+                    print("✅ TLS enabled")
+                    
+                    if self.sender_password:
+                        print(f"Authenticating with {self.sender_email}...")
+                        server.login(self.sender_email, self.sender_password)
+                        print("✅ Authentication successful")
+                
+                print("\n✅ SMTP connection test PASSED")
+                print("="*60 + "\n")
+                return True, "SMTP connection successful"
+        
+        except smtplib.SMTPAuthenticationError as e:
+            msg = f"SMTP Authentication failed: {e}\n❌ Check your email credentials (SENDER_EMAIL, SENDER_PASSWORD)"
+            print(f"\n❌ {msg}")
+            print("="*60 + "\n")
+            return False, msg
+        
+        except TimeoutError as e:
+            msg = f"Connection timeout: {e}\n❌ Cannot reach {self.smtp_server}:{self.smtp_port}\nCheck network connectivity and firewall settings"
+            print(f"\n❌ {msg}")
+            print("="*60 + "\n")
+            return False, msg
+        
+        except smtplib.SMTPException as e:
+            msg = f"SMTP error: {e}"
+            print(f"\n❌ {msg}")
+            print("="*60 + "\n")
+            return False, msg
+        
+        except Exception as e:
+            msg = f"Connection failed: {type(e).__name__}: {e}"
+            print(f"\n❌ {msg}")
+            print("="*60 + "\n")
+            return False, msg
     
     # ============================================================
     # ENHANCEMENT 1: AI-POWERED FAILURE ANALYSIS

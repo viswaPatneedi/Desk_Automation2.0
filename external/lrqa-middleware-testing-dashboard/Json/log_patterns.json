@@ -3,12 +3,14 @@
     "HOME": {
       "id": "HOME_EDIT_1775594859",
       "pattern_name": "HOME",
-      "log_pattern": "QMS Bookmark.*HOME_.*load.*complete|App focus: Focus set to app.*appId=com.entos.monarch_ui",
+      "log_pattern": "QMS.*HOME_.*load.*complete|QMS.*HOME_TILES.*complete|App focus: Focus set to app.*appId=com.entos.monarch_ui",
       "file_path": "/opt/logs/sky-messages.log",
-      "description": "Detects when HOME screen loads successfully on XUMO & SKY and Rogers-Xfinity IUIv2 devices\n\n[EDIT REQUEST for 'HOME']\nReason: universal grep pattern for HOME SCREEN in XUMO TV's across X3 and A4K panels",
+      "description": "Detects when HOME screen loads successfully on XUMO & SKY and Rogers-Xfinity IUIv2 devices\n\n[FIXED for Grep Compatibility - POSIX Extended Regex]\nReason: Updated to use POSIX-compatible regex patterns (no PCRE lookaheads/groups)\nNow uses multiple alternatives with standard grep -E\nMatches multiple HOME formats:\n- QMS Bookmark (HOME_TILES - XXXX) load complete (Sky/XUMO with 'load' keyword)\n- QMS HOME_TILES complete (XUMO simple format without 'load')\n- App focus: Focus set to app with appId=com.entos.monarch_ui (Rogers IUIv2)\n\nTested and verified with: grep -E 'pattern' /opt/logs/sky-messages.log",
       "submitted_by": "vpatne290",
       "submitted_at": "2026-04-07T20:47:39.662041+00:00",
       "approved_at": "2026-04-07T20:47:50.527099+00:00",
+      "updated_for_v2_optimized": "2026-08-07T00:00:00.000000+00:00",
+      "fixed_for_posix_regex": "2026-08-07T04:30:00.000000+00:00",
       "is_admin_submission": false,
       "is_config_override": false
     },

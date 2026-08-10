@@ -24,7 +24,7 @@
     "is_admin": false,
     "is_super_admin": false,
     "is_team_admin": false,
-    "team_name": "LRQA",
+    "team_name": "Dev_QA",
     "welcome_popup_shown": false
   },
   "rnagal741": {
@@ -122,7 +122,7 @@
     "is_admin": false,
     "is_super_admin": false,
     "is_team_admin": false,
-    "team_name": "abcd",
+    "team_name": "LRQA",
     "welcome_popup_shown": false
   }
 }

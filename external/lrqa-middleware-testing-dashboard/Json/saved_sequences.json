@@ -2,7 +2,7 @@
   {
     "sequence_id": "seq_20260107_164207_977993",
     "name": "XUMOTV-FSR_ACTIVATION",
-    "description": "",
+    "description": "This should not work",
     "queue_data": [
       {
         "method": "send_remote_keys",
@@ -632,7 +632,11 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {
+      "Dev_QA": "view_only",
+      "TestTeam123": "view_clone"
+    }
   },
   {
     "sequence_id": "seq_20260107_164316_708294",
@@ -777,7 +781,10 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {
+      "Dev_QA": "view_only"
+    }
   },
   {
     "sequence_id": "seq_20260107_164346_901288",
@@ -841,7 +848,10 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {
+      "Dev_QA": "view_only"
+    }
   },
   {
     "sequence_id": "seq_20260209_140545_285963",
@@ -1285,7 +1295,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260219_200402_844470",
@@ -1557,7 +1568,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260302_171927_304925",
@@ -1685,7 +1697,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260303_100117_662507",
@@ -1826,7 +1839,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260304_113657_227029",
@@ -2121,7 +2135,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260305_171346_667668",
@@ -2208,7 +2223,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260309_155421_355219",
@@ -2457,7 +2473,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260310_112929_147714",
@@ -2692,7 +2709,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260318_161403_356015",
@@ -3193,7 +3211,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260325_162747_826604",
@@ -3240,7 +3259,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260330_132433_574782",
@@ -5439,7 +5459,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260403_163939_786549",
@@ -5473,7 +5494,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260407_223542_052600",
@@ -5590,7 +5612,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260410_162417_061218",
@@ -5670,7 +5693,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260424_142951_357940",
@@ -7795,7 +7819,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260428_112751_564356",
@@ -9933,7 +9958,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_196f4ab0",
@@ -10186,14 +10212,15 @@
     "user_inputs": {},
     "created_at": "2026-05-19T22:01:41.245865",
     "created_by": "vpatne290",
-    "team_name": "",
+    "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
     "total_duration_seconds": null,
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260519_215316_560931",
@@ -10504,7 +10531,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260520_231522_836234",
@@ -10758,7 +10786,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260526_163544_506825",
@@ -10927,7 +10956,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260615_221848_701716",
@@ -11147,7 +11177,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260615_224813_798297",
@@ -11309,6 +11340,532 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": null
+    "updated_at": null,
+    "shared_with_teams": {}
+  },
+  {
+    "sequence_id": "seq_20260810_020832_355398",
+    "name": "NEW_SEQUENCE_DEV_QA",
+    "description": "",
+    "queue_data": [
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "key_delay": 4,
+          "remote_keys": "HOME",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "voice_command",
+        "name": "Send Voice Command",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains",
+          "voice_text": "Factory reset"
+        }
+      },
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "remote_keys": "DOWN,DOWN,ENTER",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "screen_validation",
+        "name": "Screen Validation",
+        "params": {
+          "expected_screen": "1-FactoryReset_AreYouSure_Screen",
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "remote_keys": "ENTER",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "screen_validation",
+        "name": "Screen Validation",
+        "params": {
+          "expected_screen": "2-FactoryReset_ConnectYourRemote_Screen",
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "remote_keys": "UP",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "wait",
+        "name": "Wait",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains",
+          "wait_seconds": 3
+        }
+      },
+      {
+        "description": "a",
+        "method": "screen_validation",
+        "name": "Screen Validation",
+        "params": {
+          "expected_screen": "3-FactoryReset_SelectYourLanguage_Screen",
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "remote_keys": "DOWN,ENTER",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "wait",
+        "name": "Wait",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains",
+          "wait_seconds": 3
+        }
+      },
+      {
+        "description": "a",
+        "method": "screen_validation",
+        "name": "Screen Validation",
+        "params": {
+          "expected_screen": "4-FactoryReset_SelectYourCountry_Screen",
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "remote_keys": "DOWN,ENTER",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "wait",
+        "name": "Wait",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains",
+          "wait_seconds": 3
+        }
+      },
+      {
+        "description": "a",
+        "method": "screen_validation",
+        "name": "Screen Validation",
+        "params": {
+          "expected_screen": "5-FactoryReset_SelectYourTimeZone_Screen",
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "remote_keys": "DOWN,ENTER",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "wait",
+        "name": "Wait",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains",
+          "wait_seconds": 3
+        }
+      },
+      {
+        "description": "a",
+        "method": "screen_validation",
+        "name": "Screen Validation",
+        "params": {
+          "expected_screen": "6-FactoryReset_SelectYourCable_Screen",
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "remote_keys": "DOWN,ENTER",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "wait",
+        "name": "Wait",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains",
+          "wait_seconds": 3
+        }
+      },
+      {
+        "description": "a",
+        "method": "screen_validation",
+        "name": "Screen Validation",
+        "params": {
+          "expected_screen": "7-FactoryReset_ConnectYourRemote_Screen",
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "remote_keys": "UP",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "wait",
+        "name": "Wait",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains",
+          "wait_seconds": 3
+        }
+      },
+      {
+        "description": "a",
+        "method": "screen_validation",
+        "name": "Screen Validation",
+        "params": {
+          "expected_screen": "8-FactoryReset_SelectYourLanguage_Screen",
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "remote_keys": "ENTER",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "wait",
+        "name": "Wait",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains",
+          "wait_seconds": 3
+        }
+      },
+      {
+        "description": "a",
+        "method": "screen_validation",
+        "name": "Screen Validation",
+        "params": {
+          "expected_screen": "9-FactoryReset_WelcomeToXumoTV_Screen",
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "remote_keys": "ENTER",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "wait",
+        "name": "Wait",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains",
+          "wait_seconds": 3
+        }
+      },
+      {
+        "description": "a",
+        "method": "xumo_activation",
+        "name": "XUMO Activation",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "wait",
+        "name": "Wait",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains",
+          "wait_seconds": 5
+        }
+      },
+      {
+        "description": "a",
+        "method": "screen_validation",
+        "name": "Screen Validation",
+        "params": {
+          "expected_screen": "10-FactoryReset_ActivatingXumo_Screen",
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "remote_keys": "DOWN,ENTER",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "wait",
+        "name": "Wait",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains",
+          "wait_seconds": 3
+        }
+      },
+      {
+        "description": "a",
+        "method": "screen_validation",
+        "name": "Screen Validation",
+        "params": {
+          "expected_screen": "11-FactoryReset_XumoActivated_Screen",
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "remote_keys": "ENTER",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "wait",
+        "name": "Wait",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains",
+          "wait_seconds": 3
+        }
+      },
+      {
+        "description": "a",
+        "method": "screen_validation",
+        "name": "Screen Validation",
+        "params": {
+          "expected_screen": "12-FactoryReset_YourXumoTVIsReady_Screen",
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "remote_keys": "ENTER",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "wait",
+        "name": "Wait",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains",
+          "wait_seconds": 3
+        }
+      },
+      {
+        "description": "a",
+        "method": "screen_validation",
+        "name": "Screen Validation",
+        "params": {
+          "expected_screen": "13-FactoryReset_GettingYourXumo_Screen",
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "send_remote_keys",
+        "name": "Send Remote Keys",
+        "params": {
+          "ir_keys": [],
+          "remote_keys": "UP",
+          "validation_type": "contains"
+        }
+      },
+      {
+        "description": "a",
+        "method": "wait",
+        "name": "Wait",
+        "params": {
+          "ir_keys": [],
+          "validation_type": "contains",
+          "wait_seconds": 3
+        }
+      },
+      {
+        "description": "a",
+        "method": "screen_validation",
+        "name": "Screen Validation",
+        "params": {
+          "expected_screen": "14-FactoryReset_HomeScreen_Final",
+          "ir_keys": [],
+          "validation_type": "contains"
+        }
+      }
+    ],
+    "methods": [],
+    "user_inputs": {},
+    "created_at": "2026-08-10T02:08:32.355435",
+    "created_by": "landel334",
+    "team_name": "Dev_QA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null,
+    "shared_with_teams": {}
+  },
+  {
+    "sequence_id": "seq_20260810_024434_267877",
+    "name": "REBOOT-DEEPSLEEP-NETFLIX-APPLAUNCH_DEV_QA",
+    "description": "Clone of 'REBOOT-DEEPSLEEP-NETFLIX-APPLAUNCH' (Original by vpatne290)",
+    "queue_data": [
+      {
+        "method": "reboot",
+        "name": "reboot",
+        "params": {
+          "command": "",
+          "expected_output": "",
+          "expected_screen": "",
+          "ir_keys": [],
+          "remote_keys": "",
+          "screen_name": "",
+          "validation_type": "contains",
+          "voice_text": "",
+          "wait_seconds": null
+        }
+      },
+      {
+        "method": "deepsleep",
+        "name": "deepsleep",
+        "params": {
+          "command": "",
+          "expected_output": "",
+          "expected_screen": "",
+          "ir_keys": [],
+          "remote_keys": "",
+          "screen_name": "",
+          "validation_type": "contains",
+          "voice_text": "",
+          "wait_seconds": null
+        }
+      },
+      {
+        "method": "voice_command",
+        "name": "voice_command",
+        "params": {
+          "command": "",
+          "expected_output": "",
+          "expected_screen": "",
+          "ir_keys": [],
+          "remote_keys": "",
+          "screen_name": "",
+          "validation_type": "contains",
+          "voice_text": "launch Netflix",
+          "wait_seconds": null
+        }
+      }
+    ],
+    "methods": [],
+    "user_inputs": {},
+    "created_at": "2026-08-10T02:44:34.267899",
+    "created_by": "landel334",
+    "team_name": "Dev_QA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": null,
+    "shared_with_teams": {}
   }
 ]

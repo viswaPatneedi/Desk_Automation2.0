@@ -111,6 +111,11 @@ class TestController:
             if not device:
                 return jsonify({'error': 'Device not found'}), 404
             
+            # ✨ YOUR APPROACH: Simplified execution flow
+            # Don't wait for companion jobs in request handler
+            # Let execution service detect and share tunnels during execution
+            print(f"\n[EXECUTE] Creating job for {device.name} ({device_ip})", file=sys.stderr)
+            
             # Check if device is locked
             if DeviceLock.is_device_locked(device_ip):
                 # Device is busy, queue the job instead of returning error
@@ -212,6 +217,196 @@ class TestController:
             error_msg = str(e)
             error_traceback = traceback.format_exc()
             print(f"❌ [CONTROLLER ERROR] {error_msg}")
+            print(f"Traceback:\n{error_traceback}")
+            return jsonify({
+                'error': error_msg,
+                'error_type': type(e).__name__,
+                'traceback': error_traceback
+            }), 500
+
+    def execute_test_multiple(self):
+        """POST /api/execute-multiple - Execute test on multiple devices in parallel with device grouping"""
+        try:
+            data = request.json
+            if not data:
+                return jsonify({'error': 'No JSON data provided'}), 400
+            
+            device_ips = data.get('device_ips')  # Array of device IPs
+            execution_queue = data.get('execution_queue')
+            iterations = int(data.get('iterations', 1))
+            sequence_name = data.get('sequence_name')
+            
+            if not device_ips or not isinstance(device_ips, list) or len(device_ips) == 0:
+                return jsonify({'error': 'device_ips must be a non-empty array'}), 400
+            
+            if len(device_ips) == 1:
+                # Single device - fallback to single-device execution
+                data['device_ip'] = device_ips[0]
+                return self.execute_test()
+            
+            print(f"\n🔵 [MULTI-DEVICE] Executing on {len(device_ips)} devices: {device_ips}")
+            
+            # Load all devices
+            devices = []
+            for device_ip in device_ips:
+                device = Device.find_by_ip(device_ip)
+                if not device:
+                    return jsonify({'error': f'Device not found: {device_ip}'}), 404
+                devices.append(device)
+            
+            # Check device locks
+            locked_devices = [ip for ip in device_ips if DeviceLock.is_device_locked(ip)]
+            if locked_devices:
+                return jsonify({
+                    'error': f'Some devices are busy: {", ".join(locked_devices)}',
+                    'locked_devices': locked_devices
+                }), 409
+            
+            # ✨ NEW: CHECK IF DEVICES SHARE SAME R-Pi AND CAN USE SHARED CONNECTION
+            from services.test_execution_service import (
+                check_devices_share_rpi, get_shared_rpi_for_devices,
+                get_or_create_shared_rpi_connection
+            )
+            
+            devices_share_rpi = check_devices_share_rpi(devices)
+            shared_rpi_config = get_shared_rpi_for_devices(devices) if devices_share_rpi else None
+            
+            if devices_share_rpi and shared_rpi_config:
+                print(f"✅ [MULTI-DEVICE] All {len(devices)} devices share R-Pi: {shared_rpi_config.get('rpi_ip')}")
+                print(f"   Strategy: SHARED R-Pi CONNECTION (direct shell approach)")
+                print(f"   Multiple devices will execute SIMULTANEOUSLY through one R-Pi SSH connection")
+                
+                # Pre-create shared R-Pi connection for all devices
+                # This ensures connection is ready before any device execution starts
+                success, conn_msg, rpi_service = get_or_create_shared_rpi_connection(
+                    rpi_config=shared_rpi_config,
+                    device_identifier="Group execution",
+                    job_id=None  # Will be set per device during execution
+                )
+                
+                if success and rpi_service:
+                    print(f"✅ [MULTI-DEVICE] Shared R-Pi connection established")
+                    # Mark in response that shared connection is active
+                    data['_shared_rpi_connection'] = True
+                    data['_shared_rpi_service'] = rpi_service
+                    data['_shared_rpi_config'] = shared_rpi_config
+                else:
+                    print(f"⚠️  [MULTI-DEVICE] Failed to establish shared R-Pi connection: {conn_msg}")
+                    # Continue anyway - will use per-device connections (old behavior)
+            else:
+                if devices_share_rpi is False:
+                    print(f"ℹ️  [MULTI-DEVICE] Devices have different R-Pi configs - will use per-device tunnels")
+                elif not any(d.rpi_config for d in devices):
+                    print(f"ℹ️  [MULTI-DEVICE] Devices don't have R-Pi config - direct device execution")
+            
+            # Legacy support for old format
+            if not execution_queue:
+                method = data.get('method')
+                selected_ir_keys = data.get('selected_ir_keys', ['HOME', 'POWER'])
+                voice_text = data.get('voice_text', '')
+                remote_keys = data.get('remote_keys', '')
+                # Convert to new format
+                if isinstance(method, list):
+                    execution_queue = []
+                    for m in method:
+                        item = {'method': m, 'ir_keys': selected_ir_keys, 'voice_text': voice_text}
+                        if m == 'send_remote_keys':
+                            item['remote_keys'] = remote_keys
+                        execution_queue.append(item)
+                else:
+                    item = {'method': method, 'ir_keys': selected_ir_keys, 'voice_text': voice_text}
+                    if method == 'send_remote_keys':
+                        item['remote_keys'] = remote_keys
+                    execution_queue = [item]
+            
+            # Extract method names for job tracking
+            method_names = [item['method'] for item in execution_queue]
+            
+            # Create job records for each device and acquire locks
+            job_ids = []
+            for device in devices:
+                job = Job.create_job(
+                    user_id=current_user.ntid,
+                    device_ip=device.ip,
+                    device_name=device.name,
+                    methods=method_names,
+                    execution_queue=execution_queue,
+                    iterations=iterations,
+                    sequence_name=sequence_name,
+                    team_name=getattr(current_user, 'team_name', '')
+                )
+                job_ids.append(job.job_id)
+                
+                # Calculate ETA and lock device
+                from config.config_eta import calculate_eta
+                eta_seconds = calculate_eta(execution_queue, iterations)
+                lock_acquired = DeviceLock.lock_device(
+                    device_ip=device.ip,
+                    device_name=device.name,
+                    user_id=current_user.ntid,
+                    job_id=job.job_id,
+                    estimated_duration_seconds=eta_seconds
+                )
+                
+                if not lock_acquired:
+                    # Failed to acquire lock - rollback all previous locks and mark jobs as failed
+                    for prev_job_id in job_ids[:-1]:  # All except current (current hasn't started yet)
+                        prev_job = Job.find_by_id(prev_job_id)
+                        if prev_job:
+                            DeviceLock.unlock_device(prev_job.device_ip)
+                            Job.update_job_status(prev_job_id, 'failed')
+                    Job.update_job_status(job.job_id, 'failed')
+                    return jsonify({
+                        'error': f'Could not acquire lock for device {device.name}'
+                    }), 409
+            
+            # All locks acquired successfully - now execute with device grouping
+            print(f"✅ [MULTI-DEVICE] All locks acquired. Executing with TunnelGroupCoordinator")
+            print(f"   Job IDs: {job_ids}")
+            
+            # Call the multi-device execution method
+            results = self.test_service.execute_tests_for_multiple_devices(
+                devices=devices,
+                execution_queue=execution_queue,
+                iterations=iterations,
+                job_id=job_ids  # Pass list of job IDs (will be converted to device->job_id mapping)
+            )
+            
+            # Results is a dict of execution results - it's always returned (not None)
+            # So we check if we have results for our devices
+            if results:
+                return jsonify({
+                    'message': 'Multi-device execution started with device grouping',
+                    'job_ids': job_ids,
+                    'device_count': len(devices),
+                    'eta_seconds': eta_seconds,
+                    'execution_results': results
+                })
+            else:
+                # Execution failed - unlock all devices and mark jobs as failed
+                for device in devices:
+                    DeviceLock.unlock_device(device.ip)
+                for job_id_str in job_ids:
+                    Job.update_job_status(job_id_str, 'failed')
+                return jsonify({
+                    'error': 'Multi-device execution returned empty results'
+                }), 500
+        
+        except KeyError as e:
+            error_msg = f"Missing required field: {str(e)}"
+            print(f"❌ [MULTI-DEVICE ERROR] {error_msg}")
+            return jsonify({'error': error_msg}), 400
+        
+        except ValueError as e:
+            error_msg = f"Invalid value: {str(e)}"
+            print(f"❌ [MULTI-DEVICE ERROR] {error_msg}")
+            return jsonify({'error': error_msg}), 400
+        
+        except Exception as e:
+            import traceback
+            error_msg = str(e)
+            error_traceback = traceback.format_exc()
+            print(f"❌ [MULTI-DEVICE ERROR] {error_msg}")
             print(f"Traceback:\n{error_traceback}")
             return jsonify({
                 'error': error_msg,

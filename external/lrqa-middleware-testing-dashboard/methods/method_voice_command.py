@@ -8,7 +8,7 @@ import paramiko
 import json
 from methods.method_utils import log_message
 
-def execute_voice_command_process(device_ip, port, username, password, iteration, device_name, voice_text, combined_method_name=None):
+def execute_voice_command_process(device_ip, port, username, password, iteration, device_name, voice_text, combined_method_name=None, tunnel_service=None):
     """
     Execute voice command using text transcription
     Checks only the CURL command response for success

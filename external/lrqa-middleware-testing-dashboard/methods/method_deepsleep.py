@@ -747,7 +747,7 @@ def phase_3_wakeup_and_verify(ssh_initial, device_ip, port, username, password, 
         log_callback(f"❌ Error during wakeup phase: {e}")
         return False, None, {'screenshot_path': home_screenshot_path if 'home_screenshot_path' in locals() else screenshot_path}
 
-def execute_deepsleep_process(device_ip, port, username, password, iteration=1, skip_pre_validation=False, device_name="Device", combined_method_name=None, remote_type=None, sleep_duration_minutes=60, job_id=None, perform_reboot=False):
+def execute_deepsleep_process(device_ip, port, username, password, iteration=1, skip_pre_validation=False, device_name="Device", combined_method_name=None, remote_type=None, sleep_duration_minutes=60, job_id=None, perform_reboot=False, tunnel_service=None):
     """
     Execute Deep Sleep Process - Main Entry Point
     

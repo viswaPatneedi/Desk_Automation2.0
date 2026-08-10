@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sequence Access Control - Super Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background: radial-gradient(circle at 10% 10%, rgba(14, 165, 233, 0.2), transparent 45%), #0b1220;
+            min-height: 100vh;
+            padding: 20px;
+            color: #e2e8f0;
+        }
+        .container {
+            background: #111827;
+            border: 1px solid #1f2937;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #60a5fa;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        .header p {
+            color: #9ca3af;
+            margin: 0;
+            font-size: 0.95rem;
+        }
+        .sequence-card {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.2s;
+        }
+        .sequence-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+        .sequence-name {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #e2e8f0;
+            margin-bottom: 5px;
+        }
+        .sequence-meta {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            margin-bottom: 10px;
+        }
+        .sequence-access {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            padding: 15px;
+            background: #0b1220;
+            border-radius: 5px;
+            border: 1px solid #374151;
+            margin-top: 10px;
+        }
+        .team-badge {
+            background: #3b82f6;
+            color: #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .edit-btn {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            background: #3b82f6;
+            color: #e2e8f0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .edit-btn:hover {
+            background: #1d4ed8;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+        .success {
+            background: #064e3b;
+            border: 1px solid #059669;
+            color: #d1fae5;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .error {
+            background: #7f1d1d;
+            border: 1px solid #dc2626;
+            color: #fecaca;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .navigation {
+            margin-bottom: 20px;
+        }
+        .navigation a {
+            color: #60a5fa;
+            text-decoration: none;
+            margin-right: 20px;
+        }
+        .navigation a:hover {
+            text-decoration: underline;
+        }
+        .modal-backdrop-custom {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 999;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-backdrop-custom.show {
+            display: flex;
+        }
+        .modal-content-custom {
+            background: #111827;
+            border: 1px solid #374151;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .modal-header-custom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #3b82f6;
+        }
+        .modal-header-custom h4 {
+            color: #60a5fa;
+            margin: 0;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #9ca3af;
+        }
+        .close-btn:hover {
+            color: #e2e8f0;
+        }
+        .checkbox-group {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #0b1220;
+            border: 1px solid #374151;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            color: #e2e8f0;
+        }
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .modal-footer-custom {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #374151;
+        }
+        .btn-primary, .btn-secondary {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: #e2e8f0;
+        }
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        .btn-secondary {
+            background: #475569;
+            color: #e2e8f0;
+        }
+        .btn-secondary:hover {
+            background: #64748b;
+        }
+        .search-box {
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #0b1220;
+            border: 1px solid #475569;
+            border-radius: 4px;
+            color: #e2e8f0;
+            width: 100%;
+            max-width: 300px;
+        }
+        .search-box::placeholder {
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="navigation">
+            <a href="/">← Back to Dashboard</a> | <a href="/admin/teams">Teams</a> | <a href="/admin/methods">Methods</a>
+        </div>
+
+        <div class="header">
+            <h1>🔐 Sequence Access Control (Super Admin)</h1>
+            <p>Control which teams can access specific saved sequences</p>
+        </div>
+
+        <div id="message"></div>
+
+        <div style="margin-bottom: 20px;">
+            <input type="text" id="searchBox" class="search-box" placeholder="Search sequences...">
+        </div>
+
+        <div id="sequencesContainer" class="loading show">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading sequences...</p>
+        </div>
+    </div>
+
+    <!-- Edit Sequence Access Modal -->
+    <div id="editSequenceModal" class="modal-backdrop-custom">
+        <div class="modal-content-custom">
+            <div class="modal-header-custom">
+                <h4>Edit Sequence Access</h4>
+                <button class="close-btn" onclick="closeEditModal()">×</button>
+            </div>
+            <form id="editSequenceForm">
+                <div style="margin-bottom: 20px;">
+                    <strong style="color: #60a5fa; font-size: 1.1em;" id="sequenceNameDisplay"></strong>
+                    <div style="font-size: 0.9rem; color: #9ca3af; margin-top: 5px;">
+                        <div>Created by: <span id="sequenceCreatedBy"></span></div>
+                        <div>Team: <span id="sequenceTeam"></span></div>
+                    </div>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #e2e8f0; margin-bottom: 10px; display: block;">Select teams to grant access:</strong>
+                    <div id="teamsCheckboxContainer"></div>
+                </div>
+                <div class="modal-footer-custom">
+                    <button type="button" class="btn-secondary" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE = '/api';
+        let allSequences = [];
+        let allTeams = [];
+        let currentEditSequence = null;
+
+        // Load sequences
+        async function loadSequences() {
+            try {
+                const response = await fetch(`${API_BASE}/access/sequences`, {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        showMessage('Access denied. Only super admin can access this.', 'error');
+                        return;
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    allSequences = data.sequences;
+                    allTeams = data.available_teams;
+                    displaySequences(data.sequences);
+                    document.getElementById('sequencesContainer').classList.remove('show');
+                } else {
+                    showMessage(data.error || 'Failed to load sequences', 'error');
+                }
+            } catch (error) {
+                console.error('Error loading sequences:', error);
+                showMessage('Error loading sequences: ' + error.message, 'error');
+            }
+        }
+
+        function displaySequences(sequences) {
+            const container = document.getElementById('sequencesContainer');
+            
+            if (sequences.length === 0) {
+                container.innerHTML = '<p class="text-muted">No sequences available</p>';
+                return;
+            }
+
+            container.innerHTML = sequences.map(seq => `
+                <div class="sequence-card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <div class="sequence-name">${seq.sequence_name}</div>
+                            <div class="sequence-meta">
+                                <div><strong>ID:</strong> ${seq.sequence_id}</div>
+                                <div><strong>Created by:</strong> ${seq.created_by || 'N/A'} | <strong>Team:</strong> ${seq.team_name}</div>
+                                ${seq.description ? `<div><strong>Description:</strong> ${seq.description}</div>` : ''}
+                            </div>
+                        </div>
+                        <button class="edit-btn" onclick="openEditModal('${seq.sequence_id}', '${seq.sequence_name}', '${seq.created_by || 'N/A'}', '${seq.team_name}', ${JSON.stringify(seq.accessible_teams).replace(/"/g, '&quot;')})">Edit Access</button>
+                    </div>
+                    <div class="sequence-access">
+                        ${seq.accessible_teams.length > 0 
+                            ? seq.accessible_teams.map(team => `<span class="team-badge">✓ ${team}</span>`).join('')
+                            : '<span style="color: #9ca3af; font-style: italic;">No teams have access</span>'
+                        }
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayFilteredSequences() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const filtered = allSequences.filter(s => 
+                s.sequence_name.toLowerCase().includes(searchTerm) ||
+                s.sequence_id.toLowerCase().includes(searchTerm)
+            );
+            displaySequences(filtered);
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = type === 'error' ? 'error' : 'success';
+            messageDiv.textContent = message;
+            messageDiv.style.display = 'block';
+
+            if (type === 'success') {
+                setTimeout(() => {
+                    messageDiv.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        function openEditModal(sequenceId, sequenceName, createdBy, team, accessibleTeams) {
+            currentEditSequence = sequenceId;
+            document.getElementById('sequenceNameDisplay').textContent = sequenceName;
+            document.getElementById('sequenceCreatedBy').textContent = createdBy;
+            document.getElementById('sequenceTeam').textContent = team;
+            
+            const container = document.getElementById('teamsCheckboxContainer');
+            container.innerHTML = allTeams.map(team => `
+                <div class="checkbox-group">
+                    <input type="checkbox" id="team-${team}" value="${team}" ${accessibleTeams.includes(team) ? 'checked' : ''}>
+                    <label for="team-${team}" style="margin: 0; cursor: pointer; flex: 1;">${team}</label>
+                </div>
+            `).join('');
+            
+            document.getElementById('editSequenceModal').classList.add('show');
+            console.log(`✅ Edit modal opened for sequence: ${sequenceName}`);
+        }
+
+        function closeEditModal() {
+            document.getElementById('editSequenceModal').classList.remove('show');
+            currentEditSequence = null;
+        }
+
+        // Handle sequence edit form submission
+        document.getElementById('editSequenceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const selectedTeams = Array.from(document.querySelectorAll('#teamsCheckboxContainer input[type="checkbox"]:checked'))
+                .map(cb => cb.value);
+
+            try {
+                const response = await fetch(`${API_BASE}/access/sequences`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        sequence_id: currentEditSequence,
+                        team_names: selectedTeams
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showMessage(`✅ Sequence '${data.sequence_name}' access updated for ${data.teams_granted.length} team(s)`, 'success');
+                    closeEditModal();
+                    loadSequences();
+                } else {
+                    showMessage(data.error || 'Failed to update sequence access', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        });
+
+        // Close modal when clicking outside of it
+        document.getElementById('editSequenceModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEditModal();
+            }
+        });
+
+        // Search functionality
+        document.getElementById('searchBox').addEventListener('input', displayFilteredSequences);
+
+        // Load sequences on page load
+        window.addEventListener('load', loadSequences);
+    </script>
+</body>
+</html>

@@ -71,7 +71,7 @@ class GDFRackTunnelService:
     def _validate_config(self):
         """Validate configuration has all required fields"""
         required_rpi = ['rpi_ip', 'rpi_username', 'rpi_password']
-        required_lab = ['lab_ip', 'lab_password']
+        required_lab = ['lab_ip']  # No password required - lab devices use passwordless SSH
         
         rpi_config = {
             'rpi_ip': self.rpi_ip,
@@ -79,8 +79,7 @@ class GDFRackTunnelService:
             'rpi_password': self.rpi_password
         }
         lab_config = {
-            'lab_ip': self.lab_ip,
-            'lab_password': self.lab_password
+            'lab_ip': self.lab_ip
         }
         
         missing_rpi = [f for f in required_rpi if not rpi_config.get(f)]
@@ -199,6 +198,7 @@ class GDFRackTunnelService:
     def _connect_to_lab_device(self) -> Tuple[bool, str]:
         """
         Connect to lab device through tunnel (via localhost forwarded port)
+        Lab devices use passwordless SSH (key-based authentication)
         
         Returns:
             Tuple of (success, message)
@@ -209,13 +209,23 @@ class GDFRackTunnelService:
             
             self.lab_ssh_client = paramiko.SSHClient()
             self.lab_ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self.lab_ssh_client.connect(
-                self.TUNNEL_LOCALHOST,  # Connect through tunnel
-                port=self.lab_port,
-                username=self.lab_username,
-                password=self.lab_password,
-                timeout=self.TIMEOUT_RPI_CONNECT
-            )
+            
+            # Lab devices use passwordless SSH - try without password first
+            # Paramiko will attempt SSH key authentication from ~/.ssh/
+            connect_kwargs = {
+                'hostname': self.TUNNEL_LOCALHOST,  # Connect through tunnel
+                'port': self.lab_port,
+                'username': self.lab_username,
+                'timeout': self.TIMEOUT_RPI_CONNECT,
+                'allow_agent': True,  # Allow SSH agent authentication
+                'look_for_keys': True  # Look for SSH keys in ~/.ssh/
+            }
+            
+            # Only include password if it's provided and non-empty
+            if self.lab_password:
+                connect_kwargs['password'] = self.lab_password
+            
+            self.lab_ssh_client.connect(**connect_kwargs)
             
             print(f"✅ Connected to lab device {self.device_name} through tunnel")
             return True, f"Lab device connection through tunnel successful"

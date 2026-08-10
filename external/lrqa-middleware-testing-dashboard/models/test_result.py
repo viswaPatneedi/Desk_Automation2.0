@@ -22,7 +22,8 @@ class TestResult:
                  optional_checks: Optional[Dict] = None, build_info: Optional[str] = None,
                  tiles_summary: Optional[Dict] = None, rdk_milestones_log: Optional[str] = None,
                  boot_type: Optional[str] = None, device_name: Optional[str] = None,
-                 username: Optional[str] = None, sequence_name: Optional[str] = None):
+                 username: Optional[str] = None, sequence_name: Optional[str] = None,
+                 captured_screenshots: Optional[Dict] = None):
         self.iteration = iteration
         self.phase = phase
         self.status = status
@@ -43,6 +44,7 @@ class TestResult:
         self.tiles_summary = tiles_summary
         self.rdk_milestones_log = rdk_milestones_log
         self.boot_type = boot_type
+        self.captured_screenshots = captured_screenshots or {}  # Dict with 'before', 'after', 'count' keys
     
     def to_dict(self) -> Dict:
         """Convert result to dictionary"""
@@ -66,7 +68,8 @@ class TestResult:
             'build_info': self.build_info,
             'tiles_summary': self.tiles_summary,
             'rdk_milestones_log': self.rdk_milestones_log,
-            'boot_type': self.boot_type
+            'boot_type': self.boot_type,
+            'captured_screenshots': self.captured_screenshots
         }
     
     @classmethod
@@ -91,7 +94,8 @@ class TestResult:
             build_info=data.get('build_info'),
             tiles_summary=data.get('tiles_summary'),
             rdk_milestones_log=data.get('rdk_milestones_log'),
-            boot_type=data.get('boot_type')
+            boot_type=data.get('boot_type'),
+            captured_screenshots=data.get('captured_screenshots')
         )
     
     @staticmethod

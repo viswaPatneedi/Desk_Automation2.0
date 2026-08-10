@@ -5175,24 +5175,37 @@
                 .then(data => {
                     if (data.success && data.device) {
                         const device = data.device;
-                        // Populate form with device data (use correct field names)
-                        document.getElementById('device-name').value = device.name || '';
-                        document.getElementById('device-ip').value = device.ip || '';
-                        document.getElementById('device-type').value = device.device_type || 'XUMO';
-                        document.getElementById('device-mac').value = device.mac_address || '';
-                        document.getElementById('device-location').value = device.location || 'US';
-                        document.getElementById('device-team').value = device.team_name || '';
+                        
+                        // Helper function to safely set element value
+                        function setElementValue(elementId, value) {
+                            const element = document.getElementById(elementId);
+                            if (element) {
+                                element.value = value || '';
+                            } else {
+                                console.warn(`⚠️ Form field not found: ${elementId}`);
+                            }
+                        }
+                        
+                        // Populate form with device data (use correct field names) with null checks
+                        setElementValue('device-name', device.name);
+                        setElementValue('device-ip', device.ip);
+                        setElementValue('device-type', device.device_type || 'XUMO');
+                        setElementValue('device-mac', device.mac_address);
+                        setElementValue('device-location', device.location || 'US');
+                        setElementValue('device-team', device.team_name);
                         
                         // IR Configuration fields
                         const irConfig = device.ir_config || {};
-                        document.getElementById('ir-device-ip').value = irConfig.itach_ip || '';
-                        document.getElementById('ir-device-port').value = irConfig.itach_port || '';
-                        document.getElementById('ir-connector').value = irConfig.ir_port || '';
+                        setElementValue('ir-device-ip', irConfig.itach_ip);
+                        setElementValue('ir-device-port', irConfig.itach_port);
+                        setElementValue('ir-connector', irConfig.ir_port);
                         
                         // Change button text to Update
                         const addBtn = document.getElementById('add-device-btn');
-                        addBtn.innerHTML = '<i class="bi bi-check-lg"></i> Update Device';
-                        addBtn.setAttribute('data-edit-ip', deviceIp);
+                        if (addBtn) {
+                            addBtn.innerHTML = '<i class="bi bi-check-lg"></i> Update Device';
+                            addBtn.setAttribute('data-edit-ip', deviceIp);
+                        }
                         
                         // Switch to Add New Device tab
                         const addFormTabBtn = document.querySelectorAll('.device-management-tab-btn')[1];

@@ -1,254 +1,6 @@
 [
   {
     "iteration": 1,
-    "phase": "IR-Test (POWER, HOME)",
-    "status": "PASSED",
-    "details": "Keys: POWER: sent successfully | HOME: sent successfully | Device on HOME screen",
-    "screenshots": "",
-    "logs": "",
-    "device_ip": "10.0.0.250",
-    "device_name": null,
-    "method": "ir_test",
-    "timestamp": "2026-07-20T04:11:21.468325+00:00",
-    "date": "2026-07-20",
-    "job_id": null,
-    "username": null,
-    "sequence_name": null,
-    "performance_seconds": null,
-    "optional_checks": null,
-    "build_info": null,
-    "tiles_summary": null,
-    "rdk_milestones_log": null,
-    "boot_type": null
-  },
-  {
-    "iteration": 1,
-    "phase": "ir_test Execution",
-    "status": "PASSED",
-    "details": "Keys: POWER: sent successfully | HOME: sent successfully | Device on HOME screen",
-    "screenshots": [],
-    "logs": [],
-    "device_ip": "10.0.0.250",
-    "device_name": "ELEMENT_A4K",
-    "method": "ir_test",
-    "timestamp": "2026-07-20T04:11:22.134385+00:00",
-    "date": "2026-07-20",
-    "job_id": "f0b12456-4c54-4fc8-a6e6-cc3da93cd4af",
-    "username": null,
-    "sequence_name": null,
-    "performance_seconds": null,
-    "optional_checks": null,
-    "build_info": null,
-    "tiles_summary": null,
-    "rdk_milestones_log": null,
-    "boot_type": null
-  },
-  {
-    "iteration": 1,
-    "phase": "IR-Test (POWER, HOME)",
-    "status": "PASSED",
-    "details": "Keys: POWER: sent successfully | HOME: sent successfully | Device on HOME screen",
-    "screenshots": "",
-    "logs": "",
-    "device_ip": "10.0.0.250",
-    "device_name": null,
-    "method": "ir_test",
-    "timestamp": "2026-07-20T15:09:30.323483+00:00",
-    "date": "2026-07-20",
-    "job_id": null,
-    "username": null,
-    "sequence_name": null,
-    "performance_seconds": null,
-    "optional_checks": null,
-    "build_info": null,
-    "tiles_summary": null,
-    "rdk_milestones_log": null,
-    "boot_type": null
-  },
-  {
-    "iteration": 1,
-    "phase": "ir_test Execution",
-    "status": "PASSED",
-    "details": "Keys: POWER: sent successfully | HOME: sent successfully | Device on HOME screen",
-    "screenshots": [],
-    "logs": [],
-    "device_ip": "10.0.0.250",
-    "device_name": "ELEMENT_A4K",
-    "method": "ir_test",
-    "timestamp": "2026-07-20T15:09:30.870369+00:00",
-    "date": "2026-07-20",
-    "job_id": "2d84b483-99d6-4eca-8d4d-fce9a772a397",
-    "username": null,
-    "sequence_name": null,
-    "performance_seconds": null,
-    "optional_checks": null,
-    "build_info": null,
-    "tiles_summary": null,
-    "rdk_milestones_log": null,
-    "boot_type": null
-  },
-  {
-    "iteration": 1,
-    "phase": "IR-Test (POWER, HOME)",
-    "status": "PASSED",
-    "details": "Keys: POWER: sent successfully | HOME: sent successfully | Device on HOME screen",
-    "screenshots": "",
-    "logs": "",
-    "device_ip": "10.0.0.250",
-    "device_name": null,
-    "method": "ir_test",
-    "timestamp": "2026-07-21T16:32:35.131206+00:00",
-    "date": "2026-07-21",
-    "job_id": null,
-    "username": null,
-    "sequence_name": null,
-    "performance_seconds": null,
-    "optional_checks": null,
-    "build_info": null,
-    "tiles_summary": null,
-    "rdk_milestones_log": null,
-    "boot_type": null
-  },
-  {
-    "iteration": 1,
-    "phase": "ir_test Execution",
-    "status": "PASSED",
-    "details": "Keys: POWER: sent successfully | HOME: sent successfully | Device on HOME screen",
-    "screenshots": [],
-    "logs": [],
-    "device_ip": "10.0.0.250",
-    "device_name": "ELEMENT_A4K",
-    "method": "ir_test",
-    "timestamp": "2026-07-21T16:32:35.734366+00:00",
-    "date": "2026-07-21",
-    "job_id": "c8d52ffc-96f7-490b-a5ac-e698ad1cb39a",
-    "username": null,
-    "sequence_name": null,
-    "performance_seconds": null,
-    "optional_checks": null,
-    "build_info": null,
-    "tiles_summary": null,
-    "rdk_milestones_log": null,
-    "boot_type": null
-  },
-  {
-    "iteration": 1,
-    "phase": "IR-Test (HOME, HOME, HOME, HOME)",
-    "status": "PASSED",
-    "details": "Keys: HOME: sent successfully | HOME: sent successfully | HOME: sent successfully | HOME: sent successfully | Device on HOME screen",
-    "screenshots": "",
-    "logs": "",
-    "device_ip": "10.0.0.250",
-    "device_name": null,
-    "method": "ir_test",
-    "timestamp": "2026-07-21T16:47:13.558449+00:00",
-    "date": "2026-07-21",
-    "job_id": null,
-    "username": null,
-    "sequence_name": null,
-    "performance_seconds": null,
-    "optional_checks": null,
-    "build_info": null,
-    "tiles_summary": null,
-    "rdk_milestones_log": null,
-    "boot_type": null
-  },
-  {
-    "iteration": 1,
-    "phase": "ir_test Execution",
-    "status": "PASSED",
-    "details": "Keys: HOME: sent successfully | HOME: sent successfully | HOME: sent successfully | HOME: sent successfully | Device on HOME screen",
-    "screenshots": [],
-    "logs": [],
-    "device_ip": "10.0.0.250",
-    "device_name": "ELEMENT_A4K",
-    "method": "ir_test",
-    "timestamp": "2026-07-21T16:47:14.102390+00:00",
-    "date": "2026-07-21",
-    "job_id": "432ecf00-12cb-46e7-8730-39cbae811588",
-    "username": null,
-    "sequence_name": null,
-    "performance_seconds": null,
-    "optional_checks": null,
-    "build_info": null,
-    "tiles_summary": null,
-    "rdk_milestones_log": null,
-    "boot_type": null
-  },
-  {
-    "iteration": 1,
-    "phase": "reboot_perf_v2_optimized Execution",
-    "status": "PASSED",
-    "details": "",
-    "screenshots": [
-      "/media/lrqa/Lexar/Enhancement_output/2026-07-21/10-0-0-250_ELEMENT_A4K/REBOOTPERFV2OPTIMIZED/ITR-1_20260721_200132/SCREENSHOTS/10.0.0.250_ELEMENT_A4K_Iteration-1_Before-Reboot_20260721_200151.png",
-      "/media/lrqa/Lexar/Enhancement_output/2026-07-21/10-0-0-250_ELEMENT_A4K/REBOOTPERFV2OPTIMIZED/ITR-1_20260721_200132/SCREENSHOTS/10.0.0.250_ELEMENT_A4K_Iteration-1_After-Reboot-SUCCESS_20260721_200334.png"
-    ],
-    "logs": [],
-    "device_ip": "10.0.0.250",
-    "device_name": "ELEMENT_A4K",
-    "method": "reboot_perf_v2_optimized",
-    "timestamp": "2026-07-21T20:03:42.022353+00:00",
-    "date": "2026-07-21",
-    "job_id": "bd429bbf-e8b8-4539-a71a-c3f2281dd01e",
-    "username": null,
-    "sequence_name": null,
-    "performance_seconds": 74.079671,
-    "optional_checks": {
-      "custom_checks": [],
-      "overall_passed": true,
-      "stop_iterations": false,
-      "collected_logs": [],
-      "detections": []
-    },
-    "build_info": "imagename:XUSPTC11MWR_8.3p19s1_DEV\nOSS_VERSION=4.7.10\nMIDDLEWARE_VERSION=8.3.4.15\nVENDOR_VERSION=phase3-2.11.12\nYOCTO_VERSION=kirkstone\nSDK_VERSION=5.1\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=APACHE-4K-Product-Release-Github\nJENKINS_BUILD_NUMBER=172\nBRANCH=support_8.3_xumo\nBUILD_TIME=\"2026-07-13 22:07:41\"",
-    "tiles_summary": null,
-    "rdk_milestones_log": null,
-    "boot_type": null
-  },
-  {
-    "iteration": 1,
-    "phase": "reboot_perf_v2_optimized Execution",
-    "status": "PASSED",
-    "details": "",
-    "screenshots": [
-      "/media/lrqa/Lexar/Enhancement_output/2026-07-21/10-0-0-250_ELEMENT_A4K/REBOOTPERFV2OPTIMIZED/ITR-1_20260721_202605/SCREENSHOTS/10.0.0.250_ELEMENT_A4K_Iteration-1_Before-Reboot_20260721_202623.png",
-      "/media/lrqa/Lexar/Enhancement_output/2026-07-21/10-0-0-250_ELEMENT_A4K/REBOOTPERFV2OPTIMIZED/ITR-1_20260721_202605/SCREENSHOTS/10.0.0.250_ELEMENT_A4K_Iteration-1_After-Reboot-SUCCESS_20260721_202807.png"
-    ],
-    "logs": [],
-    "device_ip": "10.0.0.250",
-    "device_name": "ELEMENT_A4K",
-    "method": "reboot_perf_v2_optimized",
-    "timestamp": "2026-07-21T20:28:16.006347+00:00",
-    "date": "2026-07-21",
-    "job_id": "6d6a868a-70c5-4a64-9827-d819c03c5011",
-    "username": null,
-    "sequence_name": null,
-    "performance_seconds": 76.196687,
-    "optional_checks": {
-      "custom_checks": [
-        {
-          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
-          "description": "Detects when any system process crashes",
-          "output": "",
-          "error": "",
-          "success": true,
-          "terminate_on_match": false,
-          "pattern_found": false
-        }
-      ],
-      "overall_passed": true,
-      "stop_iterations": false,
-      "collected_logs": [],
-      "detections": []
-    },
-    "build_info": "imagename:XUSPTC11MWR_8.3p19s1_DEV\nOSS_VERSION=4.7.10\nMIDDLEWARE_VERSION=8.3.4.15\nVENDOR_VERSION=phase3-2.11.12\nYOCTO_VERSION=kirkstone\nSDK_VERSION=5.1\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=APACHE-4K-Product-Release-Github\nJENKINS_BUILD_NUMBER=172\nBRANCH=support_8.3_xumo\nBUILD_TIME=\"2026-07-13 22:07:41\"",
-    "tiles_summary": null,
-    "rdk_milestones_log": null,
-    "boot_type": null
-  },
-  {
-    "iteration": 1,
     "phase": "netflix_playback Execution",
     "status": "FAILED",
     "details": "Netflix playback failed: 'Job' object has no attribute 'id'",
@@ -1236,5 +988,1197 @@
     "tiles_summary": null,
     "rdk_milestones_log": null,
     "boot_type": null
+  },
+  {
+    "iteration": 1,
+    "phase": "IR-POWER",
+    "status": "FAILED",
+    "details": "GDF API error (HTTP 401)",
+    "screenshots": "",
+    "logs": "",
+    "device_ip": "04:B8:6A:16:0D:AB",
+    "device_name": null,
+    "method": "gdf_ir_test",
+    "timestamp": "2026-08-05T05:38:33.853601+00:00",
+    "date": "2026-08-05",
+    "job_id": null,
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": null,
+    "build_info": null,
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 1,
+    "phase": "IR-HOME",
+    "status": "FAILED",
+    "details": "GDF API error (HTTP 401)",
+    "screenshots": "",
+    "logs": "",
+    "device_ip": "04:B8:6A:16:0D:AB",
+    "device_name": null,
+    "method": "gdf_ir_test",
+    "timestamp": "2026-08-05T05:38:38.802773+00:00",
+    "date": "2026-08-05",
+    "job_id": null,
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": null,
+    "build_info": null,
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 1,
+    "phase": "IR-Test",
+    "status": "FAILED",
+    "details": "Failed to send 2 key(s): POWER, HOME",
+    "screenshots": "",
+    "logs": "",
+    "device_ip": "04:B8:6A:16:0D:AB",
+    "device_name": null,
+    "method": "gdf_ir_test",
+    "timestamp": "2026-08-05T05:38:38.844254+00:00",
+    "date": "2026-08-05",
+    "job_id": null,
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": null,
+    "build_info": null,
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 1,
+    "phase": "ir_test Execution",
+    "status": "FAILED",
+    "details": [
+      {
+        "key": "POWER",
+        "success": false,
+        "http_status": 401,
+        "response": "{\"error\": \"Unauthorized\"}"
+      },
+      {
+        "key": "HOME",
+        "success": false,
+        "http_status": 401,
+        "response": "{\"error\": \"Unauthorized\"}"
+      }
+    ],
+    "screenshots": "",
+    "logs": "",
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "ir_test",
+    "timestamp": "2026-08-05T05:38:38.878979+00:00",
+    "date": "2026-08-05",
+    "job_id": "d5e6a697-2a68-425f-857e-1f3c3f086d59",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": null,
+    "build_info": null,
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 1,
+    "phase": "IR-POWER",
+    "status": "FAILED",
+    "details": "GDF API error (HTTP 401)",
+    "screenshots": "",
+    "logs": "",
+    "device_ip": "04:B8:6A:16:0D:AB",
+    "device_name": null,
+    "method": "gdf_ir_test",
+    "timestamp": "2026-08-05T20:33:19.202185+00:00",
+    "date": "2026-08-05",
+    "job_id": null,
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": null,
+    "build_info": null,
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 1,
+    "phase": "IR-HOME",
+    "status": "FAILED",
+    "details": "GDF API error (HTTP 401)",
+    "screenshots": "",
+    "logs": "",
+    "device_ip": "04:B8:6A:16:0D:AB",
+    "device_name": null,
+    "method": "gdf_ir_test",
+    "timestamp": "2026-08-05T20:33:23.241175+00:00",
+    "date": "2026-08-05",
+    "job_id": null,
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": null,
+    "build_info": null,
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 1,
+    "phase": "IR-Test",
+    "status": "FAILED",
+    "details": "Failed to send 2 key(s): POWER, HOME",
+    "screenshots": "",
+    "logs": "",
+    "device_ip": "04:B8:6A:16:0D:AB",
+    "device_name": null,
+    "method": "gdf_ir_test",
+    "timestamp": "2026-08-05T20:33:23.283189+00:00",
+    "date": "2026-08-05",
+    "job_id": null,
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": null,
+    "build_info": null,
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 1,
+    "phase": "ir_test Execution",
+    "status": "FAILED",
+    "details": [
+      {
+        "key": "POWER",
+        "success": false,
+        "http_status": 401,
+        "response": "Authentication failed: GDF credentials not configured"
+      },
+      {
+        "key": "HOME",
+        "success": false,
+        "http_status": 401,
+        "response": "Authentication failed: GDF credentials not configured"
+      }
+    ],
+    "screenshots": "",
+    "logs": "",
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "ir_test",
+    "timestamp": "2026-08-05T20:33:23.304289+00:00",
+    "date": "2026-08-05",
+    "job_id": "7aea8c37-32c6-4246-bb5f-f323b9746eda",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": null,
+    "build_info": null,
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "FAILED",
+    "details": "",
+    "screenshots": [
+      "/home/guser/Desk-automation/Desk-Automation-v2.0/external/lrqa-middleware-testing-dashboard/screenshots/screenshot_10_0_0_28_20260807_004454.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.28",
+    "device_name": "DT_LAB_XIONE-UK-17-97",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-06T19:17:17.814829+00:00",
+    "date": "2026-08-06",
+    "job_id": "31702554-48e7-4893-87b9-050b2f992362",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": null,
+    "build_info": null,
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "FAILED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-07/10.0.0.28_DT_LAB_XIONE-UK-17-97/Reboot_perf/1_ITRS/ITR_1/10.0.0.28_DT_LAB_XIONE-UK-17-97_Iteration-1_Before-Reboot_20260806_220222.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.28",
+    "device_name": "DT_LAB_XIONE-UK-17-97",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-06T22:04:45.174477+00:00",
+    "date": "2026-08-06",
+    "job_id": "332b4ed1-5ce4-4c17-9cd2-6e25e97e328b",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": null,
+    "build_info": null,
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "FAILED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-07/10.0.0.28_DT_LAB_XIONE-UK-17-97/Reboot_perf/1_ITRS/ITR_1/10.0.0.28_DT_LAB_XIONE-UK-17-97_Iteration-1_Before-Reboot_20260806_221856.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.28",
+    "device_name": "DT_LAB_XIONE-UK-17-97",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-06T22:21:19.779062+00:00",
+    "date": "2026-08-06",
+    "job_id": "6d3bee47-b39a-4520-862f-6cce44912aa3",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": null,
+    "build_info": null,
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "FAILED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-07/10.0.0.28_DT_LAB_XIONE-UK-17-97/Reboot_perf/1_ITRS_20260807_012717/ITR_1/10.0.0.28_DT_LAB_XIONE-UK-17-97_Iteration-1_Before-Reboot_20260807_012828.png",
+      "/home/guser/Desk-automation/Desk-Automation-v2.0/external/lrqa-middleware-testing-dashboard/screenshots/screenshot_10_0_0_28_20260807_070203.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.28",
+    "device_name": "DT_LAB_XIONE-UK-17-97",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T01:32:21.227517+00:00",
+    "date": "2026-08-07",
+    "job_id": "fba02261-4581-45c6-b2c6-de2556739456",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": {
+      "custom_checks": [],
+      "overall_passed": false,
+      "stop_iterations": false,
+      "collected_logs": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260805230618_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9660\nBRANCH=develop\nBUILD_TIME=\"2026-08-05 23:06:18\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "FAILED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-07/10.0.0.28_DT_LAB_XIONE-UK-17-97/Reboot_perf/1_ITRS_20260807_020056/ITR_1/10.0.0.28_DT_LAB_XIONE-UK-17-97_Iteration-1_Before-Reboot_20260807_020203.png",
+      "/home/guser/Desk-automation/Desk-Automation-v2.0/external/lrqa-middleware-testing-dashboard/screenshots/screenshot_10_0_0_28_20260807_073537.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.28",
+    "device_name": "DT_LAB_XIONE-UK-17-97",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T02:06:16.471285+00:00",
+    "date": "2026-08-07",
+    "job_id": "4cec7378-c8df-4c0f-94fe-a5c45eb185f2",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*MS:EPG Set new panel gadget.*tiles-disconnected.*|.*Argument missing: Let's try that again|.*to refresh your connection.*\" /opt/logs/sky-messages.log",
+          "description": "Detects network connectivity errors and EPG panel failures",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        },
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        },
+        {
+          "command": "grep -E \".*Realtek module.*\" /opt/logs/*",
+          "description": "Detects Realtek module events",
+          "output": "/opt/logs/rdk_shell.log:grep -E \".*Realtek module.*\" /opt/logs/*",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": true
+        },
+        {
+          "command": "grep -E \".*Failed to load DeviceInfo value from RDK.*Value retrieval failed.*|.*Setting device type to default value of IpStb.*\" /opt/logs/sky-messages.log",
+          "description": "Thunder Timeout check if there are any timeout error are there\n\n[EDIT REQUEST for 'THUNDER_TIMEOUT']\nReason: Thunder Timeout check",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": [
+        {
+          "check_key": "realtek_module",
+          "description": "Detects Realtek module events",
+          "pattern_found": "/opt/logs/rdk_shell.log:grep -E \".*Realtek module.*\" /opt/logs/*"
+        }
+      ],
+      "detection_triggered_logs": true
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260805230618_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9660\nBRANCH=develop\nBUILD_TIME=\"2026-08-05 23:06:18\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {}
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "FAILED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-07/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_035410/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_035516.png",
+      "/home/guser/Desk-automation/Desk-Automation-v2.0/external/lrqa-middleware-testing-dashboard/screenshots/screenshot_10_0_0_140_20260807_092847.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T03:59:12.637775+00:00",
+    "date": "2026-08-07",
+    "job_id": "ee1c4390-657b-4bd2-bdc0-f082639cd8ec",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": null,
+    "optional_checks": {
+      "custom_checks": [],
+      "overall_passed": false,
+      "stop_iterations": false,
+      "collected_logs": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260803230352_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9433\nBRANCH=develop\nBUILD_TIME=\"2026-08-03 23:03:52\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {}
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-07/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_041254/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_041402.png",
+      "ExecutionResults/2026-08-07/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_041254/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_041610.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T04:16:10.835458+00:00",
+    "date": "2026-08-07",
+    "job_id": "150ee50e-369e-4e73-bce4-e64ffc527aa8",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 87.60744,
+    "optional_checks": {
+      "custom_checks": [],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260803230352_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9433\nBRANCH=develop\nBUILD_TIME=\"2026-08-03 23:03:52\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {}
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-07/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_042745/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_042821.png",
+      "ExecutionResults/2026-08-07/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_042745/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_043023.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T04:30:23.201616+00:00",
+    "date": "2026-08-07",
+    "job_id": "6a915076-ac42-4e27-8b5e-b4af893edf4e",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 86.184697,
+    "optional_checks": {
+      "custom_checks": [],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260803230352_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9433\nBRANCH=develop\nBUILD_TIME=\"2026-08-03 23:03:52\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {}
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-07/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_045359/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_045435.png",
+      "ExecutionResults/2026-08-07/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_045359/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_045640.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T04:56:40.386311+00:00",
+    "date": "2026-08-07",
+    "job_id": "1115aeb7-2c06-4e99-a3f3-b2878d99dd1a",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 86.857755,
+    "optional_checks": {
+      "custom_checks": [],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260803230352_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9433\nBRANCH=develop\nBUILD_TIME=\"2026-08-03 23:03:52\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {}
+  },
+  {
+    "iteration": 2,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-07/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_045640/ITR_2/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-2_Before-Reboot_20260807_045726.png",
+      "ExecutionResults/2026-08-07/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_045640/ITR_2/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-2_After-Reboot_20260807_045937.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T04:59:37.663577+00:00",
+    "date": "2026-08-07",
+    "job_id": "1115aeb7-2c06-4e99-a3f3-b2878d99dd1a",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 85.350302,
+    "optional_checks": {
+      "custom_checks": [],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260803230352_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9433\nBRANCH=develop\nBUILD_TIME=\"2026-08-03 23:03:52\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {}
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-07/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_180918/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_180957.png",
+      "ExecutionResults/2026-08-07/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_180918/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_181205.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T18:12:07.518150+00:00",
+    "date": "2026-08-07",
+    "job_id": "1990e5fc-0c97-4b94-8260-3a4b22de529b",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 87.711766,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260807001657_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9733\nBRANCH=develop\nBUILD_TIME=\"2026-08-07 00:16:57\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {
+      "before": "ExecutionResults/2026-08-07/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_180918/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_180957.png",
+      "after": "ExecutionResults/2026-08-07/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_180918/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_181205.png",
+      "count": 2
+    }
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_185630/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_185707.png",
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_185630/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_185913.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T18:59:15.609254+00:00",
+    "date": "2026-08-07",
+    "job_id": "c18ab1ea-a762-4854-b30a-4a5405b8818a",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 88.133628,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260807001657_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9733\nBRANCH=develop\nBUILD_TIME=\"2026-08-07 00:16:57\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {
+      "before": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_185630/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_185707.png",
+      "after": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_185630/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_185913.png",
+      "count": 2
+    }
+  },
+  {
+    "iteration": 2,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_185915/ITR_2/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-2_Before-Reboot_20260807_185953.png",
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_185915/ITR_2/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-2_After-Reboot_20260807_190200.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T19:02:03.431426+00:00",
+    "date": "2026-08-07",
+    "job_id": "c18ab1ea-a762-4854-b30a-4a5405b8818a",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 87.531163,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260807001657_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9733\nBRANCH=develop\nBUILD_TIME=\"2026-08-07 00:16:57\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {
+      "before": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_185915/ITR_2/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-2_Before-Reboot_20260807_185953.png",
+      "after": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_185915/ITR_2/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-2_After-Reboot_20260807_190200.png",
+      "count": 2
+    }
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_193551/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_193628.png",
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_193551/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_193836.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T19:39:04.212393+00:00",
+    "date": "2026-08-07",
+    "job_id": "41be67cb-67ca-4108-aef0-df84714d463e",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 85.775159,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \"QMS.*HOME_.*load.*complete|QMS.*HOME_TILES.*complete|App focus: Focus set to app.*appId=com.entos.monarch_ui\" /opt/logs/sky-messages.log",
+          "description": "Detects when HOME screen loads successfully on XUMO & SKY and Rogers-Xfinity IUIv2 devices\n\n[FIXED for Grep Compatibility - POSIX Extended Regex]\nReason: Updated to use POSIX-compatible regex patterns (no PCRE lookaheads/groups)\nNow uses multiple alternatives with standard grep -E\nMatches multiple HOME formats:\n- QMS Bookmark (HOME_TILES - XXXX) load complete (Sky/XUMO with 'load' keyword)\n- QMS HOME_TILES complete (XUMO simple format without 'load')\n- App focus: Focus set to app with appId=com.entos.monarch_ui (Rogers IUIv2)\n\nTested and verified with: grep -E 'pattern' /opt/logs/sky-messages.log",
+          "output": "2026-08-07T19:37:54.777Z com.sky.as.apps_com.bskyb.epgui[3441]:  QMSContentManager.log: QMS Bookmark (HOME_TILES - N68443590) load complete",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": true
+        },
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": [
+        {
+          "check_key": "home",
+          "description": "Detects when HOME screen loads successfully on XUMO & SKY and Rogers-Xfinity IUIv2 devices\n\n[FIXED for Grep Compatibility - POSIX Extended Regex]\nReason: Updated to use POSIX-compatible regex patterns (no PCRE lookaheads/groups)\nNow uses multiple alternatives with standard grep -E\nMatches multiple HOME formats:\n- QMS Bookmark (HOME_TILES - XXXX) load complete (Sky/XUMO with 'load' keyword)\n- QMS HOME_TILES complete (XUMO simple format without 'load')\n- App focus: Focus set to app with appId=com.entos.monarch_ui (Rogers IUIv2)\n\nTested and verified with: grep -E 'pattern' /opt/logs/sky-messages.log",
+          "pattern_found": "2026-08-07T19:37:54.777Z com.sky.as.apps_com.bskyb.epgui[3441]:  QMSContentManager.log: QMS Bookmark (HOME_TILES - N68443590) load complete"
+        }
+      ]
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260807001657_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9733\nBRANCH=develop\nBUILD_TIME=\"2026-08-07 00:16:57\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {
+      "before": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_193551/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_193628.png",
+      "after": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_193551/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_193836.png",
+      "count": 2
+    }
+  },
+  {
+    "iteration": 2,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_193904/ITR_2/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-2_Before-Reboot_20260807_193946.png",
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_193904/ITR_2/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-2_After-Reboot_20260807_194157.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T19:42:26.924779+00:00",
+    "date": "2026-08-07",
+    "job_id": "41be67cb-67ca-4108-aef0-df84714d463e",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 84.302435,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \"QMS.*HOME_.*load.*complete|QMS.*HOME_TILES.*complete|App focus: Focus set to app.*appId=com.entos.monarch_ui\" /opt/logs/sky-messages.log",
+          "description": "Detects when HOME screen loads successfully on XUMO & SKY and Rogers-Xfinity IUIv2 devices\n\n[FIXED for Grep Compatibility - POSIX Extended Regex]\nReason: Updated to use POSIX-compatible regex patterns (no PCRE lookaheads/groups)\nNow uses multiple alternatives with standard grep -E\nMatches multiple HOME formats:\n- QMS Bookmark (HOME_TILES - XXXX) load complete (Sky/XUMO with 'load' keyword)\n- QMS HOME_TILES complete (XUMO simple format without 'load')\n- App focus: Focus set to app with appId=com.entos.monarch_ui (Rogers IUIv2)\n\nTested and verified with: grep -E 'pattern' /opt/logs/sky-messages.log",
+          "output": "2026-08-07T19:41:10.622Z com.sky.as.apps_com.bskyb.epgui[3304]:  QMSContentManager.log: QMS Bookmark (HOME_TILES - N68443590) load complete",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": true
+        },
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": [
+        {
+          "check_key": "home",
+          "description": "Detects when HOME screen loads successfully on XUMO & SKY and Rogers-Xfinity IUIv2 devices\n\n[FIXED for Grep Compatibility - POSIX Extended Regex]\nReason: Updated to use POSIX-compatible regex patterns (no PCRE lookaheads/groups)\nNow uses multiple alternatives with standard grep -E\nMatches multiple HOME formats:\n- QMS Bookmark (HOME_TILES - XXXX) load complete (Sky/XUMO with 'load' keyword)\n- QMS HOME_TILES complete (XUMO simple format without 'load')\n- App focus: Focus set to app with appId=com.entos.monarch_ui (Rogers IUIv2)\n\nTested and verified with: grep -E 'pattern' /opt/logs/sky-messages.log",
+          "pattern_found": "2026-08-07T19:41:10.622Z com.sky.as.apps_com.bskyb.epgui[3304]:  QMSContentManager.log: QMS Bookmark (HOME_TILES - N68443590) load complete"
+        }
+      ]
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260807001657_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9733\nBRANCH=develop\nBUILD_TIME=\"2026-08-07 00:16:57\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {
+      "before": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_193904/ITR_2/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-2_Before-Reboot_20260807_193946.png",
+      "after": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_193904/ITR_2/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-2_After-Reboot_20260807_194157.png",
+      "count": 2
+    }
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_203607/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_203644.png",
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_203607/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_203852.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T20:38:55.318604+00:00",
+    "date": "2026-08-07",
+    "job_id": "4db6b627-6587-4004-95b8-8fbce0e900bf",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 89.387378,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260807001657_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9733\nBRANCH=develop\nBUILD_TIME=\"2026-08-07 00:16:57\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {
+      "before": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_203607/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_203644.png",
+      "after": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_203607/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_203852.png",
+      "count": 2
+    }
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_204808/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_204845.png",
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_204808/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_205049.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T20:50:54.718259+00:00",
+    "date": "2026-08-07",
+    "job_id": "17b99fc3-7cad-43c3-b4b6-40cff826d3b0",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 89.735345,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*Home app.*has failed to start.*\" /opt/logs/sky-messages.log",
+          "description": "This patten will validate container for 'com.bskyb.epgui'",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        },
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260807001657_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9733\nBRANCH=develop\nBUILD_TIME=\"2026-08-07 00:16:57\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {
+      "before": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_204808/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_204845.png",
+      "after": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_204808/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_205049.png",
+      "count": 2
+    }
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-08/10.0.0.28_DT_LAB_XIONE-UK-17-97/Reboot_perf/1_ITRS_20260807_205907/ITR_1/10.0.0.28_DT_LAB_XIONE-UK-17-97_Iteration-1_Before-Reboot_20260807_205944.png",
+      "ExecutionResults/2026-08-08/10.0.0.28_DT_LAB_XIONE-UK-17-97/Reboot_perf/1_ITRS_20260807_205907/ITR_1/10.0.0.28_DT_LAB_XIONE-UK-17-97_Iteration-1_After-Reboot_20260807_210146.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.28",
+    "device_name": "DT_LAB_XIONE-UK-17-97",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T21:01:46.700336+00:00",
+    "date": "2026-08-07",
+    "job_id": "2c4c586c-8272-4240-b7af-e0159af20515",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 87.269819,
+    "optional_checks": {
+      "custom_checks": [],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260807001657_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9733\nBRANCH=develop\nBUILD_TIME=\"2026-08-07 00:16:57\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {
+      "before": "ExecutionResults/2026-08-08/10.0.0.28_DT_LAB_XIONE-UK-17-97/Reboot_perf/1_ITRS_20260807_205907/ITR_1/10.0.0.28_DT_LAB_XIONE-UK-17-97_Iteration-1_Before-Reboot_20260807_205944.png",
+      "after": "ExecutionResults/2026-08-08/10.0.0.28_DT_LAB_XIONE-UK-17-97/Reboot_perf/1_ITRS_20260807_205907/ITR_1/10.0.0.28_DT_LAB_XIONE-UK-17-97_Iteration-1_After-Reboot_20260807_210146.png",
+      "count": 2
+    }
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_211648/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_211726.png",
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_211648/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_211934.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T21:19:36.513497+00:00",
+    "date": "2026-08-07",
+    "job_id": "1d75c637-c43c-4793-846c-cc80f7354b44",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 88.57424,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260807001657_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9733\nBRANCH=develop\nBUILD_TIME=\"2026-08-07 00:16:57\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {
+      "before": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_211648/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_211726.png",
+      "after": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_211648/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_211934.png",
+      "count": 2
+    }
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_213008/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_213047.png",
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_213008/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_213253.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T21:32:56.311051+00:00",
+    "date": "2026-08-07",
+    "job_id": "c81cd32d-1a71-4580-8f22-08396f0fba65",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 90.881922,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260807001657_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9733\nBRANCH=develop\nBUILD_TIME=\"2026-08-07 00:16:57\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {
+      "before": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_213008/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_213047.png",
+      "after": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_213008/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_213253.png",
+      "count": 2
+    }
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_214013/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_214048.png",
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_214013/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_214305.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T21:43:05.735372+00:00",
+    "date": "2026-08-07",
+    "job_id": "9aaa0af5-b48c-4ba3-9df1-23ecd919e826",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 103.469236,
+    "optional_checks": {
+      "custom_checks": [],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260807001657_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9733\nBRANCH=develop\nBUILD_TIME=\"2026-08-07 00:16:57\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {
+      "before": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_214013/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_214048.png",
+      "after": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_214013/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_214305.png",
+      "count": 2
+    }
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_215354/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_215430.png",
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_215354/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_215637.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T21:56:39.721411+00:00",
+    "date": "2026-08-07",
+    "job_id": "cfe7f021-426d-4f84-8cf3-bcbb0075d382",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 90.679526,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260807001657_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9733\nBRANCH=develop\nBUILD_TIME=\"2026-08-07 00:16:57\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {
+      "before": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_215354/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_215430.png",
+      "after": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_215354/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_215637.png",
+      "count": 2
+    }
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_222025/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_222102.png",
+      "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_222025/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_222305.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.140",
+    "device_name": "DT_LAB_SKY_XIONE-UK-0D_AB",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-07T22:23:05.573365+00:00",
+    "date": "2026-08-07",
+    "job_id": "e4fc3c59-2ede-4f2e-afd0-2dbf97a89410",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 88.750482,
+    "optional_checks": {
+      "custom_checks": [],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260807001657_NG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9733\nBRANCH=develop\nBUILD_TIME=\"2026-08-07 00:16:57\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {
+      "before": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_222025/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_Before-Reboot_20260807_222102.png",
+      "after": "ExecutionResults/2026-08-08/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB/Reboot_perf/1_ITRS_20260807_222025/ITR_1/10.0.0.140_DT_LAB_SKY_XIONE-UK-0D_AB_Iteration-1_After-Reboot_20260807_222305.png",
+      "count": 2
+    }
+  },
+  {
+    "iteration": 1,
+    "phase": "reboot_perf_v2_optimized Execution",
+    "status": "PASSED",
+    "details": "",
+    "screenshots": [
+      "ExecutionResults/2026-08-10/10.0.0.199_DT_Lab-SKYXIONEUK-5D-54/Reboot_perf/1_ITRS_20260809_212838/ITR_1/10.0.0.199_DT_Lab-SKYXIONEUK-5D-54_Iteration-1_Before-Reboot_20260809_212917.png",
+      "ExecutionResults/2026-08-10/10.0.0.199_DT_Lab-SKYXIONEUK-5D-54/Reboot_perf/1_ITRS_20260809_212838/ITR_1/10.0.0.199_DT_Lab-SKYXIONEUK-5D-54_Iteration-1_After-Reboot_20260809_213126.png"
+    ],
+    "logs": [],
+    "device_ip": "10.0.0.199",
+    "device_name": "DT_Lab-SKYXIONEUK-5D-54",
+    "method": "reboot_perf_v2_optimized",
+    "timestamp": "2026-08-09T21:31:28.672826+00:00",
+    "date": "2026-08-09",
+    "job_id": "0e46e199-91f2-4289-ae43-6c86c6f0f857",
+    "username": null,
+    "sequence_name": null,
+    "performance_seconds": 85.695557,
+    "optional_checks": {
+      "custom_checks": [
+        {
+          "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+          "description": "Detects when any system process crashes",
+          "output": "",
+          "error": "",
+          "success": true,
+          "terminate_on_match": false,
+          "pattern_found": false
+        }
+      ],
+      "overall_passed": true,
+      "stop_iterations": false,
+      "collected_logs": [],
+      "detections": []
+    },
+    "build_info": "imagename:SKXI11ADS_MIDDLEWARE_DEV_develop_20260801230626_WNG\nOSS_VERSION=4.13.0\nMIDDLEWARE_VERSION=8.7.1.0\nVENDOR_VERSION=9.7.2\nAPPLICATION_VERSION=4.57.0\nYOCTO_VERSION=kirkstone\nSDK_VERSION=9.7.2\nVERSION=99.99.15.07\nFW_CLASS=rdke\nJENKINS_JOB=RTK-XIONE-Middleware-Github\nJENKINS_BUILD_NUMBER=9296\nBRANCH=develop\nBUILD_TIME=\"2026-08-01 23:06:26\"\nIPK_FEED_URI_xione-rtk-common-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/xione-rtk-common-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/ipks/debug\nIPK_FEED_URI_rdk-arm7ve-oss-vendor=https://partners.artifactory.comcast.com/artifactory/xione-uk-rel/9.7.2/xione-uk/rdk-arm7ve-oss-vendor/ipks/debug\nIPK_FEED_URI_xione-uk-security=https://partners.artifactory.comcast.com/artifactory/cspc-security-Sky-Realtek/cspcsecurity-rel/4.0.7/xione-uk/ipks\nIPK_FEED_URI_generic-apps=https://partners.artifactory.comcast.com/artifactory/application-rel/4.57.0",
+    "tiles_summary": null,
+    "rdk_milestones_log": null,
+    "boot_type": null,
+    "captured_screenshots": {
+      "before": "ExecutionResults/2026-08-10/10.0.0.199_DT_Lab-SKYXIONEUK-5D-54/Reboot_perf/1_ITRS_20260809_212838/ITR_1/10.0.0.199_DT_Lab-SKYXIONEUK-5D-54_Iteration-1_Before-Reboot_20260809_212917.png",
+      "after": "ExecutionResults/2026-08-10/10.0.0.199_DT_Lab-SKYXIONEUK-5D-54/Reboot_perf/1_ITRS_20260809_212838/ITR_1/10.0.0.199_DT_Lab-SKYXIONEUK-5D-54_Iteration-1_After-Reboot_20260809_213126.png",
+      "count": 2
+    }
   }
 ]

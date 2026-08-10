@@ -3,6 +3,7 @@ Saved Sequence Model - Manages saved method sequences
 Stores user-defined method sequences with custom names and input parameters
 """
 
+from __future__ import annotations
 import json
 import os
 from datetime import datetime
@@ -19,7 +20,8 @@ class SavedSequence:
                  created_by: str = None, team_name: str = None, description: str = None,
                  method_rationale: Any = None, execution_count: int = 0,
                  total_duration_seconds: float = None, average_duration_seconds: float = None,
-                 location: str = None, is_active: bool = True, updated_at: str = None):
+                 location: str = None, is_active: bool = True, updated_at: str = None,
+                 shared_with_teams: Dict[str, str] = None):
         """
         Initialize a saved sequence
         
@@ -32,6 +34,7 @@ class SavedSequence:
             created_at: Creation timestamp
             created_by: Username/NTID of creator
             team_name: Team this sequence belongs to
+            shared_with_teams: Dict of {team_name: access_level} for teams with access
         """
         self.sequence_id = sequence_id or self._generate_id()
         self.name = name
@@ -49,6 +52,7 @@ class SavedSequence:
         self.location = location or ''
         self.is_active = is_active
         self.updated_at = updated_at
+        self.shared_with_teams = shared_with_teams or {}  # {team_name: access_level}
     
     def _generate_id(self) -> str:
         """Generate unique sequence ID"""
@@ -73,7 +77,8 @@ class SavedSequence:
             'average_duration_seconds': self.average_duration_seconds,
             'location': self.location,
             'is_active': self.is_active,
-            'updated_at': self.updated_at
+            'updated_at': self.updated_at,
+            'shared_with_teams': self.shared_with_teams
         }
     
     @classmethod
@@ -95,7 +100,8 @@ class SavedSequence:
             average_duration_seconds=data.get('average_duration_seconds'),
             location=data.get('location'),
             is_active=data.get('is_active', True),
-            updated_at=data.get('updated_at')
+            updated_at=data.get('updated_at'),
+            shared_with_teams=data.get('shared_with_teams', {})
         )
 
     @staticmethod
@@ -333,3 +339,85 @@ class SavedSequence:
                 return success
         print(f"[UPDATE] Sequence {sequence_id} not found!")
         return False
+
+    @classmethod
+    def share_sequence_with_team(cls, sequence_id: str, team_name: str, access_level: str = 'view_clone') -> bool:
+        """
+        Share a sequence with another team.
+        
+        Args:
+            sequence_id: ID of sequence to share
+            team_name: Team to share with
+            access_level: Permission level ('view_only', 'view_clone')
+        
+        Returns:
+            True if successful
+        """
+        sequences = cls.load_all()
+        for seq in sequences:
+            if seq.sequence_id == sequence_id:
+                if not seq.shared_with_teams:
+                    seq.shared_with_teams = {}
+                seq.shared_with_teams[team_name] = access_level
+                print(f"[SHARE] Sequence {sequence_id} shared with {team_name} ({access_level})")
+                return cls.save_all(sequences)
+        print(f"[SHARE] Sequence {sequence_id} not found!")
+        return False
+
+    @classmethod
+    def revoke_sequence_sharing(cls, sequence_id: str, team_name: str) -> bool:
+        """
+        Revoke access to sequence for a team.
+        
+        Args:
+            sequence_id: ID of sequence
+            team_name: Team to revoke access from
+        
+        Returns:
+            True if successful
+        """
+        sequences = cls.load_all()
+        for seq in sequences:
+            if seq.sequence_id == sequence_id:
+                if seq.shared_with_teams and team_name in seq.shared_with_teams:
+                    del seq.shared_with_teams[team_name]
+                    print(f"[REVOKE] Access to sequence {sequence_id} revoked from {team_name}")
+                    return cls.save_all(sequences)
+        print(f"[REVOKE] Sequence {sequence_id} not found!")
+        return False
+
+    @classmethod
+    def clone_sequence(cls, sequence_id: str, new_name: str, new_team: str, cloned_by: str) -> Optional['SavedSequence']:
+        """
+        Clone an existing sequence to a new team.
+        
+        Args:
+            sequence_id: ID of sequence to clone
+            new_name: Name for the cloned sequence
+            new_team: Team to assign cloned sequence to
+            cloned_by: Username who initiated the clone
+        
+        Returns:
+            New SavedSequence instance if successful, None otherwise
+        """
+        sequences = cls.load_all()
+        for seq in sequences:
+            if seq.sequence_id == sequence_id:
+                # Create a new sequence with same data
+                cloned_seq = cls(
+                    name=new_name,
+                    queue_data=seq.queue_data.copy() if seq.queue_data else [],
+                    methods=seq.methods.copy() if seq.methods else [],
+                    user_inputs=seq.user_inputs.copy() if seq.user_inputs else {},
+                    created_by=cloned_by,
+                    team_name=new_team,
+                    description=f"Clone of '{seq.name}' (Original by {seq.created_by})",
+                    method_rationale=seq.method_rationale.copy() if seq.method_rationale else [],
+                    location=seq.location
+                )
+                sequences.append(cloned_seq)
+                if cls.save_all(sequences):
+                    print(f"[CLONE] Sequence {sequence_id} cloned by {cloned_by} to team {new_team}")
+                    return cloned_seq
+        print(f"[CLONE] Sequence {sequence_id} not found!")
+        return None

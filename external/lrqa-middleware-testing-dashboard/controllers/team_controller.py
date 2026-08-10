@@ -95,18 +95,33 @@ class TeamController:
             return error
         
         try:
+            from models.teams import Teams
+            
             users = User.load_users()
+            teams_metadata = Teams.get_all_teams()
             teams = {}
             
-            # Collect unique teams and their members
+            # First, add all teams from metadata (even empty ones)
+            for team_name, team_data in teams_metadata.items():
+                teams[team_name] = {
+                    'team_name': team_name,
+                    'members': [],
+                    'member_count': 0,
+                    'description': team_data.get('description', ''),
+                    'created_at': team_data.get('created_at')
+                }
+            
+            # Then, collect members and their team assignments from users
             for user in users.values():
                 team_name = getattr(user, 'team_name', '')
                 if team_name:
                     if team_name not in teams:
+                        # Team exists via user but not in metadata, create it
                         teams[team_name] = {
                             'team_name': team_name,
                             'members': [],
                             'member_count': 0,
+                            'description': '',
                             'created_at': None
                         }
                     
@@ -138,6 +153,8 @@ class TeamController:
             return error
         
         try:
+            from models.teams import Teams
+            
             data = request.json
             team_name = data.get('team_name', '').strip()
             description = data.get('description', '')
@@ -149,12 +166,20 @@ class TeamController:
             if len(team_name) < 3:
                 return jsonify({'success': False, 'error': 'Team name must be at least 3 characters'}), 400
             
+            # Check if team already exists
+            if Teams.team_exists(team_name):
+                return jsonify({'success': False, 'error': f'Team {team_name} already exists'}), 400
+            
             # Validate members
             if members and not isinstance(members, list):
                 return jsonify({'success': False, 'error': 'Members must be a list'}), 400
             
             print(f"[CREATE_TEAM] Creating team: {team_name} by {current_user.ntid}", file=sys.stderr)
             print(f"  Members: {len(members)} user(s)", file=sys.stderr)
+            
+            # Create team metadata first
+            Teams.create_team(team_name, description)
+            print(f"✅ [CREATE_TEAM] Team metadata created for '{team_name}'", file=sys.stderr)
             
             # Load existing users
             users = User.load_users()
@@ -435,6 +460,54 @@ class TeamController:
             })
         except Exception as e:
             print(f"❌ [DELETE_TEAM_MEMBER] Error: {str(e)}", file=sys.stderr)
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+    @staticmethod
+    def delete_team():
+        """DELETE /api/teams/<team_name> - Delete a team and all its members (super admin only)"""
+        # Check super admin
+        error = TeamController.require_super_admin()
+        if error:
+            return error
+        
+        try:
+            from models.teams import Teams
+            
+            team_name = request.args.get('team_name', '').strip()
+            
+            if not team_name:
+                return jsonify({'success': False, 'error': 'Team name is required'}), 400
+            
+            users = User.load_users()
+            
+            # Find all users in this team
+            team_users = [ntid for ntid, user in users.items() if getattr(user, 'team_name', '') == team_name]
+            
+            if not team_users and not Teams.team_exists(team_name):
+                return jsonify({'success': False, 'error': f'Team {team_name} not found'}), 404
+            
+            # Delete all team members
+            deleted_count = 0
+            for ntid in team_users:
+                # Don't delete super admin
+                if ntid != 'vpatne290':
+                    del users[ntid]
+                    deleted_count += 1
+            
+            User.save_users(users)
+            
+            # Delete team metadata
+            Teams.delete_team(team_name)
+            
+            print(f"✅ [DELETE_TEAM] Deleted team '{team_name}' with {deleted_count} member(s)", file=sys.stderr)
+            return jsonify({
+                'success': True,
+                'deleted_team': team_name,
+                'members_deleted': deleted_count,
+                'timestamp': datetime.utcnow().isoformat()
+            })
+        except Exception as e:
+            print(f"❌ [DELETE_TEAM] Error: {str(e)}", file=sys.stderr)
             return jsonify({'success': False, 'error': str(e)}), 500
 
     @staticmethod

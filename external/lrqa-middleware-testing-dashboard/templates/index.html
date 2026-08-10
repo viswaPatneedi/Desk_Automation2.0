@@ -977,6 +977,9 @@
                         <li><hr class="dropdown-divider"></li>
                         {% if current_user.is_super_admin %}
                         <li><a class="dropdown-item" href="/admin/teams"><i class="bi bi-people-fill"></i> Teams</a></li>
+                        <li><a class="dropdown-item" href="/admin/methods"><i class="bi bi-diagram-3"></i> Methods Access</a></li>
+                        <li><a class="dropdown-item" href="/admin/sequences"><i class="bi bi-list-check"></i> Sequences Access</a></li>
+                        <li><a class="dropdown-item" href="/admin/devices"><i class="bi bi-hdd-rack-fill"></i> Devices Access</a></li>
                         <li><a class="dropdown-item" href="#" onclick="showAppCredentialsPanel(); return false;"><i class="bi bi-key-fill"></i> App Credentials</a></li>
                         <li><hr class="dropdown-divider"></li>
                         {% endif %}
@@ -1674,7 +1677,7 @@
                                         <!-- Checkbox: Multi-select -->
                                         {% if current_user.is_admin %}
                                         <div style="display: flex; align-items: center; margin-right: 0.75rem;">
-                                            <input type="checkbox" class="device-checkbox" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" 
+                                            <input type="checkbox" class="device-checkbox" value="{{ device.ip }}" data-ip="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" 
                                                    onchange="updateDeviceSelectionCount()" 
                                                    style="width: 18px; height: 18px; cursor: pointer;">
                                         </div>
@@ -1767,18 +1770,11 @@
                             <select class="form-select device-form-select" id="device-location" required>
                                 <optgroup label="India">
                                     <option value="IND:BLR">INDIA : BLR (Bengaluru)</option>
-                                    <option value="IND:CHN">INDIA : CHN (Chennai)</option>
-                                    <option value="IND:MUM">INDIA : MUM (Mumbai)</option>
-                                    <option value="IND:DEL">INDIA : DEL (Delhi)</option>
+                                    <option value="IND:CHN">INDIA : CHN (CHENNAI)</option>
+                                    <option value="IND:TVM">INDIA : TVM (Trivandrum)</option>
                                 </optgroup>
-                                <optgroup label="US">
-                                    <option value="US:NYC" selected>US : NYC (New York)</option>
-                                    <option value="US:LAX">US : LAX (Los Angeles)</option>
-                                    <option value="US:CHI">US : CHI (Chicago)</option>
-                                </optgroup>
-                                <optgroup label="UK">
-                                    <option value="UK:LON">UK : LON (London)</option>
-                                    <option value="UK:MAN">UK : MAN (Manchester)</option>
+                                <optgroup label="USA">
+                                    <option value="USA:PHL" selected>USA : PHL (PHILLY) CTC</option>
                                 </optgroup>
                             </select>
                         </div>
@@ -1848,6 +1844,125 @@
 
                         </div>
                         <!-- End Desk Device Fields -->
+
+                        <!-- LAB Device Fields Section -->
+                        <div id="lab-device-fields" style="display: none;">
+                        <div class="device-form-group">
+                            <label for="rack-device-name" class="device-form-label">Device Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control device-form-input" id="rack-device-name" placeholder="e.g., LAB Device 1" required>
+                        </div>
+
+                        <div class="device-form-group">
+                            <label for="rack-device-ip" class="device-form-label">Device IP Address <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control device-form-input" id="rack-device-ip" placeholder="e.g., 10.0.0.140" required>
+                        </div>
+
+                        <div class="device-form-group">
+                            <label for="rack-device-type" class="device-form-label">Device Type <span class="text-danger">*</span></label>
+                            <select class="form-select device-form-select" id="rack-device-type" required>
+                                <option value="XUMO">XUMO</option>
+                                <option value="SKY STREAM">SKY STREAM</option>
+                            </select>
+                        </div>
+
+                        <div class="device-form-group">
+                            <label for="rack-device-mac" class="device-form-label">Device MAC <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control device-form-input" id="rack-device-mac" placeholder="e.g., AA:BB:CC:DD:EE:FF" required>
+                        </div>
+
+                        <div class="device-form-group">
+                            <label for="rack-device-location" class="device-form-label">Device Location <span class="text-danger">*</span></label>
+                            <select class="form-select device-form-select" id="rack-device-location" required>
+                                <optgroup label="USA">
+                                    <option value="USA:DT-LAB-PHILLY" selected>USA: D-T LAB (PHILLY)</option>
+                                    <option value="USA:1717-ARCH-ST">USA: 1717 ARCH ST</option>
+                                </optgroup>
+                                <optgroup label="India">
+                                    <option value="IND:TVM">INDIA : TVM (TRIVANDRUM)</option>
+                                </optgroup>
+                                <optgroup label="UK">
+                                    <option value="UK:SKY-MAGIC-Q">UK : SKY-MAGIC Q</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="device-form-group">
+                            <label for="rack-device-team" class="device-form-label">Team Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control device-form-input" id="rack-device-team" placeholder="e.g., LAB Team" required>
+                        </div>
+
+                        <!-- LAB Device - SSH Credentials -->
+                        <div style="background: #1f2937; border: 1px solid #374151; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                            <h6 style="color: #60a5fa; margin-bottom: 1rem; font-weight: 600;">
+                                <i class="bi bi-terminal"></i> LAB Device SSH Credentials
+                            </h6>
+                            <div class="device-form-group">
+                                <label for="rack-device-port" class="device-form-label">SSH Port <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control device-form-input" id="rack-device-port" placeholder="e.g., 10022" value="10022" required>
+                            </div>
+                            <div class="device-form-group">
+                                <label for="rack-device-username" class="device-form-label">SSH Username <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control device-form-input" id="rack-device-username" placeholder="e.g., root" value="root" required>
+                            </div>
+                        </div>
+
+                        <!-- R-Pi Tunnel Configuration Section for LAB Devices -->
+                        <div style="background: #1f2937; border: 1px solid #374151; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                            <h6 style="color: #60a5fa; margin-bottom: 1rem; font-weight: 600;">
+                                <i class="bi bi-cpu"></i> Raspberry Pi (Tunnel Host) Configuration <small style="font-size: 0.85rem; color: #9ca3af;">(Required)</small>
+                            </h6>
+                            <p style="color: #9ca3af; font-size: 0.9rem; margin-bottom: 1rem;">
+                                <i class="bi bi-info-circle"></i> Application will SSH through R-Pi tunnel to reach LAB device
+                            </p>
+                            
+                            <div class="device-form-group">
+                                <label for="rpi-ip" class="device-form-label">R-Pi IP Address <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control device-form-input" id="rpi-ip" placeholder="e.g., 10.138.17.42" required>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="rpi-port" class="device-form-label">R-Pi SSH Port <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control device-form-input" id="rpi-port" placeholder="e.g., 60201" value="60201" required>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="rpi-username" class="device-form-label">R-Pi Username <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control device-form-input" id="rpi-username" placeholder="e.g., pi" value="pi" required>
+                            </div>
+
+                            <div class="device-form-group">
+                                <label for="rpi-password" class="device-form-label">R-Pi Password <span class="text-danger">*</span></label>
+                                <input type="password" class="form-control device-form-input" id="rpi-password" placeholder="Enter R-Pi password" required>
+                                <small style="color: #9ca3af; display: block; margin-top: 0.25rem;">Password will be encrypted before storage</small>
+                            </div>
+                        </div>
+
+                        <!-- IR Blaster Configuration for LAB Devices (Optional) -->
+                        <div class="device-form-section">
+                            <h6 class="device-form-section-title">
+                                <i class="bi bi-broadcast-pin"></i> IR Blaster Configuration <small class="device-form-section-subtitle">(Optional)</small>
+                            </h6>
+                            <div class="device-form-group">
+                                <label for="rack-ir-blaster-ip" class="device-form-label">IR Blaster IP Address</label>
+                                <input type="text" class="form-control device-form-input" id="rack-ir-blaster-ip" placeholder="e.g., 192.168.1.100">
+                            </div>
+                            <div class="device-form-group">
+                                <label for="rack-ir-blaster-port" class="device-form-label">IR Blaster Port</label>
+                                <input type="number" class="form-control device-form-input" id="rack-ir-blaster-port" placeholder="e.g., 4998" min="1" max="65535">
+                            </div>
+                            <div class="device-form-group">
+                                <label for="rack-ir-connector" class="device-form-label">IR Connector</label>
+                                <select class="form-select device-form-select" id="rack-ir-connector">
+                                    <option value="">-- Select --</option>
+                                    <option value="1">Connector 1</option>
+                                    <option value="2">Connector 2</option>
+                                    <option value="3">Connector 3</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        </div>
+                        <!-- End LAB Device Fields -->
 
                         <div style="margin-top: 1.2rem;">
                             <button id="add-device-btn" class="btn btn-success btn-custom w-100" style="padding: 0.6rem; font-weight: 600; font-size: 0.95rem;">
@@ -3684,12 +3799,8 @@
         function setupDeviceFormHandler() {
             const addBtn = document.getElementById('add-device-btn');
             if (addBtn) {
-                addBtn.addEventListener('click', handleAddOrUpdateDevice);
-            }
-            
-            const addRackBtn = document.getElementById('add-rack-device-btn');
-            if (addRackBtn) {
-                addRackBtn.addEventListener('click', handleAddRackDevice);
+                // Use the router function that checks device category and routes correctly
+                addBtn.addEventListener('click', handleDeviceFormSubmission);
             }
         }
         
@@ -3786,6 +3897,9 @@
                 return;
             }
             
+            // For LAB devices, add explicit is_rack_device flag
+            deviceData.is_rack_device = false;
+            
             // Determine if adding new or updating
             const isUpdate = !!editIp;
             const method = isUpdate ? 'PUT' : 'POST';
@@ -3859,38 +3973,44 @@
         
         // Handle adding GDF_RACK device
         function handleAddRackDevice() {
-            // Check if editing existing device
-            const editIp = document.getElementById('add-rack-device-btn').getAttribute('data-edit-ip');
+            // Helper function to safely get element values
+            const safeGetValue = (id) => {
+                const el = document.getElementById(id);
+                return el ? el.value.trim() : '';
+            };
+            
+            // Check if editing existing device - use the common button ID now
+            const editIp = document.getElementById('add-device-btn').getAttribute('data-edit-ip');
             
             // Get form values
-            const rpiIpValue = document.getElementById('rpi-ip').value.trim();
-            const rpiPortValue = document.getElementById('rpi-port').value.trim();
-            const rpiUsernameValue = document.getElementById('rpi-username').value.trim();
-            const rpiPasswordValue = document.getElementById('rpi-password').value.trim();
+            const rpiIpValue = safeGetValue('rpi-ip');
+            const rpiPortValue = safeGetValue('rpi-port');
+            const rpiUsernameValue = safeGetValue('rpi-username');
+            const rpiPasswordValue = safeGetValue('rpi-password');
             
             // Get IR Blaster values (optional)
-            const irBlasterIpValue = document.getElementById('rack-ir-blaster-ip').value.trim();
-            const irBlasterPortValue = document.getElementById('rack-ir-blaster-port').value.trim();
-            const irConnectorValue = document.getElementById('rack-ir-connector').value.trim();
+            const irBlasterIpValue = safeGetValue('rack-ir-blaster-ip');
+            const irBlasterPortValue = safeGetValue('rack-ir-blaster-port');
+            const irConnectorValue = safeGetValue('rack-ir-connector');
             
             // Get Power Control values (optional)
-            const powerTypeValue = document.getElementById('rack-power-type').value.trim();
-            const powerIpValue = document.getElementById('rack-power-ip').value.trim();
-            const powerOutletValue = document.getElementById('rack-power-outlet').value.trim();
-            const powerUsernameValue = document.getElementById('rack-power-username').value.trim();
-            const powerPasswordValue = document.getElementById('rack-power-password').value.trim();
+            const powerTypeValue = safeGetValue('rack-power-type');
+            const powerIpValue = safeGetValue('rack-power-ip');
+            const powerOutletValue = safeGetValue('rack-power-outlet');
+            const powerUsernameValue = safeGetValue('rack-power-username');
+            const powerPasswordValue = safeGetValue('rack-power-password');
             
             const rackDeviceData = {
-                name: document.getElementById('rack-device-name').value.trim(),
+                name: safeGetValue('rack-device-name'),
                 // For RACK devices, controller expects 'lab_ip' not 'ip'
-                lab_ip: document.getElementById('rack-device-ip').value.trim(),
-                device_type: document.getElementById('rack-device-type').value.trim(),
-                mac_address: document.getElementById('rack-device-mac').value.trim(),
-                location: document.getElementById('rack-device-location').value.trim(),
-                team_name: document.getElementById('rack-device-team').value.trim(),
+                lab_ip: safeGetValue('rack-device-ip'),
+                device_type: safeGetValue('rack-device-type'),
+                mac_address: safeGetValue('rack-device-mac'),
+                location: safeGetValue('rack-device-location'),
+                team_name: safeGetValue('rack-device-team'),
                 // For RACK devices, controller expects 'lab_username' and 'lab_port'
-                lab_username: document.getElementById('rack-device-username').value.trim(),
-                lab_port: document.getElementById('rack-device-port').value.trim() ? parseInt(document.getElementById('rack-device-port').value.trim()) : null,
+                lab_username: safeGetValue('rack-device-username'),
+                lab_port: safeGetValue('rack-device-port') ? parseInt(safeGetValue('rack-device-port')) : null,
                 username: 'root',
                 password: '',
                 is_rack_device: true,
@@ -4027,35 +4147,32 @@
                     const action = isUpdate ? 'updated' : 'added';
                     showNotification(`✅ GDF_RACK device ${action} successfully!`, 'success');
                     
-                    // Reset form
-                    document.getElementById('rack-device-name').value = '';
-                    document.getElementById('rack-device-ip').value = '';
-                    document.getElementById('rack-device-type').value = '';
-                    document.getElementById('rack-device-mac').value = '';
-                    document.getElementById('rack-device-location').value = '';
-                    document.getElementById('rack-device-team').value = '';
-                    document.getElementById('rack-device-port').value = '10022';
-                    document.getElementById('rack-device-username').value = 'root';
-                    document.getElementById('rpi-ip').value = '';
-                    document.getElementById('rpi-port').value = '60201';
-                    document.getElementById('rpi-username').value = 'pi';
-                    document.getElementById('rpi-password').value = '';
-                    // Reset IR Blaster fields
-                    document.getElementById('rack-ir-blaster-ip').value = '';
-                    document.getElementById('rack-ir-blaster-port').value = '4998';
-                    document.getElementById('rack-ir-connector').value = '';
-                    // Reset Power Control fields
-                    document.getElementById('rack-power-type').value = '';
-                    document.getElementById('rack-power-ip').value = '';
-                    document.getElementById('rack-power-outlet').value = '';
-                    document.getElementById('rack-power-username').value = '';
-                    document.getElementById('rack-power-password').value = '';
+                    // Reset form - use defensive checks to only clear fields that exist
+                    const fieldsToClear = [
+                        'rack-device-name', 'rack-device-ip', 'rack-device-type', 'rack-device-mac',
+                        'rack-device-location', 'rack-device-team', 'rack-device-port', 'rack-device-username',
+                        'rpi-ip', 'rpi-port', 'rpi-username', 'rpi-password',
+                        'rack-ir-blaster-ip', 'rack-ir-blaster-port', 'rack-ir-connector',
+                        'rack-power-type', 'rack-power-ip', 'rack-power-outlet', 'rack-power-username', 'rack-power-password'
+                    ];
+                    
+                    fieldsToClear.forEach(fieldId => {
+                        const element = document.getElementById(fieldId);
+                        if (element) {
+                            if (fieldId === 'rack-device-port') element.value = '10022';
+                            else if (fieldId === 'rack-device-username') element.value = 'root';
+                            else if (fieldId === 'rpi-port') element.value = '60201';
+                            else if (fieldId === 'rpi-username') element.value = 'pi';
+                            else if (fieldId === 'rack-ir-blaster-port') element.value = '4998';
+                            else element.value = '';
+                        }
+                    });
                     
                     // Reset button state after update
-                    const addRackBtn = document.getElementById('add-rack-device-btn');
-                    if (isUpdate && addRackBtn) {
-                        addRackBtn.removeAttribute('data-edit-ip');
-                        addRackBtn.textContent = 'Add GDF_RACK Device';
+                    const addBtn = document.getElementById('add-device-btn');
+                    if (isUpdate && addBtn) {
+                        addBtn.removeAttribute('data-edit-ip');
+                        addBtn.textContent = 'Add LAB Device';
                     }
                     
                     updateDeviceCountBadge();
@@ -4187,11 +4304,12 @@
         
         // Update device count in navbar
         function updateDeviceCountBadge() {
-            // Count only actual device items in the device list, not other elements with data-ip attribute
-            const deviceItems = document.querySelectorAll('.device-item[data-ip]');
+            // Count devices from the device-selector (main page) where users actually select devices
+            // This includes both .device-row elements with data-device-ip attribute
+            const deviceRows = document.querySelectorAll('#device-selector .device-row[data-device-ip]');
             const countBadge = document.getElementById('device-count-badge');
             if (countBadge) {
-                countBadge.textContent = deviceItems.length;
+                countBadge.textContent = deviceRows.length;
             }
         }
         
@@ -4346,6 +4464,31 @@
                 })
                 .catch(err => console.error('❌ Error fetching devices:', err));
             
+            // Add event listener for modal close to refresh main device selector
+            const handleModalHide = () => {
+                console.log('📌 Device Management modal closing - refreshing main device selector...');
+                refreshDeviceListFromBackend().then(() => {
+                    console.log('✅ Main device selector updated after modal close');
+                    // Restore any previously selected devices from localStorage
+                    const previousSelection = localStorage.getItem('selectedDevices');
+                    if (previousSelection) {
+                        try {
+                            const selectedIps = JSON.parse(previousSelection);
+                            selectedIps.forEach(ip => {
+                                const checkbox = document.getElementById(`device-${ip}`);
+                                if (checkbox) checkbox.checked = true;
+                            });
+                            console.log('✅ Restored previous device selection:', selectedIps);
+                        } catch (e) {
+                            console.warn('⚠️ Could not restore device selection:', e);
+                        }
+                    }
+                });
+                // Remove listener after it fires once to avoid duplicate refreshes
+                modal.removeEventListener('hide.bs.modal', handleModalHide);
+            };
+            
+            modal.addEventListener('hide.bs.modal', handleModalHide);
             bootstrapModal.show();
         }
         
@@ -4456,7 +4599,7 @@
                         <div class="device-item" data-ip="${device.ip}" data-team="${device.team_name || ''}">
                             ${isAdmin ? `
                                 <div style="display: flex; align-items: center; margin-right: 0.75rem;">
-                                    <input type="checkbox" class="device-checkbox" value="${device.ip}" data-device-name="${device.name}" data-device-mac="${device.mac_address || 'N/A'}" 
+                                    <input type="checkbox" class="device-checkbox" value="${device.ip}" data-ip="${device.ip}" data-device-name="${device.name}" data-device-mac="${device.mac_address || 'N/A'}" 
                                            onchange="updateDeviceSelectionCount()" 
                                            style="width: 18px; height: 18px; cursor: pointer;">
                                 </div>
@@ -4529,7 +4672,7 @@
                     <div class="device-item" data-ip="${device.ip}" data-team="${device.team_name || ''}" data-is-rack="true">
                         ${isAdmin ? `
                             <div style="display: flex; align-items: center; margin-right: 0.75rem;">
-                                <input type="checkbox" class="device-checkbox" value="${device.ip}" data-device-name="${device.name}" data-device-mac="${device.mac_address || 'N/A'}" 
+                                <input type="checkbox" class="device-checkbox" value="${device.ip}" data-ip="${device.ip}" data-device-name="${device.name}" data-device-mac="${device.mac_address || 'N/A'}" 
                                        onchange="updateDeviceSelectionCount()" 
                                        style="width: 18px; height: 18px; cursor: pointer;">
                             </div>
@@ -4635,10 +4778,17 @@
                                 statusBadgeStyle = 'background: #10b981;';
                             }
                             
+                            // Show SHARED badge if this device is from a different team
+                            let sharedBadge = '';
+                            const userTeam = document.querySelector('[data-user-team]')?.getAttribute('data-user-team') || '';
+                            if (userTeam && device.team_name !== userTeam) {
+                                sharedBadge = `<span style="background: #3b82f6; color: #e5e7eb; padding: 0.2rem 0.5rem; border-radius: 3px; font-size: 0.7rem; margin-left: 0.5rem; font-weight: 500;"><i class="bi bi-share-fill"></i> ${device.team_name}</span>`;
+                            }
+                            
                             deviceRow.innerHTML = `
                                 <input type="checkbox" class="form-check-input device-checkbox" id="device-${device.ip}" value="${device.ip}" data-device-name="${device.name}" data-device-mac="${device.mac_address || 'N/A'}" style="margin-right: 1rem; width: 18px; height: 18px; cursor: pointer;" ${device.status === 'BUSY' ? 'disabled' : ''}>
                                 <div style="flex: 1;">
-                                    <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">${device.name} • <span style="color: #9ca3af; font-size: 0.85rem;">${device.ip} • <span class="device-mac-display">${device.mac_address || 'N/A'}</span></span> </div>
+                                    <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">${device.name} ${sharedBadge} • <span style="color: #9ca3af; font-size: 0.85rem;">${device.ip} • <span class="device-mac-display">${device.mac_address || 'N/A'}</span></span> </div>
                                     ${deviceInfoExtra ? `<div style="margin-top: 0.25rem;">${deviceInfoExtra}</div>` : ''}
                                 </div>
                                 <span class="device-status-badge" style="${statusBadgeStyle} color: #fff; padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; min-width: 75px; text-align: center;">
@@ -4681,6 +4831,9 @@
                     renderGroupedDeskDevices(data.devices);
                     renderRackDevices(data.devices);
                     console.log('✅ Device lists rendered with location grouping');
+                    
+                    // Update the device count badge to reflect actual device count
+                    updateDeviceCountBadge();
                 })
                 .catch(error => {
                     console.error('❌ Error refreshing device list:', error);
@@ -9406,20 +9559,47 @@
         function toggleDeviceFields() {
             const category = document.getElementById('device-category').value;
             const deskFields = document.getElementById('desk-device-fields');
+            const labFields = document.getElementById('lab-device-fields');
             
             if (category === 'desk') {
-                // Show desk device fields
+                // Show DESK device fields, hide LAB fields
                 deskFields.style.display = 'block';
+                labFields.style.display = 'none';
                 console.log('✅ Showing Desk Device fields');
+                document.getElementById('add-device-btn').innerHTML = '<i class="bi bi-plus-lg"></i> Add DESK Device';
             } else if (category === 'lab') {
-                // Lab device fields visible (for future implementation)
-                deskFields.style.display = 'block';
+                // Show LAB device fields, hide DESK fields
+                deskFields.style.display = 'none';
+                labFields.style.display = 'block';
                 console.log('✅ Showing Lab Device fields');
+                document.getElementById('add-device-btn').innerHTML = '<i class="bi bi-plus-lg"></i> Add LAB Device';
+            }
+        }
+
+        // New function to route form submission to correct handler
+        function handleDeviceFormSubmission() {
+            const category = document.getElementById('device-category').value;
+            
+            if (category === 'desk') {
+                handleAddOrUpdateDevice();
+            } else if (category === 'lab') {
+                handleAddRackDevice();
+            } else {
+                alert('❌ Please select a device category (DESK or LAB)');
             }
         }
         
         function editDevice(deviceIp) {
             console.log('🖊️ Editing device:', deviceIp);
+            
+            // First, show the modal
+            const modal = document.getElementById('deviceManagementModal');
+            if (modal) {
+                const bsModal = new bootstrap.Modal(modal);
+                bsModal.show();
+                console.log('✅ Device Management modal shown');
+            }
+            
             // Fetch device details
             fetch(`/api/device/${deviceIp}`)
                 .then(response => response.json())
@@ -9427,83 +9607,114 @@
                     if (data.success && data.device) {
                         const device = data.device;
                         
+                        // Helper function to safely set element value
+                        function setElementValue(elementId, value) {
+                            const element = document.getElementById(elementId);
+                            if (element) {
+                                element.value = value || '';
+                                console.log(`✅ Set form field: ${elementId} = ${value}`);
+                            } else {
+                                console.warn(`⚠️ Form field not found: ${elementId} (this field may not be available in this form)`);
+                            }
+                        }
+                        
                         // Check if this is a RACK device
                         if (device.is_rack_device) {
                             console.log('🖊️ Editing GDF_RACK device...');
-                            // Populate RACK device form
-                            document.getElementById('rack-device-name').value = device.name || '';
-                            document.getElementById('rack-device-ip').value = device.ip || '';
-                            document.getElementById('rack-device-type').value = device.device_type || '';
-                            document.getElementById('rack-device-mac').value = device.mac_address || '';
-                            document.getElementById('rack-device-location').value = device.location || 'US';
-                            document.getElementById('rack-device-team').value = device.team_name || '';
-                            document.getElementById('rack-device-port').value = device.port || 10022;
-                            document.getElementById('rack-device-username').value = device.username || 'root';
                             
-                            // Populate R-Pi configuration
-                            const rpiConfig = device.rpi_config || {};
-                            document.getElementById('rpi-ip').value = rpiConfig.rpi_ip || '';
-                            document.getElementById('rpi-port').value = rpiConfig.rpi_port || 60201;
-                            document.getElementById('rpi-username').value = rpiConfig.rpi_username || 'pi';
-                            document.getElementById('rpi-password').value = rpiConfig.rpi_password || '';
-                            
-                            // Populate IR Blaster configuration
-                            const irBlasterConfig = device.ir_blaster_config || {};
-                            document.getElementById('rack-ir-blaster-ip').value = irBlasterConfig.ir_blaster_ip || '';
-                            document.getElementById('rack-ir-blaster-port').value = irBlasterConfig.ir_blaster_port || 4998;
-                            document.getElementById('rack-ir-connector').value = irBlasterConfig.ir_connector || '';
-                            
-                            // Populate Power Control configuration
-                            const powerConfig = device.power_control_config || {};
-                            document.getElementById('rack-power-type').value = powerConfig.power_type || '';
-                            document.getElementById('rack-power-ip').value = powerConfig.power_ip || '';
-                            document.getElementById('rack-power-outlet').value = powerConfig.power_outlet || '';
-                            document.getElementById('rack-power-username').value = powerConfig.power_username || '';
-                            document.getElementById('rack-power-password').value = powerConfig.power_password || '';
-                            
-                            // Change button text to Update and set edit flag
-                            const addRackBtn = document.getElementById('add-rack-device-btn');
-                            addRackBtn.innerHTML = '<i class="bi bi-check-lg"></i> Update GDF_RACK Device';
-                            addRackBtn.setAttribute('data-edit-ip', deviceIp);
-                            
-                            // Switch to GDF_RACK Device form tab
-                            const rackFormTabBtn = document.querySelectorAll('.device-management-tab-btn')[2];
-                            if (rackFormTabBtn) {
-                                switchDeviceTab('add-rack-form', rackFormTabBtn);
+                            // Set category to LAB and show LAB device fields (FIRST, before populating)
+                            const categorySelect = document.getElementById('device-category');
+                            if (categorySelect) {
+                                categorySelect.value = 'lab';
+                                toggleDeviceFields();
+                                console.log('✅ Switched to LAB device form');
                             }
+                            
+                            // Wait a moment for form fields to become visible
+                            setTimeout(() => {
+                                // Populate RACK device form with proper null checks
+                                setElementValue('rack-device-name', device.name);
+                                setElementValue('rack-device-ip', device.ip);
+                                setElementValue('rack-device-type', device.device_type);
+                                setElementValue('rack-device-mac', device.mac_address);
+                                setElementValue('rack-device-location', device.location || 'US');
+                                setElementValue('rack-device-team', device.team_name);
+                                setElementValue('rack-device-port', device.port || 10022);
+                                setElementValue('rack-device-username', device.username || 'root');
+                                
+                                // Populate R-Pi configuration
+                                const rpiConfig = device.rpi_config || {};
+                                setElementValue('rpi-ip', rpiConfig.rpi_ip);
+                                setElementValue('rpi-port', rpiConfig.rpi_port || 60201);
+                                setElementValue('rpi-username', rpiConfig.rpi_username || 'pi');
+                                setElementValue('rpi-password', rpiConfig.rpi_password);
+                                
+                                // Populate IR Blaster configuration
+                                const irBlasterConfig = device.ir_blaster_config || {};
+                                setElementValue('rack-ir-blaster-ip', irBlasterConfig.ir_blaster_ip);
+                                setElementValue('rack-ir-blaster-port', irBlasterConfig.ir_blaster_port || 4998);
+                                setElementValue('rack-ir-connector', irBlasterConfig.ir_connector);
+                                
+                                // Populate Power Control configuration
+                                const powerConfig = device.power_control_config || {};
+                                setElementValue('rack-power-type', powerConfig.power_type);
+                                setElementValue('rack-power-ip', powerConfig.power_ip);
+                                setElementValue('rack-power-outlet', powerConfig.power_outlet);
+                                setElementValue('rack-power-username', powerConfig.power_username);
+                                setElementValue('rack-power-password', powerConfig.power_password);
+                                
+                                // Change button text to Update and set edit flag on the common button
+                                const addBtn = document.getElementById('add-device-btn');
+                                if (addBtn) {
+                                    addBtn.innerHTML = '<i class="bi bi-check-lg"></i> Update LAB Device';
+                                    addBtn.setAttribute('data-edit-ip', deviceIp);
+                                }
+                                
+                                console.log('✅ GDF_RACK device form populated for editing');
+                            }, 100);
                         } else {
                             console.log('🖊️ Editing DESK device...');
-                            // Populate DESK device form
-                            document.getElementById('device-name').value = device.name || '';
-                            document.getElementById('device-ip').value = device.ip || '';
-                            document.getElementById('device-type').value = device.device_type || 'XUMO';
-                            document.getElementById('device-mac').value = device.mac_address || '';
-                            document.getElementById('device-location').value = device.location || 'US:NYC';
-                            document.getElementById('device-team').value = device.team_name || '';
                             
-                            // Populate R-Pi tunnel configuration (REQUIRED for DESK devices)
-                            const rpiConfig = device.rpi_config || {};
-                            document.getElementById('desk-rpi-ip').value = rpiConfig.rpi_ip || '';
-                            document.getElementById('desk-rpi-port').value = rpiConfig.rpi_port || 22;
-                            document.getElementById('desk-rpi-username').value = rpiConfig.rpi_username || 'pi';
-                            document.getElementById('desk-rpi-password').value = rpiConfig.rpi_password || '';
-                            
-                            // IR Configuration fields
-                            const irConfig = device.ir_config || {};
-                            document.getElementById('ir-device-ip').value = irConfig.itach_ip || '';
-                            document.getElementById('ir-device-port').value = irConfig.itach_port || '';
-                            document.getElementById('ir-connector').value = irConfig.ir_port || '';
-                            
-                            // Change button text to Update
-                            const addBtn = document.getElementById('add-device-btn');
-                            addBtn.innerHTML = '<i class="bi bi-check-lg"></i> Update Device';
-                            addBtn.setAttribute('data-edit-ip', deviceIp);
-                            
-                            // Switch to Add New Device tab
-                            const addFormTabBtn = document.querySelectorAll('.device-management-tab-btn')[1];
-                            if (addFormTabBtn) {
-                                switchDeviceTab('add-form', addFormTabBtn);
+                            // Set category to DESK and show DESK device fields (FIRST, before populating)
+                            const categorySelect = document.getElementById('device-category');
+                            if (categorySelect) {
+                                categorySelect.value = 'desk';
+                                toggleDeviceFields();
+                                console.log('✅ Switched to DESK device form');
                             }
+                            
+                            // Wait a moment for form fields to become visible
+                            setTimeout(() => {
+                                // Populate DESK device form with proper null checks
+                                setElementValue('device-name', device.name);
+                                setElementValue('device-ip', device.ip);
+                                setElementValue('device-type', device.device_type || 'XUMO');
+                                setElementValue('device-mac', device.mac_address);
+                                setElementValue('device-location', device.location || 'US');
+                                setElementValue('device-team', device.team_name);
+                                
+                                // Populate R-Pi tunnel configuration (REQUIRED for DESK devices)
+                                const rpiConfig = device.rpi_config || {};
+                                setElementValue('desk-rpi-ip', rpiConfig.rpi_ip);
+                                setElementValue('desk-rpi-port', rpiConfig.rpi_port || 22);
+                                setElementValue('desk-rpi-username', rpiConfig.rpi_username || 'pi');
+                                setElementValue('desk-rpi-password', rpiConfig.rpi_password);
+                                
+                                // IR Configuration fields
+                                const irConfig = device.ir_config || {};
+                                setElementValue('ir-device-ip', irConfig.itach_ip);
+                                setElementValue('ir-device-port', irConfig.itach_port);
+                                setElementValue('ir-connector', irConfig.ir_port);
+                                
+                                // Change button text to Update
+                                const addBtn = document.getElementById('add-device-btn');
+                                if (addBtn) {
+                                    addBtn.innerHTML = '<i class="bi bi-check-lg"></i> Update Device';
+                                    addBtn.setAttribute('data-edit-ip', deviceIp);
+                                }
+                                
+                                console.log('✅ DESK device form populated for editing');
+                            }, 100);
                         }
                         
                         console.log('✅ Device loaded for editing:', device);
@@ -9512,8 +9723,8 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching device:', error);
-                    alert('Error loading device details');
+                    console.error('❌ Error fetching device:', error);
+                    alert('Error loading device details: ' + error.message);
                 });
         }
         
@@ -9533,13 +9744,23 @@
             .then(data => {
                 if (data.success) {
                     showNotification('✅ Device deleted successfully', 'success');
-                    updateDeviceCountBadge();
-                    // Remove device from UI without reloading
+                    
+                    // Remove device from UI
                     const deviceItem = document.querySelector(`.device-item[data-ip="${deviceIp}"]`);
                     if (deviceItem) {
                         deviceItem.style.opacity = '0.5';
                         setTimeout(() => deviceItem.remove(), 300);
                     }
+                    
+                    // Also remove from main device-selector
+                    const deviceRow = document.querySelector(`.device-row[data-device-ip="${deviceIp}"]`);
+                    if (deviceRow) {
+                        deviceRow.style.opacity = '0.5';
+                        setTimeout(() => deviceRow.remove(), 300);
+                    }
+                    
+                    // Refresh device list and update count
+                    refreshDeviceListFromBackend();
                     updateDeviceSelectionCount();
                 } else {
                     showNotification('Error deleting device: ' + (data.message || 'Unknown error'), 'error');
@@ -9684,6 +9905,9 @@
             return getMethodInfo(method).name;
         }
         
+        // Global cache for sequence access info (from list view)
+        let sequenceAccessCache = {};
+        
         function loadSavedSequences() {
             const container = document.getElementById('saved-sequences-list');
             const countBadge = document.getElementById('saved-sequences-count');
@@ -9721,44 +9945,47 @@
                             <div id="sequences-checkbox-container">
                         `;
                         
-                        htmlContent += data.sequences.map(seq => `
-                            <div style="margin: 0.75rem 0; padding: 0.75rem; background: #334155; border-left: 3px solid #10b981; border-radius: 4px;">
-                                <div style="display: flex; gap: 0.75rem; align-items: flex-start; justify-content: space-between;">
-                                    <div style="display: flex; gap: 0.5rem; align-items: flex-start; flex: 1; min-width: 0;">
-                                        <input type="checkbox" class="sequence-checkbox" value="${seq.sequence_id}" style="margin: 0.25rem 0 0 0; flex-shrink: 0;" title="Select this sequence">
-                                        <div style="flex: 1; min-width: 0;">
-                                            <strong style="color: #e5e7eb; word-break: break-word; display: block;">${seq.name}</strong>
-                                            <small style="color: #9ca3af; display: block; margin-top: 0.25rem;">
-                                                <i class="bi bi-person"></i> ${seq.created_by || 'Unknown'}   ${seq.team_name ? `<i class="bi bi-people"></i> ${seq.team_name}` : ''}
-                                            </small>
-                                           </div>
-                                    </div>
-                                    <div style="display: flex; gap: 0.3rem; flex-wrap: wrap; flex-shrink: 0; margin-left: 0.5rem;">
-                                        <button onclick="loadSequenceToQueue('${seq.sequence_id}')" class="btn btn-sm btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Load this sequence to queue">
-                                            <i class="bi bi-download"></i>
-                                        </button>
-                                        <button onclick="editSequenceMetadata('${seq.sequence_id}', '${seq.name.replace(/'/g, "\\'")}')" class="btn btn-sm btn-info" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Edit sequence name">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button onclick="editSequenceMethods('${seq.sequence_id}', '${seq.name.replace(/'/g, "\\'")}')" class="btn btn-sm btn-warning" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Edit sequence methods">
-                                            <i class="bi bi-arrow-left-right"></i>
-                                        </button>
-                                        <button onclick="deleteSequence('${seq.sequence_id}', '${seq.name.replace(/'/g, "\\'")}')" class="btn btn-sm btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Delete this sequence">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        `).join('');
+                        data.sequences.forEach(seq => {
+                            const seqName = seq.name.replace(/'/g, "\\'");
+                            const canEdit = seq.access && seq.access.can_edit;
+                            const canClone = seq.access && seq.access.can_clone;
+                            
+                            // Store access info in cache for later use in modal
+                            sequenceAccessCache[seq.sequence_id] = seq.access || {};
+                            console.log('💾 Cached access info for', seq.sequence_id, ':', sequenceAccessCache[seq.sequence_id]);
+                            
+                            let buttonHTML = '<button onclick="loadSequenceToQueue(\'' + seq.sequence_id + '\')" class="btn btn-sm btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Load this sequence to queue"><i class="bi bi-download"></i></button>';
+                            
+                            buttonHTML += '<button onclick="viewSequenceDetails(\'' + seq.sequence_id + '\')" class="btn btn-sm btn-success" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="View sequence details"><i class="bi bi-eye"></i></button>';
+                            
+                            if (canClone) {
+                                buttonHTML += '<button onclick="cloneSequence(\'' + seq.sequence_id + '\', \'' + seqName + '\')" class="btn btn-sm btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Clone sequence to your team"><i class="bi bi-files"></i></button>';
+                            }
+                            
+                            if (canEdit) {
+                                buttonHTML += '<button onclick="editSequenceMetadata(\'' + seq.sequence_id + '\', \'' + seqName + '\')" class="btn btn-sm btn-info" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Edit sequence name"><i class="bi bi-pencil"></i></button>';
+                                buttonHTML += '<button onclick="editSequenceMethods(\'' + seq.sequence_id + '\', \'' + seqName + '\')" class="btn btn-sm btn-warning" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Edit sequence methods"><i class="bi bi-arrow-left-right"></i></button>';
+                                buttonHTML += '<button onclick="deleteSequence(\'' + seq.sequence_id + '\', \'' + seqName + '\')" class="btn btn-sm btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Delete this sequence"><i class="bi bi-trash"></i></button>';
+                            }
+                            
+                            const viewOnlyBadge = (seq.access && !seq.access.is_owner) ? '<span style="margin-left: 0.5rem; color: #fbbf24; background: #78350f; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.7rem;"><i class="bi bi-eye"></i> View Only</span>' : '';
+                            const teamDisplay = seq.team_name ? '<i class="bi bi-people"></i> ' + seq.team_name : '';
+                            
+                            htmlContent += '<div style="margin: 0.75rem 0; padding: 0.75rem; background: #334155; border-left: 3px solid #10b981; border-radius: 4px;">';
+                            htmlContent += '<div style="display: flex; gap: 0.75rem; align-items: flex-start; justify-content: space-between;">';
+                            htmlContent += '<div style="display: flex; gap: 0.5rem; align-items: flex-start; flex: 1; min-width: 0;">';
+                            htmlContent += '<input type="checkbox" class="sequence-checkbox" value="' + seq.sequence_id + '" style="margin: 0.25rem 0 0 0; flex-shrink: 0;" title="Select this sequence">';
+                            htmlContent += '<div style="flex: 1; min-width: 0;">';
+                            htmlContent += '<strong style="color: #e5e7eb; word-break: break-word; display: block;">' + seq.name + '</strong>';
+                            htmlContent += '<small style="color: #9ca3af; display: block; margin-top: 0.25rem;"><i class="bi bi-person"></i> ' + (seq.created_by || 'Unknown') + '   ' + teamDisplay + viewOnlyBadge + '</small>';
+                            htmlContent += '</div></div>';
+                            htmlContent += '<div style="display: flex; gap: 0.3rem; flex-wrap: wrap; flex-shrink: 0; margin-left: 0.5rem;">';
+                            htmlContent += buttonHTML;
+                            htmlContent += '</div></div></div>';
+                        });
                         
-                        htmlContent += `</div>`;
+                        htmlContent += '</div>';
                         container.innerHTML = htmlContent;
-                        
-                        // Re-initialize sequence search after sequences are loaded
-                        const sequenceSearchInput = document.getElementById('sequences-search-input');
-                        if (sequenceSearchInput) {
-                            sequenceSearchInput.addEventListener('input', filterSequences);
-                        }
                     } else {
                         console.log('⚠️ No sequences found or API success is false');
                         countBadge.textContent = '0';
@@ -10567,7 +10794,7 @@
                     const queueItem = {
                         id: Date.now().toString() + Math.random() + seqIndex + itemIndex,
                         method: item.method || '',
-                        name: item.name || getMethodDisplayName(item.method),
+                        name: item.name || getMethodName(item.method),
                         description: item.description || '',  // Include description when merging sequences
                         params: { ...item.params } || {}
                     };
@@ -10626,7 +10853,7 @@
                 const queueItem = {
                     id: Date.now().toString() + Math.random() + itemIndex,
                     method: item.method || '',
-                    name: item.name || getMethodDisplayName(item.method),
+                    name: item.name || getMethodName(item.method),
                     description: item.description || '',  // Include description when executing sequences separately
                     params: { ...item.params } || {}
                 };
@@ -10707,6 +10934,249 @@
                     console.error('❌ Error fetching sequence:', error);
                     showNotification(`❌ Error loading sequence: ${error.message}`, 'error');
                 });
+        }
+        
+        function viewSequenceDetails(sequenceId) {
+            // If cache is empty, fetch sequences again to populate it
+            if (!sequenceAccessCache[sequenceId]) {
+                console.log('📊 Cache empty for', sequenceId, '- fetching fresh sequence list...');
+                fetch('/api/sequences/list', { credentials: 'include' })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success && data.sequences) {
+                            data.sequences.forEach(seq => {
+                                sequenceAccessCache[seq.sequence_id] = seq.access || {};
+                            });
+                            console.log('✅ Cache populated with', data.sequences.length, 'sequences');
+                        }
+                        // Now open the modal with populated cache
+                        openSequenceDetailsModal(sequenceId);
+                    })
+                    .catch(err => {
+                        console.error('❌ Error refreshing cache:', err);
+                        // Try anyway with whatever cache we have
+                        openSequenceDetailsModal(sequenceId);
+                    });
+            } else {
+                console.log('✅ Using cached access info for', sequenceId);
+                openSequenceDetailsModal(sequenceId);
+            }
+        }
+        
+        function openSequenceDetailsModal(sequenceId) {
+            fetch(`/api/sequences/${sequenceId}`)
+                .then(response => {
+                    console.log('📡 Response status:', response.status);
+                    return response.json().then(data => ({
+                        status: response.status,
+                        ok: response.ok,
+                        data: data
+                    }));
+                })
+                .then(({status, ok, data}) => {
+                    console.log('👁️ Full Sequence Details:', {status, ok, data});
+                    console.log('📊 Response structure:', {
+                        'has_sequence': !!data.sequence,
+                        'has_access_in_sequence': !!data.sequence?.access,
+                        'has_access_at_root': !!data.access,
+                        'queue_data_length': data.sequence?.queue_data?.length || 0,
+                        'first_item': data.sequence?.queue_data?.[0]
+                    });
+                    
+                    if (!ok) {
+                        console.error('❌ API Error:', data.error || data.message || 'Unknown error');
+                        showNotification(`❌ Error loading sequence: ${data.error || data.message || 'HTTP ' + status}`, 'error');
+                        return;
+                    }
+                    if (data.success && data.sequence) {
+                        const sequence = data.sequence;
+                        const queueData = sequence.queue_data || [];
+                        
+                        // Use cached access info from list view (most reliable)
+                        // Fall back to API response if cache empty
+                        let accessInfo = sequenceAccessCache[sequenceId] || sequence.access || data.access || {};
+                        const isViewOnly = !accessInfo.can_edit;
+                        const canClone = accessInfo.can_clone;
+                        
+                        console.log('🔍 Permission check - Trying cache first:', sequenceAccessCache[sequenceId]);
+                        console.log('🔍 Permission check - can_clone:', canClone, 'can_edit:', accessInfo.can_edit, 'accessInfo:', accessInfo);
+                        console.log('📋 Queue data sample:', queueData.slice(0, 2));
+                        
+                        // Build modal for viewing sequence with dark theme
+                        let modalHTML = '<div class="modal fade" id="viewSequenceModal" tabindex="-1"><div class="modal-dialog modal-lg" style="max-width: 900px;"><div class="modal-content" style="background-color: #1f2937; color: #e5e7eb; border: 1px solid #374151;">';
+                        
+                        // Modal Header
+                        modalHTML += '<div class="modal-header" style="border-bottom: 1px solid #374151; background-color: #111827;">';
+                        modalHTML += '<div class="d-flex align-items-center gap-2">';
+                        modalHTML += '<h5 class="modal-title" style="margin-bottom: 0; color: #f3f4f6;">' + sequence.name + '</h5>';
+                        if (isViewOnly) {
+                            modalHTML += '<span class="badge" style="background-color: #fbbf24; color: #000;"><i class="bi bi-eye"></i> View Only</span>';
+                        }
+                        modalHTML += '</div>';
+                        modalHTML += '<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>';
+                        
+                        // Modal Body
+                        modalHTML += '<div class="modal-body" style="background-color: #1f2937; padding: 1.5rem;">';
+                        
+                        // Info section
+                        modalHTML += '<div style="background-color: #111827; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; border-left: 3px solid #10b981;">';
+                        modalHTML += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.9rem;">';
+                        modalHTML += '<div><strong style="color: #f3f4f6;">Created by:</strong> <span style="color: #d1d5db;">' + (sequence.created_by || 'Unknown') + '</span></div>';
+                        if (sequence.team_name) {
+                            modalHTML += '<div><strong style="color: #f3f4f6;">Team:</strong> <span style="color: #d1d5db;">' + sequence.team_name + '</span></div>';
+                        }
+                        modalHTML += '<div><strong style="color: #f3f4f6;">Total Methods:</strong> <span style="color: #d1d5db;">' + queueData.length + ' items</span></div>';
+                        modalHTML += '</div></div>';
+                        
+                        // List all methods with data
+                        if (queueData.length > 0) {
+                            modalHTML += '<div style="margin-bottom: 1.5rem;"><h6 style="color: #f3f4f6; margin-bottom: 1rem; font-weight: 600;">📋 Queue Items:</h6>';
+                            modalHTML += '<div style="max-height: 400px; overflow-y: auto; border: 1px solid #374151; border-radius: 6px; background-color: #111827;">';
+                            
+                            queueData.forEach((item, idx) => {
+                                const methodName = getMethodName ? getMethodName(item.method) : item.method;
+                                modalHTML += '<div style="padding: 1rem; border-bottom: 1px solid #374151; background-color: #1f2937;">';
+                                modalHTML += '<div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 0.5rem;">';
+                                modalHTML += '<div style="flex: 1;">';
+                                modalHTML += '<span style="font-weight: 600; color: #f3f4f6; display: inline-block; background-color: #10b981; color: #000; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.75rem; margin-right: 0.5rem;">' + (idx + 1) + '</span>';
+                                modalHTML += '<strong style="color: #10b981;">' + methodName + '</strong>';
+                                if (item.device_id) {
+                                    modalHTML += '<span style="font-size: 0.85em; color: #9ca3af; margin-left: 1rem;">🖥️ ' + item.device_id + '</span>';
+                                }
+                                modalHTML += '</div>';
+                                modalHTML += '</div>';
+                                
+                                // Show ALL method parameters/fields (including user-provided data)
+                                // Fields to skip (method metadata, not user parameters)
+                                const skipFields = ['method', 'device_id', 'id', 'description', 'name'];
+                                const paramFields = {};
+                                
+                                // Collect all non-empty fields as parameters
+                                for (const [key, value] of Object.entries(item)) {
+                                    if (!skipFields.includes(key) && value !== null && value !== undefined && value !== '' && (!Array.isArray(value) || value.length > 0)) {
+                                        paramFields[key] = value;
+                                    }
+                                }
+                                
+                                // Also include params field if it exists
+                                if (item.params && Object.keys(item.params).length > 0) {
+                                    Object.assign(paramFields, item.params);
+                                }
+                                
+                                // Display all parameters
+                                if (Object.keys(paramFields).length > 0) {
+                                    modalHTML += '<div style="margin-top: 0.5rem; margin-left: 1.5rem; padding: 0.75rem; background-color: #111827; border-radius: 4px; border-left: 2px solid #6366f1; font-size: 0.85rem;">';
+                                    modalHTML += '<strong style="color: #a1a5fb; display: block; margin-bottom: 0.5rem;">📝 Parameters:</strong>';
+                                    for (const [key, value] of Object.entries(paramFields)) {
+                                        let displayValue;
+                                        if (Array.isArray(value)) {
+                                            displayValue = value.length > 0 ? JSON.stringify(value) : '(empty array)';
+                                        } else if (typeof value === 'object') {
+                                            displayValue = JSON.stringify(value);
+                                        } else {
+                                            displayValue = String(value);
+                                        }
+                                        // Format the key nicely (convert snake_case to Title Case)
+                                        const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                                        modalHTML += '<div style="color: #d1d5db; margin-bottom: 0.25rem; word-break: break-all;"><span style="color: #a1a5fb;">' + displayKey + ':</span> <span style="color: #61f3f3;">' + displayValue + '</span></div>';
+                                    }
+                                    modalHTML += '</div>';
+                                }
+                                
+                                modalHTML += '</div>';
+                            });
+                            
+                            modalHTML += '</div></div>';
+                        } else {
+                            modalHTML += '<div style="text-align: center; padding: 2rem; color: #9ca3af;"><i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 1rem;"></i>No methods in this sequence</div>';
+                        }
+                        
+                        modalHTML += '</div>';
+                        
+                        // Modal footer
+                        modalHTML += '<div class="modal-footer" style="border-top: 1px solid #374151; background-color: #111827;">';
+                        modalHTML += '<button type="button" class="btn" style="background-color: #6b7280; color: #fff; border: 1px solid #6b7280;" data-bs-dismiss="modal">Close</button>';
+                        modalHTML += '<button type="button" class="btn btn-primary" onclick="loadSequenceToQueueAndClose(\'' + sequenceId + '\')"><i class="bi bi-download"></i> Load to Queue</button>';
+                        if (canClone) {
+                            modalHTML += '<button type="button" class="btn" style="background-color: #8b5cf6; color: #fff; border: 1px solid #8b5cf6;" onclick="cloneSequence(\'' + sequenceId + '\', \'' + sequence.name.replace(/'/g, "\\'") + '\')"><i class="bi bi-files"></i> Clone to My Team</button>';
+                        }
+                        modalHTML += '</div>';
+                        
+                        modalHTML += '</div></div></div>';
+                        
+                        // Remove old modal if exists
+                        const oldModal = document.getElementById('viewSequenceModal');
+                        if (oldModal) oldModal.remove();
+                        
+                        // Add modal to body
+                        document.body.insertAdjacentHTML('beforeend', modalHTML);
+                        
+                        // Show modal
+                        const modal = new bootstrap.Modal(document.getElementById('viewSequenceModal'));
+                        modal.show();
+                    } else {
+                        console.error('❌ API Response not successful:', data);
+                        showNotification(`❌ Error loading sequence: ${data.error || 'Invalid response format'}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Error fetching sequence details:', error);
+                    showNotification(`❌ Error loading sequence: ${error.message}`, 'error');
+                });
+        }
+        
+        function loadSequenceToQueueAndClose(sequenceId) {
+            loadSequenceToQueue(sequenceId);
+            // Close the modal
+            setTimeout(() => {
+                const modal = bootstrap.Modal.getInstance(document.getElementById('viewSequenceModal'));
+                if (modal) {
+                    modal.hide();
+                }
+            }, 500);
+        }
+        
+        function cloneSequence(sequenceId, sequenceName) {
+            const newName = prompt('Enter name for cloned sequence:', sequenceName + ' (Copy)');
+            if (!newName) {
+                console.log('⚠️ Clone cancelled');
+                return;
+            }
+            
+            console.log('📋 Cloning sequence:', sequenceId, 'as', newName);
+            
+            fetch(`/api/sequences/${sequenceId}/clone`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ new_name: newName }),
+                credentials: 'include'
+            })
+            .then(response => response.json().then(data => ({
+                status: response.status,
+                ok: response.ok,
+                data: data
+            })))
+            .then(({status, ok, data}) => {
+                console.log('📥 Clone Response:', {status, ok, data});
+                if (ok && data.success) {
+                    console.log('✅ Sequence cloned successfully:', data.new_sequence_id);
+                    showNotification('✅ Sequence cloned successfully: ' + newName, 'success');
+                    
+                    // Reload sequences list
+                    loadSavedSequences();
+                    
+                    // Close modal if open
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('viewSequenceModal'));
+                    if (modal) modal.hide();
+                } else {
+                    console.error('❌ Clone failed:', data.error || data.message);
+                    showNotification('❌ Clone failed: ' + (data.error || data.message || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error cloning sequence:', error);
+                showNotification('❌ Error cloning sequence: ' + error.message, 'error');
+            });
         }
         
         // Global variables to store modal callbacks
@@ -11054,20 +11524,20 @@
                                 data: data
                             }));
                         })
-                        .then(({status, ok, updateData}) => {
-                            console.log('📥 PUT Sequence Full Response:', {status, ok, updateData});
+                        .then(({status, ok, data}) => {
+                            console.log('📥 PUT Sequence Full Response:', {status, ok, data});
                             if (!ok) {
-                                console.error('❌ API Error updating sequence:', updateData.error || updateData.message || 'Unknown error');
-                                showNotification(`❌ Error updating sequence: ${updateData.error || updateData.message || 'HTTP ' + status}`, 'error');
+                                console.error('❌ API Error updating sequence:', data.error || data.message || 'Unknown error');
+                                showNotification(`❌ Error updating sequence: ${data.error || data.message || 'HTTP ' + status}`, 'error');
                                 return;
                             }
-                            if (updateData.success) {
+                            if (data.success) {
                                 showNotification(`✅ Sequence renamed to "${newName}"`, 'success');
                                 delete sequenceCacheMap[sequenceId];
                                 loadSavedSequences(); // Refresh saved sequences list
                             } else {
-                                console.error('❌ Update not successful:', updateData);
-                                showNotification(`❌ Error: ${updateData.error || 'Failed to update sequence'}`, 'error');
+                                console.error('❌ Update not successful:', data);
+                                showNotification(`❌ Error: ${data.error || 'Failed to update sequence'}`, 'error');
                             }
                         })
                         .catch(error => {
