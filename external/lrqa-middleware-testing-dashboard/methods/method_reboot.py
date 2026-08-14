@@ -40,7 +40,7 @@ try:
 except ImportError:
     AI_VALIDATION_ENABLED = False
 
-def execute_reboot_process(device_ip, port, username, password, iteration=1, device_name="Device", combined_method_name=None, has_deepsleep=False, job_id=None, tunnel_service=None):
+def execute_reboot_process(device_ip, port, username, password, iteration=1, device_name="Device", combined_method_name=None, has_deepsleep=False, job_id=None, tunnel_service=None, device_config=None):
     """
     Execute Reboot Process - Complete implementation matching Device-Reboot-DeepSleep-Wakeup_Updated.py:
     Step 1: Pre-Reboot validation (HOME screen check, screenshot)
@@ -81,7 +81,7 @@ def execute_reboot_process(device_ip, port, username, password, iteration=1, dev
         if tunnel_service:
             log_message("✓ Using R-Pi interactive shell tunnel for device connection")
             from utils.ssh_wrapper import wrap_tunnel_service_as_ssh
-            ssh = wrap_tunnel_service_as_ssh(tunnel_service)
+            ssh = wrap_tunnel_service_as_ssh(tunnel_service, device_config)
         else:
             ssh = paramiko.SSHClient()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

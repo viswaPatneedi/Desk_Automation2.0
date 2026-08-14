@@ -150,19 +150,21 @@
             text-decoration: underline;
         }
         .modal-backdrop-custom {
-            display: none;
+            display: none !important;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.7);
-            z-index: 1050;
+            z-index: 9999 !important;
             align-items: center;
             justify-content: center;
+            pointer-events: all;
         }
         .modal-backdrop-custom.show {
-            display: flex;
+            display: flex !important;
+            pointer-events: all;
         }
         .modal-content-custom {
             background: #111827;
@@ -529,7 +531,7 @@
                             : device.team_name ? '' : '<div class="no-access">Not shared with any teams</div>'
                         }
                     </div>
-                    <button class="edit-btn" onclick="openEditModal('${device.ip}')" style="margin-top: 10px;">
+                    <button class="edit-btn" data-device-ip="${device.ip}" style="margin-top: 10px;">
                         <i class="bi bi-pencil-square"></i> Edit Access
                     </button>
                 </div>
@@ -538,76 +540,119 @@
 
         // Open edit modal
         async function openEditModal(deviceIp) {
-            currentEditDevice = allDevices.find(d => d.ip === deviceIp);
-            if (!currentEditDevice) return;
+            try {
+                console.log('📍 openEditModal called with IP:', deviceIp);
+                
+                currentEditDevice = allDevices.find(d => d.ip === deviceIp);
+                
+                if (!currentEditDevice) {
+                    console.error('❌ Device not found for IP:', deviceIp);
+                    console.log('📋 Available devices:', allDevices.map(d => d.ip));
+                    return;
+                }
 
-            document.getElementById('deviceNameDisplay').textContent = currentEditDevice.name;
-            document.getElementById('deviceIP').textContent = currentEditDevice.ip;
-            document.getElementById('deviceTeam').textContent = currentEditDevice.team_name;
-            document.getElementById('deviceType').textContent = currentEditDevice.device_type || 'N/A';
-            document.getElementById('deviceLocation').textContent = currentEditDevice.location || 'N/A';
+                console.log('✅ Device found:', currentEditDevice.name);
+                
+                document.getElementById('deviceNameDisplay').textContent = currentEditDevice.name;
+                document.getElementById('deviceIP').textContent = currentEditDevice.ip;
+                document.getElementById('deviceTeam').textContent = currentEditDevice.team_name;
+                document.getElementById('deviceType').textContent = currentEditDevice.device_type || 'N/A';
+                document.getElementById('deviceLocation').textContent = currentEditDevice.location || 'N/A';
 
-            // Render current access (including primary team and shared teams)
-            const accessContainer = document.getElementById('teamsAccessContainer');
-            const sharedTeams = currentEditDevice.shared_with_teams || {};
-            
-            let accessHTML = '';
-            
-            // Show primary team (always has full access)
-            if (currentEditDevice.team_name) {
-                accessHTML += `
-                    <div class="team-option-group" style="background: #064e3b; border-color: #059669;">
-                        <span style="flex-grow: 1; color: #d1fae5;">
-                            <i class="bi bi-people-fill"></i> <strong>${currentEditDevice.team_name}</strong>
-                            <span style="color: #6ee7b7; font-size: 0.9em; margin-left: 5px;">(Owner - Full Access)</span>
-                        </span>
-                    </div>
-                `;
+                // Render current access (including primary team and shared teams)
+                const accessContainer = document.getElementById('teamsAccessContainer');
+                const sharedTeams = currentEditDevice.shared_with_teams || {};
+                
+                let accessHTML = '';
+                
+                // Show primary team (always has full access)
+                if (currentEditDevice.team_name) {
+                    accessHTML += `
+                        <div class="team-option-group" style="background: #064e3b; border-color: #059669;">
+                            <span style="flex-grow: 1; color: #d1fae5;">
+                                <i class="bi bi-people-fill"></i> <strong>${currentEditDevice.team_name}</strong>
+                                <span style="color: #6ee7b7; font-size: 0.9em; margin-left: 5px;">(Owner - Full Access)</span>
+                            </span>
+                        </div>
+                    `;
+                }
+                
+                // Show shared teams with removal option
+                if (Object.keys(sharedTeams).length > 0) {
+                    accessHTML += Object.entries(sharedTeams).map(([team, level]) => `
+                        <div class="team-option-group">
+                            <span style="flex-grow: 1;">
+                                <i class="bi bi-people-fill"></i> ${team}
+                                <span style="color: #60a5fa; font-size: 0.9em;">(${level})</span>
+                            </span>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="removeTeamAccess('${team}')">
+                                <i class="bi bi-x-circle"></i> Remove
+                            </button>
+                        </div>
+                    `).join('');
+                } else if (!currentEditDevice.team_name) {
+                    accessHTML = '<div class="no-access">No teams have access to this device</div>';
+                }
+                
+                accessContainer.innerHTML = accessHTML;
+
+                // Populate team selector (exclude owner team and already shared teams)
+                const teamSelect = document.getElementById('newTeamSelect');
+                console.log('📋 All Teams:', allTeams);
+                console.log('🎯 Current Device:', currentEditDevice.name, 'Team:', currentEditDevice.team_name);
+                console.log('🔗 Shared With:', sharedTeams);
+                
+                const availableTeams = allTeams.filter(team => 
+                    team !== currentEditDevice.team_name && !sharedTeams[team]
+                );
+                console.log('✅ Available Teams to Share:', availableTeams);
+                
+                teamSelect.innerHTML = '<option value="">Select a team...</option>' + 
+                    availableTeams.map(team => 
+                        `<option value="${team}">${team}</option>`
+                    ).join('');
+
+                // Show modal
+                const modal = document.getElementById('editDeviceModal');
+                console.log('🔍 Modal element:', modal);
+                
+                if (!modal) {
+                    console.error('❌ Modal element not found!');
+                    return;
+                }
+                
+                console.log('📍 Adding show class to modal...');
+                modal.style.display = 'flex';
+                modal.classList.add('show');
+                
+                // Prevent body scroll when modal is open
+                document.body.style.overflow = 'hidden';
+                
+                console.log('✅ Modal displayed with show class');
+                
+                // Set focus to first form element
+                setTimeout(() => {
+                    console.log('✅ Modal should be visible now');
+                    const teamSelect = modal.querySelector('#newTeamSelect');
+                    if (teamSelect) {
+                        teamSelect.focus();
+                        console.log('🎯 Focus set to team selector');
+                    }
+                }, 50);
+            } catch (error) {
+                console.error('❌ Error in openEditModal:', error);
             }
-            
-            // Show shared teams with removal option
-            if (Object.keys(sharedTeams).length > 0) {
-                accessHTML += Object.entries(sharedTeams).map(([team, level]) => `
-                    <div class="team-option-group">
-                        <span style="flex-grow: 1;">
-                            <i class="bi bi-people-fill"></i> ${team}
-                            <span style="color: #60a5fa; font-size: 0.9em;">(${level})</span>
-                        </span>
-                        <button type="button" class="btn btn-sm btn-danger" onclick="removeTeamAccess('${team}')">
-                            <i class="bi bi-x-circle"></i> Remove
-                        </button>
-                    </div>
-                `).join('');
-            } else if (!currentEditDevice.team_name) {
-                accessHTML = '<div class="no-access">No teams have access to this device</div>';
-            }
-            
-            accessContainer.innerHTML = accessHTML;
-
-            // Populate team selector (exclude owner team and already shared teams)
-            const teamSelect = document.getElementById('newTeamSelect');
-            console.log('📋 All Teams:', allTeams);
-            console.log('🎯 Current Device:', currentEditDevice.name, 'Team:', currentEditDevice.team_name);
-            console.log('🔗 Shared With:', sharedTeams);
-            
-            const availableTeams = allTeams.filter(team => 
-                team !== currentEditDevice.team_name && !sharedTeams[team]
-            );
-            console.log('✅ Available Teams to Share:', availableTeams);
-            
-            teamSelect.innerHTML = '<option value="">Select a team...</option>' + 
-                availableTeams.map(team => 
-                    `<option value="${team}">${team}</option>`
-                ).join('');
-
-            document.getElementById('editDeviceModal').classList.add('show');
         }
 
         // Close edit modal
         function closeEditModal() {
-            document.getElementById('editDeviceModal').classList.remove('show');
+            const modal = document.getElementById('editDeviceModal');
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
             document.getElementById('editDeviceForm').reset();
             currentEditDevice = null;
+            console.log('✅ Modal closed');
         }
 
         // Add team access
@@ -725,6 +770,30 @@
             
             // Attach form submit handler
             document.getElementById('editDeviceForm').addEventListener('submit', handleEditDeviceFormSubmit);
+            
+            // Close modal when clicking outside the content
+            document.getElementById('editDeviceModal').addEventListener('click', function(event) {
+                if (event.target === this) {
+                    closeEditModal();
+                }
+            });
+            
+            // Close modal with Escape key
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    closeEditModal();
+                }
+            });
+            
+            // Event delegation for Edit buttons
+            document.addEventListener('click', function(event) {
+                const editBtn = event.target.closest('.edit-btn[data-device-ip]');
+                if (editBtn) {
+                    const deviceIp = editBtn.getAttribute('data-device-ip');
+                    console.log('🖱️ Edit button clicked for IP:', deviceIp);
+                    openEditModal(deviceIp);
+                }
+            });
             
             await loadDevices();
             console.log('📥 Devices loaded');

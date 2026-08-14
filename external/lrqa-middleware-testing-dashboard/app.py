@@ -2026,6 +2026,8 @@ recovery_service = RecoveryService() if RECOVERY_ENABLED else None
 test_execution_service = TestExecutionService(recovery_service)
 log_service = LogService()
 queue_service = QueueService(test_execution_service, recovery_service)
+# ✨ Set circular reference so execution service can trigger queued jobs
+test_execution_service.queue_service = queue_service
 periodic_sync_service = PeriodicDataSyncService(interval_seconds=1800)
 
 # Initialize Auto Cleanup Service (removes old logs, screenshots, and job folders)
@@ -2226,7 +2228,7 @@ if threading.current_thread() is threading.main_thread():
     atexit.register(cleanup_handler)
 
 # Initialize Controllers (Request Handlers)
-test_controller = TestController(test_execution_service, log_service)
+test_controller = TestController(test_execution_service, log_service, queue_service)
 queue_controller = QueueController(queue_service)
 results_controller = ResultsController(test_execution_service, log_service)
 
@@ -4299,6 +4301,8 @@ def get_recovery_status():
 def save_sequence():
     """Save a method sequence"""
     try:
+        from sqlalchemy import text
+        
         data = request.json
         name = data.get('name')
         queue_data = data.get('queue_data', [])
@@ -4315,8 +4319,22 @@ def save_sequence():
         if not queue_data and not methods:
             return jsonify({'success': False, 'error': 'Queue data or methods are required'}), 400
         
-        # Capture creator and team for permission tracking
-        created_by = current_user.ntid
+        # Get the current user's ID from database using their NTID
+        from models.database import Session
+        session = Session()
+        user_result = session.execute(text(f"SELECT id, username FROM users WHERE username = '{current_user.ntid}' LIMIT 1")).fetchone()
+        if user_result:
+            user_id, username = user_result[0], user_result[1]
+        else:
+            user_id = None
+            username = None
+        session.close()
+        
+        if not user_id:
+            return jsonify({'success': False, 'error': 'User not found in database'}), 400
+        
+        # Capture creator (store user_id as the relationship, username will be resolved on retrieval)
+        created_by = user_id  # Store user_id for database relationship
         team_name = getattr(current_user, 'team_name', '')
         sequence = SavedSequence.add_sequence(
             name,
@@ -4562,6 +4580,57 @@ def clone_sequence(sequence_id):
         )
         return jsonify(result), status_code
     except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/sequences/<sequence_id>/as-method', methods=['GET'])
+@login_required
+def load_sequence_as_method(sequence_id):
+    """
+    Load a saved sequence as a reusable method step.
+    This allows users to reference existing sequences in new sequences for reusability.
+    """
+    import sys
+    try:
+        from models.sequence_access_control import SequenceAccessControl
+        
+        print(f"\n[LOAD_AS_METHOD] Loading sequence {sequence_id} as reusable method", file=sys.stderr)
+        
+        # Check if sequence exists
+        sequence = SavedSequence.find_by_id(sequence_id)
+        if not sequence:
+            print(f"❌ [LOAD_AS_METHOD] Sequence not found: {sequence_id}", file=sys.stderr)
+            return jsonify({'success': False, 'error': 'Sequence not found'}), 404
+        
+        # Check if user has view permission
+        if not SequenceAccessControl.can_view(current_user, sequence):
+            print(f"❌ [LOAD_AS_METHOD] Permission denied for {current_user.ntid}", file=sys.stderr)
+            return jsonify({'success': False, 'error': 'Permission denied. You do not have view access to this sequence.'}), 403
+        
+        seq_dict = sequence.to_dict()
+        
+        # Format sequence as a reusable method step
+        method_step = {
+            'type': 'reference',
+            'source_sequence_id': sequence_id,
+            'source_sequence_name': sequence.name,
+            'source_sequence_creator': seq_dict.get('created_by'),
+            'methods': seq_dict.get('methods', []),
+            'method_count': len(seq_dict.get('methods', [])),
+            'description': f"Embedded sequence: {sequence.name}"
+        }
+        
+        print(f"✅ [LOAD_AS_METHOD] Successfully loaded {sequence.name} with {method_step['method_count']} methods", file=sys.stderr)
+        
+        return jsonify({
+            'success': True,
+            'method': method_step,
+            'source_sequence': seq_dict
+        })
+    
+    except Exception as e:
+        print(f"❌ [LOAD_AS_METHOD] Exception: {str(e)}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
         return jsonify({'success': False, 'error': str(e)}), 500
 
 # =============================================================================

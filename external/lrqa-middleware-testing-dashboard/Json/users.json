@@ -23,7 +23,7 @@
     "created_at": "2025-11-24T17:23:33.127229",
     "is_admin": false,
     "is_super_admin": false,
-    "is_team_admin": false,
+    "is_team_admin": true,
     "team_name": "Dev_QA",
     "welcome_popup_shown": false
   },
@@ -38,7 +38,7 @@
     "is_admin": false,
     "is_super_admin": false,
     "is_team_admin": false,
-    "team_name": "LRQA",
+    "team_name": "Dev_QA",
     "welcome_popup_shown": false
   },
   "lsampa662": {
@@ -109,20 +109,6 @@
     "is_super_admin": false,
     "is_team_admin": false,
     "team_name": "",
-    "welcome_popup_shown": false
-  },
-  "drajan661": {
-    "user_id": "drajan661",
-    "ntid": "drajan661",
-    "email": "divya_rajansyamala@comcast.com",
-    "alternate_email": "drajan661@cable.comcast.com",
-    "name": "Divya R S",
-    "password_hash": "scrypt:32768:8:1$XU5IBg18E4fk2Pil$a7b84291a31e6780955a42d7a2b02b4276b5807b5b33b84bce8ada2d73d3923657140ab0d31de2892b6ccaaf15caa57ef20795f9af5dccad3aedd4e2cf25ad2b",
-    "created_at": "2026-03-13T04:08:30.783828",
-    "is_admin": false,
-    "is_super_admin": false,
-    "is_team_admin": false,
-    "team_name": "LRQA",
     "welcome_popup_shown": false
   }
 }

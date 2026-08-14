@@ -1,181 +1,5 @@
 [
   {
-    "job_id": "ba023791-1465-466e-8409-fdd459eae734",
-    "user_id": "vpatne290",
-    "device_ip": "10.0.0.250",
-    "device_name": "ELEMENT_A4K",
-    "methods": [
-      "ir_test"
-    ],
-    "execution_queue": [
-      {
-        "method": "ir_test",
-        "ir_keys": [
-          "HOME",
-          "DOWN",
-          "DOWN",
-          "DOWN",
-          "UP",
-          "UP",
-          "UP",
-          "HOME"
-        ]
-      }
-    ],
-    "iterations": 1,
-    "status": "failed",
-    "start_time": "2026-06-11T14:50:29.623076",
-    "end_time": "2026-06-11T15:02:22.218706+00:00",
-    "log_file_path": null,
-    "session_folder": null,
-    "sequence_name": null,
-    "execution_type": "direct_method",
-    "current_step": 0,
-    "current_iteration": 0,
-    "iteration_results": {},
-    "created_at": "2026-06-11T14:50:17.698618",
-    "eta_seconds": 0,
-    "eta_formatted": "Done",
-    "time_per_iteration": 169,
-    "remaining_iterations": 2,
-    "executing_user": "vpatne290",
-    "triggered_at": "2026-07-21T15:05:58.582346",
-    "queue_position": null,
-    "team_name": ""
-  },
-  {
-    "job_id": "dfbb0cc1-5fab-4f39-8aa9-612939224454",
-    "user_id": "vpatne290",
-    "device_ip": "10.0.0.250",
-    "device_name": "ELEMENT_A4K",
-    "methods": [
-      "ir_test"
-    ],
-    "execution_queue": [
-      {
-        "method": "ir_test",
-        "ir_keys": [
-          "HOME",
-          "DOWN",
-          "DOWN",
-          "DOWN",
-          "DOWN",
-          "UP",
-          "UP",
-          "HOME"
-        ],
-        "description": "Navigating through UI on HOME SCREEN"
-      }
-    ],
-    "iterations": 1,
-    "status": "failed",
-    "start_time": "2026-06-11T15:09:10.635954",
-    "end_time": "2026-06-11T15:11:41.279587+00:00",
-    "log_file_path": null,
-    "session_folder": null,
-    "sequence_name": null,
-    "execution_type": "direct_method",
-    "current_step": 0,
-    "current_iteration": 0,
-    "iteration_results": {},
-    "created_at": "2026-06-11T15:09:02.087835",
-    "eta_seconds": 0,
-    "eta_formatted": "Done",
-    "time_per_iteration": 169,
-    "remaining_iterations": 2,
-    "executing_user": "vpatne290",
-    "triggered_at": "2026-07-21T15:05:58.582362",
-    "queue_position": null,
-    "team_name": ""
-  },
-  {
-    "job_id": "a6bd2ad2-9772-4b4d-8aef-1f4c23cf10e8",
-    "user_id": "vpatne290",
-    "device_ip": "10.0.0.250",
-    "device_name": "ELEMENT_A4K",
-    "methods": [
-      "ir_test"
-    ],
-    "execution_queue": [
-      {
-        "method": "ir_test",
-        "ir_keys": [
-          "HOME",
-          "DOWN",
-          "DOWN",
-          "DOWN",
-          "DOWN",
-          "UP",
-          "UP",
-          "HOME"
-        ],
-        "description": "Navigating through UI on HOME SCREEN"
-      }
-    ],
-    "iterations": 1,
-    "status": "completed",
-    "start_time": "2026-06-11T15:14:16.167047",
-    "end_time": "2026-06-11T15:16:29.291051+00:00",
-    "log_file_path": "logs/jobs/a6bd2ad2-9772-4b4d-8aef-1f4c23cf10e8/execution.log",
-    "session_folder": null,
-    "sequence_name": null,
-    "execution_type": "direct_method",
-    "current_step": 1,
-    "current_iteration": 1,
-    "iteration_results": {
-      "1": "passed"
-    },
-    "created_at": "2026-06-11T15:14:16.167061",
-    "eta_seconds": 0,
-    "eta_formatted": "Done",
-    "time_per_iteration": 169,
-    "remaining_iterations": 1,
-    "executing_user": "vpatne290",
-    "triggered_at": "2026-07-21T15:05:58.582376",
-    "queue_position": null,
-    "team_name": ""
-  },
-  {
-    "job_id": "01d14ff7-0449-4fd3-b1a2-afa080d5f816",
-    "user_id": "vpatne290",
-    "device_ip": "10.0.0.250",
-    "device_name": "ELEMENT_A4K",
-    "methods": [
-      "ir_test"
-    ],
-    "execution_queue": [
-      {
-        "method": "ir_test",
-        "ir_keys": [
-          "HOME"
-        ],
-        "description": "Bring the device to home screen"
-      }
-    ],
-    "iterations": 1,
-    "status": "completed",
-    "start_time": "2026-06-11T17:49:17.061225",
-    "end_time": "2026-06-11T17:49:34.685828+00:00",
-    "log_file_path": "logs/jobs/01d14ff7-0449-4fd3-b1a2-afa080d5f816/execution.log",
-    "session_folder": null,
-    "sequence_name": null,
-    "execution_type": "direct_method",
-    "current_step": 1,
-    "current_iteration": 1,
-    "iteration_results": {
-      "1": "passed"
-    },
-    "created_at": "2026-06-11T17:49:17.061239",
-    "eta_seconds": 0,
-    "eta_formatted": "Done",
-    "time_per_iteration": 43,
-    "remaining_iterations": 1,
-    "executing_user": "vpatne290",
-    "triggered_at": "2026-07-21T15:05:58.582391",
-    "queue_position": null,
-    "team_name": ""
-  },
-  {
     "job_id": "78aa00c9-81a7-4a15-a5f8-33c4920eb516",
     "user_id": "vpatne290",
     "device_ip": "10.0.0.250",
@@ -5251,8 +5075,8 @@
     "current_iteration": 0,
     "iteration_results": {},
     "created_at": "2026-08-09T21:28:07.090132",
-    "eta_seconds": 205,
-    "eta_formatted": "3m 25s",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
     "time_per_iteration": 205,
     "remaining_iterations": 2,
     "executing_user": "vpatne290",
@@ -5303,12 +5127,2158 @@
       "1": "passed"
     },
     "created_at": "2026-08-09T21:28:07.092905",
-    "eta_seconds": 205,
-    "eta_formatted": "3m 25s",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
     "time_per_iteration": 205,
     "remaining_iterations": 2,
     "executing_user": "vpatne290",
     "triggered_at": "2026-08-09T21:28:07.092907",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "9d7a6650-12e9-4d77-80eb-f70da65db214",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.140",
+    "device_name": "DT-XIONE_UK-0D-AB",
+    "methods": [
+      "execute_command"
+    ],
+    "execution_queue": [
+      {
+        "method": "execute_command",
+        "command": "cat /version.txt",
+        "command_text": "cat /version.txt",
+        "expected_output": "image",
+        "validation_type": "contains",
+        "description": "check device version"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-10T15:46:36.799353",
+    "end_time": "2026-08-10T15:47:22.043789+00:00",
+    "log_file_path": "logs/jobs/9d7a6650-12e9-4d77-80eb-f70da65db214/execution.log",
+    "session_folder": "Enhancement_output/sessions/EXECUTE_COMMAND_DT-XIONE_UK-0D-AB_10-0-0-140_1_ITR_20260810_154636_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-10T15:46:36.799361",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 45,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-10T15:46:36.799364",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "81439ae8-5d5a-4ca7-a7be-fe8ff52ffc72",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "Device Reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-10T18:49:27.756048",
+    "end_time": "2026-08-10T18:49:43.268111+00:00",
+    "log_file_path": "logs/jobs/81439ae8-5d5a-4ca7-a7be-fe8ff52ffc72/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_CELLO-SKY_10-0-0-95_1_ITR_20260810_184927_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-10T18:49:27.756056",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-10T18:49:27.756058",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "7b93c929-1a77-40b8-b736-dcd12f4c5da2",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "Device Reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-10T18:49:27.762204",
+    "end_time": "2026-08-10T18:49:43.286832+00:00",
+    "log_file_path": "logs/jobs/7b93c929-1a77-40b8-b736-dcd12f4c5da2/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_SKY-GLASS-2_10-0-0-166_1_ITR_20260810_184927_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-10T18:49:27.762212",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-10T18:49:27.762215",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "66d0388a-d3ae-439f-814e-30d3e2026c7c",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crashed|ERROR.*crash|FATAL|panic"
+        ],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-10T20:13:40.918476",
+    "end_time": "2026-08-10T20:13:56.246347+00:00",
+    "log_file_path": "logs/jobs/66d0388a-d3ae-439f-814e-30d3e2026c7c/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_CELLO-SKY_10-0-0-95_1_ITR_20260810_201340_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-10T20:06:09.780614",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-10T20:06:09.780622",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "be3f5509-7e2e-4b9f-8747-c77021887feb",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crashed|ERROR.*crash|FATAL|panic"
+        ],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-10T20:13:38.556310",
+    "end_time": "2026-08-10T20:13:53.885196+00:00",
+    "log_file_path": "logs/jobs/be3f5509-7e2e-4b9f-8747-c77021887feb/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_SKY-GLASS-2_10-0-0-166_1_ITR_20260810_201338_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-10T20:06:09.812658",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-10T20:06:09.812660",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "75787008-bd60-43bf-a763-2f1d5b430d74",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.140",
+    "device_name": "DT-XIONE_UK-0D-AB",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crashed|ERROR.*crash|FATAL|panic"
+        ],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-10T20:06:09.833515",
+    "end_time": "2026-08-10T20:10:11.650572+00:00",
+    "log_file_path": "logs/jobs/75787008-bd60-43bf-a763-2f1d5b430d74/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-0D-AB_10-0-0-140_1_ITR_20260810_200640_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-10T20:06:09.833524",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-10T20:06:09.833526",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "7eba240e-c3b9-4d8e-b59d-2a66de86be7f",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.28",
+    "device_name": "DT-XIONE_UK-17-97",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crashed|ERROR.*crash|FATAL|panic"
+        ],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-10T20:06:09.850744",
+    "end_time": "2026-08-10T20:10:12.338989+00:00",
+    "log_file_path": "logs/jobs/7eba240e-c3b9-4d8e-b59d-2a66de86be7f/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-17-97_10-0-0-28_1_ITR_20260810_200640_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-10T20:06:09.850750",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-10T20:06:09.850753",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "0b4f1b50-09d2-4fdd-944c-01f9c9fa8e51",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.140",
+    "device_name": "DT-XIONE_UK-0D-AB",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crashed|ERROR.*crash|FATAL|panic"
+        ],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-10T20:16:48.293231",
+    "end_time": "2026-08-10T23:49:52.133018+00:00",
+    "log_file_path": null,
+    "session_folder": null,
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-08-10T20:16:48.293263",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-10T20:16:48.293271",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "9bd270e3-9c11-441f-b277-c4e6f416afc2",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.28",
+    "device_name": "DT-XIONE_UK-17-97",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crashed|ERROR.*crash|FATAL|panic"
+        ],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-10T20:16:48.323745",
+    "end_time": "2026-08-10T23:50:02.181988+00:00",
+    "log_file_path": null,
+    "session_folder": null,
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-08-10T20:16:48.323750",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-10T20:16:48.323752",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "40566bfa-19c1-4514-900a-0f749f27c907",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crashed|ERROR.*crash|FATAL|panic"
+        ],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-10T23:58:24.057119",
+    "end_time": "2026-08-11T00:08:23.878906+00:00",
+    "log_file_path": null,
+    "session_folder": null,
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-08-10T23:58:24.057151",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-10T23:58:24.057159",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "e7668f78-6428-4b51-9ece-24de05da6f43",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.199",
+    "device_name": "DT-XIONE_UK-5D-54",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crashed|ERROR.*crash|FATAL|panic"
+        ],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-10T23:58:24.084372",
+    "end_time": "2026-08-11T00:01:23.459952+00:00",
+    "log_file_path": "logs/jobs/e7668f78-6428-4b51-9ece-24de05da6f43/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-5D-54_10-0-0-199_1_ITR_20260810_235838_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-10T23:58:24.084381",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-10T23:58:24.084388",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "9ded4b33-9e86-454e-ad41-ec227d23f7dd",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": false,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T00:14:58.764346",
+    "end_time": "2026-08-11T00:25:24.293328+00:00",
+    "log_file_path": null,
+    "session_folder": null,
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-08-11T00:14:58.764359",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T00:14:58.764363",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "062a909a-0e67-4377-93e5-34cd7058ef01",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.199",
+    "device_name": "DT-XIONE_UK-5D-54",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": false,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T00:14:58.791810",
+    "end_time": "2026-08-11T00:19:48.970752+00:00",
+    "log_file_path": "logs/jobs/062a909a-0e67-4377-93e5-34cd7058ef01/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-5D-54_10-0-0-199_1_ITR_20260811_001513_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-11T00:14:58.791817",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T00:14:58.791819",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "d0ccc816-20ad-411f-ba04-a5c031541700",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T00:38:53.065720",
+    "end_time": "2026-08-11T00:39:08.468501+00:00",
+    "log_file_path": "logs/jobs/d0ccc816-20ad-411f-ba04-a5c031541700/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_CELLO-SKY_10-0-0-95_1_ITR_20260811_003853_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-11T00:38:53.065731",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T00:38:53.065734",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "ca1abc79-a2b7-4082-9b8c-8484c25ce129",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.28",
+    "device_name": "DT-XIONE_UK-17-97",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T00:38:53.100655",
+    "end_time": "2026-08-11T00:41:56.454955+00:00",
+    "log_file_path": "logs/jobs/ca1abc79-a2b7-4082-9b8c-8484c25ce129/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-17-97_10-0-0-28_1_ITR_20260811_003907_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-11T00:38:53.100664",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T00:38:53.100667",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "9c3961cf-5893-4d78-b8fd-d57497b92fde",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "rboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T00:54:25.382527",
+    "end_time": "2026-08-11T00:54:40.887280+00:00",
+    "log_file_path": "logs/jobs/9c3961cf-5893-4d78-b8fd-d57497b92fde/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_CELLO-SKY_10-0-0-95_1_ITR_20260811_005425_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-11T00:54:25.382536",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T00:54:25.382539",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "a71d2346-7b8b-43a6-b665-4cfd09d2bfbd",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.140",
+    "device_name": "DT-XIONE_UK-0D-AB",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "rboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T00:54:25.411360",
+    "end_time": "2026-08-11T00:57:22.411228+00:00",
+    "log_file_path": "logs/jobs/a71d2346-7b8b-43a6-b665-4cfd09d2bfbd/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-0D-AB_10-0-0-140_1_ITR_20260811_005440_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-11T00:54:25.411368",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T00:54:25.411370",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "4345b34b-8bb9-4aae-9655-c7ab36465320",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": false,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T01:02:29.390488",
+    "end_time": "2026-08-11T01:02:59.259915+00:00",
+    "log_file_path": "logs/jobs/4345b34b-8bb9-4aae-9655-c7ab36465320/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_SKY-GLASS-2_10-0-0-166_1_ITR_20260811_010243_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-11T01:02:29.390498",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T01:02:29.390500",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "634e1fda-7073-44a9-8bf9-e4f78c7c983a",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.140",
+    "device_name": "DT-XIONE_UK-0D-AB",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": false,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T01:02:29.438735",
+    "end_time": "2026-08-11T01:12:40.547700+00:00",
+    "log_file_path": null,
+    "session_folder": null,
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-08-11T01:02:29.438744",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T01:02:29.438746",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "26ef920d-ca97-49cc-9ea4-51f9e91a2675",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crashed|ERROR.*crash|FATAL|panic"
+        ],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T01:24:11.787688",
+    "end_time": "2026-08-11T01:27:24.563407+00:00",
+    "log_file_path": "logs/jobs/26ef920d-ca97-49cc-9ea4-51f9e91a2675/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_CELLO-SKY_10-0-0-95_1_ITR_20260811_012426_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-11T01:24:11.787720",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T01:24:11.787728",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "2b1d90e1-6512-4527-bfa1-ee2f3365f3b1",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.140",
+    "device_name": "DT-XIONE_UK-0D-AB",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crashed|ERROR.*crash|FATAL|panic"
+        ],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T01:24:11.827495",
+    "end_time": "2026-08-11T01:43:21.593591+00:00",
+    "log_file_path": null,
+    "session_folder": null,
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-08-11T01:24:11.827505",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T01:24:11.827508",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "3c730dc3-ea17-41d8-8318-b825805f2954",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T01:56:08.368069",
+    "end_time": "2026-08-11T01:59:23.563519+00:00",
+    "log_file_path": "logs/jobs/3c730dc3-ea17-41d8-8318-b825805f2954/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_CELLO-SKY_10-0-0-95_1_ITR_3c730dc3_20260811_015622_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-08-11T01:56:08.368101",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T01:56:08.368110",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "7963858b-3849-426a-b57f-0e0acafc63a5",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.140",
+    "device_name": "DT-XIONE_UK-0D-AB",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T01:59:39.994695",
+    "end_time": "2026-08-11T01:59:43.635382+00:00",
+    "log_file_path": "logs/jobs/7963858b-3849-426a-b57f-0e0acafc63a5/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-0D-AB_10-0-0-140_1_ITR_7963858b_20260811_015940_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-08-11T01:56:08.403165",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T01:56:08.403168",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "051cf68a-3aa3-4051-b5cf-4dc32c80c83c",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T03:21:40.048087",
+    "end_time": "2026-08-11T03:22:29.894398+00:00",
+    "log_file_path": "logs/jobs/051cf68a-3aa3-4051-b5cf-4dc32c80c83c/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_CELLO-SKY_10-0-0-95_1_ITR_051cf68a_20260811_032157_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-11T03:21:40.048118",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T03:21:40.048126",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "c11030c3-02ac-4fe5-84b7-7704e0014da9",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T03:21:40.081446",
+    "end_time": "2026-08-11T03:22:29.910796+00:00",
+    "log_file_path": "logs/jobs/c11030c3-02ac-4fe5-84b7-7704e0014da9/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_SKY-GLASS-2_10-0-0-166_1_ITR_c11030c3_20260811_032157_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-11T03:21:40.081452",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T03:21:40.081454",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "3cec2ab9-74fb-479b-b4ce-e9f34ccbb395",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.140",
+    "device_name": "DT-XIONE_UK-0D-AB",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T03:21:40.142867",
+    "end_time": "2026-08-11T03:22:13.184785+00:00",
+    "log_file_path": "logs/jobs/3cec2ab9-74fb-479b-b4ce-e9f34ccbb395/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-0D-AB_10-0-0-140_1_ITR_3cec2ab9_20260811_032141_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-11T03:21:40.142872",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T03:21:40.142875",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "2de7edb7-9610-4c9e-a84b-ecb5f4dbd20e",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T14:39:06.721554",
+    "end_time": "2026-08-11T14:43:06.714410+00:00",
+    "log_file_path": "logs/jobs/2de7edb7-9610-4c9e-a84b-ecb5f4dbd20e/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_CELLO-SKY_10-0-0-95_1_ITR_2de7edb7_20260811_143924_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-11T14:39:06.721587",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T14:39:06.721595",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "3287d942-3a48-451e-b9f7-b3f989e75dc1",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T14:39:06.755806",
+    "end_time": "2026-08-11T14:43:18.102557+00:00",
+    "log_file_path": "logs/jobs/3287d942-3a48-451e-b9f7-b3f989e75dc1/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_SKY-GLASS-2_10-0-0-166_1_ITR_3287d942_20260811_143924_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-11T14:39:06.755814",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T14:39:06.755816",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "74bf81b6-2d83-4901-b428-2a6f1bf5fca2",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.199",
+    "device_name": "DT-XIONE_UK-5D-54",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T14:39:06.781240",
+    "end_time": "2026-08-11T14:43:28.828031+00:00",
+    "log_file_path": "logs/jobs/74bf81b6-2d83-4901-b428-2a6f1bf5fca2/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-5D-54_10-0-0-199_1_ITR_74bf81b6_20260811_143924_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-08-11T14:39:06.781245",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T14:39:06.781247",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "3e40a4a0-f2ba-470a-be3e-d7b2348620aa",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.28",
+    "device_name": "DT-XIONE_UK-17-97",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T14:39:06.800174",
+    "end_time": "2026-08-11T14:43:38.870872+00:00",
+    "log_file_path": "logs/jobs/3e40a4a0-f2ba-470a-be3e-d7b2348620aa/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-17-97_10-0-0-28_1_ITR_3e40a4a0_20260811_143924_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-08-11T14:39:06.800179",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T14:39:06.800180",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "e9c065ac-9b94-4447-9134-b37201ffec94",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T15:02:29.651194",
+    "end_time": "2026-08-11T15:06:28.328268+00:00",
+    "log_file_path": "logs/jobs/e9c065ac-9b94-4447-9134-b37201ffec94/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_CELLO-SKY_10-0-0-95_1_ITR_e9c065ac_20260811_150247_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-11T15:02:29.651226",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T15:02:29.651266",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "dedb7582-715d-40af-9210-354f9dee5a7b",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T15:02:29.685080",
+    "end_time": "2026-08-11T15:06:39.691140+00:00",
+    "log_file_path": "logs/jobs/dedb7582-715d-40af-9210-354f9dee5a7b/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_SKY-GLASS-2_10-0-0-166_1_ITR_dedb7582_20260811_150247_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-11T15:02:29.685087",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T15:02:29.685089",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "f9541ff4-2674-41d8-92fd-af9a16ecaa95",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.28",
+    "device_name": "DT-XIONE_UK-17-97",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T15:02:29.708743",
+    "end_time": "2026-08-11T15:06:42.133226+00:00",
+    "log_file_path": "logs/jobs/f9541ff4-2674-41d8-92fd-af9a16ecaa95/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-17-97_10-0-0-28_1_ITR_f9541ff4_20260811_150247_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-11T15:02:29.708750",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T15:02:29.708751",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "bd615349-0be2-4eba-80b8-f96816d01d5c",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.199",
+    "device_name": "DT-XIONE_UK-5D-54",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T15:02:29.727154",
+    "end_time": "2026-08-11T15:06:30.526309+00:00",
+    "log_file_path": "logs/jobs/bd615349-0be2-4eba-80b8-f96816d01d5c/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-5D-54_10-0-0-199_1_ITR_bd615349_20260811_150247_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-11T15:02:29.727160",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T15:02:29.727163",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "b41db068-020e-4df6-9505-3536fea805d4",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T15:24:52.142254",
+    "end_time": "2026-08-11T15:29:04.666688+00:00",
+    "log_file_path": "logs/jobs/b41db068-020e-4df6-9505-3536fea805d4/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_CELLO-SKY_10-0-0-95_1_ITR_b41db068_20260811_152510_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-11T15:24:52.142286",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T15:24:52.142293",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "c090f0b8-487d-4af5-a36a-0d4a94036288",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T15:24:52.176509",
+    "end_time": "2026-08-11T15:28:53.289393+00:00",
+    "log_file_path": "logs/jobs/c090f0b8-487d-4af5-a36a-0d4a94036288/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_SKY-GLASS-2_10-0-0-166_1_ITR_c090f0b8_20260811_152510_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-11T15:24:52.176515",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T15:24:52.176517",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "1e30c0c8-5673-495b-af36-1421937ae09a",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.199",
+    "device_name": "DT-XIONE_UK-5D-54",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T15:24:52.200811",
+    "end_time": "2026-08-11T15:29:05.282260+00:00",
+    "log_file_path": "logs/jobs/1e30c0c8-5673-495b-af36-1421937ae09a/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-5D-54_10-0-0-199_1_ITR_1e30c0c8_20260811_152510_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-11T15:24:52.200816",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T15:24:52.200817",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "2540925e-9e6a-455a-bc51-51a9b97e1cb0",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.28",
+    "device_name": "DT-XIONE_UK-17-97",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-08-11T15:24:52.219276",
+    "end_time": "2026-08-11T15:28:53.647074+00:00",
+    "log_file_path": "logs/jobs/2540925e-9e6a-455a-bc51-51a9b97e1cb0/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-17-97_10-0-0-28_1_ITR_2540925e_20260811_152510_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-08-11T15:24:52.219281",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T15:24:52.219283",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "38e656e6-6fa3-4f5c-b8d5-a1b70823376f",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T17:06:41.071075",
+    "end_time": "2026-08-11T17:06:59.705563+00:00",
+    "log_file_path": "logs/jobs/38e656e6-6fa3-4f5c-b8d5-a1b70823376f/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_CELLO-SKY_10-0-0-95_1_ITR_38e656e6_20260811_170659_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-11T17:06:41.071106",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T17:06:41.071115",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "129efb3e-4b9a-4252-afe3-13f86db27165",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T17:06:41.103983",
+    "end_time": "2026-08-11T17:06:59.757822+00:00",
+    "log_file_path": "logs/jobs/129efb3e-4b9a-4252-afe3-13f86db27165/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_SKY-GLASS-2_10-0-0-166_1_ITR_129efb3e_20260811_170659_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-11T17:06:41.103989",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T17:06:41.103991",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "8c098487-cd04-4607-8e47-0780032cbf82",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.28",
+    "device_name": "DT-XIONE_UK-17-97",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T17:06:41.125175",
+    "end_time": "2026-08-11T17:06:59.856984+00:00",
+    "log_file_path": "logs/jobs/8c098487-cd04-4607-8e47-0780032cbf82/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-17-97_10-0-0-28_1_ITR_8c098487_20260811_170659_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-11T17:06:41.125179",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T17:06:41.125181",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "85f21a42-45c9-405f-9846-b5499b33d14f",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.199",
+    "device_name": "DT-XIONE_UK-5D-54",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": []
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-11T17:06:41.143641",
+    "end_time": "2026-08-11T17:06:59.787197+00:00",
+    "log_file_path": "logs/jobs/85f21a42-45c9-405f-9846-b5499b33d14f/execution.log",
+    "session_folder": "Enhancement_output/sessions/REBOOT_PERF_V2_OPTIMIZED_DT-XIONE_UK-5D-54_10-0-0-199_1_ITR_85f21a42_20260811_170659_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-11T17:06:41.143645",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-11T17:06:41.143647",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "0a49e600-d833-40de-94df-d1470636199d",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME",
+          "HOME"
+        ],
+        "ir_key_delay": 0.5,
+        "description": "wakeup the devices"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-13T13:32:32.304414",
+    "end_time": "2026-08-13T13:33:44.536547+00:00",
+    "log_file_path": "logs/jobs/0a49e600-d833-40de-94df-d1470636199d/execution.log",
+    "session_folder": "Enhancement_output/sessions/IR_TEST_CELLO-SKY_10-0-0-95_1_ITR_0a49e600_20260813_133250_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-13T13:32:32.304443",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 61,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-13T13:32:32.304451",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "d2642412-5b45-4186-adba-8c56f19e2819",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME",
+          "HOME"
+        ],
+        "ir_key_delay": 0.5,
+        "description": "wakeup the devices"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-13T13:32:32.366682",
+    "end_time": "2026-08-13T13:33:44.513895+00:00",
+    "log_file_path": "logs/jobs/d2642412-5b45-4186-adba-8c56f19e2819/execution.log",
+    "session_folder": "Enhancement_output/sessions/IR_TEST_SKY-GLASS-2_10-0-0-166_1_ITR_d2642412_20260813_133250_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-13T13:32:32.366689",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 61,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-13T13:32:32.366691",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "0aa4d94d-891a-4540-b4be-98f19026a689",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.172",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crashed|ERROR.*crash|FATAL|panic"
+        ],
+        "auto_collect_logs": true,
+        "description": "reboot"
+      }
+    ],
+    "iterations": 2,
+    "status": "failed",
+    "start_time": "2026-08-13T13:52:37.573326",
+    "end_time": "2026-08-13T14:11:07.480252+00:00",
+    "log_file_path": null,
+    "session_folder": null,
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-08-13T13:52:37.573357",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 3,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-13T13:52:37.573364",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "c1f82077-f5b7-4efe-b8ae-dcff951f0515",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.95",
+    "device_name": "CELLO-SKY",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME",
+          "HOME"
+        ],
+        "ir_key_delay": 2.7,
+        "description": "send IR to wakeup the devices"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-13T17:58:32.775654",
+    "end_time": "2026-08-13T17:59:55.662334+00:00",
+    "log_file_path": "logs/jobs/c1f82077-f5b7-4efe-b8ae-dcff951f0515/execution.log",
+    "session_folder": "Enhancement_output/sessions/IR_TEST_CELLO-SKY_10-0-0-95_1_ITR_c1f82077_20260813_175850_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-13T17:58:32.775684",
+    "eta_seconds": 61,
+    "eta_formatted": "1m 1s",
+    "time_per_iteration": 61,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-13T17:58:32.775692",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "61100184-720e-4ecf-8862-49fa29840c10",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME",
+          "HOME"
+        ],
+        "ir_key_delay": 2.7,
+        "description": "send IR to wakeup the devices"
+      }
+    ],
+    "iterations": 1,
+    "status": "failed",
+    "start_time": "2026-08-13T17:58:32.814901",
+    "end_time": "2026-08-13T17:59:55.687645+00:00",
+    "log_file_path": "logs/jobs/61100184-720e-4ecf-8862-49fa29840c10/execution.log",
+    "session_folder": "Enhancement_output/sessions/IR_TEST_SKY-GLASS-2_10-0-0-166_1_ITR_61100184_20260813_175850_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {
+      "1": "failed"
+    },
+    "created_at": "2026-08-13T17:58:32.814908",
+    "eta_seconds": 61,
+    "eta_formatted": "1m 1s",
+    "time_per_iteration": 61,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-08-13T17:58:32.814911",
     "queue_position": null,
     "team_name": "LRQA"
   }

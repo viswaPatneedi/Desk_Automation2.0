@@ -961,18 +961,24 @@
                 <!-- Username Dropdown Menu -->
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="User Options">
-                        <i class="bi bi-person-fill"></i> {% if current_user.is_super_admin or current_user.is_admin %}<i class="bi bi-star-fill" style="color: #FFD700; font-size: 0.8em;"></i>{% endif %}
+                        <i class="bi bi-person-fill"></i> {{ current_user.ntid }}
+                        {% if current_user.is_super_admin %}<i class="bi bi-star-fill" style="color: #FFD700; font-size: 0.8em; margin-left: 2px;"></i>{% endif %}
+                        {% if current_user.is_team_admin and not current_user.is_super_admin %}<i class="bi bi-star-fill" style="color: #60a5fa; font-size: 0.8em; margin-left: 2px;"></i>{% endif %}
                     </button>
                     <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
                         <li><h6 class="dropdown-header">
                             <i class="bi bi-person-circle"></i> {{ current_user.name }}
-                            {% if current_user.is_super_admin or current_user.is_admin %}<i class="bi bi-star-fill" style="color: #FFD700; margin-left: 4px;"></i>{% endif %}
+                            {% if current_user.is_super_admin %}<i class="bi bi-star-fill" style="color: #FFD700; margin-left: 4px;"></i>{% endif %}
+                            {% if current_user.is_team_admin and not current_user.is_super_admin %}<i class="bi bi-star-fill" style="color: #60a5fa; margin-left: 4px;"></i>{% endif %}
                         </h6></li>
                         {% if current_user.team_name %}
                         <li><h6 class="dropdown-header" style="color: #9ca3af; font-size: 0.85rem; font-weight: 500;"><i class="bi bi-people-fill"></i> {{ current_user.team_name }}</h6></li>
                         {% endif %}
-                        {% if current_user.is_super_admin or current_user.is_admin %}
-                        <li><h6 class="dropdown-header" style="color: #ef4444;"><i class="bi bi-crown-fill"></i> Super Admin</h6></li>
+                        {% if current_user.is_super_admin %}
+                        <li><h6 class="dropdown-header" style="color: #FFD700;"><i class="bi bi-crown-fill"></i> Super Admin</h6></li>
+                        {% endif %}
+                        {% if current_user.is_team_admin and not current_user.is_super_admin %}
+                        <li><h6 class="dropdown-header" style="color: #60a5fa;"><i class="bi bi-shield-fill"></i> Team Admin</h6></li>
                         {% endif %}
                         <li><hr class="dropdown-divider"></li>
                         {% if current_user.is_super_admin %}
@@ -4770,8 +4776,8 @@
                                 statusBadgeContent = `<i class="bi bi-exclamation-circle-fill"></i> BUSY`;
                                 statusBadgeStyle = 'background: #dc2626; color: #fff;';
                                 deviceInfoExtra = `<span style="color: #fca5a5; font-size: 0.8rem;"><i class="bi bi-person"></i> ${device.executing_user}</span>`;
-                                if (device.current_iteration && device.total_iterations) {
-                                    deviceInfoExtra += ` <span style="color: #fca5a5; font-size: 0.8rem;">ITR ${device.current_iteration}/${device.total_iterations}</span>`;
+                                if (device.current_iteration !== undefined && device.total_iterations) {
+                                    deviceInfoExtra += ` <span style="color: #fca5a5; font-size: 0.8rem;">ITR ${device.current_iteration + 1}/${device.total_iterations}</span>`;
                                 }
                             } else if (device.status === 'AVAILABLE') {
                                 statusBadgeContent = '<i class="bi bi-check-circle"></i> Available';
@@ -4887,8 +4893,8 @@
                             console.log(`⏭️  Skipping status check for ${deviceIp} - Device is BUSY (locked by ${runningJob.executing_user})`);
                             
                             // Device is executing a job - show busy status with user details
-                            const progressText = runningJob.current_iteration ? 
-                                ` (${runningJob.current_iteration}/${runningJob.iterations})` : '';
+                            const progressText = runningJob.current_iteration !== undefined ? 
+                                ` (${runningJob.current_iteration + 1}/${runningJob.iterations})` : '';
                             
                             statusBadge.innerHTML = `
                                 <div style="text-align: left;">
@@ -8036,7 +8042,27 @@
                         return null;
                     };
                     
-                    if (queueItem.method === 'ir_test') {
+                    // 🔗 COMPOSITE SEQUENCE HANDLER - NEW
+                    if (queueItem.isCompositeSequence) {
+                        const methodCount = queueItem.methodCount || 0;
+                        const creator = queueItem.sequenceCreator || 'Unknown';
+                        const sequenceName = queueItem.sequenceName || queueItem.name;
+                        const totalDuration = getParam(queueItem, 'total_duration_seconds') || 0;
+                        const avgDuration = getParam(queueItem, 'average_duration_seconds') || 0;
+                        const execCount = getParam(queueItem, 'execution_count') || 0;
+                        
+                        inputsHtml = `
+                            <div style="margin-top: 4px; padding: 0.5rem; background: #1e293b; border-left: 3px solid #8b5cf6; border-radius: 4px;">
+                                <small style="color: #e879f9;"><i class="bi bi-diagram-2-fill"></i> <strong>Composite Sequence</strong></small><br>
+                                <small style="color: #f472b6;"><i class="bi bi-box-seam"></i> Sequence: ${sequenceName}</small><br>
+                                <small style="color: #60a5fa;"><i class="bi bi-person-badge"></i> Creator: ${creator}</small><br>
+                                <small style="color: #fbbf24;"><i class="bi bi-layers-fill"></i> Methods: ${methodCount}</small>
+                                <br><small style="color: #86efac;"><i class="bi bi-hourglass-split"></i> Avg Duration: ${avgDuration}s</small>
+                                <br><small style="color: #a1e3e1;"><i class="bi bi-play-circle-fill"></i> Executed ${execCount} times</small>
+                            </div>
+                        `;
+                    } 
+                    else if (queueItem.method === 'ir_test') {
                         const irKeys = getParam(queueItem, 'ir_keys', 'irKeys');
                         const irDelay = getParam(queueItem, 'ir_key_delay', 'irKeyDelay') || 0.5;
                         const remoteType = getParam(queueItem, 'remote_type', 'remoteType') || '';
@@ -8287,11 +8313,17 @@
                     const methodInfo = getMethodInfo(queueItem.method);
                     const description = queueItem.description || '';
                     
+                    // Determine styling for composite sequences vs regular methods
+                    const isComposite = queueItem.isCompositeSequence;
+                    const borderColor = isComposite ? '#8b5cf6' : '#0d6efd';  // Purple for composite, blue for regular
+                    const backgroundColor = isComposite ? '#312e81' : '#334155';  // Darker purple background for composite
+                    const headerColor = isComposite ? '#e879f9' : '#e5e7eb';  // Purple text for composite
+                    
                     html += `
-                        <div style="margin: 0.75rem 0; padding: 0.75rem; background: #334155; border-left: 3px solid #0d6efd; border-radius: 8px;">
+                        <div style="margin: 0.75rem 0; padding: 0.75rem; background: ${backgroundColor}; border-left: 3px solid ${borderColor}; border-radius: 8px; ${isComposite ? 'box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.3);' : ''}">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                 <div style="flex: 1;">
-                                    <strong style="color: #e5e7eb;">${index + 1}. ${methodInfo.name}</strong>
+                                    <strong style="color: ${headerColor};">${index + 1}. ${isComposite ? '📦 ' : ''}${methodInfo.name}</strong>
                                     <small style="color: #9ca3af; display: block; margin-top: 0.25rem;">${methodInfo.description}</small>
                                     ${inputsHtml}
                                     ${conditionHtml}
@@ -9598,6 +9630,30 @@
                 const bsModal = new bootstrap.Modal(modal);
                 bsModal.show();
                 console.log('✅ Device Management modal shown');
+                
+                // Ensure focus and scrolling happen after modal is fully shown
+                // Bootstrap's shown.bs.modal event fires when modal is fully displayed
+                modal.addEventListener('shown.bs.modal', function focusHandler() {
+                    console.log('⏱️ Modal shown event - setting focus and scrolling');
+                    
+                    // Find first focusable element in modal
+                    const focusableElements = modal.querySelectorAll('input:not([readonly]), textarea:not([readonly]), select');
+                    if (focusableElements.length > 0) {
+                        const firstElement = focusableElements[0];
+                        firstElement.focus({ preventScroll: true });
+                        firstElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        console.log('🎯 Focus set to:', firstElement.id || firstElement.name);
+                    }
+                    
+                    // Scroll modal body into viewport
+                    const modalBody = modal.querySelector('.modal-body');
+                    if (modalBody) {
+                        modalBody.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    
+                    // Remove this listener after it fires once
+                    modal.removeEventListener('shown.bs.modal', focusHandler);
+                }, { once: true });
             }
             
             // Fetch device details
@@ -9898,6 +9954,16 @@
                 'validate_results': { name: 'Validate_Results', description: 'Execute command & validate output', icon: 'check-circle-fill' },
                 'execute_sequence': { name: 'Execute Sequence', description: 'Run a saved sequence', icon: 'play-circle-fill' }
             };
+            
+            // Handle composite sequence references
+            if (method && method.startsWith('sequence_reference_')) {
+                return { 
+                    name: 'Composite Sequence (Reusable)', 
+                    description: 'Execute a saved sequence as a single step', 
+                    icon: 'diagram-2-fill' 
+                };
+            }
+            
             return methods[method] || { name: method, description: '', icon: 'gear-fill' };
         }
         
@@ -9950,22 +10016,27 @@
                             const canEdit = seq.access && seq.access.can_edit;
                             const canClone = seq.access && seq.access.can_clone;
                             
+                            // DEBUG: Log sequence data including created_by
+                            console.log(`📊 Sequence: ${seq.name} | created_by: "${seq.created_by}" | keys: ${Object.keys(seq).join(', ')}`);
+                            
                             // Store access info in cache for later use in modal
                             sequenceAccessCache[seq.sequence_id] = seq.access || {};
                             console.log('💾 Cached access info for', seq.sequence_id, ':', sequenceAccessCache[seq.sequence_id]);
                             
-                            let buttonHTML = '<button onclick="loadSequenceToQueue(\'' + seq.sequence_id + '\')" class="btn btn-sm btn-primary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Load this sequence to queue"><i class="bi bi-download"></i></button>';
+                            let buttonHTML = '<button class="btn btn-sm btn-primary load-queue-btn" data-seq-id="' + seq.sequence_id + '" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Load this sequence to queue"><i class="bi bi-download"></i></button>';
                             
-                            buttonHTML += '<button onclick="viewSequenceDetails(\'' + seq.sequence_id + '\')" class="btn btn-sm btn-success" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="View sequence details"><i class="bi bi-eye"></i></button>';
+                            buttonHTML += '<button class="btn btn-sm btn-success view-seq-btn" data-seq-id="' + seq.sequence_id + '" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="View sequence details"><i class="bi bi-eye"></i></button>';
+                            
+                            buttonHTML += '<button class="btn btn-sm btn-purple load-as-method-btn" data-seq-id="' + seq.sequence_id + '" data-seq-name="' + (seqName || '').replace(/"/g, '&quot;') + '" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap; background-color: #9333ea; border-color: #9333ea; color: white;" title="Use this sequence as a reusable method"><i class="bi bi-link-45deg"></i></button>';
                             
                             if (canClone) {
-                                buttonHTML += '<button onclick="cloneSequence(\'' + seq.sequence_id + '\', \'' + seqName + '\')" class="btn btn-sm btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Clone sequence to your team"><i class="bi bi-files"></i></button>';
+                                buttonHTML += '<button class="btn btn-sm btn-secondary clone-seq-list-btn" data-seq-id="' + seq.sequence_id + '" data-seq-name="' + (seqName || '').replace(/"/g, '&quot;') + '" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Clone sequence to your team"><i class="bi bi-files"></i></button>';
                             }
                             
                             if (canEdit) {
-                                buttonHTML += '<button onclick="editSequenceMetadata(\'' + seq.sequence_id + '\', \'' + seqName + '\')" class="btn btn-sm btn-info" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Edit sequence name"><i class="bi bi-pencil"></i></button>';
-                                buttonHTML += '<button onclick="editSequenceMethods(\'' + seq.sequence_id + '\', \'' + seqName + '\')" class="btn btn-sm btn-warning" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Edit sequence methods"><i class="bi bi-arrow-left-right"></i></button>';
-                                buttonHTML += '<button onclick="deleteSequence(\'' + seq.sequence_id + '\', \'' + seqName + '\')" class="btn btn-sm btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Delete this sequence"><i class="bi bi-trash"></i></button>';
+                                buttonHTML += '<button class="btn btn-sm btn-info edit-seq-btn" data-seq-id="' + seq.sequence_id + '" data-seq-name="' + (seqName || '').replace(/"/g, '&quot;') + '" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Edit sequence name"><i class="bi bi-pencil"></i></button>';
+                                buttonHTML += '<button class="btn btn-sm btn-warning edit-methods-btn" data-seq-id="' + seq.sequence_id + '" data-seq-name="' + (seqName || '').replace(/"/g, '&quot;') + '" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Edit sequence methods"><i class="bi bi-arrow-left-right"></i></button>';
+                                buttonHTML += '<button class="btn btn-sm btn-danger delete-seq-btn" data-seq-id="' + seq.sequence_id + '" data-seq-name="' + (seqName || '').replace(/"/g, '&quot;') + '" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; white-space: nowrap;" title="Delete this sequence"><i class="bi bi-trash"></i></button>';
                             }
                             
                             const viewOnlyBadge = (seq.access && !seq.access.is_owner) ? '<span style="margin-left: 0.5rem; color: #fbbf24; background: #78350f; padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.7rem;"><i class="bi bi-eye"></i> View Only</span>' : '';
@@ -9977,7 +10048,13 @@
                             htmlContent += '<input type="checkbox" class="sequence-checkbox" value="' + seq.sequence_id + '" style="margin: 0.25rem 0 0 0; flex-shrink: 0;" title="Select this sequence">';
                             htmlContent += '<div style="flex: 1; min-width: 0;">';
                             htmlContent += '<strong style="color: #e5e7eb; word-break: break-word; display: block;">' + seq.name + '</strong>';
-                            htmlContent += '<small style="color: #9ca3af; display: block; margin-top: 0.25rem;"><i class="bi bi-person"></i> ' + (seq.created_by || 'Unknown') + '   ' + teamDisplay + viewOnlyBadge + '</small>';
+                            // Log creator data for debugging
+                            console.log(`[SEQUENCE] ${seq.name} | created_by: "${seq.created_by}" (type: ${typeof seq.created_by})`);
+                            
+                            const creatorDisplay = (seq.created_by && seq.created_by !== 'null' && seq.created_by.toString().trim()) 
+                                ? '<span style="color: #60a5fa; font-weight: 500;">' + seq.created_by + '</span>'
+                                : '<span style="color: #ef4444; font-style: italic;">Unknown Creator</span>';
+                            htmlContent += '<small style="color: #9ca3af; display: block; margin-top: 0.25rem;"><i class="bi bi-person-badge"></i> ' + creatorDisplay + '   ' + teamDisplay + viewOnlyBadge + '</small>';
                             htmlContent += '</div></div>';
                             htmlContent += '<div style="display: flex; gap: 0.3rem; flex-wrap: wrap; flex-shrink: 0; margin-left: 0.5rem;">';
                             htmlContent += buttonHTML;
@@ -9986,6 +10063,56 @@
                         
                         htmlContent += '</div>';
                         container.innerHTML = htmlContent;
+                        
+                        // Attach event listeners to buttons (data attribute approach)
+                        document.querySelectorAll('.load-queue-btn').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                loadSequenceToQueue(this.dataset.seqId);
+                            });
+                        });
+                        
+                        document.querySelectorAll('.view-seq-btn').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                viewSequenceDetails(this.dataset.seqId);
+                            });
+                        });
+                        
+                        document.querySelectorAll('.delete-seq-btn').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                deleteSequence(this.dataset.seqId, this.dataset.seqName);
+                            });
+                        });
+                        
+                        document.querySelectorAll('.edit-seq-btn').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                editSequenceMetadata(this.dataset.seqId, this.dataset.seqName);
+                            });
+                        });
+                        
+                        document.querySelectorAll('.edit-methods-btn').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                editSequenceMethods(this.dataset.seqId, this.dataset.seqName);
+                            });
+                        });
+                        
+                        document.querySelectorAll('.clone-seq-list-btn').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                cloneSequence(this.dataset.seqId, this.dataset.seqName);
+                            });
+                        });
+                        
+                        document.querySelectorAll('.load-as-method-btn').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                loadSequenceAsMethod(this.dataset.seqId, this.dataset.seqName);
+                            });
+                        });
                     } else {
                         console.log('⚠️ No sequences found or API success is false');
                         countBadge.textContent = '0';
@@ -10965,163 +11092,144 @@
         
         function openSequenceDetailsModal(sequenceId) {
             fetch(`/api/sequences/${sequenceId}`)
-                .then(response => {
-                    console.log('📡 Response status:', response.status);
-                    return response.json().then(data => ({
-                        status: response.status,
-                        ok: response.ok,
-                        data: data
-                    }));
-                })
-                .then(({status, ok, data}) => {
-                    console.log('👁️ Full Sequence Details:', {status, ok, data});
-                    console.log('📊 Response structure:', {
-                        'has_sequence': !!data.sequence,
-                        'has_access_in_sequence': !!data.sequence?.access,
-                        'has_access_at_root': !!data.access,
-                        'queue_data_length': data.sequence?.queue_data?.length || 0,
-                        'first_item': data.sequence?.queue_data?.[0]
-                    });
-                    
-                    if (!ok) {
-                        console.error('❌ API Error:', data.error || data.message || 'Unknown error');
-                        showNotification(`❌ Error loading sequence: ${data.error || data.message || 'HTTP ' + status}`, 'error');
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success || !data.sequence) {
+                        showNotification(`Error: ${data.error || 'Invalid sequence'}`, 'error');
                         return;
                     }
-                    if (data.success && data.sequence) {
-                        const sequence = data.sequence;
-                        const queueData = sequence.queue_data || [];
-                        
-                        // Use cached access info from list view (most reliable)
-                        // Fall back to API response if cache empty
-                        let accessInfo = sequenceAccessCache[sequenceId] || sequence.access || data.access || {};
-                        const isViewOnly = !accessInfo.can_edit;
-                        const canClone = accessInfo.can_clone;
-                        
-                        console.log('🔍 Permission check - Trying cache first:', sequenceAccessCache[sequenceId]);
-                        console.log('🔍 Permission check - can_clone:', canClone, 'can_edit:', accessInfo.can_edit, 'accessInfo:', accessInfo);
-                        console.log('📋 Queue data sample:', queueData.slice(0, 2));
-                        
-                        // Build modal for viewing sequence with dark theme
-                        let modalHTML = '<div class="modal fade" id="viewSequenceModal" tabindex="-1"><div class="modal-dialog modal-lg" style="max-width: 900px;"><div class="modal-content" style="background-color: #1f2937; color: #e5e7eb; border: 1px solid #374151;">';
-                        
-                        // Modal Header
-                        modalHTML += '<div class="modal-header" style="border-bottom: 1px solid #374151; background-color: #111827;">';
-                        modalHTML += '<div class="d-flex align-items-center gap-2">';
-                        modalHTML += '<h5 class="modal-title" style="margin-bottom: 0; color: #f3f4f6;">' + sequence.name + '</h5>';
-                        if (isViewOnly) {
-                            modalHTML += '<span class="badge" style="background-color: #fbbf24; color: #000;"><i class="bi bi-eye"></i> View Only</span>';
-                        }
-                        modalHTML += '</div>';
-                        modalHTML += '<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>';
-                        
-                        // Modal Body
-                        modalHTML += '<div class="modal-body" style="background-color: #1f2937; padding: 1.5rem;">';
-                        
-                        // Info section
-                        modalHTML += '<div style="background-color: #111827; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; border-left: 3px solid #10b981;">';
-                        modalHTML += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.9rem;">';
-                        modalHTML += '<div><strong style="color: #f3f4f6;">Created by:</strong> <span style="color: #d1d5db;">' + (sequence.created_by || 'Unknown') + '</span></div>';
-                        if (sequence.team_name) {
-                            modalHTML += '<div><strong style="color: #f3f4f6;">Team:</strong> <span style="color: #d1d5db;">' + sequence.team_name + '</span></div>';
-                        }
-                        modalHTML += '<div><strong style="color: #f3f4f6;">Total Methods:</strong> <span style="color: #d1d5db;">' + queueData.length + ' items</span></div>';
-                        modalHTML += '</div></div>';
-                        
-                        // List all methods with data
-                        if (queueData.length > 0) {
-                            modalHTML += '<div style="margin-bottom: 1.5rem;"><h6 style="color: #f3f4f6; margin-bottom: 1rem; font-weight: 600;">📋 Queue Items:</h6>';
-                            modalHTML += '<div style="max-height: 400px; overflow-y: auto; border: 1px solid #374151; border-radius: 6px; background-color: #111827;">';
+                    
+                    const sequence = data.sequence;
+                    const queueData = sequence.queue_data || [];
+                    let accessInfo = sequenceAccessCache[sequenceId] || sequence.access || data.access || {};
+                    const isViewOnly = !accessInfo.can_edit;
+                    const canClone = accessInfo.can_clone;
+                    
+                    // Build modal HTML
+                    let html = '<div class="modal fade" id="viewSequenceModal" tabindex="-1">';
+                    html += '<div class="modal-dialog modal-lg" style="max-width: 900px;">';
+                    html += '<div class="modal-content" style="background-color: #1f2937; color: #e5e7eb; border: 1px solid #374151;">';
+                    
+                    // Header
+                    html += '<div class="modal-header" style="border-bottom: 1px solid #374151; background-color: #111827;">';
+                    html += '<h5 class="modal-title">Sequence: ' + (sequence.name || 'Untitled') + '</h5>';
+                    if (isViewOnly) html += '<span class="badge bg-warning ms-2">View Only</span>';
+                    html += '<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>';
+                    html += '</div>';
+                    
+                    // Body
+                    html += '<div class="modal-body" style="background-color: #1f2937;">';
+                    
+                    // Info section
+                    html += '<div style="background-color: #111827; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; border-left: 3px solid #10b981;">';
+                    html += '<strong>Created by:</strong> ' + (sequence.created_by || 'Unknown') + '<br>';
+                    if (sequence.team_name) html += '<strong>Team:</strong> ' + sequence.team_name + '<br>';
+                    html += '<strong>Total Items:</strong> ' + queueData.length + '';
+                    html += '</div>';
+                    
+                    // Methods list
+                    if (queueData.length > 0) {
+                        html += '<div style="max-height: 500px; overflow-y: auto; border: 1px solid #374151; border-radius: 6px; background-color: #111827;">';
+                        queueData.forEach((item, idx) => {
+                            const methodName = getMethodName ? getMethodName(item.method) : (item.sequenceName || item.name || item.method || 'Unknown');
                             
-                            queueData.forEach((item, idx) => {
-                                const methodName = getMethodName ? getMethodName(item.method) : item.method;
-                                modalHTML += '<div style="padding: 1rem; border-bottom: 1px solid #374151; background-color: #1f2937;">';
-                                modalHTML += '<div style="display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 0.5rem;">';
-                                modalHTML += '<div style="flex: 1;">';
-                                modalHTML += '<span style="font-weight: 600; color: #f3f4f6; display: inline-block; background-color: #10b981; color: #000; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.75rem; margin-right: 0.5rem;">' + (idx + 1) + '</span>';
-                                modalHTML += '<strong style="color: #10b981;">' + methodName + '</strong>';
-                                if (item.device_id) {
-                                    modalHTML += '<span style="font-size: 0.85em; color: #9ca3af; margin-left: 1rem;">🖥️ ' + item.device_id + '</span>';
+                            if (item.isCompositeSequence) {
+                                // Composite sequence - show with methods list
+                                html += '<div style="padding: 0.75rem 1rem; border-bottom: 1px solid #374151; background: linear-gradient(135deg, #312e81 0%, #1f2937 100%); border-left: 3px solid #8b5cf6;">';\n                                // Header\n                                html += '<div style="margin-bottom: 0.75rem;">';\n                                html += '<span style="background-color: #8b5cf6; color: #fff; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.75rem; margin-right: 0.5rem; display: inline-block;">' + (idx + 1) + '</span>';\n                                html += '<strong style=\"color: #e879f9; font-size: 1rem;\">' + methodName + ' <span style=\"color: #a78bfa; font-size: 0.85rem; font-weight: normal;\">(Composite Sequence - Reusable)</span></strong>';\n                                html += '</div>';\n                                // Creator info\n                                if (item.sequenceCreator) {\n                                    html += '<div style=\"color: #d1d5db; font-size: 0.85rem; margin-bottom: 0.5rem;\">👤 <strong>Creator:</strong> ' + item.sequenceCreator + '</div>';\n                                }\n                                // Methods section\n                                if (item.sequenceMethods && item.sequenceMethods.length > 0) {\n                                    html += '<div style=\"background-color: #1f2937; padding: 0.75rem; border-radius: 4px; margin-top: 0.5rem; border-left: 2px solid #8b5cf6;\">';\n                                    html += '<div style=\"color: #a1a5fb; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;\">📋 <strong>Methods included this sequence:</strong></div>';\n                                    item.sequenceMethods.forEach((m, midx) => {\n                                        const mMethod = getMethodName ? getMethodName(m.method) : (m.method || 'Unknown');\n                                        html += '<div style=\"color: #d1d5db; font-size: 0.8rem; margin-left: 1rem; margin-bottom: 0.25rem;\"><span style=\"color: #93c5fd;\">• ' + (midx + 1) + '.</span> ' + mMethod + '</div>';\n                                    });\n                                    html += '</div>';\n                                }\n                                html += '</div>';
+                                        const mMethod = getMethodName ? getMethodName(m.method) : (m.method || 'Unknown');
+                                        html += '<small style="color: #a1a5fb; display: block; margin-left: 1rem;">' + (midx + 1) + '. ' + mMethod + '</small>';
+                                    });
                                 }
-                                modalHTML += '</div>';
-                                modalHTML += '</div>';
+                                html += '</div></div>';
+                            } else {
+                                html += '<div style="padding: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #374151; background-color: #1f2937;">';
+                                html += '<span style="background-color: #10b981; color: #000; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.75rem; margin-right: 0.5rem;">' + (idx + 1) + '</span>';
+                                html += '<strong style="color: #10b981;">' + methodName + '</strong>';
+                                if (item.device_id) html += ' <span style="color: #9ca3af;">(' + item.device_id + ')</span>';
+                                html += '<br>';
                                 
-                                // Show ALL method parameters/fields (including user-provided data)
-                                // Fields to skip (method metadata, not user parameters)
-                                const skipFields = ['method', 'device_id', 'id', 'description', 'name'];
-                                const paramFields = {};
+                                // Show all user-provided parameters
+                                const skipFields = ['method', 'device_id', 'id', 'description', 'name', 'isCompositeSequence', 'sequenceId', 'sequenceName', 'sequenceCreator', 'sequenceMethods', 'methodCount'];
+                                let hasParams = false;
+                                html += '<div style="margin-top: 0.75rem; margin-left: 1.5rem; padding: 0.5rem; background-color: #111827; border-radius: 4px; border-left: 2px solid #6366f1; font-size: 0.8rem;">';
                                 
-                                // Collect all non-empty fields as parameters
                                 for (const [key, value] of Object.entries(item)) {
-                                    if (!skipFields.includes(key) && value !== null && value !== undefined && value !== '' && (!Array.isArray(value) || value.length > 0)) {
-                                        paramFields[key] = value;
-                                    }
-                                }
-                                
-                                // Also include params field if it exists
-                                if (item.params && Object.keys(item.params).length > 0) {
-                                    Object.assign(paramFields, item.params);
-                                }
-                                
-                                // Display all parameters
-                                if (Object.keys(paramFields).length > 0) {
-                                    modalHTML += '<div style="margin-top: 0.5rem; margin-left: 1.5rem; padding: 0.75rem; background-color: #111827; border-radius: 4px; border-left: 2px solid #6366f1; font-size: 0.85rem;">';
-                                    modalHTML += '<strong style="color: #a1a5fb; display: block; margin-bottom: 0.5rem;">📝 Parameters:</strong>';
-                                    for (const [key, value] of Object.entries(paramFields)) {
+                                    if (!skipFields.includes(key) && value !== null && value !== undefined && value !== '') {
+                                        hasParams = true;
                                         let displayValue;
-                                        if (Array.isArray(value)) {
-                                            displayValue = value.length > 0 ? JSON.stringify(value) : '(empty array)';
-                                        } else if (typeof value === 'object') {
+                                        if (typeof value === 'object') {
                                             displayValue = JSON.stringify(value);
                                         } else {
                                             displayValue = String(value);
                                         }
-                                        // Format the key nicely (convert snake_case to Title Case)
                                         const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                                        modalHTML += '<div style="color: #d1d5db; margin-bottom: 0.25rem; word-break: break-all;"><span style="color: #a1a5fb;">' + displayKey + ':</span> <span style="color: #61f3f3;">' + displayValue + '</span></div>';
+                                        html += '<div style="color: #d1d5db; margin-bottom: 0.25rem; word-break: break-all;"><span style="color: #a1a5fb;">' + displayKey + ':</span> <span style="color: #61f3f3;">' + displayValue + '</span></div>';
                                     }
-                                    modalHTML += '</div>';
                                 }
                                 
-                                modalHTML += '</div>';
-                            });
-                            
-                            modalHTML += '</div></div>';
-                        } else {
-                            modalHTML += '<div style="text-align: center; padding: 2rem; color: #9ca3af;"><i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 1rem;"></i>No methods in this sequence</div>';
-                        }
-                        
-                        modalHTML += '</div>';
-                        
-                        // Modal footer
-                        modalHTML += '<div class="modal-footer" style="border-top: 1px solid #374151; background-color: #111827;">';
-                        modalHTML += '<button type="button" class="btn" style="background-color: #6b7280; color: #fff; border: 1px solid #6b7280;" data-bs-dismiss="modal">Close</button>';
-                        modalHTML += '<button type="button" class="btn btn-primary" onclick="loadSequenceToQueueAndClose(\'' + sequenceId + '\')"><i class="bi bi-download"></i> Load to Queue</button>';
-                        if (canClone) {
-                            modalHTML += '<button type="button" class="btn" style="background-color: #8b5cf6; color: #fff; border: 1px solid #8b5cf6;" onclick="cloneSequence(\'' + sequenceId + '\', \'' + sequence.name.replace(/'/g, "\\'") + '\')"><i class="bi bi-files"></i> Clone to My Team</button>';
-                        }
-                        modalHTML += '</div>';
-                        
-                        modalHTML += '</div></div></div>';
-                        
-                        // Remove old modal if exists
-                        const oldModal = document.getElementById('viewSequenceModal');
-                        if (oldModal) oldModal.remove();
-                        
-                        // Add modal to body
-                        document.body.insertAdjacentHTML('beforeend', modalHTML);
-                        
-                        // Show modal
-                        const modal = new bootstrap.Modal(document.getElementById('viewSequenceModal'));
-                        modal.show();
+                                if (!hasParams) {
+                                    html += '<span style="color: #9ca3af; font-size: 0.75rem;">No additional parameters</span>';
+                                }
+                                html += '</div></div>';
+                            }
+                        });
+                        html += '</div>';
                     } else {
-                        console.error('❌ API Response not successful:', data);
-                        showNotification(`❌ Error loading sequence: ${data.error || 'Invalid response format'}`, 'error');
+                        html += '<div style="text-align: center; padding: 2rem; color: #9ca3af;">No methods in this sequence</div>';
                     }
+                    
+                    html += '</div>';
+                    
+                    // Footer
+                    html += '<div class="modal-footer" style="border-top: 1px solid #374151; background-color: #111827;">';
+                    html += '<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>';
+                    html += '<button type="button" class="btn btn-primary load-to-queue-btn" data-seq-id="' + sequenceId + '">Load to Queue</button>';
+                    if (canClone) {
+                        html += '<button type="button" class="btn btn-primary clone-seq-btn" style="background-color: #8b5cf6; border-color: #8b5cf6;" data-seq-id="' + sequenceId + '" data-seq-name="' + (sequence.name || '').replace(/"/g, '&quot;') + '">Clone</button>';
+                    }
+                    html += '</div>';
+                    
+                    html += '</div></div></div>';
+                    
+                    // Remove old and add new modal
+                    const oldModal = document.getElementById('viewSequenceModal');
+                    if (oldModal) oldModal.remove();
+                    document.body.insertAdjacentHTML('beforeend', html);
+                    
+                    // Add event listeners
+                    document.querySelector('.load-to-queue-btn')?.addEventListener('click', function() {
+                        loadSequenceToQueueAndClose(this.dataset.seqId);
+                    });
+                    
+                    document.querySelector('.clone-seq-btn')?.addEventListener('click', function() {
+                        cloneSequence(this.dataset.seqId, this.dataset.seqName);
+                    });
+                    
+                    // Show modal
+                    new bootstrap.Modal(document.getElementById('viewSequenceModal')).show();
+                    
+                    // Attach delete button event listener AFTER modal is added to DOM
+                    setTimeout(() => {
+                        document.querySelectorAll('.delete-seq-btn').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                deleteSequence(this.dataset.seqId, this.dataset.seqName);
+                            });
+                        });
+                        document.querySelectorAll('.edit-seq-btn').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                editSequenceMetadata(this.dataset.seqId, this.dataset.seqName);
+                            });
+                        });
+                        document.querySelectorAll('.edit-methods-btn').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                editSequenceMethods(this.dataset.seqId, this.dataset.seqName);
+                            });
+                        });
+                    }, 100);
                 })
                 .catch(error => {
-                    console.error('❌ Error fetching sequence details:', error);
-                    showNotification(`❌ Error loading sequence: ${error.message}`, 'error');
+                    console.error('Error loading sequence:', error);
+                    showNotification('Error loading sequence: ' + error.message, 'error');
                 });
         }
         
@@ -11134,6 +11242,82 @@
                     modal.hide();
                 }
             }, 500);
+        }
+        
+        function loadSequenceAsMethod(sequenceId, sequenceName) {
+            console.log('🔗 Loading sequence as reusable method:', sequenceId, '-', sequenceName);
+            
+            fetch(`/api/sequences/${sequenceId}/as-method`, {
+                method: 'GET',
+                credentials: 'include'
+            })
+            .then(response => response.json().then(data => ({
+                status: response.status,
+                ok: response.ok,
+                data: data
+            })))
+            .then(({status, ok, data}) => {
+                console.log('📥 Load as Method Response:', {status, ok, data});
+                
+                if (ok && data.success && data.method && data.source_sequence) {
+                    console.log('✅ Sequence loaded as method:', data.method);
+                    
+                    const methodStep = data.method;
+                    const sourceSequence = data.source_sequence;
+                    const methodCount = methodStep.method_count || 0;
+                    
+                    if (methodCount === 0) {
+                        showNotification('⚠️ Sequence has no methods to add', 'warning');
+                        return;
+                    }
+                    
+                    // Add the ENTIRE SEQUENCE as a single composite method (NOT individual methods)
+                    const compositeQueueItem = {
+                        id: Date.now().toString(),
+                        method: `sequence_reference_${sequenceId}`,  // Special method type for composite
+                        name: `📦 ${sequenceName} (Sequence)`,  // Show it's a sequence
+                        description: `Composite sequence: ${sequenceName} (${methodCount} methods by ${methodStep.source_sequence_creator})`,
+                        isCompositeSequence: true,  // Flag to identify as composite
+                        sequenceId: sequenceId,
+                        sequenceName: sequenceName,
+                        sequenceCreator: methodStep.source_sequence_creator,
+                        sequenceMethods: sourceSequence.methods || [],
+                        methodCount: methodCount,
+                        params: {
+                            // Preserve all sequence configuration
+                            description: sourceSequence.description || '',
+                            team_name: sourceSequence.team_name || '',
+                            method_rationale: sourceSequence.method_rationale || '',
+                            execution_count: sourceSequence.execution_count || 0,
+                            total_duration_seconds: sourceSequence.total_duration_seconds || 0,
+                            average_duration_seconds: sourceSequence.average_duration_seconds || 0,
+                            methods: sourceSequence.methods || [],
+                            queue_data: sourceSequence.queue_data || []
+                        }
+                    };
+                    
+                    console.log(`📌 Adding entire sequence as single composite method:`, compositeQueueItem);
+                    console.log(`   - Sequence: ${sequenceName}`);
+                    console.log(`   - Methods: ${methodCount}`);
+                    console.log(`   - Creator: ${methodStep.source_sequence_creator}`);
+                    
+                    executionQueue.push(compositeQueueItem);
+                    
+                    renderQueue();
+                    showNotification(`✅ Added "${sequenceName}" as a composite method (${methodCount} methods)`, 'success');
+                    
+                    // Close modal if open
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('viewSequenceModal'));
+                    if (modal) modal.hide();
+                } else {
+                    console.error('❌ Failed to load sequence as method:', data.error || data.message);
+                    showNotification('❌ Failed to load sequence: ' + (data.error || data.message || 'Unknown error'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('❌ Error loading sequence as method:', error);
+                showNotification('❌ Error loading sequence: ' + error.message, 'error');
+            });
         }
         
         function cloneSequence(sequenceId, sequenceName) {
@@ -12087,84 +12271,177 @@
                 
                 console.log('✓ transformedQueue is a valid array');
                 
-                // Execute on each selected device
-                selectedDevices.forEach((device, deviceIndex) => {
-                console.log(`🚀 [EXECUTE] Processing device ${deviceIndex + 1}/${selectedDevices.length}: ${device.name} (${device.ip})`);
-                
-                const executionData = {
-                    device_ip: device.ip,
-                    execution_queue: transformedQueue,
-                    iterations: parseInt(iterations)
-                };
-                
-                console.log('🚀 [EXECUTE] Execution data prepared:', executionData);
-                
-                // Include sequence name if executing a saved sequence
-                // Check both the global variable and the badge element (covers all execution paths)
-                let sequenceName = window.editingSequenceName;
-                if (!sequenceName) {
-                    // Try to get from UI badge element as fallback
-                    const badgeElement = document.getElementById('dashboard-editing-sequence-name');
-                    if (badgeElement && badgeElement.textContent && badgeElement.textContent !== 'Loading...') {
-                        sequenceName = badgeElement.textContent.trim();
+                // ✨ NEW: Check if multiple devices are selected
+                if (selectedDevices.length > 1) {
+                    console.log(`\n🔵 [EXECUTE] MULTI-DEVICE MODE: ${selectedDevices.length} devices selected`);
+                    console.log('   Using R-Pi grouping strategy');
+                    console.log('   Endpoint: POST /api/execute-multiple');
+                    
+                    // Prepare multi-device execution data
+                    const multiDeviceData = {
+                        device_ips: selectedDevices.map(d => d.ip),
+                        execution_queue: transformedQueue,
+                        iterations: parseInt(iterations)
+                    };
+                    
+                    // Include sequence name if present
+                    let sequenceName = window.editingSequenceName;
+                    if (!sequenceName) {
+                        const badgeElement = document.getElementById('dashboard-editing-sequence-name');
+                        if (badgeElement && badgeElement.textContent && badgeElement.textContent !== 'Loading...') {
+                            sequenceName = badgeElement.textContent.trim();
+                        }
                     }
-                }
-                
-                if (sequenceName) {
-                    executionData.sequence_name = sequenceName;
-                    console.log(`📌 Using sequence name: "${sequenceName}"`);
-                }
-                
-                console.log(`🚀 [EXECUTE] Sending execution request for device ${device.ip}:`, executionData);
-                
-                try {
-                    // Call the execution API
-                    console.log('🚀 [EXECUTE] About to call fetch() to /api/execute');
-                    const fetchPromise = fetch('/api/execute', {
+                    
+                    if (sequenceName) {
+                        multiDeviceData.sequence_name = sequenceName;
+                        console.log(`📌 Using sequence name: "${sequenceName}"`);
+                    }
+                    
+                    console.log('🚀 [EXECUTE] Sending multi-device execution request:', multiDeviceData);
+                    
+                    // ✨ SHOW LOADING MODAL
+                    showExecutionLoadingModal(selectedDevices.length, selectedDevices.map(d => d.name).join(', '));
+                    
+                    // Disable execute button to prevent duplicate submissions
+                    const buttons = document.querySelectorAll('button[onclick*="executeQueue"]');
+                    buttons.forEach(btn => btn.disabled = true);
+                    
+                    // Call multi-device endpoint
+                    fetch('/api/execute-multiple', {
+                        credentials: 'include',
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(multiDeviceData)
+                    })
+                    .then(response => {
+                        console.log('📡 [EXECUTE] Response received:', response.status, response.statusText);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('✅ [EXECUTE] Multi-device response parsed:', data);
+                        
+                        // Ensure modal is visible before trying to close it
+                        const modalDiv = document.getElementById('execution-loading-modal');
+                        console.log(`📍 [EXECUTE] Modal element exists: ${!!modalDiv}`);
+                        
+                        if (data.job_ids && Array.isArray(data.job_ids)) {
+                            console.log(`✅ [EXECUTE] Jobs created: ${data.job_ids.join(', ')}`);
+                            console.log(`📊 [R-Pi Grouping] ${data.unique_rpi_count} unique R-Pi connection(s) established`);
+                            
+                            // Update modal with success message
+                            updateExecutionLoadingModal('success', `✅ Execution started!\n${data.device_count} devices selected\n${data.unique_rpi_count} R-Pi group(s) preparing for parallel execution`);
+                            
+                            showNotification(`✅ Execution started on ${data.device_count} devices via ${data.unique_rpi_count} R-Pi(s)`, 'success');
+                            
+                            // Force a small delay to ensure modal rendered, then close
+                            console.log('⏲️ [EXECUTE] Waiting 2.5 seconds before closing modal...');
+                            setTimeout(() => {
+                                console.log('🔄 [EXECUTE] Closing modal now...');
+                                closeExecutionLoadingModal();
+                                // Re-enable buttons
+                                buttons.forEach(btn => btn.disabled = false);
+                                console.log('✅ [EXECUTE] Buttons re-enabled, calling loadCurrentExecutions()');
+                                loadCurrentExecutions();
+                            }, 2500);
+                        } else if (data.error) {
+                            console.error('❌ [EXECUTE] Error in response:', data.error);
+                            updateExecutionLoadingModal('error', `❌ Error: ${data.error}`);
+                            setTimeout(() => {
+                                closeExecutionLoadingModal();
+                                buttons.forEach(btn => btn.disabled = false);
+                            }, 3000);
+                            alert(`❌ Multi-device Error: ${data.error}`);
+                        } else {
+                            console.log('⚠️  [EXECUTE] Response exists but missing job_ids:', data);
+                            // Still close modal as something completed
+                            updateExecutionLoadingModal('success', `✅ Request processed\nCheck job list for status`);
+                            setTimeout(() => {
+                                closeExecutionLoadingModal();
+                                buttons.forEach(btn => btn.disabled = false);
+                                loadCurrentExecutions();
+                            }, 2500);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ [EXECUTE] Fetch/parse error:', error);
+                        console.error('❌ [EXECUTE] Error message:', error.message);
+                        console.error('❌ [EXECUTE] Error stack:', error.stack);
+                        updateExecutionLoadingModal('error', `❌ Request Failed: ${error.message}`);
+                        setTimeout(() => {
+                            closeExecutionLoadingModal();
+                            buttons.forEach(btn => btn.disabled = false);
+                        }, 3000);
+                        alert(`❌ Failed to execute on multiple devices\n\nError: ${error.message}`);
+                    });
+                    
+                } else {
+                    // Single device execution (original flow)
+                    console.log('\n🟢 [EXECUTE] SINGLE-DEVICE MODE: 1 device selected');
+                    console.log('   Endpoint: POST /api/execute');
+                    
+                    // Execute on single device (original approach)
+                    const device = selectedDevices[0];
+                    const executionData = {
+                        device_ip: device.ip,
+                        execution_queue: transformedQueue,
+                        iterations: parseInt(iterations)
+                    };
+                    
+                    // Include sequence name if present
+                    let sequenceName = window.editingSequenceName;
+                    if (!sequenceName) {
+                        const badgeElement = document.getElementById('dashboard-editing-sequence-name');
+                        if (badgeElement && badgeElement.textContent && badgeElement.textContent !== 'Loading...') {
+                            sequenceName = badgeElement.textContent.trim();
+                        }
+                    }
+                    
+                    if (sequenceName) {
+                        executionData.sequence_name = sequenceName;
+                        console.log(`📌 Using sequence name: "${sequenceName}"`);
+                    }
+                    
+                    console.log(`🚀 [EXECUTE] Sending single-device execution request for ${device.ip}:`, executionData);
+                    
+                    // Single device fetch
+                    fetch('/api/execute', {
                         credentials: 'include',
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
                         },
                         body: JSON.stringify(executionData)
-                    });
-                    console.log('🚀 [EXECUTE] fetch() called, waiting for response...');
-                    
-                    fetchPromise
-                    .then(response => {
-                        console.log('🚀 [EXECUTE] Response received! Status:', response.status, response.statusText);
-                        return response.json();
                     })
+                    .then(response => response.json())
                     .then(data => {
                         console.log('✅ [EXECUTE] Execution response data:', data);
                         if (data.job_id) {
                             console.log('✅ [EXECUTE] Job created with ID:', data.job_id);
-                            loadCurrentExecutions();  // Refresh executions list immediately
+                            showNotification(`✅ Execution started - Job: ${data.job_id}`, 'success');
+                            loadCurrentExecutions();
                         } else if (data.error) {
                             console.error('❌ [EXECUTE] Error in response:', data.error);
                             alert(`❌ Error: ${data.error}`);
                         } else if (data.message) {
                             console.log('ℹ️ [EXECUTE] Message:', data.message);
                             alert(`ℹ️ ${data.message}`);
-                            loadCurrentExecutions();  // Refresh even for queued jobs
+                            loadCurrentExecutions();
                         }
                     })
                     .catch(error => {
                         console.error('❌ [EXECUTE] Fetch error:', error);
-                        console.error('❌ [EXECUTE] Error message:', error.message);
-                        console.error('❌ [EXECUTE] Error stack:', error.stack);
-                        alert(`❌ Failed to execute on ${device.name}\n\nError: ${error.message}`);
+                        alert(`❌ Failed to execute\n\nError: ${error.message}`);
                     });
-                } catch (executeError) {
-                    console.error('❌ [EXECUTE] Try-catch error:', executeError);
-                    console.error('❌ [EXECUTE] Error message:', executeError.message);
-                    console.error('❌ [EXECUTE] Error stack:', executeError.stack);
                 }
-            });
-            
-            console.log('🚀 [EXECUTE] All devices have been submitted for execution');
+                
             } catch (outerError) {
-                console.error('❌ [EXECUTE] OUTER ERROR - Failed to iterate devices:', outerError);
+                console.error('❌ [EXECUTE] OUTER ERROR - Failed to process devices:', outerError);
                 console.error('❌ [EXECUTE] Error type:', outerError.constructor.name);
                 console.error('❌ [EXECUTE] Error message:', outerError.message);
                 console.error('❌ [EXECUTE] Error stack:', outerError.stack);
@@ -12274,6 +12551,147 @@
             if (modal) {
                 modal.style.display = 'none';
                 sessionStorage.setItem('dashboard-onboarding-seen', 'true');
+            }
+        }
+        
+        // ============= EXECUTION LOADING MODAL =============
+        function showExecutionLoadingModal(deviceCount, deviceNames) {
+            console.log(`⏳ [LOADING] Showing execution modal for ${deviceCount} device(s): ${deviceNames}`);
+            
+            // Create or get modal container
+            let modalContainer = document.getElementById('execution-loading-modal');
+            if (!modalContainer) {
+                modalContainer = document.createElement('div');
+                modalContainer.id = 'execution-loading-modal';
+                document.body.appendChild(modalContainer);
+            }
+            
+            modalContainer.innerHTML = `
+                <div style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 9999;
+                ">
+                    <div style="
+                        background: #1e293b;
+                        border: 2px solid #3b82f6;
+                        border-radius: 12px;
+                        padding: 2rem;
+                        text-align: center;
+                        max-width: 500px;
+                        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                    ">
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="font-size: 3rem; margin-bottom: 1rem;" class="spinner-animation">⚙️</div>
+                            <h2 style="color: #60a5fa; margin: 0; font-size: 1.5rem;">Preparing Execution</h2>
+                        </div>
+                        
+                        <div style="background: #0f172a; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: left;">
+                            <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.8rem;">
+                                <div>📱 <strong>Devices Selected:</strong> ${deviceCount}</div>
+                                <div style="font-size: 0.8rem; color: #64748b; margin-top: 0.3rem;">${deviceNames}</div>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.8rem;" id="loading-step-1">
+                                <div>1. 🔍 Collecting R-Pi configurations...</div>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 0.8rem;" id="loading-step-2">
+                                <div>2. 🔗 Verifying R-Pi connections...</div>
+                            </div>
+                            <div style="color: #94a3b8; font-size: 0.9rem;" id="loading-step-3">
+                                <div>3. 💼 Creating job records...</div>
+                            </div>
+                        </div>
+                        
+                        <div style="color: #cbd5e1; font-size: 0.9rem;">
+                            <p style="margin: 0; color: #60a5fa;">
+                                <strong>Note:</strong> Do NOT close this window or navigate away.<br/>
+                                Execution will start automatically.
+                            </p>
+                        </div>
+                        
+                        <div id="loading-message" style="
+                            margin-top: 1rem;
+                            padding: 0.8rem;
+                            background: #10b981;
+                            color: #f0fdf4;
+                            border-radius: 6px;
+                            display: none;
+                        "></div>
+                    </div>
+                </div>
+                <style>
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                    .spinner-animation {
+                        animation: spin 2s linear infinite;
+                        display: inline-block;
+                    }
+                </style>
+            `;
+            
+            // Simulate step progress
+            setTimeout(() => {
+                const step1 = document.getElementById('loading-step-1');
+                if (step1) step1.style.color = '#10b981';
+                if (step1) step1.innerHTML = '<div>1. 🔍 R-Pi configurations collected ✅</div>';
+            }, 800);
+            
+            setTimeout(() => {
+                const step2 = document.getElementById('loading-step-2');
+                if (step2) step2.style.color = '#10b981';
+                if (step2) step2.innerHTML = '<div>2. 🔗 R-Pi connections verified ✅</div>';
+            }, 1600);
+            
+            setTimeout(() => {
+                const step3 = document.getElementById('loading-step-3');
+                if (step3) step3.style.color = '#10b981';
+                if (step3) step3.innerHTML = '<div>3. 💼 Job records created ✅</div>';
+            }, 2400);
+        }
+        
+        function updateExecutionLoadingModal(status, message) {
+            console.log(`[LOADING] Update: ${status} - ${message}`);
+            const msgDiv = document.getElementById('loading-message');
+            if (msgDiv) {
+                msgDiv.textContent = message;
+                msgDiv.style.display = 'block';
+                msgDiv.style.backgroundColor = status === 'success' ? '#10b981' : '#ef4444';
+                msgDiv.style.color = status === 'success' ? '#f0fdf4' : '#fee2e2';
+            }
+        }
+        
+        function closeExecutionLoadingModal() {
+            console.log('[LOADING] Closing execution modal...');
+            const modal = document.getElementById('execution-loading-modal');
+            if (modal) {
+                console.log('[LOADING] Modal found, fading out...');
+                modal.style.opacity = '0';
+                modal.style.transition = 'opacity 0.3s ease';
+                
+                // Remove after fade completes
+                const removeTimer = setTimeout(() => {
+                    if (modal.parentNode) {
+                        console.log('[LOADING] Removing modal from DOM...');
+                        modal.parentNode.removeChild(modal);
+                        console.log('[LOADING] ✅ Modal removed from DOM');
+                    } else {
+                        console.log('[LOADING] Modal no longer has parent node');
+                    }
+                }, 350); // Slightly longer than transition time
+                
+                modal.removeAttribute('data-removing'); // Clear flag
+                console.log('[LOADING] ✅ Modal close initiated');
+            } else {
+                console.log('[LOADING] ⚠️  Modal element not found in DOM');
             }
         }
     </script>

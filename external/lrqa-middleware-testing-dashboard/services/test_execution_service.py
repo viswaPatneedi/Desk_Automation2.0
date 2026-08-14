@@ -274,8 +274,9 @@ def get_shared_rpi_for_devices(devices: List[Device]) -> Optional[Dict]:
 class TestExecutionService:
     """Service for managing test execution"""
     
-    def __init__(self, recovery_service=None):
+    def __init__(self, recovery_service=None, queue_service=None):
         self.recovery_service = recovery_service
+        self.queue_service = queue_service
         self.current_html_results = []
         self.last_device_ip = None
         self.last_method = None
@@ -443,26 +444,41 @@ class TestExecutionService:
     
     def establish_tunnel_for_device(self, device: Device, log_service=None) -> Tuple[bool, str, Optional[GDFRPiDirectShellService]]:
         """
-        Establish tunnel for RACK device if needed
+        Establish tunnel for device (MANDATORY R-Pi requirement)
+        
+        Since ALL devices (DESK and LAB) now have R-Pi configuration,
+        ALL execution MUST go through R-Pi tunnel. Direct SSH is no longer supported.
         
         Supports three approaches (in order of preference):
-        1. ✨ NEW: Reuse shared R-Pi direct connection (pre-created for multiple devices)
+        1. ✨ Reuse shared R-Pi direct connection (pre-created for multiple devices)
         2. Wait for companion device's tunnel (group execution)
         3. Create exclusive tunnel for this device (single device execution)
         
         Args:
-            device: Device object (may be RACK or DESK)
+            device: Device object (MUST have R-Pi config)
             log_service: Optional log service for logging tunnel status
             
         Returns:
             Tuple of (success, message, tunnel_service or None)
+            
+        Raises:
+            RuntimeError - if device doesn't have R-Pi config (MANDATORY requirement)
         """
-        if not device.is_rack_device:
-            # DESK device - no tunnel needed
-            return True, "DESK device - direct connection", None
-        
+        # ✨ MANDATORY REQUIREMENT: All devices MUST have R-Pi configuration
+        # No device is allowed without R-Pi tunnel (no direct SSH fallback)
         if not device.rpi_config:
-            return False, "RACK device missing R-Pi configuration", None
+            error_msg = (
+                f"❌ CRITICAL: Device '{device.name}' ({device.ip}) does NOT have R-Pi configuration.\n"
+                f"All devices MUST have R-Pi configuration for application execution.\n"
+                f"Please configure R-Pi details for this device before attempting execution."
+            )
+            raise RuntimeError(error_msg)
+        
+        # Device has R-Pi config - proceed with tunnel establishment (applies to both DESK and RACK)
+        if device.is_rack_device:
+            device_type = "RACK"
+        else:
+            device_type = "DESK (with R-Pi)"
         
         try:
             rpi_ip = device.rpi_config.get('rpi_ip', 'unknown')
@@ -487,6 +503,53 @@ class TestExecutionService:
                         if log_service:
                             log_service.log(f"\n{msg}")
                         
+                        # ✨ CRITICAL FIX: Create device-specific wrapper to avoid race conditions
+                        # Instead of updating the shared tunnel service's config (which other devices also use),
+                        # create a wrapper that has THIS device's config and passes it to execute_command()
+                        
+                        lab_device_config = {
+                            'lab_ip': device.ip or '10.0.0.28',
+                            'lab_port': device.port or 10022,
+                            'lab_username': device.username or 'root',
+                            'lab_password': device.password or '',
+                        }
+                        
+                        # Create a device-specific wrapper that's returned instead of the shared tunnel
+                        # This wrapper will always use THIS device's config, avoiding race conditions
+                        class DeviceSpecificTunnelWrapper:
+                            def __init__(self, tunnel_service, device_config):
+                                self.tunnel_service = tunnel_service
+                                self.device_config = device_config
+                            
+                            def connect(self):
+                                return self.tunnel_service.connect()
+                            
+                            def execute_command(self, command, timeout=30):
+                                # Pass device-specific config to avoid race conditions
+                                return self.tunnel_service.execute_command(
+                                    command,
+                                    timeout=timeout,
+                                    device_ip=self.device_config['lab_ip'],
+                                    device_port=self.device_config['lab_port'],
+                                    device_username=self.device_config['lab_username'],
+                                    device_password=self.device_config['lab_password']
+                                )
+                            
+                            def is_healthy(self):
+                                return self.tunnel_service.is_healthy()
+                            
+                            def disconnect(self):
+                                return self.tunnel_service.disconnect()
+                            
+                            def get_connection_stats(self):
+                                return self.tunnel_service.get_connection_stats()
+                        
+                        wrapper_service = DeviceSpecificTunnelWrapper(service, lab_device_config)
+                        msg_update = f"[TUNNEL] Created device-specific wrapper for {device.ip}:{device.port}"
+                        if log_service:
+                            log_service.log(msg_update)
+                        print(msg_update)
+                        
                         # Increment ref count for this device
                         conn_data['ref_count'] += 1
                         job_id = getattr(self, 'current_job_id', 'unknown')
@@ -495,14 +558,14 @@ class TestExecutionService:
                         
                         # Register this device as using the shared connection
                         register_tunnel(device.ip, {
-                            'tunnel_service': service,
+                            'tunnel_service': wrapper_service,
                             'rpi_ip': rpi_ip,
                             'shared': True,
                             'direct_shell': True,  # Flag indicating NEW direct shell approach
                             'job_id': job_id
                         })
                         
-                        return True, msg, service
+                        return True, msg, wrapper_service
             
             # ✨ APPROACH 2: WAIT FOR COMPANION DEVICE'S TUNNEL (GROUP EXECUTION)
             # Before trying to acquire exclusive tunnel, check if companion is already establishing one
@@ -512,12 +575,59 @@ class TestExecutionService:
             
             if shared_tunnel_data:
                 # Tunnel is already being established by companion - REUSE IT
-                tunnel_service = shared_tunnel_data.get('tunnel_service')
+                tunnel_service_base = shared_tunnel_data.get('tunnel_service')
                 msg = f"✅ [TUNNEL-STRATEGY] Reusing companion's tunnel to R-Pi ({rpi_ip}) - parallel execution enabled"
                 if log_service:
                     log_service.log(f"\n{msg}")
                 else:
                     print(msg)
+                
+                # ✨ CRITICAL FIX: Create device-specific wrapper to avoid race conditions
+                # Instead of updating the shared tunnel service's config (which other devices also use),
+                # create a wrapper that has THIS device's config and passes it to execute_command()
+                
+                lab_device_config = {
+                    'lab_ip': device.ip or '10.0.0.28',
+                    'lab_port': device.port or 10022,
+                    'lab_username': device.username or 'root',
+                    'lab_password': device.password or '',
+                }
+                
+                # Create a device-specific wrapper that's returned instead of the shared tunnel
+                # This wrapper will always use THIS device's config, avoiding race conditions
+                class DeviceSpecificTunnelWrapper:
+                    def __init__(self, tunnel_service, device_config):
+                        self.tunnel_service = tunnel_service
+                        self.device_config = device_config
+                    
+                    def connect(self):
+                        return self.tunnel_service.connect()
+                    
+                    def execute_command(self, command, timeout=30):
+                        # Pass device-specific config to avoid race conditions
+                        return self.tunnel_service.execute_command(
+                            command,
+                            timeout=timeout,
+                            device_ip=self.device_config['lab_ip'],
+                            device_port=self.device_config['lab_port'],
+                            device_username=self.device_config['lab_username'],
+                            device_password=self.device_config['lab_password']
+                        )
+                    
+                    def is_healthy(self):
+                        return self.tunnel_service.is_healthy()
+                    
+                    def disconnect(self):
+                        return self.tunnel_service.disconnect()
+                    
+                    def get_connection_stats(self):
+                        return self.tunnel_service.get_connection_stats()
+                
+                tunnel_service = DeviceSpecificTunnelWrapper(tunnel_service_base, lab_device_config)
+                msg_update = f"[TUNNEL] Created device-specific wrapper for {device.ip}:{device.port}"
+                if log_service:
+                    log_service.log(msg_update)
+                print(msg_update)
                 
                 # Register this device as using the shared tunnel (global registry)
                 register_tunnel(device.ip, {
@@ -575,19 +685,22 @@ class TestExecutionService:
                     print(error_msg)
                 return False, error_msg, None
             
-            # Build lab device config from device object
+            # ✨ Create R-Pi DIRECT SHELL service (uses direct SSH, not port forwarding)
+            # This enables multiple devices on same R-Pi to execute SIMULTANEOUSLY
+            # Uses native SSH commands instead of localhost port forwarding
+            # Example: ssh -p 10022 root@10.0.0.95 "cat /version.txt"
+            #          (executed ON R-Pi, giving direct access to device IP)
+            
             lab_device_config = {
-                'lab_ip': device.ip or '10.0.0.28',  # Default lab IP if not set
+                'lab_ip': device.ip or '10.0.0.28',
                 'lab_port': device.port or 10022,
                 'lab_username': device.username or 'root',
                 'lab_password': device.password or '',
                 'device_name': device.name
             }
+            tunnel_service = GDFRPiDirectShellService(device.rpi_config, device.name, device_config=lab_device_config)
             
-            # Create R-Pi shell service (maintains interactive session)
-            tunnel_service = GDFRPiShellService(device.rpi_config, lab_device_config)
-            
-            # Establish R-Pi session
+            # Establish R-Pi SSH connection
             success, msg = tunnel_service.connect()
             if success:
                 # Store tunnel in global registry for companion devices to find
@@ -872,8 +985,10 @@ class TestExecutionService:
                 else:
                     folder_method_name = ','.join(method_list)
             
+            # CRITICAL: Pass job_id to create UNIQUE session folder per job
+            # This prevents screenshot and log mixing for same device running multiple jobs
             usb_session_folder, screenshots_dir, execution_logs_dir, device_logs_dir = create_execution_session_folder(
-                folder_method_name, device.name, device.ip, iterations
+                folder_method_name, device.name, device.ip, iterations, job_id=job_id
             )
             session_folder = usb_session_folder
             
@@ -929,12 +1044,37 @@ class TestExecutionService:
                     session_folder=session_folder
                 )
             
-            # ✨ ESTABLISH TUNNEL FOR RACK DEVICES ✨
-            # Special handling: IR_test doesn't need tunnel (uses HTTP API)
-            # Only establish tunnel for methods that require SSH
+            # ✨ MANDATORY R-Pi TUNNEL FOR ALL DEVICE EXECUTION ✨
+            # Since ALL devices (DESK and LAB) now have R-Pi configuration,
+            # ALL execution MUST through R-Pi tunnel. Direct SSH is NEVER used.
+            # This procedure is identical for all device types and methods.
             tunnel_service = None
             needs_ssh_tunnel = False
             tunnel_established_at_group_level = skip_tunnel_lifecycle
+            
+            # MANDATORY: Validate that device has R-Pi configuration
+            if not device.rpi_config:
+                error_msg = (
+                    f"\n❌ CRITICAL: Device '{device.name}' ({device.ip}) does NOT have R-Pi configuration.\n"
+                    f"All devices MUST have R-Pi configuration for execution.\n"
+                    f"Please add R-Pi configuration for this device before attempting execution."
+                )
+                log_service.log(error_msg)
+                print(error_msg)
+                if job_id:
+                    Job.update_job_status(job_id, 'failed', 
+                        end_time=datetime.now(timezone.utc).isoformat(),
+                        log_file_path=log_file_path
+                    )
+                    DeviceLock.unlock_device(device.ip)
+                raise RuntimeError(error_msg)
+            
+            log_service.log(f"\n{'='*70}")
+            log_service.log(f"STEP: R-PI TUNNEL ESTABLISHMENT (MANDATORY FOR ALL DEVICES)")
+            log_service.log(f"{'='*70}")
+            log_service.log(f"Device: {device.name} ({device.ip})")
+            log_service.log(f"R-Pi Address: {device.rpi_config.get('rpi_ip', 'unknown')}")
+            log_service.log(f"Procedure: Get R-Pi details → Connect to R-Pi → Trigger execution on device")
             
             # Check if execution queue contains non-IR_test methods
             for queue_item in execution_queue:
@@ -943,9 +1083,10 @@ class TestExecutionService:
                     needs_ssh_tunnel = True
                     break
             
-            if device.is_rack_device and needs_ssh_tunnel and not skip_tunnel_lifecycle:
+            if needs_ssh_tunnel and not skip_tunnel_lifecycle:
                 # Normal flow: establish tunnel for this device
-                log_service.log(f"\n[TUNNEL] Execution queue contains SSH-based methods - establishing R-Pi tunnel...")
+                log_service.log(f"\n[TUNNEL] Execution queue contains SSH-based methods")
+                log_service.log(f"[TUNNEL] Establishing R-Pi tunnel now (single device)...")
                 tunnel_success, tunnel_msg, tunnel_service = self.establish_tunnel_for_device(device, log_service)
                 if not tunnel_success:
                     log_service.log(f"\n❌ CRITICAL: Failed to establish R-Pi tunnel")
@@ -956,11 +1097,13 @@ class TestExecutionService:
                             log_file_path=log_file_path
                         )
                         DeviceLock.unlock_device(device.ip)
-                    raise RuntimeError(f"GDF_RACK tunnel establishment failed: {tunnel_msg}")
-                log_service.log(f"\n{tunnel_msg}")
-            elif device.is_rack_device and needs_ssh_tunnel and skip_tunnel_lifecycle:
+                    raise RuntimeError(f"R-Pi tunnel establishment FAILED: {tunnel_msg}")
+                log_service.log(f"\n✅ R-Pi tunnel established successfully")
+                log_service.log(f"{tunnel_msg}")
+                
+            elif needs_ssh_tunnel and skip_tunnel_lifecycle:
                 # Group execution flow: tunnel already established at group level
-                log_service.log(f"\n[TUNNEL] Using group-level tunnel (skip_tunnel_lifecycle=True)")
+                log_service.log(f"\n[TUNNEL] Group execution mode - using pre-established R-Pi tunnel")
                 # Retrieve tunnel service from global registry
                 tunnel_service_data = get_tunnel(device.ip)
                 tunnel_service = tunnel_service_data.get('tunnel_service') if tunnel_service_data else None
@@ -974,11 +1117,15 @@ class TestExecutionService:
                         )
                         DeviceLock.unlock_device(device.ip)
                     raise RuntimeError(error_msg)
-                log_service.log(f"✅ Group tunnel service retrieved successfully")
+                log_service.log(f"✅ R-Pi tunnel retrieved from active registry")
                 tunnel_established_at_group_level = True
-            elif device.is_rack_device and not needs_ssh_tunnel:
-                log_service.log(f"\n[TUNNEL] Execution queue is IR_test only - tunnel not required (uses HTTP API)")
-                log_service.log(f"[TUNNEL] IR commands will be sent via GDF API without R-Pi tunnel")
+                
+            elif not needs_ssh_tunnel:
+                # Execution queue is ONLY IR_test (uses HTTP API, not SSH)
+                # But still need tunnel for log verification
+                log_service.log(f"\n[TUNNEL] Execution queue is IR_test only (uses HTTP API)")
+                log_service.log(f"[TUNNEL] IR commands will be sent via GDF API without SSH tunnel")
+                log_service.log(f"[TUNNEL] Note: Tunnel may still be established for log verification after IR commands")
             
             for i in range(start_iteration, iterations):
                 # Check if job has been cancelled
@@ -1289,7 +1436,13 @@ class TestExecutionService:
                             i + 1, device.name, combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             has_deepsleep=has_deepsleep,
                             job_id=job_id,
-                            tunnel_service=tunnel_service
+                            tunnel_service=tunnel_service,
+                            device_config={
+                                'lab_ip': device.ip or '10.0.0.28',
+                                'lab_port': device.port or 10022,
+                                'lab_username': device.username or 'root',
+                                'lab_password': device.password or '',
+                            }
                         )
                         # --- Screenshot capture after navigation step ---
                         if method_result is not None and method in ["reboot", "deepsleep", "status", "ir_test", "voice_command", "send_remote_keys"]:
@@ -1316,7 +1469,8 @@ class TestExecutionService:
                         # Reboot performance monitoring with timing and home screen detection
                         method_result = execute_reboot_performance_process(
                             conn_device_ip, conn_port, conn_username, conn_password,
-                            i + 1, device.name, combined_method_name=combined_method_name if len(execution_queue) > 1 else None
+                            i + 1, device.name, combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
+                            tunnel_service=tunnel_service
                         )
                     elif method == "reboot_performance_v2":
                         # Reboot performance V2 - with optional post-reboot checks
@@ -1365,7 +1519,8 @@ class TestExecutionService:
                             combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             optional_checks=optional_checks_resolved,
                             wait_after_reboot=wait_after_reboot,
-                            home_screen_timeout=home_screen_timeout
+                            home_screen_timeout=home_screen_timeout,
+                            tunnel_service=tunnel_service
                         )
                     elif method == "reboot_perf_v2_optimized":
                         # Reboot performance V2 - Optimized (37.9% faster than V2)
@@ -1428,7 +1583,13 @@ class TestExecutionService:
                             auto_collect_logs=auto_collect_logs,
                             log_search_patterns=log_search_patterns,
                             job_id=job_id,
-                            tunnel_service=tunnel_service
+                            tunnel_service=tunnel_service,
+                            device_config={
+                                'lab_ip': device.ip or '10.0.0.28',
+                                'lab_port': device.port or 10022,
+                                'lab_username': device.username or 'root',
+                                'lab_password': device.password or '',
+                            }
                         )
                     elif method == "trail_method":
                         # Trail Method - Cloned from Reboot Performance V2 Optimized
@@ -1490,7 +1651,8 @@ class TestExecutionService:
                             home_screen_timeout=home_screen_timeout,
                             auto_collect_logs=auto_collect_logs,
                             log_search_patterns=log_search_patterns,
-                            job_id=job_id
+                            job_id=job_id,
+                            tunnel_service=tunnel_service
                         )
                     elif method == "soft_hard_boot":
                         # Soft Boot / Hard Boot Performance Monitoring
@@ -1518,7 +1680,8 @@ class TestExecutionService:
                             boot_type=boot_type,
                             optional_checks=optional_checks_resolved if optional_checks else None,
                             home_screen_timeout=home_screen_timeout,
-                            job_id=job_id
+                            job_id=job_id,
+                            tunnel_service=tunnel_service
                         )
                     elif method == "deepsleep":
                         skip_pre = method_index > 0
@@ -1538,7 +1701,8 @@ class TestExecutionService:
                             remote_type=remote_type_ds,
                             sleep_duration_minutes=sleep_duration,
                             job_id=job_id,
-                            perform_reboot=perform_reboot
+                            perform_reboot=perform_reboot,
+                            tunnel_service=tunnel_service
                         )
                     elif method == "maintenance_deepsleep_wakeup":
                         # Extract Maintenance > DeepSleep > Wakeup specific parameters
@@ -1558,7 +1722,8 @@ class TestExecutionService:
                             job_id=job_id,
                             execute_deepsleep_wakeup=execute_ds_wakeup,
                             remaining_iterations=remaining_iterations,
-                            execution_queue=execution_queue
+                            execution_queue=execution_queue,
+                            tunnel_service=tunnel_service
                         )
                     elif method == "maintenance_CURL_deepsleep_wakeup":
                         # Extract Maintenance > CURL DeepSleep > Wakeup specific parameters (optimized version)
@@ -1576,7 +1741,8 @@ class TestExecutionService:
                             remote_type=remote_type_mdw,
                             sleep_duration_minutes=sleep_duration,
                             job_id=job_id,
-                            execute_deepsleep_wakeup=execute_ds_wakeup
+                            execute_deepsleep_wakeup=execute_ds_wakeup,
+                            tunnel_service=tunnel_service
                         )
                     elif method == "deepsleep_maintenance_wakeup":
                         # Extract DeepSleep Maintenance Wakeup specific parameters
@@ -1589,7 +1755,8 @@ class TestExecutionService:
                         method_result = execute_deepsleep_maintenance_wakeup_process(
                             conn_device_ip, conn_port, conn_username, conn_password,
                             i + 1, device.name, remote_type=remote_type_dmw,
-                            job_id=job_id
+                            job_id=job_id,
+                            tunnel_service=tunnel_service
                         )
                     elif method == "standby_deep_sleep_ir_control":
                         # Extract Standby Deep Sleep IR Control parameters
@@ -2674,6 +2841,14 @@ class TestExecutionService:
                     if DeviceLock.is_lock_owned_by_job(device.ip, job_id):
                         DeviceLock.unlock_device(device.ip)
                         log_service.log(f"\n🔓 Device unlocked: {device.ip}")
+                        
+                        # ✨ CRITICAL: Trigger next queued job for this device
+                        if self.queue_service:
+                            try:
+                                self.queue_service.trigger_next_job_for_device(device.ip)
+                                log_service.log(f"✅ Checked for queued jobs on device {device.ip}")
+                            except Exception as queue_error:
+                                log_service.log(f"⚠️ Error triggering next queued job: {queue_error}")
                     else:
                         current_lock = DeviceLock.get_device_lock(device.ip)
                         if current_lock:
@@ -3139,6 +3314,7 @@ class TestExecutionService:
             
             # ========== EXECUTE DEVICES IN PARALLEL ==========
             device_threads = []
+            device_tunnel_map = {}  # Track tunnel registration for each device
             
             for device_dict in group.devices:
                 device = device_dict['object']
@@ -3152,9 +3328,20 @@ class TestExecutionService:
                     }
                     continue
                 
+                # ✨ Pre-register tunnel for device (prevents multiple tunnel acquisitions)
+                print(f"[GROUP-EXEC] Pre-registering shared tunnel for {device.name}...")
+                device_tunnel_map[device.ip] = tunnel_service
+                register_tunnel(device.ip, {
+                    'tunnel_service': tunnel_service,
+                    'rpi_ip': rpi_ip,
+                    'shared': True,
+                    'group_id': group.group_id,
+                    'job_id': device_job_id
+                })
+                
                 device_thread = threading.Thread(
                     target=self._execute_single_device_with_shared_tunnel,
-                    args=(device, execution_queue, iterations, device_job_id, tunnel_service, results_dict),
+                    args=(device, execution_queue, iterations, device_job_id, tunnel_service, results_dict, group.group_id),
                     daemon=False,
                     name=f"DeviceExec-{device.name}"
                 )
@@ -3168,6 +3355,13 @@ class TestExecutionService:
             
             print(f"[GROUP-EXEC] ✅ {group.group_id}: All devices completed")
             
+            # ✨ CRITICAL: Cleanup tunnel ONLY AFTER all devices complete
+            # This ensures devices don't lose shared tunnel reference during parallel execution
+            print(f"[GROUP-EXEC] {group.group_id}: Cleaning up shared tunnel registrations...")
+            for device_ip in device_tunnel_map.keys():
+                unregister_tunnel(device_ip)
+                print(f"[GROUP-EXEC]   ✓ Unregistered tunnel for device {device_ip}")
+            
         finally:
             # ========== RELEASE GROUP LOCK ==========
             print(f"[GROUP-EXEC] {group.group_id}: Releasing lock for R-Pi {rpi_ip}...")
@@ -3177,22 +3371,35 @@ class TestExecutionService:
     def _execute_single_device_with_shared_tunnel(self, device: Device, 
                                                   execution_queue: List[dict],
                                                   iterations: int, job_id: str,
-                                                  tunnel_service, results_dict: Dict):
+                                                  tunnel_service, results_dict: Dict,
+                                                  group_id: str = None):
         """
         Execute tests on single device using a shared (already-established) tunnel
         
         Key Difference from standard execution:
-        - Tunnel already exists (established by group)
+        - Tunnel ALREADY PRE-REGISTERED by the group (see _execute_group)
         - Skip tunnel establishment/cleanup
         - Just run the test methods
         - Multiple devices can execute simultaneously (same tunnel)
+        - Tunnel cleanup handled by group AFTER all devices complete
+        
+        Args:
+            group_id: Optional group identifier for logging
         """
         
+        device_exec_id = f"[{group_id}-{device.name}]" if group_id else f"[{device.name}]"
+        
         try:
-            print(f"[DEVICE-EXEC] {device.name}: Starting execution (using group tunnel)...")
+            print(f"[DEVICE-EXEC] {device_exec_id}: Starting execution (using group tunnel)...")
             
-            # Store tunnel for this device to use (global registry)
-            register_tunnel(device.ip, {'tunnel_service': tunnel_service})
+            # ✨ NOTE: Tunnel is ALREADY registered by _execute_group (no need to register again)
+            # This prevents race conditions where multiple devices try to register simultaneously
+            tunnel_data = get_tunnel(device.ip)
+            if tunnel_data:
+                print(f"[DEVICE-EXEC] {device_exec_id}: Tunnel already registered - proceeding with execution")
+            else:
+                print(f"[DEVICE-EXEC] {device_exec_id}: WARNING - Tunnel not pre-registered, registering now...")
+                register_tunnel(device.ip, {'tunnel_service': tunnel_service})
             
             # Execute tests normally but with pre-established tunnel
             result = self._execute_queue_sequence(
@@ -3204,16 +3411,20 @@ class TestExecutionService:
             )
             
             results_dict[device.name] = result
-            print(f"[DEVICE-EXEC] ✅ {device.name}: Execution completed")
+            print(f"[DEVICE-EXEC] {device_exec_id}: Execution completed successfully")
             
         except Exception as e:
+            import traceback
             error_msg = f"Exception during device execution: {str(e)}"
-            print(f"[DEVICE-EXEC] ❌ {device.name}: {error_msg}")
+            print(f"[DEVICE-EXEC] {device_exec_id}: ERROR - {error_msg}")
+            print(f"[DEVICE-EXEC] {device_exec_id}: Traceback: {traceback.format_exc()}")
             results_dict[device.name] = {
                 'status': 'failed',
-                'reason': error_msg
+                'reason': error_msg,
+                'error_type': type(e).__name__
             }
         finally:
-            # Clean up tunnel reference (but don't release SSH tunnel - released at group level)
-            # Release tunnel from global registry
-            unregister_tunnel(device.ip)
+            # ✨ CRITICAL FIX: Do NOT unregister tunnel here!
+            # Tunnel cleanup is handled by _execute_group AFTER all devices complete
+            # This prevents race condition where tunnel is lost mid-execution
+            print(f"[DEVICE-EXEC] {device_exec_id}: Cleanup (tunnel cleanup deferred to group level)")

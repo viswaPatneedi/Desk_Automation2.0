@@ -70,3 +70,4 @@ Json/*.json
 !Json/.gitkeep
 app.pid
 *.pid
+ExecutionResults/

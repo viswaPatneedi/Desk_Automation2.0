@@ -214,6 +214,26 @@ class ModalManager {
             // Add event listeners
             modalEl.addEventListener('show.bs.modal', () => this.onModalShow(modalId));
             modalEl.addEventListener('hide.bs.modal', () => this.onModalHide(modalId));
+            
+            // Additional handlers for cleanup
+            modalEl.addEventListener('hidden.bs.modal', () => {
+                console.log(`🔄 Modal fully hidden: ${modalId}`);
+                
+                // Final cleanup after Bootstrap animation completes
+                setTimeout(() => {
+                    // Remove any lingering backdrops
+                    const backdrops = document.querySelectorAll('.modal-backdrop');
+                    if (backdrops.length > 0) {
+                        console.log(`🧹 Cleaning up ${backdrops.length} leftover backdrop(s)`);
+                        backdrops.forEach(backdrop => backdrop.remove());
+                    }
+                    
+                    // Restore body state
+                    document.body.style.overflow = 'auto';
+                    document.body.classList.remove('modal-open');
+                    document.body.style.paddingRight = '0';
+                }, 100);
+            });
         });
 
         // Register form handlers
@@ -305,13 +325,40 @@ class ModalManager {
             }
         });
 
-        // Focus management for modals
+        // Focus management for modals - both on initialization and dynamically
         document.querySelectorAll('.modal').forEach(modal => {
+            // Event listener for shown.bs.modal (Bootstrap event)
             modal.addEventListener('shown.bs.modal', () => {
-                const firstInput = modal.querySelector('input, textarea, select, button');
-                if (firstInput) firstInput.focus();
+                console.log('✨ Modal shown event fired - setting focus');
+                this.setModalFocus(modal);
             });
         });
+    }
+
+    setModalFocus(modalElement) {
+        // Try multiple selectors to find focusable element
+        const selectors = [
+            modalElement.querySelector('input[type="text"][autofocus]'),
+            modalElement.querySelector('textarea[autofocus]'),
+            modalElement.querySelector('select[autofocus]'),
+            modalElement.querySelector('input[type="text"]:not([readonly])'),
+            modalElement.querySelector('input:not([readonly]):not([type="hidden"])'),
+            modalElement.querySelector('textarea:not([readonly])'),
+            modalElement.querySelector('select'),
+            modalElement.querySelector('button:not(.close)')
+        ];
+
+        for (let element of selectors) {
+            if (element) {
+                console.log('🎯 Setting focus to:', element.tagName, element.id || element.name);
+                element.focus({ preventScroll: false });
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return true;
+            }
+        }
+        
+        console.warn('⚠️ No focusable element found in modal');
+        return false;
     }
 
     isValidEmail(email) {
@@ -333,13 +380,23 @@ class ModalManager {
 
         try {
             this.currentModal = modalId;
+            const modalElement = document.getElementById(modalId);
             
             // Pre-populate modal data if provided
             if (options.data) {
                 await this.populateModalData(modalId, options.data);
             }
 
+            // Show the modal
             this.modals[modalId].show();
+            
+            // Ensure focus is set after modal is shown
+            // Bootstrap's shown.bs.modal event will handle this, but also set it immediately as backup
+            setTimeout(() => {
+                console.log('⏱️ Post-show focus adjustment (100ms)');
+                this.setModalFocus(modalElement);
+            }, 100);
+            
             return true;
         } catch (error) {
             console.error(`Error showing modal ${modalId}:`, error);
@@ -350,8 +407,35 @@ class ModalManager {
 
     closeModal(modalId) {
         if (this.modals[modalId]) {
+            console.log(`🔐 Closing modal: ${modalId}`);
             this.modals[modalId].hide();
             this.currentModal = null;
+            
+            // Aggressive cleanup - ensure backdrop is removed
+            setTimeout(() => {
+                // Remove any lingering bootstrap backdrops
+                const backdrops = document.querySelectorAll('.modal-backdrop');
+                backdrops.forEach(backdrop => {
+                    console.log('🧹 Removing lingering backdrop');
+                    backdrop.remove();
+                });
+                
+                // Remove modal-open class from body
+                document.body.classList.remove('modal-open');
+                
+                // Ensure overflow is restored
+                document.body.style.overflow = 'auto';
+                document.body.style.paddingRight = '0';
+                
+                // Clear any modal divs with show display
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    modal.classList.remove('show');
+                    modal.style.display = 'none';
+                });
+                
+                console.log('✅ Modal cleanup complete - page should be accessible');
+            }, 150);
         }
     }
 
@@ -386,17 +470,51 @@ class ModalManager {
     onModalShow(modalId) {
         console.log(`📂 Opening modal: ${modalId}`);
         document.body.style.overflow = 'hidden';
+        
+        // Ensure modal is scrolled into view
+        const modalElement = document.getElementById(modalId);
+        if (modalElement) {
+            setTimeout(() => {
+                console.log('📍 Scrolling modal into view');
+                modalElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Set focus on first focusable element
+                this.setModalFocus(modalElement);
+            }, 50);
+        }
     }
 
     onModalHide(modalId) {
         console.log(`📌 Closing modal: ${modalId}`);
-        document.body.style.overflow = '';
         
         // Clear form data on close
         const form = document.querySelector(`#${modalId} form`);
         if (form) {
             form.reset();
         }
+        
+        // Immediate cleanup
+        document.body.style.overflow = 'auto';
+        document.body.classList.remove('modal-open');
+        document.body.style.paddingRight = '0';
+        
+        // Remove all backdrop elements
+        setTimeout(() => {
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => {
+                backdrop.remove();
+            });
+            
+            // Force removal of show class and display
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('show');
+                modal.style.display = 'none';
+                modal.setAttribute('aria-hidden', 'true');
+            }
+            
+            console.log('✅ All backdrops removed - page accessible');
+        }, 100);
     }
 
     showSuccess(message, duration = 3000) {
@@ -991,6 +1109,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize modal manager
     modalManager = new ModalManager();
 
+    // Global safety net - catch any hidden modal events at document level
+    document.addEventListener('hidden.bs.modal', (event) => {
+        console.log('🌐 Document-level hidden.bs.modal caught');
+        setTimeout(() => {
+            // Check if any backdrops are lingering
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            if (backdrops.length > 0) {
+                console.log(`🧹 Cleanup: Removing ${backdrops.length} lingering backdrop(s)`);
+                backdrops.forEach(backdrop => backdrop.remove());
+            }
+            
+            // Ensure body is accessible
+            if (document.body.classList.contains('modal-open')) {
+                document.body.classList.remove('modal-open');
+                document.body.style.overflow = 'auto';
+                document.body.style.paddingRight = '0';
+                console.log('✅ Body restored to accessible state');
+            }
+        }, 150);
+    }, true); // Use capture phase to catch all events
+
     // Add event listeners to dynamic elements
     document.querySelectorAll('[data-toggle="modal"]').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -1019,6 +1158,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     console.log('✅ Phase 3 Modal System initialized successfully!');
 });
+
+// ============================================================
+// GLOBAL CLEANUP UTILITY
+// ============================================================
+
+/**
+ * Force cleanup of all modal backdrops and overlays
+ * Call this if a modal gets stuck with visible backdrop
+ */
+function forceCleanupModals() {
+    console.log('🧹 Force cleaning up all modals...');
+    
+    // Remove all backdrops
+    const backdrops = document.querySelectorAll('.modal-backdrop');
+    backdrops.forEach((backdrop, index) => {
+        console.log(`   Removing backdrop ${index + 1}/${backdrops.length}`);
+        backdrop.remove();
+    });
+    
+    // Remove show class from all modals
+    const modals = document.querySelectorAll('.modal.show');
+    modals.forEach(modal => {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+        modal.setAttribute('aria-hidden', 'true');
+    });
+    
+    // Restore body state
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = 'auto';
+    document.body.style.paddingRight = '0';
+    
+    console.log('✅ Force cleanup complete - all backdrops removed!');
+}
+
+// Make cleanup function globally accessible
+window.forceCleanupModals = forceCleanupModals;
 
 // Export for use in other scripts
 if (typeof module !== 'undefined' && module.exports) {

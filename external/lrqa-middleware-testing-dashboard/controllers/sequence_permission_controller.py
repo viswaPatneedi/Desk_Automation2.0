@@ -189,6 +189,10 @@ class SequencePermissionController:
             for seq in sequences:
                 if SequenceAccessControl.can_view(current_user, seq):
                     seq_dict = seq.to_dict()
+                    
+                    # DEBUG: Log created_by before adding to response
+                    print(f"[SEQUENCE] {seq.name} | created_by: {seq_dict.get('created_by')} (type: {type(seq_dict.get('created_by')).__name__})")
+                    
                     # Add permission info
                     seq_dict = SequenceAccessControl.add_permission_info_to_sequence(seq_dict, current_user)
                     accessible_sequences.append(seq_dict)

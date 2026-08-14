@@ -1023,7 +1023,7 @@ def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, 
                 # Use R-Pi tunnel connectivity
                 try:
                     from utils.ssh_wrapper import wrap_tunnel_service_as_ssh
-                    ssh = wrap_tunnel_service_as_ssh(tunnel_service)
+                    ssh = wrap_tunnel_service_as_ssh(tunnel_service, device_config)
                     elapsed_total = time.time() - start_time
                     log(f"✓ Device reconnected after {elapsed_total:.1f}s total")
                     log(f"   (Initial wait: {ssh_probe_start}s, SSH probing: {elapsed_probe_time}s)")
@@ -1051,7 +1051,7 @@ def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, 
     log(f"❌ Device did not come back online within {ssh_probe_start + total_ssh_timeout}s total")
     return None
 
-def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password, iteration=1, device_name="Device", combined_method_name=None, optional_checks=None, wait_after_reboot=80, home_screen_timeout=180, auto_collect_logs=False, log_search_patterns=None, job_id=None, termination_if_not_found=None, max_performance_time=None, tunnel_service=None, total_iterations=1):
+def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password, iteration=1, device_name="Device", combined_method_name=None, optional_checks=None, wait_after_reboot=80, home_screen_timeout=180, auto_collect_logs=False, log_search_patterns=None, job_id=None, termination_if_not_found=None, max_performance_time=None, tunnel_service=None, total_iterations=1, device_config=None):
     """
     Execute Reboot Performance Monitoring V2 - OPTIMIZED:
     
@@ -1151,7 +1151,8 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
         if tunnel_service:
             log_message("✓ Using R-Pi interactive shell tunnel for device connection")
             from utils.ssh_wrapper import wrap_tunnel_service_as_ssh
-            ssh = wrap_tunnel_service_as_ssh(tunnel_service)
+            # Pass device_config to create device-specific wrapper (prevents race conditions)
+            ssh = wrap_tunnel_service_as_ssh(tunnel_service, device_config)
         else:
             log_message("✓ Creating direct SSH connection to device...")
             ssh = paramiko.SSHClient()

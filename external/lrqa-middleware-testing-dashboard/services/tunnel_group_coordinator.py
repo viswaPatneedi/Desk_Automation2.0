@@ -110,14 +110,10 @@ class TunnelGroupCoordinator:
             print(f"[TUNNEL-GROUP-COORD] Analyzing {len(devices)} devices for R-Pi grouping...")
             
             for device in devices:
-                # Skip non-RACK devices
-                if not device.is_rack_device:
-                    print(f"[TUNNEL-GROUP-COORD]   • {device.name}: DESK device (no tunnel needed)")
-                    continue
-                
-                # Get R-Pi IP from config
+                # Check for R-Pi config regardless of device type (DESK or RACK)
+                # Both DESK and RACK devices can use R-Pi tunnels
                 if not device.rpi_config:
-                    print(f"[TUNNEL-GROUP-COORD]   ⚠️  {device.name}: No R-Pi config")
+                    print(f"[TUNNEL-GROUP-COORD]   ⚠️  {device.name}: No R-Pi config (will attempt direct connection)")
                     continue
                 
                 rpi_ip = device.rpi_config.get('rpi_ip')
@@ -133,13 +129,14 @@ class TunnelGroupCoordinator:
                     self.group_tunnel_locks[rpi_ip] = threading.RLock()
                     print(f"[TUNNEL-GROUP-COORD]   ✨ Created group for R-Pi {rpi_ip}")
                 
-                # Add device to group
+                # Add device to group (works for both DESK and RACK devices)
+                device_type = "RACK" if device.is_rack_device else "DESK"
                 self.groups[rpi_ip].add_device(device.name, device.ip, device)
-                print(f"[TUNNEL-GROUP-COORD]     ✓ Added {device.name} to group")
+                print(f"[TUNNEL-GROUP-COORD]     ✓ Added {device.name} ({device_type}) to R-Pi group")
             
             # Print summary
             print(f"\n[TUNNEL-GROUP-COORD] Grouping Summary:")
-            print(f"[TUNNEL-GROUP-COORD] ├─ Total groups: {len(self.groups)}")
+            print(f"[TUNNEL-GROUP-COORD] ├─ Total R-Pi groups: {len(self.groups)}")
             for rpi_ip, group in self.groups.items():
                 print(f"[TUNNEL-GROUP-COORD] ├─ R-Pi {rpi_ip}: {group.get_device_count()} devices")
                 for device in group.devices:

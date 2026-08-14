@@ -84,6 +84,24 @@ class SavedSequence:
     @classmethod
     def from_dict(cls, data: dict) -> 'SavedSequence':
         """Create instance from dictionary"""
+        # Handle created_by conversion from ID to username if needed
+        created_by = data.get('created_by')
+        if created_by and (isinstance(created_by, int) or (isinstance(created_by, str) and created_by.isdigit())):
+            # If it's a numeric ID, try to look up the username using raw SQL
+            user_id = int(created_by)
+            try:
+                from models.database import Session
+                from sqlalchemy import text
+                session = Session()
+                result = session.execute(text(f"SELECT username FROM users WHERE id = {user_id} LIMIT 1")).fetchone()
+                if result:
+                    created_by = result[0]
+                    print(f"[BACKEND] ✅ Converted user ID {user_id} to username: {created_by}")
+                session.close()
+            except Exception as e:
+                print(f"[BACKEND] ⚠️  Could not convert user ID {user_id}: {e}")
+                pass  # Keep the original value if lookup fails
+        
         return cls(
             name=data['name'],
             queue_data=data.get('queue_data', []),
@@ -91,7 +109,7 @@ class SavedSequence:
             user_inputs=data.get('user_inputs', {}),
             sequence_id=data.get('sequence_id'),
             created_at=data.get('created_at'),
-            created_by=data.get('created_by'),
+            created_by=created_by,
             team_name=data.get('team_name'),
             description=data.get('description'),
             method_rationale=data.get('method_rationale', []),
@@ -119,6 +137,27 @@ class SavedSequence:
     @classmethod
     def _from_db_row(cls, row: DBSavedSequence) -> 'SavedSequence':
         queue_data = row.methods or []
+        
+        # Convert user ID to username using raw SQL
+        created_by_username = None
+        if row.created_by is not None:
+            try:
+                from models.database import Session
+                from sqlalchemy import text
+                session = Session()
+                user_id = int(row.created_by) if isinstance(row.created_by, (int, str)) else row.created_by
+                result = session.execute(text(f"SELECT username FROM users WHERE id = {user_id} LIMIT 1")).fetchone()
+                if result:
+                    created_by_username = result[0]
+                    print(f"[DB] ✅ User ID {user_id} → {created_by_username}")
+                else:
+                    print(f"[DB] ⚠️  User ID {user_id} not found in database")
+                    created_by_username = str(row.created_by)
+                session.close()
+            except Exception as e:
+                print(f"[DB] ❌ Error looking up user ID {row.created_by}: {e}")
+                created_by_username = str(row.created_by)
+        
         return cls(
             name=row.name,
             queue_data=queue_data,
@@ -126,7 +165,7 @@ class SavedSequence:
             user_inputs={},
             sequence_id=row.seq_id,
             created_at=row.created_at.isoformat() if row.created_at else None,
-            created_by=str(row.created_by) if row.created_by is not None else None,
+            created_by=created_by_username,
             team_name=row.team_name,
             description=row.description,
             method_rationale=row.method_rationale or [],
@@ -227,7 +266,8 @@ class SavedSequence:
                         average_duration_seconds=sequence.average_duration_seconds,
                         team_name=sequence.team_name or '',
                         location=sequence.location or '',
-                        is_active=sequence.is_active
+                        is_active=sequence.is_active,
+                        created_by=sequence.created_by  # FIXED: Now saving creator user_id
                     )
                     session.add(row)
                 else:
@@ -241,6 +281,7 @@ class SavedSequence:
                     row.team_name = sequence.team_name or ''
                     row.location = sequence.location or ''
                     row.is_active = sequence.is_active
+                    row.created_by = sequence.created_by  # FIXED: Now updating creator user_id
 
             session.commit()
             backup_synced = cls._write_json_backup(session)

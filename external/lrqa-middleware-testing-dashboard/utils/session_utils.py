@@ -3,12 +3,22 @@ import sys
 import hashlib
 from datetime import datetime, timezone
 
-def create_execution_session_folder(method, device_name, device_ip, iterations):
+def create_execution_session_folder(method, device_name, device_ip, iterations, job_id=None):
     """
     Create execution session folder with smart storage management.
     
+    CRITICAL: Includes job_id to ensure UNIQUE folder per job
+    This prevents screenshot and log mixing when same device runs multiple jobs
+    
     Uses USB storage if available (auto-detected), falls back to local storage.
     Storage path is determined by usb_storage_manager.
+    
+    Args:
+        method: Test method name(s)
+        device_name: Device name
+        device_ip: Device IP
+        iterations: Number of iterations
+        job_id: Optional job ID (RECOMMENDED for unique folder per job)
     """
     # Try to use USB storage manager directly
     try:
@@ -26,6 +36,9 @@ def create_execution_session_folder(method, device_name, device_ip, iterations):
     safe_ip = device_ip.replace('.', '-')
     timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_UTC')
     
+    # CRITICAL: Include job_id to make folder unique per job (prevents screenshot mixing)
+    job_id_part = f"_{job_id[:8]}" if job_id else ""  # Use first 8 chars of job_id
+    
     # Handle long method names by truncating or using hash
     safe_method = method.upper()
     max_method_length = 100  # Leave room for device name, IP, iteration, timestamp
@@ -36,11 +49,12 @@ def create_execution_session_folder(method, device_name, device_ip, iterations):
         method_hash = hashlib.md5(safe_method.encode()).hexdigest()[:8]
         safe_method = '_'.join(methods_list) + f'_+{len(safe_method.split(",")) - 3}MORE_{method_hash}'
     
-    session_name = f"{safe_method}_{safe_device_name}_{safe_ip}_{iterations}_ITR_{timestamp}"
+    # Build session name WITH job_id
+    session_name = f"{safe_method}_{safe_device_name}_{safe_ip}_{iterations}_ITR{job_id_part}_{timestamp}"
     
     # Final safety check - truncate if still too long (filesystem limit is typically 255)
     if len(session_name) > 200:
-        session_name = f"{safe_method[:80]}_{safe_device_name[:30]}_{safe_ip}_{iterations}_ITR_{timestamp}"
+        session_name = f"{safe_method[:70]}_{safe_device_name[:25]}_{safe_ip}_{iterations}_ITR{job_id_part}_{timestamp}"
     
     # Create session folder structure
     session_folder = os.path.join(base_output, 'sessions', session_name)

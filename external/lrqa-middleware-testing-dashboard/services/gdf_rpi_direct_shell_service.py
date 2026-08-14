@@ -31,7 +31,7 @@ class GDFRPiDirectShellService:
     Designed to be SHARED across multiple device executions on the same R-Pi.
     """
     
-    def __init__(self, rpi_config: Dict, device_identifier: str = "Generic"):
+    def __init__(self, rpi_config: Dict, device_identifier: str = "Generic", device_config: Optional[Dict] = None):
         """
         Initialize GDF R-Pi Direct Shell Service
         
@@ -43,12 +43,30 @@ class GDFRPiDirectShellService:
                 - rpi_password: R-Pi SSH password
             
             device_identifier: Name/identifier for logging (e.g., device name)
+            
+            device_config: Optional device configuration dict with keys:
+                - lab_ip: Device IP address (e.g., 10.0.0.28)
+                - lab_port: Device SSH port (e.g., 10022)
+                - lab_username: Device SSH username (e.g., root)
+                - lab_password: Device SSH password
         """
         # R-Pi Configuration
         self.rpi_ip = rpi_config.get('rpi_ip')
         self.rpi_port = int(rpi_config.get('rpi_port', 60201))
         self.rpi_username = rpi_config.get('rpi_username')
         self.rpi_password = rpi_config.get('rpi_password')
+        
+        # Device Configuration (optional, for execute_command compatibility)
+        if device_config:
+            self.lab_ip = device_config.get('lab_ip')
+            self.lab_port = int(device_config.get('lab_port', 10022))
+            self.lab_username = device_config.get('lab_username', 'root')
+            self.lab_password = device_config.get('lab_password', '')
+        else:
+            self.lab_ip = None
+            self.lab_port = 10022
+            self.lab_username = 'root'
+            self.lab_password = ''
         
         # Connection State
         self.device_identifier = device_identifier
@@ -64,7 +82,7 @@ class GDFRPiDirectShellService:
         self._validate_config()
     
     def _validate_config(self):
-        """Validate that all required configuration is present"""
+        """Validate that all required R-Pi configuration is present"""
         required_fields = {
             'rpi_ip': self.rpi_ip,
             'rpi_username': self.rpi_username,
@@ -74,6 +92,31 @@ class GDFRPiDirectShellService:
         missing = [k for k, v in required_fields.items() if not v]
         if missing:
             raise ValueError(f"Missing R-Pi SSH configuration: {', '.join(missing)}")
+    
+    def set_device_config(self, device_config: Dict) -> None:
+        """
+        Update device configuration for this tunnel service
+        
+        Used when a tunnel is reused by a companion device to switch to the new device's IP/credentials.
+        This ensures execute_command() uses the correct device IP.
+        
+        THREAD-SAFE: Uses lock to prevent race conditions when multiple devices reuse the same tunnel.
+        
+        Args:
+            device_config: Device configuration dict with keys:
+                - lab_ip: Device IP address (e.g., 10.0.0.28)
+                - lab_port: Device SSH port (e.g., 10022)
+                - lab_username: Device SSH username (e.g., root)
+                - lab_password: Device SSH password
+        """
+        with self.lock:  # Ensure thread-safe update
+            old_ip = self.lab_ip
+            self.lab_ip = device_config.get('lab_ip')
+            self.lab_port = int(device_config.get('lab_port', 10022))
+            self.lab_username = device_config.get('lab_username', 'root')
+            self.lab_password = device_config.get('lab_password', '')
+            
+            print(f"[R-Pi DIRECT] Updated device config from {old_ip} → {self.lab_ip}:{self.lab_port}")
     
     def connect(self) -> Tuple[bool, str]:
         """
@@ -142,6 +185,49 @@ class GDFRPiDirectShellService:
             self.is_connected = False
             self.ssh_client = None
             return False, msg
+    
+    def execute_command(self, command: str, timeout: int = 30, device_ip: Optional[str] = None, 
+                       device_port: Optional[int] = None, device_username: Optional[str] = None,
+                       device_password: Optional[str] = None) -> Tuple[bool, str, str]:
+        """
+        Execute command on device through R-Pi shell (SSH wrapper compatible)
+        
+        This method is compatible with the SSH wrapper and can use either:
+        1. Stored device configuration (lab_ip, lab_port, lab_username, lab_password)
+        2. Explicit parameters passed to this call
+        
+        Explicit parameters take precedence over stored config, allowing different devices
+        to use the same tunnel without race conditions.
+        
+        Args:
+            command: Command to execute on device
+            timeout: Command timeout in seconds
+            device_ip: Optional explicit device IP (overrides stored config)
+            device_port: Optional explicit device port (overrides stored config)
+            device_username: Optional explicit device username (overrides stored config)
+            device_password: Optional explicit device password (overrides stored config)
+        
+        Returns:
+            Tuple of (success: bool, stdout: str, stderr: str)
+        """
+        # Use explicit params if provided, otherwise use stored device config
+        target_ip = device_ip or self.lab_ip
+        target_port = device_port or self.lab_port
+        target_username = device_username or self.lab_username
+        target_password = device_password or self.lab_password
+        
+        if not target_ip:
+            return False, "", "No device IP provided and no stored config"
+        
+        # Use the device command method with explicit parameters (no race condition)
+        return self.execute_device_command(
+            device_ip=target_ip,
+            device_port=target_port,
+            device_username=target_username,
+            command=command,
+            device_password=target_password,
+            timeout=timeout
+        )
     
     def execute_device_command(self, device_ip: str, device_port: int, 
                                device_username: str, command: str,
