@@ -104,11 +104,11 @@ class LockStatusMonitor {
         if (status.critical) {
             alertClass = 'alert-danger';
             icon = 'bi-exclamation-circle-fill';
-            warningMsg = '<strong style="color: #d32f2f;">⚠️ CRITICAL: Lock expires very soon!</strong><br>';
+            warningMsg = '<strong style="color: #d32f2f;">[WARN] CRITICAL: Lock expires very soon!</strong><br>';
         } else if (status.warning) {
             alertClass = 'alert-warning';
             icon = 'bi-exclamation-triangle-fill';
-            warningMsg = '<strong>⚠️ Warning: Lock expiring soon</strong><br>';
+            warningMsg = '<strong>[WARN] Warning: Lock expiring soon</strong><br>';
         }
         
         container.innerHTML = `
@@ -180,7 +180,7 @@ class LockStatusMonitor {
         if ('Notification' in window && Notification.permission === 'granted') {
             new Notification(title, {
                 body: message,
-                icon: type === 'ERROR' ? '⛔' : '⚠️'
+                icon: type === 'ERROR' ? '[BLOCKED]' : '[WARN]'
             });
         }
         
@@ -239,16 +239,16 @@ async function extendJobLock(jobId) {
         
         const data = await response.json();
         if (data.success) {
-            alert(`✅ Lock extended until: ${data.new_expiration}`);
+            alert(`[OK] Lock extended until: ${data.new_expiration}`);
             // Refresh lock status display
             if (window.lockStatusMonitors && window.lockStatusMonitors[jobId]) {
                 window.lockStatusMonitors[jobId].checkLockStatus();
             }
         } else {
-            alert(`❌ Failed to extend lock: ${data.error}`);
+            alert(`[ERROR] Failed to extend lock: ${data.error}`);
         }
     } catch (error) {
-        alert(`❌ Error extending lock: ${error}`);
+        alert(`[ERROR] Error extending lock: ${error}`);
     }
 }
 

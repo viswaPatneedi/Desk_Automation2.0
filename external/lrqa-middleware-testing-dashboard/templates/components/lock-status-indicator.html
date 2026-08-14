@@ -46,7 +46,7 @@
                 
                 onLostLock: function(status) {
                     console.error('[LOCK-INDICATOR] CRITICAL: Device lock was lost!');
-                    alert('⛔ CRITICAL: Device lock was lost during job execution!\nJob may fail if it attempts to use the device.');
+                    alert('[BLOCKED] CRITICAL: Device lock was lost during job execution!\nJob may fail if it attempts to use the device.');
                 }
             });
         }

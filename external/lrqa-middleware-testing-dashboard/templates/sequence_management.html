@@ -388,7 +388,7 @@
             `).join('');
             
             document.getElementById('editSequenceModal').classList.add('show');
-            console.log(`✅ Edit modal opened for sequence: ${sequenceName}`);
+            console.log(`[OK] Edit modal opened for sequence: ${sequenceName}`);
         }
 
         function closeEditModal() {
@@ -419,7 +419,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    showMessage(`✅ Sequence '${data.sequence_name}' access updated for ${data.teams_granted.length} team(s)`, 'success');
+                    showMessage(`[OK] Sequence '${data.sequence_name}' access updated for ${data.teams_granted.length} team(s)`, 'success');
                     closeEditModal();
                     loadSequences();
                 } else {

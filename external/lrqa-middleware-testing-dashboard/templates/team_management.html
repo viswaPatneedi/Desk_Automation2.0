@@ -587,7 +587,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    showMessage(`✅ Team '${teamName}' created with ${data.members_created} member(s)`, 'success');
+                    showMessage(`[OK] Team '${teamName}' created with ${data.members_created} member(s)`, 'success');
                     document.getElementById('createTeamForm').reset();
                     resetMembersInput();
                     loadTeams();
@@ -661,7 +661,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    showMessage(`✅ Team '${teamName}' deleted successfully with ${data.members_deleted} member(s) removed`, 'success');
+                    showMessage(`[OK] Team '${teamName}' deleted successfully with ${data.members_deleted} member(s) removed`, 'success');
                     loadTeams();
                 } else {
                     showMessage(data.error || 'Failed to delete team', 'error');
@@ -686,7 +686,7 @@
             document.getElementById('editMemberAdmin').checked = member.is_team_admin || false;
             
             document.getElementById('editMemberModal').classList.add('show');
-            console.log(`✅ Edit modal opened for ${member.ntid} in team ${teamName}`);
+            console.log(`[OK] Edit modal opened for ${member.ntid} in team ${teamName}`);
         }
 
         function closeEditModal() {
@@ -725,7 +725,7 @@
                 // Add team_name only if it's different from current team
                 if (newTeamName !== currentEditTeamName) {
                     updateData.team_name = newTeamName;
-                    console.log(`🔄 Changing user's team from '${currentEditTeamName}' to '${newTeamName}'`);
+                    console.log(`[CYCLE] Changing user's team from '${currentEditTeamName}' to '${newTeamName}'`);
                 } else {
                     console.log(`📝 Updating user without team change`);
                 }
@@ -743,8 +743,8 @@
 
                 if (data.success) {
                     const action = newTeamName !== currentEditTeamName 
-                        ? `✅ User '${currentEditMemberNTID}' moved to team '${newTeamName}'` 
-                        : `✅ User '${currentEditMemberNTID}' updated successfully`;
+                        ? `[OK] User '${currentEditMemberNTID}' moved to team '${newTeamName}'` 
+                        : `[OK] User '${currentEditMemberNTID}' updated successfully`;
                     showMessage(action, 'success');
                     closeEditModal();
                     loadTeams();
@@ -775,7 +775,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    showMessage(`✅ User '${ntid}' removed from team '${teamName}'`, 'success');
+                    showMessage(`[OK] User '${ntid}' removed from team '${teamName}'`, 'success');
                     loadTeams();
                 } else {
                     showMessage(data.error || 'Failed to delete member', 'error');

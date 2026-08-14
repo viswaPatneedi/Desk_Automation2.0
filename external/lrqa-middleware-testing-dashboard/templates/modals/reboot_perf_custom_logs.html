@@ -106,21 +106,21 @@ function addCustomLogPattern() {
     
     const container = document.getElementById('customLogPatterns');
     if (!container) {
-        console.error('❌ Error: customLogPatterns container not found in DOM');
+        console.error('[ERROR] Error: customLogPatterns container not found in DOM');
         return;
     }
     const patternDiv = document.createElement('div');
     patternDiv.innerHTML = patternHTML;
     container.appendChild(patternDiv);
     
-    console.log(`✅ Added custom log pattern input field ${customLogPatternCount}`);
+    console.log(`[OK] Added custom log pattern input field ${customLogPatternCount}`);
 }
 
 function removeCustomLogPattern(patternId) {
     const element = document.getElementById(patternId);
     if (element) {
         element.remove();
-        console.log(`✅ Removed pattern: ${patternId}`);
+        console.log(`[OK] Removed pattern: ${patternId}`);
     }
 }
 
@@ -129,7 +129,7 @@ function applyCustomLogPatterns() {
     const patterns = [];
     const container = document.getElementById('customLogPatterns');
     if (!container) {
-        console.error('❌ Error: customLogPatterns container not found in DOM');
+        console.error('[ERROR] Error: customLogPatterns container not found in DOM');
         return;
     }
     const patternDivs = container.querySelectorAll('.custom-log-pattern');
@@ -157,7 +157,7 @@ function applyCustomLogPatterns() {
     // Store in window object for method execution
     window.customLogPatterns = patterns;
     
-    console.log(`✅ Applied ${patterns.length} custom log patterns:`, patterns);
+    console.log(`[OK] Applied ${patterns.length} custom log patterns:`, patterns);
     
     // Update the display in logPatternsModal to show applied patterns
     if (patterns.length > 0) {
@@ -180,7 +180,7 @@ function applyCustomLogPatterns() {
             
             // Show the display section
             displaySection.style.display = 'block';
-            console.log(`✅ Updated pattern display in logPatternsModal`);
+            console.log(`[OK] Updated pattern display in logPatternsModal`);
         }
     }
     
@@ -192,7 +192,7 @@ function applyCustomLogPatterns() {
     
     // Show status
     if (patterns.length > 0) {
-        showNotification(`✅ ${patterns.length} custom pattern(s) added`, 'success');
+        showNotification(`[OK] ${patterns.length} custom pattern(s) added`, 'success');
     } else {
         showNotification('ℹ️ No custom patterns added - standard detection will run', 'info');
     }
@@ -200,7 +200,7 @@ function applyCustomLogPatterns() {
 
 // Initialize modal on page load
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ Custom log filtering modal loaded');
+    console.log('[OK] Custom log filtering modal loaded');
     window.customLogPatterns = [];
 });
 </script>

@@ -1093,7 +1093,7 @@
             } catch (error) {
                 console.error('Error loading more results:', error);
                 const loadMoreBtn = document.getElementById('loadMoreBtn');
-                loadMoreBtn.textContent = '❌ Error Loading More';
+                loadMoreBtn.textContent = '[ERROR] Error Loading More';
             }
         }
         
@@ -1332,7 +1332,7 @@
                             ${result.is_sequence && result.methods && ensureMethodsArray(result.methods).length > 0 ? `
                             <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #4b5563;">
                                 <div style="color: #9ca3af; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 600;">
-                                    📋 Methods (${ensureMethodsArray(result.methods).length})
+                                    [CLIPBOARD] Methods (${ensureMethodsArray(result.methods).length})
                                 </div>
                                 <div class="sequence-methods-section">
                                     ${ensureMethodsArray(result.methods).map(method => `

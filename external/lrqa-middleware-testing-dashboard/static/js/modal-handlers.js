@@ -162,7 +162,7 @@ class FormHandler {
             }
         }
 
-        // 🔧 FIX: Explicitly handle checkbox inputs that are unchecked (not included in FormData)
+        // [WRENCH] FIX: Explicitly handle checkbox inputs that are unchecked (not included in FormData)
         // Without this, unchecked checkboxes won't appear in the data object at all
         const checkboxes = this.form.querySelectorAll('input[type="checkbox"]');
         checkboxes.forEach(checkbox => {
@@ -199,7 +199,7 @@ class ModalManager {
     }
 
     initialize() {
-        console.log('🚀 Initializing Modal Manager...');
+        console.log('[ROCKET] Initializing Modal Manager...');
         
         // Initialize all modal instances
         const modalElements = document.querySelectorAll('.modal');
@@ -217,14 +217,14 @@ class ModalManager {
             
             // Additional handlers for cleanup
             modalEl.addEventListener('hidden.bs.modal', () => {
-                console.log(`🔄 Modal fully hidden: ${modalId}`);
+                console.log(`[CYCLE] Modal fully hidden: ${modalId}`);
                 
                 // Final cleanup after Bootstrap animation completes
                 setTimeout(() => {
                     // Remove any lingering backdrops
                     const backdrops = document.querySelectorAll('.modal-backdrop');
                     if (backdrops.length > 0) {
-                        console.log(`🧹 Cleaning up ${backdrops.length} leftover backdrop(s)`);
+                        console.log(` Cleaning up ${backdrops.length} leftover backdrop(s)`);
                         backdrops.forEach(backdrop => backdrop.remove());
                     }
                     
@@ -242,7 +242,7 @@ class ModalManager {
         // Initialize accessibility features
         this.initializeAccessibility();
 
-        console.log(`✅ Modal Manager initialized with ${Object.keys(this.modals).length} modals`);
+        console.log(`[OK] Modal Manager initialized with ${Object.keys(this.modals).length} modals`);
     }
 
     registerFormHandlers() {
@@ -329,7 +329,7 @@ class ModalManager {
         document.querySelectorAll('.modal').forEach(modal => {
             // Event listener for shown.bs.modal (Bootstrap event)
             modal.addEventListener('shown.bs.modal', () => {
-                console.log('✨ Modal shown event fired - setting focus');
+                console.log(' Modal shown event fired - setting focus');
                 this.setModalFocus(modal);
             });
         });
@@ -350,14 +350,14 @@ class ModalManager {
 
         for (let element of selectors) {
             if (element) {
-                console.log('🎯 Setting focus to:', element.tagName, element.id || element.name);
+                console.log(' Setting focus to:', element.tagName, element.id || element.name);
                 element.focus({ preventScroll: false });
                 element.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 return true;
             }
         }
         
-        console.warn('⚠️ No focusable element found in modal');
+        console.warn('[WARN] No focusable element found in modal');
         return false;
     }
 
@@ -393,7 +393,7 @@ class ModalManager {
             // Ensure focus is set after modal is shown
             // Bootstrap's shown.bs.modal event will handle this, but also set it immediately as backup
             setTimeout(() => {
-                console.log('⏱️ Post-show focus adjustment (100ms)');
+                console.log('[TIMER] Post-show focus adjustment (100ms)');
                 this.setModalFocus(modalElement);
             }, 100);
             
@@ -407,7 +407,7 @@ class ModalManager {
 
     closeModal(modalId) {
         if (this.modals[modalId]) {
-            console.log(`🔐 Closing modal: ${modalId}`);
+            console.log(` Closing modal: ${modalId}`);
             this.modals[modalId].hide();
             this.currentModal = null;
             
@@ -416,7 +416,7 @@ class ModalManager {
                 // Remove any lingering bootstrap backdrops
                 const backdrops = document.querySelectorAll('.modal-backdrop');
                 backdrops.forEach(backdrop => {
-                    console.log('🧹 Removing lingering backdrop');
+                    console.log(' Removing lingering backdrop');
                     backdrop.remove();
                 });
                 
@@ -434,7 +434,7 @@ class ModalManager {
                     modal.style.display = 'none';
                 });
                 
-                console.log('✅ Modal cleanup complete - page should be accessible');
+                console.log('[OK] Modal cleanup complete - page should be accessible');
             }, 150);
         }
     }
@@ -468,14 +468,14 @@ class ModalManager {
     }
 
     onModalShow(modalId) {
-        console.log(`📂 Opening modal: ${modalId}`);
+        console.log(` Opening modal: ${modalId}`);
         document.body.style.overflow = 'hidden';
         
         // Ensure modal is scrolled into view
         const modalElement = document.getElementById(modalId);
         if (modalElement) {
             setTimeout(() => {
-                console.log('📍 Scrolling modal into view');
+                console.log(' Scrolling modal into view');
                 modalElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 
                 // Set focus on first focusable element
@@ -485,7 +485,7 @@ class ModalManager {
     }
 
     onModalHide(modalId) {
-        console.log(`📌 Closing modal: ${modalId}`);
+        console.log(`[PIN] Closing modal: ${modalId}`);
         
         // Clear form data on close
         const form = document.querySelector(`#${modalId} form`);
@@ -513,7 +513,7 @@ class ModalManager {
                 modal.setAttribute('aria-hidden', 'true');
             }
             
-            console.log('✅ All backdrops removed - page accessible');
+            console.log('[OK] All backdrops removed - page accessible');
         }, 100);
     }
 
@@ -586,9 +586,9 @@ async function testSSHConnection() {
         });
 
         if (result.success) {
-            modalManager.showSuccess(`✅ SSH Connection successful! (Response time: ${result.response_time}ms)`);
+            modalManager.showSuccess(`[OK] SSH Connection successful! (Response time: ${result.response_time}ms)`);
         } else {
-            modalManager.showError(`❌ SSH Connection failed: ${result.error}`);
+            modalManager.showError(`[ERROR] SSH Connection failed: ${result.error}`);
         }
     } catch (error) {
         modalManager.showError(`Connection test error: ${error.message}`);
@@ -618,7 +618,7 @@ async function saveDevice() {
         const result = await modalManager.api[method](endpoint, data);
 
         if (result.success) {
-            modalManager.showSuccess(`✅ Device ${data.device_id ? 'updated' : 'added'} successfully!`);
+            modalManager.showSuccess(`[OK] Device ${data.device_id ? 'updated' : 'added'} successfully!`);
             form.clearForm();
             modalManager.closeModal('deviceManagementAddModal');
 
@@ -662,7 +662,7 @@ async function submitLogin() {
         const result = await modalManager.api.post('/auth/login', data);
 
         if (result.success) {
-            modalManager.showSuccess('✅ Login successful!');
+            modalManager.showSuccess('[OK] Login successful!');
             form.clearForm();
             
             // Redirect after brief delay
@@ -751,7 +751,7 @@ async function saveExecutionContext() {
         const result = await modalManager.api.post('/executions/capture-context', data);
 
         if (result.success) {
-            modalManager.showSuccess('✅ Execution context captured successfully!');
+            modalManager.showSuccess('[OK] Execution context captured successfully!');
             form.clearForm();
             modalManager.closeModal('executionContextCaptureModal');
 
@@ -1050,7 +1050,7 @@ async function saveSequenceDefinition() {
         const result = await modalManager.api[method](endpoint, data);
 
         if (result.success) {
-            modalManager.showSuccess(`✅ Sequence ${data.editing_id ? 'updated' : 'created'} successfully!`);
+            modalManager.showSuccess(`[OK] Sequence ${data.editing_id ? 'updated' : 'created'} successfully!`);
             form.clearForm();
             modalManager.closeModal('sequenceManagementSaveModal');
 
@@ -1104,19 +1104,19 @@ async function editSequence(sequenceId) {
 let modalManager;
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('📦 Phase 3 Modal System initializing...');
+    console.log('[BOX] Phase 3 Modal System initializing...');
     
     // Initialize modal manager
     modalManager = new ModalManager();
 
     // Global safety net - catch any hidden modal events at document level
     document.addEventListener('hidden.bs.modal', (event) => {
-        console.log('🌐 Document-level hidden.bs.modal caught');
+        console.log(' Document-level hidden.bs.modal caught');
         setTimeout(() => {
             // Check if any backdrops are lingering
             const backdrops = document.querySelectorAll('.modal-backdrop');
             if (backdrops.length > 0) {
-                console.log(`🧹 Cleanup: Removing ${backdrops.length} lingering backdrop(s)`);
+                console.log(` Cleanup: Removing ${backdrops.length} lingering backdrop(s)`);
                 backdrops.forEach(backdrop => backdrop.remove());
             }
             
@@ -1125,7 +1125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.classList.remove('modal-open');
                 document.body.style.overflow = 'auto';
                 document.body.style.paddingRight = '0';
-                console.log('✅ Body restored to accessible state');
+                console.log('[OK] Body restored to accessible state');
             }
         }, 150);
     }, true); // Use capture phase to catch all events
@@ -1156,7 +1156,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    console.log('✅ Phase 3 Modal System initialized successfully!');
+    console.log('[OK] Phase 3 Modal System initialized successfully!');
 });
 
 // ============================================================
@@ -1168,7 +1168,7 @@ document.addEventListener('DOMContentLoaded', () => {
  * Call this if a modal gets stuck with visible backdrop
  */
 function forceCleanupModals() {
-    console.log('🧹 Force cleaning up all modals...');
+    console.log(' Force cleaning up all modals...');
     
     // Remove all backdrops
     const backdrops = document.querySelectorAll('.modal-backdrop');
@@ -1190,7 +1190,7 @@ function forceCleanupModals() {
     document.body.style.overflow = 'auto';
     document.body.style.paddingRight = '0';
     
-    console.log('✅ Force cleanup complete - all backdrops removed!');
+    console.log('[OK] Force cleanup complete - all backdrops removed!');
 }
 
 // Make cleanup function globally accessible

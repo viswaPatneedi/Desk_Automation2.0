@@ -10,7 +10,7 @@
             </div>
             <div class="modal-body" style="max-height: 700px; overflow-y: auto;">
                 <div style="margin-bottom: 1.5rem;">
-                    <h6 style="color: #60a5fa; margin-bottom: 1rem;">📋 Existing Credentials</h6>
+                    <h6 style="color: #60a5fa; margin-bottom: 1rem;">[CLIPBOARD] Existing Credentials</h6>
                     
                     <!-- Team Filter -->
                     <div class="form-group mb-3">
@@ -122,26 +122,26 @@
             console.log('🔑 Auth status:', authData);
             
             if (!authData.authenticated) {
-                document.getElementById('credentialsList').innerHTML = `<div style="color: #ef4444;"><i class="bi bi-exclamation-circle"></i> ⚠️ Not authenticated. Please log in first.</div>`;
+                document.getElementById('credentialsList').innerHTML = `<div style="color: #ef4444;"><i class="bi bi-exclamation-circle"></i> [WARN] Not authenticated. Please log in first.</div>`;
                 return;
             }
             
             if (!authData.is_super_admin) {
-                document.getElementById('credentialsList').innerHTML = `<div style="color: #ef4444;"><i class="bi bi-shield-exclamation"></i> ⛔ Not a super admin. Only super admins can manage credentials.</div>`;
+                document.getElementById('credentialsList').innerHTML = `<div style="color: #ef4444;"><i class="bi bi-shield-exclamation"></i> [BLOCKED] Not a super admin. Only super admins can manage credentials.</div>`;
                 return;
             }
             
             // Load credentials if authenticated and is super admin
             await loadAppCredentials();
         } catch (error) {
-            console.error('❌ Error checking auth status:', error);
+            console.error('[ERROR] Error checking auth status:', error);
             document.getElementById('credentialsList').innerHTML = `<div style="color: #ef4444;"><i class="bi bi-exclamation-triangle"></i> Error checking authentication: ${error.message}</div>`;
         }
     }
 
     async function loadAppCredentials() {
         try {
-            console.log('🔄 Loading app credentials...');
+            console.log('[CYCLE] Loading app credentials...');
             const response = await fetch('/api/admin/app-credentials', {
                 method: 'GET',
                 headers: {
@@ -154,18 +154,18 @@
 
             if (!response.ok) {
                 if (response.status === 403) {
-                    alert('⛔ Access denied. Only super admins can manage app credentials.');
+                    alert('[BLOCKED] Access denied. Only super admins can manage app credentials.');
                     return;
                 }
                 if (response.status === 401) {
-                    alert('⚠️ You need to be logged in. Please login and try again.');
+                    alert('[WARN] You need to be logged in. Please login and try again.');
                     return;
                 }
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
             const credentials = await response.json();
-            console.log('✅ Credentials loaded:', credentials);
+            console.log('[OK] Credentials loaded:', credentials);
             
             // Store all credentials for filtering
             allCredentials = credentials || [];
@@ -176,7 +176,7 @@
             // Display all credentials initially
             displayCredentials(allCredentials);
         } catch (error) {
-            console.error('❌ Error loading credentials:', error);
+            console.error('[ERROR] Error loading credentials:', error);
             document.getElementById('credentialsList').innerHTML = `<div style="color: #ef4444;"><i class="bi bi-exclamation-triangle"></i> Error loading credentials: ${error.message}<br><small style="color: #9ca3af; margin-top: 0.5rem; display: block;">Try refreshing the page or logging in again.</small></div>`;
         }
     }
@@ -262,12 +262,12 @@
 
         // Validation
         if (!appName || !teamName || !username) {
-            alert('⛔ Please fill in App Name, Team Name, and Username');
+            alert('[BLOCKED] Please fill in App Name, Team Name, and Username');
             return;
         }
 
         if (!editingCredentialId && !password) {
-            alert('⛔ Password is required for new credentials');
+            alert('[BLOCKED] Password is required for new credentials');
             return;
         }
 
@@ -327,13 +327,13 @@
             await loadAppCredentials();
             
             if (editingCredentialId) {
-                showNotification('✅ Credential updated successfully', 'success');
+                showNotification('[OK] Credential updated successfully', 'success');
             } else {
-                showNotification('✅ Credential created successfully', 'success');
+                showNotification('[OK] Credential created successfully', 'success');
             }
         } catch (error) {
             console.error('Error saving credential:', error);
-            showNotification(`❌ Error saving credential: ${error.message}`, 'error');
+            showNotification(`[ERROR] Error saving credential: ${error.message}`, 'error');
         }
     }
 
@@ -380,13 +380,13 @@
             showNotification('✏️ Editing credential - Password field is empty (leave blank to keep current)', 'info');
         } catch (error) {
             console.error('Error loading credential:', error);
-            showNotification(`❌ Error loading credential: ${error.message}`, 'error');
+            showNotification(`[ERROR] Error loading credential: ${error.message}`, 'error');
         }
     }
 
     function cancelEdit() {
         resetCredentialForm();
-        showNotification('✅ Edit cancelled', 'info');
+        showNotification('[OK] Edit cancelled', 'info');
     }
 
     function resetCredentialForm() {
@@ -426,15 +426,15 @@
             }
 
             await loadAppCredentials();
-            showNotification('✅ Primary credential updated', 'success');
+            showNotification('[OK] Primary credential updated', 'success');
         } catch (error) {
             console.error('Error setting primary credential:', error);
-            showNotification(`❌ Error: ${error.message}`, 'error');
+            showNotification(`[ERROR] Error: ${error.message}`, 'error');
         }
     }
 
     async function deleteCredential(credentialId) {
-        if (!confirm('⚠️ Are you sure you want to delete this credential?')) {
+        if (!confirm('[WARN] Are you sure you want to delete this credential?')) {
             return;
         }
 
@@ -452,10 +452,10 @@
             }
 
             await loadAppCredentials();
-            showNotification('✅ Credential deleted successfully', 'success');
+            showNotification('[OK] Credential deleted successfully', 'success');
         } catch (error) {
             console.error('Error deleting credential:', error);
-            showNotification(`❌ Error: ${error.message}`, 'error');
+            showNotification(`[ERROR] Error: ${error.message}`, 'error');
         }
     }
 </script>

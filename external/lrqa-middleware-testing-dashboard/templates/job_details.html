@@ -550,7 +550,7 @@
                                     </li>
                                     {% endif %}
                                     {% if item.sleep_duration_minutes %}
-                                    <li><code>⏱️ Sleep Duration</code>: <span style="color: #f59e0b; font-weight: bold;">{{ item.sleep_duration_minutes }} minutes</span></li>
+                                    <li><code>[TIMER] Sleep Duration</code>: <span style="color: #f59e0b; font-weight: bold;">{{ item.sleep_duration_minutes }} minutes</span></li>
                                     {% endif %}
                                     {% if item.perform_reboot is not none %}
                                     <li><code>↻ Perform Reboot</code>: 
@@ -583,10 +583,10 @@
                                     </li>
                                     {% endif %}
                                     {% if item.sleep_duration_minutes %}
-                                    <li><code>⏱️ DeepSleep Wait Duration</code>: <span style="color: #f59e0b; font-weight: bold;">{{ item.sleep_duration_minutes }} minutes</span></li>
+                                    <li><code>[TIMER] DeepSleep Wait Duration</code>: <span style="color: #f59e0b; font-weight: bold;">{{ item.sleep_duration_minutes }} minutes</span></li>
                                     {% endif %}
                                     {% if item.execute_deepsleep_wakeup is not none %}
-                                    <li><code>🔄 Phases</code>: 
+                                    <li><code>[CYCLE] Phases</code>: 
                                         {% if item.execute_deepsleep_wakeup %}
                                         <span style="color: #10b981; font-weight: bold;">✓ Full (Steps 1-12)</span>
                                         <br><small style="color: #9ca3af;">Maintenance + DeepSleep + Wakeup (~60-95 min)</small>
@@ -631,10 +631,10 @@
                                     </li>
                                     {% endif %}
                                     {% if item.sleep_duration_minutes %}
-                                    <li><code>⏱️ Sleep Duration</code>: <span style="color: #f59e0b; font-weight: bold;">{{ item.sleep_duration_minutes }} minutes</span></li>
+                                    <li><code>[TIMER] Sleep Duration</code>: <span style="color: #f59e0b; font-weight: bold;">{{ item.sleep_duration_minutes }} minutes</span></li>
                                     {% endif %}
                                     {% if item.execute_deepsleep_wakeup is not none %}
-                                    <li><code>⚡ CURL-Based Phases</code>: 
+                                    <li><code>[LIGHTNING] CURL-Based Phases</code>: 
                                         {% if item.execute_deepsleep_wakeup %}
                                         <span style="color: #10b981; font-weight: bold;">✓ Full (DeepSleep + Wakeup)</span>
                                         <br><small style="color: #9ca3af;">CURL-based immediate DeepSleep + Wakeup (~60-95 min)</small>
@@ -650,7 +650,7 @@
                                     <li><code>🎬 Asset Voice Command</code>: <span style="color: #06b6d4; font-weight: bold;">{{ item.asset_voice_command }}</span></li>
                                     {% endif %}
                                     {% if item.playback_duration %}
-                                    <li><code>⏱️ Playback Duration</code>: <span style="color: #f59e0b; font-weight: bold;">{{ item.playback_duration }}s</span></li>
+                                    <li><code>[TIMER] Playback Duration</code>: <span style="color: #f59e0b; font-weight: bold;">{{ item.playback_duration }}s</span></li>
                                     {% endif %}
                                     {% if item.execute_playback_controls is not none %}
                                     <li><code>🎮 Playback Controls</code>: 
@@ -680,7 +680,7 @@
                                     <li><code>🌐 Login URL</code>: <span style="color: #3b82f6;">{{ item.login_url }}</span></li>
                                     {% endif %}
                                     {% if item.playback_log_string %}
-                                    <li><code>📋 Playback Log Pattern</code>: <span style="color: #10b981;">{{ item.playback_log_string }}</span></li>
+                                    <li><code>[CLIPBOARD] Playback Log Pattern</code>: <span style="color: #10b981;">{{ item.playback_log_string }}</span></li>
                                     {% endif %}
                                 {% endif %}
                             </ul>

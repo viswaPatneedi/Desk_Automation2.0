@@ -790,7 +790,7 @@
                         // If new is valid and existing is not, replace
                         if (isValid && !existingIsValid) {
                             dedupeMap[key] = result;
-                            console.log(`🔄 Replaced [${key}] with better result (status: ${status}, has details: ${hasDetails})`);
+                            console.log(`[CYCLE] Replaced [${key}] with better result (status: ${status}, has details: ${hasDetails})`);
                         } else if (isValid === existingIsValid) {
                             // Both valid or both invalid - keep existing (first one wins)
                             console.log(`⏭️ Skipped duplicate [${key}] (kept first, new status: ${status})`);

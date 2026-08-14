@@ -393,7 +393,7 @@
             
             for (const [jobId, jobData] of Object.entries(jobs)) {
                 html += `
-                    <div class="job-title">📋 Job: ${jobId}</div>
+                    <div class="job-title">[CLIPBOARD] Job: ${jobId}</div>
                     <div class="job-meta">
                         <strong>Iterations:</strong> ${jobData.iterations || 'N/A'} | <strong>Status:</strong> ${jobData.status}
                     </div>

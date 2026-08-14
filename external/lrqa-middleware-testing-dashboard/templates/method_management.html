@@ -370,7 +370,7 @@
             `).join('');
             
             document.getElementById('editMethodModal').classList.add('show');
-            console.log(`✅ Edit modal opened for method: ${methodName}`);
+            console.log(`[OK] Edit modal opened for method: ${methodName}`);
         }
 
         function closeEditModal() {
@@ -401,7 +401,7 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    showMessage(`✅ Method '${currentEditMethod}' access updated for ${data.teams_granted.length} team(s)`, 'success');
+                    showMessage(`[OK] Method '${currentEditMethod}' access updated for ${data.teams_granted.length} team(s)`, 'success');
                     closeEditModal();
                     loadMethods();
                 } else {

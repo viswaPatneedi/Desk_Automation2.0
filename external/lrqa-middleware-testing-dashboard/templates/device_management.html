@@ -406,10 +406,10 @@
                 
                 const data = await response.json();
                 console.log('🔍 Full API Response from /api/devices/shared:', data);
-                console.log(`📊 Total devices returned: ${data.count || 0}`);
+                console.log(`[CHART] Total devices returned: ${data.count || 0}`);
                 
                 allDevices = data.devices || [];
-                console.log('📋 All Devices:', allDevices.map(d => ({ name: d.name, ip: d.ip, team: d.team_name })));
+                console.log('[CLIPBOARD] All Devices:', allDevices.map(d => ({ name: d.name, ip: d.ip, team: d.team_name })));
                 
                 deviceAccessMap = {};
                 allDevices.forEach(device => {
@@ -431,7 +431,7 @@
                 });
                 
                 if (!response.ok) {
-                    console.error('❌ Error loading teams, status:', response.status);
+                    console.error('[ERROR] Error loading teams, status:', response.status);
                     return;
                 }
                 
@@ -454,7 +454,7 @@
                         return String(team);
                     }).filter(t => t).sort();
                 } else {
-                    console.warn('⚠️ Unexpected teams response format, trying alternative extraction...');
+                    console.warn('[WARN] Unexpected teams response format, trying alternative extraction...');
                     // Try to extract from root level
                     if (Array.isArray(data)) {
                         allTeams = data.map(team => {
@@ -466,9 +466,9 @@
                     }
                 }
                 
-                console.log('✅ Loaded teams:', allTeams);
+                console.log('[OK] Loaded teams:', allTeams);
             } catch (error) {
-                console.error('❌ Error loading teams:', error);
+                console.error('[ERROR] Error loading teams:', error);
             }
         }
 
@@ -546,12 +546,12 @@
                 currentEditDevice = allDevices.find(d => d.ip === deviceIp);
                 
                 if (!currentEditDevice) {
-                    console.error('❌ Device not found for IP:', deviceIp);
-                    console.log('📋 Available devices:', allDevices.map(d => d.ip));
+                    console.error('[ERROR] Device not found for IP:', deviceIp);
+                    console.log('[CLIPBOARD] Available devices:', allDevices.map(d => d.ip));
                     return;
                 }
 
-                console.log('✅ Device found:', currentEditDevice.name);
+                console.log('[OK] Device found:', currentEditDevice.name);
                 
                 document.getElementById('deviceNameDisplay').textContent = currentEditDevice.name;
                 document.getElementById('deviceIP').textContent = currentEditDevice.ip;
@@ -598,14 +598,14 @@
 
                 // Populate team selector (exclude owner team and already shared teams)
                 const teamSelect = document.getElementById('newTeamSelect');
-                console.log('📋 All Teams:', allTeams);
+                console.log('[CLIPBOARD] All Teams:', allTeams);
                 console.log('🎯 Current Device:', currentEditDevice.name, 'Team:', currentEditDevice.team_name);
                 console.log('🔗 Shared With:', sharedTeams);
                 
                 const availableTeams = allTeams.filter(team => 
                     team !== currentEditDevice.team_name && !sharedTeams[team]
                 );
-                console.log('✅ Available Teams to Share:', availableTeams);
+                console.log('[OK] Available Teams to Share:', availableTeams);
                 
                 teamSelect.innerHTML = '<option value="">Select a team...</option>' + 
                     availableTeams.map(team => 
@@ -617,7 +617,7 @@
                 console.log('🔍 Modal element:', modal);
                 
                 if (!modal) {
-                    console.error('❌ Modal element not found!');
+                    console.error('[ERROR] Modal element not found!');
                     return;
                 }
                 
@@ -628,11 +628,11 @@
                 // Prevent body scroll when modal is open
                 document.body.style.overflow = 'hidden';
                 
-                console.log('✅ Modal displayed with show class');
+                console.log('[OK] Modal displayed with show class');
                 
                 // Set focus to first form element
                 setTimeout(() => {
-                    console.log('✅ Modal should be visible now');
+                    console.log('[OK] Modal should be visible now');
                     const teamSelect = modal.querySelector('#newTeamSelect');
                     if (teamSelect) {
                         teamSelect.focus();
@@ -640,7 +640,7 @@
                     }
                 }, 50);
             } catch (error) {
-                console.error('❌ Error in openEditModal:', error);
+                console.error('[ERROR] Error in openEditModal:', error);
             }
         }
 
@@ -652,7 +652,7 @@
             document.body.style.overflow = 'auto';
             document.getElementById('editDeviceForm').reset();
             currentEditDevice = null;
-            console.log('✅ Modal closed');
+            console.log('[OK] Modal closed');
         }
 
         // Add team access
@@ -692,7 +692,7 @@
                 
                 // Refresh modal
                 await openEditModal(currentEditDevice.ip);
-                showMessage('✅ Access granted successfully', 'success');
+                showMessage('[OK] Access granted successfully', 'success');
             } catch (error) {
                 showMessage('Error: ' + error.message, 'error');
             }
@@ -722,7 +722,7 @@
                 
                 // Refresh modal
                 await openEditModal(currentEditDevice.ip);
-                showMessage('✅ Access revoked successfully', 'success');
+                showMessage('[OK] Access revoked successfully', 'success');
             } catch (error) {
                 showMessage('Error: ' + error.message, 'error');
             }
@@ -747,11 +747,11 @@
             event.preventDefault();  // Prevent default form submission
             
             if (!currentEditDevice) {
-                showMessage('❌ No device selected', 'error');
+                showMessage('[ERROR] No device selected', 'error');
                 return;
             }
             
-            showMessage('✅ Device access settings saved successfully', 'success');
+            showMessage('[OK] Device access settings saved successfully', 'success');
             
             // Close modal after short delay to show success message
             setTimeout(() => {
@@ -766,7 +766,7 @@
 
         // Initialize
         async function initialize() {
-            console.log('🚀 Initializing device management page...');
+            console.log('[ROCKET] Initializing device management page...');
             
             // Attach form submit handler
             document.getElementById('editDeviceForm').addEventListener('submit', handleEditDeviceFormSubmit);
@@ -796,9 +796,9 @@
             });
             
             await loadDevices();
-            console.log('📥 Devices loaded');
+            console.log('[INBOX] Devices loaded');
             await loadTeams();
-            console.log('✅ Teams loaded');
+            console.log('[OK] Teams loaded');
         }
         
         initialize();

@@ -10191,7 +10191,7 @@
                     console.log(`📊 Historical jobs: ${historyJobs.length}`);
                 }
                 
-                // Merge: Current jobs take priority, but don't duplicate
+                // Merge: Current jobs take priority, but avoid duplicates
                 const jobIds = new Set(currentJobs.map(j => j.job_id));
                 const mergedJobs = [
                     ...currentJobs,
@@ -11133,45 +11133,40 @@
                         queueData.forEach((item, idx) => {
                             const methodName = getMethodName ? getMethodName(item.method) : (item.sequenceName || item.name || item.method || 'Unknown');
                             
+                            // Skip composite sequences (feature disabled for testing)
                             if (item.isCompositeSequence) {
-                                // Composite sequence - show with methods list
-                                html += '<div style="padding: 0.75rem 1rem; border-bottom: 1px solid #374151; background: linear-gradient(135deg, #312e81 0%, #1f2937 100%); border-left: 3px solid #8b5cf6;">';\n                                // Header\n                                html += '<div style="margin-bottom: 0.75rem;">';\n                                html += '<span style="background-color: #8b5cf6; color: #fff; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.75rem; margin-right: 0.5rem; display: inline-block;">' + (idx + 1) + '</span>';\n                                html += '<strong style=\"color: #e879f9; font-size: 1rem;\">' + methodName + ' <span style=\"color: #a78bfa; font-size: 0.85rem; font-weight: normal;\">(Composite Sequence - Reusable)</span></strong>';\n                                html += '</div>';\n                                // Creator info\n                                if (item.sequenceCreator) {\n                                    html += '<div style=\"color: #d1d5db; font-size: 0.85rem; margin-bottom: 0.5rem;\">👤 <strong>Creator:</strong> ' + item.sequenceCreator + '</div>';\n                                }\n                                // Methods section\n                                if (item.sequenceMethods && item.sequenceMethods.length > 0) {\n                                    html += '<div style=\"background-color: #1f2937; padding: 0.75rem; border-radius: 4px; margin-top: 0.5rem; border-left: 2px solid #8b5cf6;\">';\n                                    html += '<div style=\"color: #a1a5fb; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;\">📋 <strong>Methods included this sequence:</strong></div>';\n                                    item.sequenceMethods.forEach((m, midx) => {\n                                        const mMethod = getMethodName ? getMethodName(m.method) : (m.method || 'Unknown');\n                                        html += '<div style=\"color: #d1d5db; font-size: 0.8rem; margin-left: 1rem; margin-bottom: 0.25rem;\"><span style=\"color: #93c5fd;\">• ' + (midx + 1) + '.</span> ' + mMethod + '</div>';\n                                    });\n                                    html += '</div>';\n                                }\n                                html += '</div>';
-                                        const mMethod = getMethodName ? getMethodName(m.method) : (m.method || 'Unknown');
-                                        html += '<small style="color: #a1a5fb; display: block; margin-left: 1rem;">' + (midx + 1) + '. ' + mMethod + '</small>';
-                                    });
-                                }
-                                html += '</div></div>';
-                            } else {
-                                html += '<div style="padding: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #374151; background-color: #1f2937;">';
-                                html += '<span style="background-color: #10b981; color: #000; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.75rem; margin-right: 0.5rem;">' + (idx + 1) + '</span>';
-                                html += '<strong style="color: #10b981;">' + methodName + '</strong>';
-                                if (item.device_id) html += ' <span style="color: #9ca3af;">(' + item.device_id + ')</span>';
-                                html += '<br>';
-                                
-                                // Show all user-provided parameters
-                                const skipFields = ['method', 'device_id', 'id', 'description', 'name', 'isCompositeSequence', 'sequenceId', 'sequenceName', 'sequenceCreator', 'sequenceMethods', 'methodCount'];
-                                let hasParams = false;
-                                html += '<div style="margin-top: 0.75rem; margin-left: 1.5rem; padding: 0.5rem; background-color: #111827; border-radius: 4px; border-left: 2px solid #6366f1; font-size: 0.8rem;">';
-                                
-                                for (const [key, value] of Object.entries(item)) {
-                                    if (!skipFields.includes(key) && value !== null && value !== undefined && value !== '') {
-                                        hasParams = true;
-                                        let displayValue;
-                                        if (typeof value === 'object') {
-                                            displayValue = JSON.stringify(value);
-                                        } else {
-                                            displayValue = String(value);
-                                        }
-                                        const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                                        html += '<div style="color: #d1d5db; margin-bottom: 0.25rem; word-break: break-all;"><span style="color: #a1a5fb;">' + displayKey + ':</span> <span style="color: #61f3f3;">' + displayValue + '</span></div>';
-                                    }
-                                }
-                                
-                                if (!hasParams) {
-                                    html += '<span style="color: #9ca3af; font-size: 0.75rem;">No additional parameters</span>';
-                                }
-                                html += '</div></div>';
+                                return; // Skip rendering
                             }
+                            
+                            html += '<div style="padding: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #374151; background-color: #1f2937;">';
+                            html += '<span style="background-color: #10b981; color: #000; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.75rem; margin-right: 0.5rem;">' + (idx + 1) + '</span>';
+                            html += '<strong style="color: #10b981;">' + methodName + '</strong>';
+                            if (item.device_id) html += ' <span style="color: #9ca3af;">(' + item.device_id + ')</span>';
+                            html += '<br>';
+                            
+                            // Show all user-provided parameters
+                            const skipFields = ['method', 'device_id', 'id', 'description', 'name', 'isCompositeSequence', 'sequenceId', 'sequenceName', 'sequenceCreator', 'sequenceMethods', 'methodCount'];
+                            let hasParams = false;
+                            html += '<div style="margin-top: 0.75rem; margin-left: 1.5rem; padding: 0.5rem; background-color: #111827; border-radius: 4px; border-left: 2px solid #6366f1; font-size: 0.8rem;">';
+                            
+                            for (const [key, value] of Object.entries(item)) {
+                                if (!skipFields.includes(key) && value !== null && value !== undefined && value !== '') {
+                                    hasParams = true;
+                                    let displayValue;
+                                    if (typeof value === 'object') {
+                                        displayValue = JSON.stringify(value);
+                                    } else {
+                                        displayValue = String(value);
+                                    }
+                                    const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                                    html += '<div style="color: #d1d5db; margin-bottom: 0.25rem; word-break: break-all;"><span style="color: #a1a5fb;">' + displayKey + ':</span> <span style="color: #61f3f3;">' + displayValue + '</span></div>';
+                                }
+                            }
+                            
+                            if (!hasParams) {
+                                html += '<span style="color: #9ca3af; font-size: 0.75rem;">No additional parameters</span>';
+                            }
+                            html += '</div></div>';
                         });
                         html += '</div>';
                     } else {
@@ -11275,7 +11270,7 @@
                     const compositeQueueItem = {
                         id: Date.now().toString(),
                         method: `sequence_reference_${sequenceId}`,  // Special method type for composite
-                        name: `📦 ${sequenceName} (Sequence)`,  // Show it's a sequence
+                        name: `📦 ${sequenceName} (Sequence)`,  // Show this is a sequence
                         description: `Composite sequence: ${sequenceName} (${methodCount} methods by ${methodStep.source_sequence_creator})`,
                         isCompositeSequence: true,  // Flag to identify as composite
                         sequenceId: sequenceId,
