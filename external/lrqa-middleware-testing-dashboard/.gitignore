@@ -18,8 +18,11 @@ instance/
 # Application specific
 screenshots/
 iteration_logs/
+Iteration_logs/
 base_images/
 Enhancement_output/
+ExecutionResults/
+logs/
 realtime_logs.txt
 
 # Backup files
