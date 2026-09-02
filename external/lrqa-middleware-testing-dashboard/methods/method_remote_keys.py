@@ -5,6 +5,7 @@ Handles multiple key presses, grouping consecutive keys for efficient keySimulat
 This method can be called multiple times in the same execution without conflicts.
 """
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 import time
 import traceback
 from typing import List, Dict, Tuple, Union
@@ -50,7 +51,8 @@ def group_keys(keys: List[str]) -> List[Tuple[str, int]]:
     return grouped
 
 def send_remote_keys(device_ip: str, key_sequence: Union[str, List[str]], 
-                     port: int = 10022, username: str = "root", password: str = "", key_delay: float = 2.0) -> Dict:
+                     port: int = 10022, username: str = "root", password: str = "", key_delay: float = 2.0,
+                     ssh_client=None) -> Dict:
     """
     Send remote control keys to a device via SSH.
     
@@ -100,12 +102,13 @@ def send_remote_keys(device_ip: str, key_sequence: Union[str, List[str]],
         if key not in keycodes:
             return {"success": False, "message": f"Unsupported key: {key}. Check supported keys list."}
     
-    ssh = None
+    ssh = ssh_client
+    owns_ssh_connection = ssh_client is None
     try:
-        # Create fresh SSH connection for this call (thread-safe)
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(device_ip, port=port, username=username, password=password, timeout=15)
+        if owns_ssh_connection:
+            ssh = get_execution_ssh_client()
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(device_ip, port=port, username=username, password=password, timeout=15)
         
         executed_keys = []
         for key, repeat in grouped:
@@ -120,10 +123,8 @@ def send_remote_keys(device_ip: str, key_sequence: Union[str, List[str]],
             cmd = f"keySimulator -k{keycode} -r{repeat}"
             
             stdin, stdout, stderr = ssh.exec_command(cmd)
-            exit_status = stdout.channel.recv_exit_status()
-            
-            if exit_status != 0:
-                error_msg = stderr.read().decode('utf-8', errors='ignore').strip()
+            error_msg = stderr.read().decode('utf-8', errors='ignore').strip()
+            if error_msg:
                 return {"success": False, "message": f"Failed to send key {key}: {error_msg}"}
             
             executed_keys.append(f"{display_key}x{repeat}" if repeat > 1 else display_key)
@@ -149,7 +150,7 @@ def send_remote_keys(device_ip: str, key_sequence: Union[str, List[str]],
         return {"success": False, "message": f"Error: {str(e)}\n{traceback.format_exc()}"}
     finally:
         # Always close SSH connection to prevent resource leaks
-        if ssh:
+        if ssh and owns_ssh_connection:
             try:
                 ssh.close()
             except:

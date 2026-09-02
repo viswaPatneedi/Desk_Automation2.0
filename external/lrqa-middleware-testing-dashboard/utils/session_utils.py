@@ -3,7 +3,16 @@ import sys
 import hashlib
 from datetime import datetime, timezone
 
-def create_execution_session_folder(method, device_name, device_ip, iterations, job_id=None):
+def _safe_path_part(value, fallback='UNKNOWN'):
+    """Return a filesystem-safe, stable path component."""
+    value = str(value or fallback).strip()
+    value = value.replace('/', '_').replace('\\', '_')
+    value = ''.join(char if char.isalnum() or char in '._-' else '_' for char in value)
+    return value.strip('._') or fallback
+
+
+def create_execution_session_folder(method, device_name, device_ip, iterations, job_id=None,
+                                    team_name=None, user_id=None):
     """
     Create execution session folder with smart storage management.
     
@@ -31,13 +40,13 @@ def create_execution_session_folder(method, device_name, device_ip, iterations, 
         usb_available = False
         base_output = 'Enhancement_output'
     
-    # Create safe folder names
-    safe_device_name = device_name.replace(' ', '-').replace('/', '_').replace('\\', '_').upper()
-    safe_ip = device_ip.replace('.', '-')
-    timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S_UTC')
-    
-    # CRITICAL: Include job_id to make folder unique per job (prevents screenshot mixing)
-    job_id_part = f"_{job_id[:8]}" if job_id else ""  # Use first 8 chars of job_id
+    # Create the stable hierarchy used by execution results and screenshots.
+    safe_device_name = _safe_path_part(device_name).upper()
+    safe_ip = _safe_path_part(device_ip.replace('.', '-'))
+    safe_team = _safe_path_part(team_name).upper()
+    safe_user = _safe_path_part(user_id)
+    current_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+    timestamp = datetime.now(timezone.utc).strftime('%H%M%S_UTC')
     
     # Handle long method names by truncating or using hash
     safe_method = method.upper()
@@ -49,18 +58,22 @@ def create_execution_session_folder(method, device_name, device_ip, iterations, 
         method_hash = hashlib.md5(safe_method.encode()).hexdigest()[:8]
         safe_method = '_'.join(methods_list) + f'_+{len(safe_method.split(",")) - 3}MORE_{method_hash}'
     
-    # Build session name WITH job_id
-    session_name = f"{safe_method}_{safe_device_name}_{safe_ip}_{iterations}_ITR{job_id_part}_{timestamp}"
+    # Build the sequence execution folder below its job-owned device hierarchy.
+    session_name = f"{safe_method}_{iterations}_{timestamp}"
     
     # Final safety check - truncate if still too long (filesystem limit is typically 255)
     if len(session_name) > 200:
-        session_name = f"{safe_method[:70]}_{safe_device_name[:25]}_{safe_ip}_{iterations}_ITR{job_id_part}_{timestamp}"
+        session_name = f"{safe_method[:70]}_{iterations}_{timestamp}"
     
     # Create session folder structure
-    session_folder = os.path.join(base_output, 'sessions', session_name)
-    screenshots_dir = os.path.join(session_folder, "SCREENSHOTS")
-    execution_logs_dir = os.path.join(session_folder, "EXECUTION_LOGS")
-    device_logs_dir = os.path.join(session_folder, "DEVICE_LOGS")
+    session_folder = os.path.join(
+        base_output, 'EXECUTION_RESULTS', 'DESK_AUTOMATION-V2', safe_team,
+        safe_user, current_date, f'{safe_device_name}_{safe_ip}', session_name
+    )
+    iteration_folder = os.path.join(session_folder, f'ITERATION_{iterations}', 'ITR_1')
+    screenshots_dir = os.path.join(iteration_folder, 'screenshots')
+    execution_logs_dir = os.path.join(iteration_folder, 'execution')
+    device_logs_dir = os.path.join(iteration_folder, 'captured_device_logs')
 
     for folder in [session_folder, screenshots_dir, execution_logs_dir, device_logs_dir]:
         if not os.path.exists(folder):

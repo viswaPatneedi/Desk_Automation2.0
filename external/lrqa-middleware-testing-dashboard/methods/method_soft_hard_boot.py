@@ -21,6 +21,7 @@ import sys
 import time
 import re
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 import socket
 import subprocess
 from datetime import datetime, timezone
@@ -532,7 +533,7 @@ def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, 
     log(f"   Will probe every {probe_interval}s for up to {total_ssh_timeout}s (max total: {ssh_probe_start + total_ssh_timeout}s)")
     sys.stdout.flush()  # Force log output immediately
     
-    ssh = paramiko.SSHClient()
+    ssh = get_execution_ssh_client()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
     elapsed_probe_time = 0
@@ -552,7 +553,7 @@ def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, 
             return ssh
         except Exception as e:
             # Connection failed, continue probing
-            ssh = paramiko.SSHClient()
+            ssh = get_execution_ssh_client()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             time.sleep(probe_interval)
             elapsed_probe_time = time.time() - start_time - ssh_probe_start
@@ -640,7 +641,7 @@ def execute_soft_hard_boot_process(device_ip, port, username, password, iteratio
     try:
         # STEP 1: DEVICE CONNECTION & PRE-BOOT SETUP
         log_message("[STEP 1] Connecting to device and initial setup...")
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password, timeout=15)
         log_message("✓ Connected to device successfully")

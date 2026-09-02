@@ -163,6 +163,13 @@ class SystemCommandsController:
                     "approved_at": row.updated_at.isoformat() if row.updated_at else None,
                 }
             return approved
+        except Exception:
+            try:
+                with open(SYSTEM_COMMANDS_FILE, "r", encoding="utf-8") as handle:
+                    data = json.load(handle)
+                return data.get("user_defined", {}) if isinstance(data, dict) else {}
+            except (OSError, json.JSONDecodeError):
+                return {}
         finally:
             session.close()
 
@@ -180,6 +187,8 @@ class SystemCommandsController:
                 row.change_id: SystemCommandsController._format_pending(row, session)
                 for row in rows
             }
+        except Exception:
+            return {}
         finally:
             session.close()
 

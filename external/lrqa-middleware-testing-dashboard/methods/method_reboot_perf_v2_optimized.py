@@ -22,6 +22,7 @@ import sys
 import time
 import re
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 import socket
 import os
 import threading
@@ -83,6 +84,14 @@ def build_execution_results_path(device_ip, device_name, method_name, iteration,
             log_callback(msg)
     
     try:
+        from methods import method_utils
+        screenshots_dir = getattr(method_utils.thread_local, 'screenshots_dir', None)
+        if screenshots_dir:
+            results_dir = Path(screenshots_dir)
+            results_dir.mkdir(parents=True, exist_ok=True)
+            log(f"📁 Job screenshot path: {results_dir}")
+            return results_dir
+
         # Get current date
         date_str = datetime.now().strftime('%Y-%m-%d')
         
@@ -679,6 +688,8 @@ def collect_device_logs_to_media_app(ssh, device_ip, device_name, iteration, log
     Returns: str (path to collected logs) or None if failed
     """
     import os
+    import shlex
+    from methods import method_utils
     
     # Clean device name for filename
     safe_device_name = device_name.replace(' ', '_').replace('/', '_').replace('\\', '_')
@@ -725,8 +736,48 @@ def collect_device_logs_to_media_app(ssh, device_ip, device_name, iteration, log
             for line in verify_output.split('\n'):
                 if remote_log_archive in line:
                     log_message_func(f"  Details: {line}")
-            
-            return remote_log_archive
+
+            # Download the job's archive through the existing R-Pi device channel.
+            # R-Pi shell wrappers do not expose SFTP, so stream the bytes with cat.
+            destination_dir = getattr(method_utils.thread_local, 'device_logs_dir', None)
+            if not destination_dir:
+                log_message_func("⚠ Job artifact folder is unavailable; archive remains on device")
+                return remote_log_archive
+
+            os.makedirs(destination_dir, exist_ok=True)
+            local_log_archive = os.path.join(destination_dir, os.path.basename(remote_log_archive))
+            size_cmd = f"wc -c < {shlex.quote(remote_log_archive)}"
+            _, size_stdout, size_stderr = ssh.exec_command(size_cmd, timeout=10)
+            remote_size_text = size_stdout.read().decode('utf-8', errors='ignore').strip()
+            remote_error = size_stderr.read().decode('utf-8', errors='ignore').strip()
+            try:
+                remote_size = int(remote_size_text)
+            except ValueError:
+                log_message_func(f"⚠ Cannot verify archive size: {remote_error or remote_size_text}")
+                return remote_log_archive
+
+            _, archive_stdout, archive_stderr = ssh.exec_command(
+                f"cat {shlex.quote(remote_log_archive)}", timeout=300
+            )
+            with open(local_log_archive, 'wb') as local_file:
+                while True:
+                    chunk = archive_stdout.read(65536)
+                    if not chunk:
+                        break
+                    local_file.write(chunk)
+            archive_error = archive_stderr.read().decode('utf-8', errors='ignore').strip()
+            local_size = os.path.getsize(local_log_archive) if os.path.exists(local_log_archive) else -1
+
+            if local_size != remote_size:
+                log_message_func(
+                    f"❌ Archive copy verification failed: remote={remote_size} bytes, local={local_size} bytes"
+                )
+                return remote_log_archive
+
+            log_message_func(f"✓ Device log archive copied and verified: {local_log_archive}")
+            if archive_error:
+                log_message_func(f"⚠ Archive copy warning: {archive_error}")
+            return local_log_archive
         else:
             log_message_func(f"❌ Failed to create log archive")
             log_message_func(f"  Output: {verify_output}")
@@ -925,7 +976,7 @@ def execute_optional_post_reboot_checks(ssh, optional_checks, log_message_func, 
     
     return results
 
-def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, initial_wait=50, ssh_probe_start=30, probe_interval=5, total_ssh_timeout=120, log_callback=None, tunnel_service=None):
+def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, initial_wait=50, ssh_probe_start=30, probe_interval=5, total_ssh_timeout=120, log_callback=None, tunnel_service=None, device_config=None):
     """
     OPTIMIZED: Wait for device with intelligent early SSH probing + R-Pi tunnel health checks
     
@@ -945,7 +996,8 @@ def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, 
         probe_interval: Time between SSH connection attempts (5s)
         total_ssh_timeout: Total time to keep trying SSH connections (120s)
         log_callback: Function to log messages
-        tunnel_service: R-Pi tunnel service object (for health checks and re-establishment)
+        tunnel_service: Connected R-Pi shell service used to probe the device
+        device_config: Device-specific SSH connection details for the R-Pi shell
     
     Returns:
         paramiko.SSHClient if device comes back online, None if timeout
@@ -969,9 +1021,8 @@ def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, 
     # Phase 3: Active SSH probing with tunnel health checks
     log(f"[PROBING PHASE 3] Starting SSH probing at {ssh_probe_start}s mark...")
     log(f"   Will probe every {probe_interval}s for up to {total_ssh_timeout}s (max total: {ssh_probe_start + total_ssh_timeout}s)")
-    log(f"   Tunnel health will be checked before each SSH attempt")
     if tunnel_service:
-        log(f"   Using R-Pi tunnel (localhost:{port}) for SSH connection")
+        log(f"   Using the existing R-Pi shell to probe {device_ip}:{port}")
     else:
         log(f"   Using direct SSH connection to {device_ip}:{port}")
     sys.stdout.flush()  # Force log output immediately
@@ -988,51 +1039,24 @@ def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, 
             elapsed_total = time.time() - start_time
             log(f"  ⏱ SSH probe attempt at {elapsed_probe_time}s mark (total {elapsed_total:.0f}s)...")
             
-            # ✅ CRITICAL: Check R-Pi tunnel health BEFORE each SSH attempt
-            if tunnel_service:
-                try:
-                    # Check if tunnel port is still responsive
-                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                    sock.settimeout(1)
-                    result = sock.connect_ex(('127.0.0.1', port))
-                    sock.close()
-                    
-                    if result == 0:
-                        log(f"     ✓ R-Pi tunnel active (port {port} listening)")
-                    else:
-                        log(f"     ⚠ R-Pi tunnel port {port} NOT responding - Re-establishing...")
-                        try:
-                            # Attempt to stop old tunnel
-                            if hasattr(tunnel_service, 'stop'):
-                                tunnel_service.stop()
-                                time.sleep(1)
-                            
-                            # Re-establish tunnel
-                            log(f"     → Reconnecting R-Pi tunnel...")
-                            tunnel_service.connect()
-                            log(f"     ✓ R-Pi tunnel re-established")
-                            time.sleep(2)
-                        except Exception as tunnel_err:
-                            log(f"     ⚠ Failed to re-establish tunnel: {tunnel_err}")
-                            log(f"     → Attempting SSH anyway...")
-                except Exception as health_check_err:
-                    log(f"     ⚠ Tunnel health check failed: {health_check_err}")
-            
             # Try SSH connection
             if tunnel_service:
-                # Use R-Pi tunnel connectivity
+                # The R-Pi shell remains connected while its device-side SSH command is retried.
                 try:
                     from utils.ssh_wrapper import wrap_tunnel_service_as_ssh
                     ssh = wrap_tunnel_service_as_ssh(tunnel_service, device_config)
+                    _, stdout, stderr = ssh.exec_command('true', timeout=5)
+                    error_output = stderr.read()
+                    if error_output.strip():
+                        raise ConnectionError(error_output.decode('utf-8', errors='replace'))
                     elapsed_total = time.time() - start_time
                     log(f"✓ Device reconnected after {elapsed_total:.1f}s total")
                     log(f"   (Initial wait: {ssh_probe_start}s, SSH probing: {elapsed_probe_time}s)")
                     log(f"   Connected via R-Pi tunnel")
                     return ssh
                 except Exception as tunnel_wrap_err:
-                    # Try regular SSH as fallback
-                    log(f"     ⚠ Tunnel wrapper failed: {tunnel_wrap_err} - trying direct SSH...")
-                    ssh.connect('127.0.0.1', port=port, username=username, password=password, timeout=5)
+                    log(f"     ⚠ Device SSH through R-Pi is not ready: {tunnel_wrap_err}")
+                    raise
             else:
                 # Direct SSH connection to device
                 ssh.connect(device_ip, port=port, username=username, password=password, timeout=5)
@@ -1043,7 +1067,7 @@ def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, 
             return ssh
         except Exception as e:
             # Connection failed, continue probing
-            ssh = paramiko.SSHClient()
+            ssh = get_execution_ssh_client()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             time.sleep(probe_interval)
             elapsed_probe_time = time.time() - start_time - ssh_probe_start
@@ -1155,7 +1179,7 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
             ssh = wrap_tunnel_service_as_ssh(tunnel_service, device_config)
         else:
             log_message("✓ Creating direct SSH connection to device...")
-            ssh = paramiko.SSHClient()
+            ssh = get_execution_ssh_client()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(device_ip, port=port, username=username, password=password, timeout=15)
         
@@ -1216,7 +1240,8 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                 before_screenshot_result = screenshot_capture_service.capture_screenshot(
                     device_ip=device_ip,
                     screenshot_port=5800,
-                    timeout=10
+                    timeout=10,
+                    ssh=ssh
                 )
                 
                 if before_screenshot_result.get('success'):
@@ -1347,7 +1372,8 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
             probe_interval=5,
             total_ssh_timeout=100,
             log_callback=log_message,
-            tunnel_service=tunnel_service
+            tunnel_service=tunnel_service,
+            device_config=device_config
         )
         
         if not ssh:
@@ -1537,7 +1563,8 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                     screenshot_result = screenshot_capture_service.capture_screenshot(
                         device_ip=device_ip,
                         screenshot_port=5800,
-                        timeout=10
+                        timeout=10,
+                        ssh=ssh
                     )
                     
                     if screenshot_result and screenshot_result.get('success'):
@@ -1799,7 +1826,8 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                     screenshot_result = screenshot_capture_service.capture_screenshot(
                         device_ip=device_ip,
                         screenshot_port=5800,
-                        timeout=10
+                        timeout=10,
+                        ssh=ssh
                     )
                     
                     if screenshot_result and screenshot_result.get('success'):

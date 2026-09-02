@@ -1,36 +1,5 @@
 [
     {
-        "ip": "10.0.0.95",
-        "name": "CELLO-SKY",
-        "username": "root",
-        "password": "",
-        "port": 10022,
-        "ir_config": {
-            "ir_port": "2",
-            "itach_ip": "10.0.0.50",
-            "itach_port": 4998
-        },
-        "mac_address": "FC:D2:90:00:09:AC",
-        "vnc_url": "http://10.0.0.95:5800/",
-        "use_jump_host": false,
-        "jump_host_config": {},
-        "device_type": "SKY STREAM",
-        "location": "USA:PHL",
-        "team_name": "LRQA",
-        "is_rack_device": false,
-        "rpi_config": {
-            "rpi_ip": "10.26.52.151",
-            "rpi_port": 22,
-            "rpi_password": "Viswa123!",
-            "rpi_username": "lrqa"
-        },
-        "ir_blaster_config": {},
-        "power_control_config": {},
-        "created_by": "",
-        "shared_with_teams": {},
-        "is_active": true
-    },
-    {
         "ip": "10.0.0.140",
         "name": "DT-XIONE_UK-0D-AB",
         "username": "root",
@@ -122,9 +91,9 @@
         "password": "",
         "port": 10022,
         "ir_config": {
-            "ir_port": "3",
             "itach_ip": "10.0.0.50",
-            "itach_port": 4998
+            "itach_port": 4998,
+            "ir_port": "3"
         },
         "mac_address": "1C:2F:A2:30:35:B6",
         "vnc_url": "http://10.0.0.250:5800/",
@@ -137,8 +106,8 @@
         "rpi_config": {
             "rpi_ip": "10.26.52.151",
             "rpi_port": 22,
-            "rpi_password": "Viswa123!",
-            "rpi_username": "lrqa"
+            "rpi_username": "lrqa",
+            "rpi_password": "Viswa123!"
         },
         "ir_blaster_config": {},
         "power_control_config": {},
@@ -153,9 +122,9 @@
         "password": "",
         "port": 10022,
         "ir_config": {
+            "ir_port": "1",
             "itach_ip": "10.0.0.50",
-            "itach_port": 4998,
-            "ir_port": "1"
+            "itach_port": 4998
         },
         "mac_address": "04:B8:6A:78:39:7B",
         "vnc_url": "http://10.0.0.166:5800/",
@@ -168,8 +137,8 @@
         "rpi_config": {
             "rpi_ip": "10.26.52.151",
             "rpi_port": 22,
-            "rpi_username": "lrqa",
-            "rpi_password": "Viswa123!"
+            "rpi_password": "Viswa123!",
+            "rpi_username": "lrqa"
         },
         "ir_blaster_config": {},
         "power_control_config": {},

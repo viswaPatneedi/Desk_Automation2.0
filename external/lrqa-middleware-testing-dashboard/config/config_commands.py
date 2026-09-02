@@ -44,6 +44,7 @@ AVAILABLE_METHODS = [
     'memcapture_tool',
     'execute_command',
     'collect_device_logs',
+    'fetch_archived_devicelogs',
     'validate_results',
     'activate_flux',
     'navigate_to_tiles',

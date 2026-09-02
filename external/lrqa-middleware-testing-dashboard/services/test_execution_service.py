@@ -34,6 +34,7 @@ from methods.method_execute_command import execute_system_command as execute_com
 from methods.method_activate_flux import activate_flux_widget
 from methods.method_navigate_to_tiles import navigate_to_tiles
 from methods.method_collect_device_logs import collect_device_logs
+from methods.method_fetch_archived_devicelogs import fetch_archived_device_logs
 from methods.method_check_logs import execute_check_logs
 from methods.method_maintenance_deepsleep_wakeup import execute_maintenance_deepsleep_wakeup_process
 from methods.method_maintenance_CURL_deepsleep_wakeup import execute_maintenance_CURL_deepsleep_wakeup_process
@@ -521,7 +522,7 @@ class TestExecutionService:
                                 self.tunnel_service = tunnel_service
                                 self.device_config = device_config
                             
-                            def connect(self):
+                            def connect(self, *_args, **_kwargs):
                                 return self.tunnel_service.connect()
                             
                             def execute_command(self, command, timeout=30):
@@ -537,6 +538,9 @@ class TestExecutionService:
                             
                             def is_healthy(self):
                                 return self.tunnel_service.is_healthy()
+
+                            def execute_rpi_command(self, command, timeout=30):
+                                return self.tunnel_service.execute_rpi_command(command, timeout=timeout)
                             
                             def disconnect(self):
                                 return self.tunnel_service.disconnect()
@@ -600,7 +604,7 @@ class TestExecutionService:
                         self.tunnel_service = tunnel_service
                         self.device_config = device_config
                     
-                    def connect(self):
+                    def connect(self, *_args, **_kwargs):
                         return self.tunnel_service.connect()
                     
                     def execute_command(self, command, timeout=30):
@@ -616,6 +620,9 @@ class TestExecutionService:
                     
                     def is_healthy(self):
                         return self.tunnel_service.is_healthy()
+
+                    def execute_rpi_command(self, command, timeout=30):
+                        return self.tunnel_service.execute_rpi_command(command, timeout=timeout)
                     
                     def disconnect(self):
                         return self.tunnel_service.disconnect()
@@ -987,10 +994,23 @@ class TestExecutionService:
             
             # CRITICAL: Pass job_id to create UNIQUE session folder per job
             # This prevents screenshot and log mixing for same device running multiple jobs
+            execution_job = Job.get_job(job_id)
             usb_session_folder, screenshots_dir, execution_logs_dir, device_logs_dir = create_execution_session_folder(
-                folder_method_name, device.name, device.ip, iterations, job_id=job_id
+                folder_method_name,
+                device.name,
+                device.ip,
+                iterations,
+                job_id=job_id,
+                team_name=getattr(execution_job, 'team_name', None),
+                user_id=getattr(execution_job, 'executing_user', None) or getattr(execution_job, 'user_id', None)
             )
             session_folder = usb_session_folder
+
+            from methods import method_utils
+            method_utils.thread_local.session_folder = session_folder
+            method_utils.thread_local.screenshots_dir = screenshots_dir
+            method_utils.thread_local.execution_logs_dir = execution_logs_dir
+            method_utils.thread_local.device_logs_dir = device_logs_dir
             
             # Set log service to write to job-specific log file
             log_file_handle = open(log_file_path, 'a', encoding='utf-8')
@@ -1076,12 +1096,10 @@ class TestExecutionService:
             log_service.log(f"R-Pi Address: {device.rpi_config.get('rpi_ip', 'unknown')}")
             log_service.log(f"Procedure: Get R-Pi details → Connect to R-Pi → Trigger execution on device")
             
-            # Check if execution queue contains non-IR_test methods
-            for queue_item in execution_queue:
-                method = queue_item.get('method', '')
-                if method != 'ir_test':
-                    needs_ssh_tunnel = True
-                    break
+            # Every managed execution uses the device's R-Pi connection. IR
+            # transmission may use iTach/GDF separately, but IR verification
+            # must still reach the device through its assigned R-Pi.
+            needs_ssh_tunnel = True
             
             if needs_ssh_tunnel and not skip_tunnel_lifecycle:
                 # Normal flow: establish tunnel for this device
@@ -1126,6 +1144,17 @@ class TestExecutionService:
                 log_service.log(f"\n[TUNNEL] Execution queue is IR_test only (uses HTTP API)")
                 log_service.log(f"[TUNNEL] IR commands will be sent via GDF API without SSH tunnel")
                 log_service.log(f"[TUNNEL] Note: Tunnel may still be established for log verification after IR commands")
+
+            # Every SSH-based method receives a device-bound view of the shared
+            # R-Pi connection. The group owns the underlying connection lifecycle.
+            if tunnel_service and hasattr(tunnel_service, 'for_device'):
+                tunnel_service = tunnel_service.for_device({
+                    'lab_ip': device.ip,
+                    'lab_port': device.port or 10022,
+                    'lab_username': device.username or 'root',
+                    'lab_password': device.password or '',
+                })
+            method_utils.thread_local.tunnel_service = tunnel_service
             
             for i in range(start_iteration, iterations):
                 # Check if job has been cancelled
@@ -1137,9 +1166,24 @@ class TestExecutionService:
                         log_service.log(f"{'='*60}")
                         print(f"✓ Job {job_id} was cancelled, exiting iteration loop")
                         break
+
+                    # Persist the active iteration before any long-running setup
+                    # so one-step methods report progress immediately.
+                    Job.update_job_progress(job_id, 0, i + 1)
                 
                 # TIMING: Record iteration start time for ETA calculation
                 iteration_start_time = time_module.time()
+
+                # Keep screenshots and downloaded device logs isolated per iteration.
+                iteration_folder = os.path.join(session_folder, f'ITERATION_{iterations}', f'ITR_{i + 1}')
+                screenshots_dir = os.path.join(iteration_folder, 'screenshots')
+                execution_logs_dir = os.path.join(iteration_folder, 'execution')
+                device_logs_dir = os.path.join(iteration_folder, 'captured_device_logs')
+                for artifact_dir in (screenshots_dir, execution_logs_dir, device_logs_dir):
+                    os.makedirs(artifact_dir, exist_ok=True)
+                method_utils.thread_local.screenshots_dir = screenshots_dir
+                method_utils.thread_local.execution_logs_dir = execution_logs_dir
+                method_utils.thread_local.device_logs_dir = device_logs_dir
                 
                 log_service.log(f"\n{'='*60}")
                 log_service.log(f"ITERATION {i+1}/{iterations}")
@@ -1773,18 +1817,14 @@ class TestExecutionService:
                             tunnel_service=tunnel_service
                         )
                     elif method == "status":
-                        import paramiko
-                        import time
                         try:
                             log_service.log("Checking device status...")
-                            client = paramiko.SSHClient()
-                            client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                            client.connect(conn_device_ip, port=conn_port, username=conn_username, password=conn_password, timeout=10)
-                            stdin, stdout, stderr = client.exec_command('uptime')
+                            from utils.ssh_wrapper import wrap_tunnel_service_as_ssh
+                            client = wrap_tunnel_service_as_ssh(tunnel_service)
+                            stdin, stdout, stderr = client.exec_command('uptime', timeout=10)
                             uptime_output = stdout.read().decode().strip()
                             log_service.log(f"✓ Device is online and responsive")
                             log_service.log(f"  Uptime: {uptime_output}")
-                            client.close()
                             method_result = {"iteration": i + 1, "screenshots": [], "logs": [], "success": True}
                             log_service.log("✓ Status check completed successfully")
                         except Exception as e:
@@ -1816,7 +1856,8 @@ class TestExecutionService:
                             is_rack_device=device.is_rack_device,
                             device_mac_address=device.mac_address,
                             device_type=device.device_type,
-                            rpi_config=device.rpi_config  # Pass R-Pi config for SSH verification after IR
+                            rpi_config=device.rpi_config,
+                            tunnel_service=tunnel_service
                         )
                     elif method == "voice_command":
                         if not voice_text:
@@ -1845,7 +1886,8 @@ class TestExecutionService:
                                     port=conn_port,
                                     username=conn_username,
                                     password=conn_password,
-                                    key_delay=key_delay
+                                    key_delay=key_delay,
+                                    ssh_client=wrap_tunnel_service_as_ssh(tunnel_service)
                                 )
                                 log_service.log(f"[SENDKEYS-RESULT] Got result: {result}")
                                 method_result = {
@@ -2386,6 +2428,34 @@ class TestExecutionService:
                                 "success": False,
                                 "details": f"Log collection failed: {str(e)}"
                             }
+
+                    elif method == "fetch_archived_devicelogs":
+                        log_service.log("Fetching archived device logs from /media/apps through R-Pi...")
+                        try:
+                            result = fetch_archived_device_logs(
+                                device_ip=device.ip,
+                                iteration=i + 1,
+                                device_name=device.name,
+                                log_callback=log_service.log,
+                                tunnel_service=tunnel_service
+                            )
+                            method_result = {
+                                "iteration": i + 1,
+                                "screenshots": [],
+                                "logs": result.get("logs", []),
+                                "success": result.get("success", False),
+                                "details": result.get("details", "")
+                            }
+                            log_service.log(f"{'✓' if result.get('success') else '✗'} {result.get('details', '')}")
+                        except Exception as e:
+                            log_service.log(f"❌ Archived log fetch failed: {str(e)}")
+                            method_result = {
+                                "iteration": i + 1,
+                                "screenshots": [],
+                                "logs": [],
+                                "success": False,
+                                "details": f"Archived log fetch failed: {str(e)}"
+                            }
                     
                     elif method == "check_logs":
                         # Check Available Logs - Validate logs based on log patterns from log_patterns.json
@@ -2735,11 +2805,11 @@ class TestExecutionService:
                     if any(result == 'failed' for result in job.iteration_results.values()):
                         final_status = 'failed'
             
-            # ✨ CLEANUP TUNNEL FOR RACK DEVICES ✨
-            # Only cleanup if we established the tunnel (not group-level management)
-            if device.is_rack_device and not skip_tunnel_lifecycle:
+            # Cleanup is based on connection ownership, not device type. DESK
+            # devices also acquire an R-Pi tunnel and must release it.
+            if needs_ssh_tunnel and not skip_tunnel_lifecycle:
                 self.cleanup_tunnel_for_device(device.ip, log_service)
-            elif device.is_rack_device and skip_tunnel_lifecycle:
+            elif needs_ssh_tunnel and skip_tunnel_lifecycle:
                 log_service.log(f"[TUNNEL] Skipping cleanup (tunnel managed at group level)")
             
             if job_id:
@@ -2763,8 +2833,8 @@ class TestExecutionService:
             print(f"🔧 [DEBUG] Exception in _execute_queue_sequence: {error_msg}")
             log_service.log(error_msg)
             
-            # ✨ CLEANUP TUNNEL ON ERROR ✨
-            if device.is_rack_device:
+            # Release any R-Pi tunnel acquired by this worker on failure too.
+            if needs_ssh_tunnel and not skip_tunnel_lifecycle:
                 self.cleanup_tunnel_for_device(device.ip, log_service)
             
             # CRITICAL: Flush logs immediately after error to ensure they're written
@@ -2817,6 +2887,8 @@ class TestExecutionService:
                 # Send email notification about failure
                 self._send_completion_email(job_id, 'failed', log_file_path)
         finally:
+            if hasattr(method_utils.thread_local, 'tunnel_service'):
+                del method_utils.thread_local.tunnel_service
             # FINAL flush before closing logs
             if log_file_handle:
                 try:
@@ -3294,16 +3366,22 @@ class TestExecutionService:
                     }
                 return
             
-            # ========== ESTABLISH TUNNEL ONCE FOR GROUP ==========
+            # ========== ESTABLISH ONE R-PI CONNECTION FOR GROUP ==========
             print(f"[GROUP-EXEC] {group.group_id}: Establishing tunnel to R-Pi {rpi_ip}...")
-            
-            # Get first device from group to establish tunnel
             first_device = group.devices[0]['object']
-            tunnel_success, tunnel_msg, tunnel_service = self.establish_tunnel_for_device(first_device)
-            
+            tunnel_service = GDFRPiDirectShellService(
+                first_device.rpi_config,
+                device_identifier=group.group_id,
+            )
+            tunnel_success, tunnel_msg = tunnel_service.connect()
+
             if not tunnel_success:
-                print(f"[GROUP-EXEC] ❌ {group.group_id}: Failed to establish tunnel - {tunnel_msg}")
+                print(f"[GROUP-EXEC] ❌ {group.group_id}: Failed to establish R-Pi connection - {tunnel_msg}")
                 for device in group.devices:
+                    job_id = device_job_mapping.get(device['name'])
+                    if job_id:
+                        Job.update_job_status(job_id, 'failed', end_time=datetime.now(timezone.utc).isoformat())
+                        DeviceLock.unlock_device(device['ip'])
                     results_dict[device['name']] = {
                         'status': 'failed',
                         'reason': tunnel_msg
@@ -3363,6 +3441,11 @@ class TestExecutionService:
                 print(f"[GROUP-EXEC]   ✓ Unregistered tunnel for device {device_ip}")
             
         finally:
+            if 'tunnel_service' in locals() and tunnel_service:
+                try:
+                    tunnel_service.disconnect()
+                except Exception as disconnect_error:
+                    print(f"[GROUP-EXEC] Warning disconnecting R-Pi {rpi_ip}: {disconnect_error}")
             # ========== RELEASE GROUP LOCK ==========
             print(f"[GROUP-EXEC] {group.group_id}: Releasing lock for R-Pi {rpi_ip}...")
             tunnel_group_coordinator.release_tunnel_for_group(rpi_ip)

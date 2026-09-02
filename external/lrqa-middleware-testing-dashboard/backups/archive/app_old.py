@@ -939,7 +939,7 @@ def probe_ir_ports(itach_ip='10.0.0.12', itach_port=4998, ports=(1, 2, 3)):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.settimeout(4)
                 s.connect((itach_ip, itach_port))
-                s.(ir_code.encode('ascii'))
+                s.sendall(ir_code.encode('ascii'))
                 resp = s.recv(256).decode('ascii', errors='ignore').strip()
                 results[p] = {'success': resp.startswith('completeir'), 'response': resp}
         except Exception as e:

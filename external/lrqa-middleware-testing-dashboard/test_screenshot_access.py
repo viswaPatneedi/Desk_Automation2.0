@@ -105,6 +105,8 @@ try:
     else:
         print(f"   ⚠️ No screenshot endpoint found, but ports are accessible")
         print(f"   Try accessing VNC web interface directly at: http://127.0.0.1:5800/")
+except Exception as e:
+    print(f"   ✗ Screenshot fetch error: {e}")
 
 print(f"\n🔌 Closing tunnel...")
 service.disconnect()

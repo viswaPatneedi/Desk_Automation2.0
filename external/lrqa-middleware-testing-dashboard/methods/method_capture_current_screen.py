@@ -3,6 +3,7 @@ Method: Capture Current Screen
 Prompts user for image name, captures screenshot, saves to USB session folder.
 """
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 from utils.screenshot_utils import take_and_analyze_screenshot
 from tools.screen.screenshot_utils_vnc import take_vnc_screenshot_with_fallback
 import os
@@ -17,7 +18,7 @@ def capture_current_screen(device_ip, port, username, password, image_name, scre
     
     try:
         # Connect via SSH
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
         

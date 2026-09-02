@@ -8,6 +8,7 @@ import sys
 import time
 import re
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 from datetime import datetime, timezone
 from difflib import SequenceMatcher
 
@@ -162,7 +163,7 @@ def navigate_to_tiles(device_ip, port, username, password, flux_server_ip_port, 
     try:
         # STEP 1: CONNECT TO DEVICE
         log_message("\n[STEP 1] Connecting to device...")
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password, timeout=15)
         log_message("✓ Connected to device successfully")

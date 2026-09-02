@@ -25,6 +25,40 @@ from typing import Tuple, Dict, Optional, Any
 from io import StringIO
 
 
+class DeviceScopedRPiShellService:
+    """Device-bound view of a shared R-Pi connection.
+
+    It prevents methods from switching the shared target or closing the R-Pi
+    while another device in the same execution group is still running.
+    """
+
+    def __init__(self, service, device_config: Dict):
+        self._service = service
+        self._device_config = device_config
+
+    def execute_command(self, command, timeout=30, **_ignored):
+        return self._service.execute_command(
+            command,
+            timeout=timeout,
+            device_ip=self._device_config['lab_ip'],
+            device_port=self._device_config['lab_port'],
+            device_username=self._device_config['lab_username'],
+            device_password=self._device_config['lab_password']
+        )
+
+    def execute_rpi_command(self, command, timeout=30):
+        return self._service.execute_rpi_command(command, timeout=timeout)
+
+    def connect(self):
+        return self._service.connect()
+
+    def is_healthy(self):
+        return self._service.is_healthy()
+
+    def disconnect(self):
+        return True, "R-Pi connection cleanup is owned by the execution group"
+
+
 class GDFRPiDirectShellService:
     """
     Manages single SSH connection to R-Pi and executes device commands through it.
@@ -117,6 +151,10 @@ class GDFRPiDirectShellService:
             self.lab_password = device_config.get('lab_password', '')
             
             print(f"[R-Pi DIRECT] Updated device config from {old_ip} → {self.lab_ip}:{self.lab_port}")
+
+    def for_device(self, device_config: Dict) -> DeviceScopedRPiShellService:
+        """Return a device-bound view without opening another R-Pi connection."""
+        return DeviceScopedRPiShellService(self, device_config)
     
     def connect(self) -> Tuple[bool, str]:
         """
@@ -228,6 +266,22 @@ class GDFRPiDirectShellService:
             device_password=target_password,
             timeout=timeout
         )
+
+    def execute_rpi_command(self, command: str, timeout: int = 30) -> Tuple[bool, str, str]:
+        """Run an infrastructure command on the connected R-Pi itself."""
+        with self.lock:
+            ssh_client = self.ssh_client
+            connected = self.is_connected
+        if not connected or not ssh_client:
+            return False, '', 'R-Pi connection not established'
+        try:
+            _, stdout, stderr = ssh_client.exec_command(command, timeout=timeout)
+            output = stdout.read().decode('utf-8', errors='ignore')
+            error = stderr.read().decode('utf-8', errors='ignore')
+            exit_code = stdout.channel.recv_exit_status()
+            return exit_code == 0, output, error
+        except Exception as error:
+            return False, '', str(error)
     
     def execute_device_command(self, device_ip: str, device_port: int, 
                                device_username: str, command: str,
@@ -256,29 +310,36 @@ class GDFRPiDirectShellService:
             return False, "", "R-Pi connection not established"
         
         try:
+            # A Paramiko transport supports independent channels. Do not hold the
+            # connection lock while a device command runs, or devices sharing this
+            # R-Pi would execute sequentially instead of in parallel.
             with self.lock:
-                # Build SSH command to execute on device through R-Pi
-                # Format: ssh -p <device_port> -o StrictHostKeyChecking=no <username>@<device_ip> "<command>"
-                ssh_cmd = (
-                    f"ssh -p {device_port} "
-                    f"-o StrictHostKeyChecking=no "
-                    f"-o ConnectTimeout=10 "
-                    f"{device_username}@{device_ip} "
-                    f'"{command}"'
-                )
-                
-                print(f"\n[R-Pi DIRECT] Executing on {device_username}@{device_ip}:{device_port}")
-                print(f"[R-Pi DIRECT] Command: {command[:80]}{'...' if len(command) > 80 else ''}")
-                
-                # Execute through R-Pi SSH connection
-                stdin, stdout, stderr = self.ssh_client.exec_command(ssh_cmd, timeout=timeout)
-                
-                # Read output
-                out_str = stdout.read().decode('utf-8', errors='ignore')
-                err_str = stderr.read().decode('utf-8', errors='ignore')
-                exit_code = stdout.channel.recv_exit_status()
-                
-                # Update stats
+                ssh_client = self.ssh_client
+                connected = self.is_connected
+
+            if not connected or not ssh_client:
+                return False, "", "R-Pi connection not established"
+
+            # Build SSH command to execute on device through R-Pi.
+            ssh_cmd = (
+                f"ssh -p {device_port} "
+                f"-o StrictHostKeyChecking=no "
+                f"-o ConnectTimeout=10 "
+                f"{device_username}@{device_ip} "
+                f'"{command}"'
+            )
+
+            print(f"\n[R-Pi DIRECT] Executing on {device_username}@{device_ip}:{device_port}")
+            print(f"[R-Pi DIRECT] Command: {command[:80]}{'...' if len(command) > 80 else ''}")
+
+            # Each call opens its own R-Pi SSH channel, enabling same-R-Pi devices
+            # to execute independently through the shared R-Pi connection.
+            stdin, stdout, stderr = ssh_client.exec_command(ssh_cmd, timeout=timeout)
+            out_str = stdout.read().decode('utf-8', errors='ignore')
+            err_str = stderr.read().decode('utf-8', errors='ignore')
+            exit_code = stdout.channel.recv_exit_status()
+
+            with self.lock:
                 self.commands_executed += 1
                 self.last_command_result = {
                     'device_ip': device_ip,
@@ -286,15 +347,15 @@ class GDFRPiDirectShellService:
                     'exit_code': exit_code,
                     'timestamp': time.time()
                 }
-                
-                if exit_code == 0:
-                    msg = f"✅ [R-Pi DIRECT] Command succeeded on {device_ip}"
-                    print(msg)
-                    return True, out_str, err_str
-                else:
-                    msg = f"⚠️  [R-Pi DIRECT] Command failed on {device_ip} (exit code: {exit_code})"
-                    print(msg)
-                    return False, out_str, err_str
+
+            if exit_code == 0:
+                msg = f"✅ [R-Pi DIRECT] Command succeeded on {device_ip}"
+                print(msg)
+                return True, out_str, err_str
+
+            msg = f"⚠️  [R-Pi DIRECT] Command failed on {device_ip} (exit code: {exit_code})"
+            print(msg)
+            return False, out_str, err_str
         
         except Exception as e:
             msg = f"❌ [R-Pi DIRECT] Error executing command: {str(e)}"

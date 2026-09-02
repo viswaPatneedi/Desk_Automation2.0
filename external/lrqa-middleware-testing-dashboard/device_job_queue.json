@@ -1,0 +1,28 @@
+{
+  "10.0.0.1": [
+    {
+      "id": "10.0.0.1_reboot_perf_v2_optimized_1787858560",
+      "job_id": "10.0.0.1_reboot_perf_v2_optimized_1787858560",
+      "device_ip": "10.0.0.1",
+      "device_name": "TestDevice",
+      "method": "reboot_perf_v2_optimized",
+      "iterations": 1,
+      "username": "root",
+      "password": "password",
+      "port": 10022,
+      "selected_ir_keys": [
+        "HOME",
+        "POWER"
+      ],
+      "voice_text": "",
+      "remote_keys": "",
+      "expected_screen": "",
+      "execution_queue": [],
+      "sequence_name": null,
+      "queued_at": "2026-08-27T19:22:40.253020+00:00",
+      "triggered_at": "2026-08-27T19:22:40.253055+00:00",
+      "status": "queued",
+      "executing_user": "john_doe"
+    }
+  ]
+}

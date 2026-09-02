@@ -108,6 +108,10 @@ def take_vnc_screenshot(
         ...     print(f"Screenshot saved to {result['local_path']}")
         ...     print(f"Dimensions: {result['dimensions']}")
     """
+    if screenshot_folder == 'screenshots':
+        from methods.method_utils import get_execution_screenshots_dir
+        screenshot_folder = get_execution_screenshots_dir(screenshot_folder)
+
     def log(msg):
         if log_callback:
             log_callback(msg)

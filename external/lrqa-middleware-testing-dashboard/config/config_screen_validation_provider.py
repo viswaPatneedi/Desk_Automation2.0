@@ -81,13 +81,3 @@ OLLAMA-EXCLUSIVE MODE (No alternatives)
 5. Verify it's working:
    python -c "from services.ollama_integration import get_ollama_service; s = get_ollama_service(); print('READY' if s.is_available() else 'NOT AVAILABLE')"
 """
-
-2. Set environment variable:
-   export SCREEN_VALIDATION_PROVIDER='hybrid'
-   export GOOGLE_API_KEY='your-key-here'
-
-3. System will:
-   - Try Ollama first (local, fast, free)
-   - Fall back to Gemini if Ollama confidence is low
-   - Fall back to legacy pixel validation if both fail
-"""

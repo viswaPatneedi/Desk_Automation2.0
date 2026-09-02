@@ -21,6 +21,7 @@ import time
 import re
 import json
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 from datetime import datetime, timezone
 import os
 
@@ -301,7 +302,7 @@ def netflix_playback(
         log("[STEP 1] ESTABLISHING SSH CONNECTION")
         log("="*80)
         
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password, timeout=15)
         log("✓ SSH connection established")

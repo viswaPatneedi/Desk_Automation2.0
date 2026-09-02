@@ -5,6 +5,7 @@ Retrieves the one-time PIN activation code from a XUMO device via SSH.
 """
 
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 import json
 import traceback
 from typing import Dict, Optional
@@ -45,7 +46,7 @@ def fetch_xumo_activation_code(device_ip: str, port: int = 10022,
     ssh = None
     try:
         # Create SSH connection
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password, timeout=15)
         

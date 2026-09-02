@@ -6,6 +6,7 @@ Execute approved/system commands on device and optionally capture TOP metrics to
 import time
 import os
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 from datetime import datetime, timezone
 
 from methods.method_utils import (
@@ -407,7 +408,7 @@ def execute_system_command(device_ip, port, username, password, iteration=1, dev
         log_message(f"🏷 Command Name: {command_name}")
 
     try:
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password, timeout=15)
         log_message("✓ Connected to device successfully")

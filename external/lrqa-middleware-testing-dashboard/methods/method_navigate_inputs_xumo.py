@@ -4,6 +4,7 @@ Navigates to the Inputs row on XUMO-TV device, validates available input tiles,
 and compares current screen with reference screenshots.
 """
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 import json
 import time
 import os
@@ -150,7 +151,7 @@ def navigate_inputs_xumo(device_ip, port, username, password, screenshots_dir, i
     
     ssh = None
     try:
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
         

@@ -4,6 +4,7 @@ Fetches latest log patterns from log_patterns.json and allows user to select spe
 """
 
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 import time
 import json
 import os
@@ -116,7 +117,7 @@ def execute_check_logs(device_ip, port, username, password, iteration=1, device_
         
         log_msg(f"[STEP 1] Connecting to device...")
         # Establish SSH connection
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password, timeout=15)
         log_msg("✓ Connected to device successfully")

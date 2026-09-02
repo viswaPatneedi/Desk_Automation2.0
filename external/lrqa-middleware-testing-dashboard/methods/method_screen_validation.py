@@ -6,6 +6,7 @@ This method can be called multiple times in the same execution to verify device 
 """
 
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 import os
 import time
 import traceback
@@ -32,7 +33,7 @@ def capture_screenshot_ssh(device_ip: str, port: int, username: str, password: s
         from utils.screenshot_utils import activate_screencapture_plugin
         
         # Create SSH connection
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password, timeout=15)
         

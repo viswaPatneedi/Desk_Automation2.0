@@ -9,6 +9,7 @@ import time
 import socket
 import json
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 from datetime import datetime, timezone
 
 # Import configurations
@@ -196,7 +197,7 @@ def phase_1_reboot(ssh, device_ip, port, username, password, log_callback=None):
         device_offline = False
         for check in range(3):
             try:
-                test_ssh = paramiko.SSHClient()
+                test_ssh = get_execution_ssh_client()
                 test_ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 test_ssh.connect(device_ip, port=port, username=username, password=password, timeout=5)
                 test_ssh.close()
@@ -419,7 +420,7 @@ def phase_2c_verify_deepsleep(ssh, device_ip, port, username, password, log_call
         
         while True:
             try:
-                test_ssh = paramiko.SSHClient()
+                test_ssh = get_execution_ssh_client()
                 test_ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 test_ssh.connect(device_ip, port=port, username=username, password=password, timeout=5)
                 test_ssh.close()
@@ -809,7 +810,7 @@ def execute_deepsleep_process(device_ip, port, username, password, iteration=1, 
     
     try:
         # Initial SSH connection
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password)
         

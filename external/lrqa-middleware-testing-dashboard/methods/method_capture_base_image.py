@@ -9,6 +9,7 @@ import os
 import sys
 import time
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 from datetime import datetime, timezone
 from typing import Dict, List
 from utils.screenshot_utils import take_and_analyze_screenshot
@@ -89,7 +90,7 @@ def capture_base_image(
         
         # Step 1: Connect via SSH
         log("\n[STEP 1/2] 🔌 Connecting to device...")
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
         log("   ✅ SSH connection established")

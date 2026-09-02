@@ -11,6 +11,7 @@ import time
 import socket
 import json
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 from datetime import datetime, timezone
 
 # Import configurations
@@ -339,7 +340,7 @@ def execute_deepsleep_maintenance_wakeup_process(device_ip, port, username, pass
         
         while time.time() - poll_start < max_offline_wait:
             try:
-                test_ssh = paramiko.SSHClient()
+                test_ssh = get_execution_ssh_client()
                 test_ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 test_ssh.connect(device_ip, port=port, username=username, password=password, timeout=3)
                 test_ssh.close()
@@ -375,7 +376,7 @@ def execute_deepsleep_maintenance_wakeup_process(device_ip, port, username, pass
         
         while time.time() - poll_start < max_recovery_wait:
             try:
-                test_ssh = paramiko.SSHClient()
+                test_ssh = get_execution_ssh_client()
                 test_ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 test_ssh.connect(device_ip, port=port, username=username, password=password, timeout=3)
                 elapsed = time.time() - poll_start
@@ -595,7 +596,7 @@ def execute_deepsleep_maintenance_wakeup_process(device_ip, port, username, pass
         
         while time.time() - poll_start < max_wakeup_wait:
             try:
-                test_ssh = paramiko.SSHClient()
+                test_ssh = get_execution_ssh_client()
                 test_ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 test_ssh.connect(device_ip, port=port, username=username, password=password, timeout=3)
                 elapsed = time.time() - poll_start

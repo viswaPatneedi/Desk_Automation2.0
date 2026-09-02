@@ -5,6 +5,7 @@ Collect all device logs from /opt/logs/ and store as compressed archive in /medi
 
 import time
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 from datetime import datetime, timezone
 import os
 
@@ -68,7 +69,7 @@ def collect_device_logs(device_ip, port, username, password, iteration=1, device
         log_message_wrapper(f"Iteration: {iteration}")
         
         # Connect to device via SSH
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         
         log_message_wrapper(f"🔌 Connecting to {device_ip}:{port}...")

@@ -219,9 +219,7 @@ class TestController:
                 device_ip=device_ip,
                 execution_queue=execution_queue,
                 iterations=iterations,
-                job_id=job.job_id,
-                rpi_connection_pool=rpi_prep_result.get('rpi_connection_pool'),
-                device_to_rpi_mapping=rpi_prep_result.get('device_to_rpi_mapping')
+                job_id=job.job_id
             )
             print(f"🔧 [CONTROLLER] execute_test_queue returned: {success}")
             

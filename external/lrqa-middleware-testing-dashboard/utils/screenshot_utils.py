@@ -442,6 +442,10 @@ def take_and_analyze_screenshot(ssh, screenshot_name, device_ip, log_callback=No
             'error': str
         }
     """
+    if screenshot_folder == 'screenshots':
+        from methods.method_utils import get_execution_screenshots_dir
+        screenshot_folder = get_execution_screenshots_dir(screenshot_folder)
+
     def log(message):
         if log_callback:
             log_callback(message)

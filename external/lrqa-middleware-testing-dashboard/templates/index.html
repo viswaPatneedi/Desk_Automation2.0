@@ -1334,6 +1334,18 @@
                                 </div>
                             </div>
 
+                            <div class="method-card" draggable="true" data-method="fetch_archived_devicelogs"
+                                 data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true"
+                                 data-bs-title="<strong>Fetch Archived Device Logs</strong><br>Copies verified .tar.gz and .tgz archives from /media/apps through the active R-Pi connection.<br><br><strong>Output:</strong><br>Saves archives to this job's captured_device_logs folder for the current iteration.<br><br><strong>Safety:</strong><br>Deletes the device copy only after the local file size is verified.">
+                                <div class="method-icon collect-logs">
+                                    <i class="bi bi-cloud-download"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Fetch Archived Device Logs</h6>
+                                    <p>Copy /media/apps archives to results</p>
+                                </div>
+                            </div>
+
                             <div class="method-card" draggable="true" data-method="check_logs"
                                  data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true"
                                  data-bs-title="<strong>Check Available Logs</strong><br>Validate device logs based on configured log patterns from the Log Pattern page.<br><br><strong>Features:</strong><br>• Always uses latest log patterns from Log Patterns page<br>• Select specific patterns to check from available list<br>• Searches device logs for pattern matches<br>• Automatically collects logs if patterns found<br>• Supports both log patterns (grep) and system commands (top, df, free)<br><br><strong>Process:</strong><br>1. Fetches latest patterns from log_patterns.json<br>2. Executes selected patterns/commands on device<br>3. Displays matched results<br>4. Collects logs to /media/apps if matches found<br><br><strong>Use Case:</strong><br>Validate specific log conditions after execution (crashes, errors, status checks)">
@@ -1581,8 +1593,16 @@
                     <i class="bi bi-play-circle-fill"></i>
                     <h5>Current & Recent Executions</h5>
                     <div style="display: flex; gap: 0.75rem; align-items: center; margin-left: auto;">
-                        <label for="execution-date-filter" style="color: #9ca3af; font-size: 0.875rem; margin: 0; white-space: nowrap;" title="Filter shows jobs by their UTC start date">Filter by Date (UTC):</label>
-                        <input type="date" id="execution-date-filter" style="padding: 0.4rem 0.6rem; border-radius: 4px; border: 1px solid #4b5563; background: #1f2937; color: #e5e7eb; font-size: 0.875rem; cursor: pointer;" title="Jobs are filtered by their UTC start date to ensure consistent results across timezones" onchange="filterExecutionsByDate()">
+                        <label for="execution-from-date" style="color: #9ca3af; font-size: 0.875rem; margin: 0; white-space: nowrap;">From (UTC):</label>
+                        <input type="date" id="execution-from-date" style="padding: 0.4rem 0.6rem; border-radius: 4px; border: 1px solid #4b5563; background: #1f2937; color: #e5e7eb; font-size: 0.875rem; cursor: pointer;" onchange="filterExecutionsByDate()">
+                        <label for="execution-to-date" style="color: #9ca3af; font-size: 0.875rem; margin: 0; white-space: nowrap;">To (UTC):</label>
+                        <input type="date" id="execution-to-date" style="padding: 0.4rem 0.6rem; border-radius: 4px; border: 1px solid #4b5563; background: #1f2937; color: #e5e7eb; font-size: 0.875rem; cursor: pointer;" onchange="filterExecutionsByDate()">
+                        <button id="execution-user-scope" onclick="setExecutionScope('user')" class="btn btn-sm btn-primary" style="padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: nowrap;" title="Show my executions">
+                            <i class="bi bi-person-fill"></i> Mine
+                        </button>
+                        <button id="execution-team-scope" onclick="setExecutionScope('team')" class="btn btn-sm btn-outline-secondary" style="padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: nowrap;" title="Show team executions">
+                            <i class="bi bi-people-fill"></i> Team
+                        </button>
                         <button onclick="resetExecutionDateFilter()" class="btn btn-sm btn-secondary" style="padding: 0.4rem 0.6rem; font-size: 0.75rem; white-space: nowrap;">
                             <i class="bi bi-x-circle"></i> Clear
                         </button>
@@ -3047,10 +3067,13 @@
             const utcMonth = String(today.getUTCMonth() + 1).padStart(2, '0');
             const utcDay = String(today.getUTCDate()).padStart(2, '0');
             const utcToday = `${utcYear}-${utcMonth}-${utcDay}`;
-            const dateFilter = document.getElementById('execution-date-filter');
-            if (dateFilter) {
-                dateFilter.value = utcToday;
+            const fromDateFilter = document.getElementById('execution-from-date');
+            const toDateFilter = document.getElementById('execution-to-date');
+            if (fromDateFilter && toDateFilter) {
+                fromDateFilter.value = utcToday;
+                toDateFilter.value = utcToday;
             }
+            window.executionScope = 'user';
             
             // Preload all caches in background (non-blocking)
             // Wrap in try-catch to avoid breaking initialization if cache preload fails
@@ -7474,7 +7497,7 @@
         } // close promptForDeepSleepParams
 
         // Modal to select IR test keys with custom sequence building
-        async function showIrTestModal() {
+        async function showIrTestModal(initialKeys = [], initialDelay = 0.5) {
             return new Promise((resolve) => {
                 console.log('🔧 Showing IR Test key selection modal with sequence builder...');
                 
@@ -7576,7 +7599,7 @@
                 console.log('📡 Available IR Remotes:', remotes);
                 
                 // State to track the sequence
-                let sequenceStack = [];
+                let sequenceStack = Array.isArray(initialKeys) ? [...initialKeys] : [];
                 
                 // Populate available keys
                 const keysContainer = document.getElementById('ir-keys-container');
@@ -7616,6 +7639,7 @@
                 const confirmBtn = document.getElementById('ir-test-confirm');
                 const clearBtn = document.getElementById('ir-seq-clear');
                 const undoBtn = document.getElementById('ir-seq-undo');
+                document.getElementById('ir-key-delay').value = initialDelay;
                 
                 // Function to render the sequence
                 function renderSequence() {
@@ -7652,6 +7676,8 @@
                         });
                     });
                 }
+
+                renderSequence();
                 
                 // Add key to sequence when clicked
                 document.querySelectorAll('.ir-key-btn').forEach(btn => {
@@ -8434,12 +8460,17 @@
             // Special handling for ir_test: use modal to select keys
             if (queueItem.method === 'ir_test') {
                 (async () => {
-                    const selectedKeys = await showIrTestModal();
-                    if (selectedKeys !== null) {
-                        queueItem.ir_keys = selectedKeys;
+                    const savedKeys = queueItem.ir_keys || queueItem.params?.ir_keys || [];
+                    const initialKeys = Array.isArray(savedKeys) ? savedKeys : (savedKeys.sequence || []);
+                    const initialDelay = queueItem.ir_key_delay || queueItem.params?.ir_key_delay || savedKeys.delay || 0.5;
+                    const selection = await showIrTestModal(initialKeys, initialDelay);
+                    if (selection !== null) {
+                        queueItem.ir_keys = selection.sequence;
+                        queueItem.ir_key_delay = selection.delay;
                         queueItem.remote_type = 'auto-detect';  // Always auto-detect
                         queueItem.params = queueItem.params || {};
                         queueItem.params.ir_keys = queueItem.ir_keys;
+                        queueItem.params.ir_key_delay = queueItem.ir_key_delay;
                         queueItem.params.remote_type = queueItem.remote_type;
                         renderQueue();
                         showNotification('✅ IR Command Test parameters updated', 'success');
@@ -9950,6 +9981,7 @@
                 'memcapture_tool': { name: 'Memcapture_Tool', description: 'Capture memory metrics', icon: 'cpu' },
                 'execute_command': { name: 'Execute_Command', description: 'Execute system command', icon: 'terminal-fill' },
                 'collect_device_logs': { name: 'Collect_Device_Logs', description: 'Collect device logs archive', icon: 'archive' },
+                'fetch_archived_devicelogs': { name: 'Fetch Archived Device Logs', description: 'Copy /media/apps archives into this iteration results folder', icon: 'cloud-download' },
                 'check_logs': { name: 'Check Available Logs', description: 'Validate logs by pattern', icon: 'search' },
                 'validate_results': { name: 'Validate_Results', description: 'Execute command & validate output', icon: 'check-circle-fill' },
                 'execute_sequence': { name: 'Execute Sequence', description: 'Run a saved sequence', icon: 'play-circle-fill' }
@@ -10145,10 +10177,15 @@
             
             console.log('🔄 Loading current & recent executions...');
             
-            // Get selected date filter
-            const dateFilterInput = document.getElementById('execution-date-filter');
-            const selectedDate = dateFilterInput.value;
-            console.log(`📅 Date filter selected: '${selectedDate}'`);
+            // Get selected inclusive UTC date range and execution scope.
+            const fromDate = document.getElementById('execution-from-date').value;
+            const toDate = document.getElementById('execution-to-date').value || fromDate;
+            const executionScope = window.executionScope || 'user';
+            console.log(`📅 Date range selected: '${fromDate}' to '${toDate}' (${executionScope})`);
+            if (fromDate && toDate && fromDate > toDate) {
+                container.innerHTML = '<p class="text-danger">The From date must be before or equal to the To date.</p>';
+                return;
+            }
             
             // Get today's UTC date
             const today = new Date().toISOString().split('T')[0];
@@ -10158,9 +10195,12 @@
             // This ensures running/pending jobs show immediately after triggering
             console.log('📥 Fetching CURRENT active jobs from /api/jobs...');
             
+            const filterParams = new URLSearchParams({ scope: executionScope });
+            if (fromDate) filterParams.set('from_date', fromDate);
+            if (toDate) filterParams.set('to_date', toDate);
             Promise.all([
-                fetch('/api/jobs', { credentials: 'include' }).then(r => safeJsonParse(r, '/api/jobs')),
-                selectedDate ? fetch('/api/execution-history?date=' + selectedDate, { credentials: 'include' }).then(r => safeJsonParse(r, '/api/execution-history')) : Promise.resolve({ success: true, jobs: [] })
+                fetch('/api/jobs?' + filterParams.toString(), { credentials: 'include' }).then(r => safeJsonParse(r, '/api/jobs')),
+                fetch('/api/execution-history?' + filterParams.toString(), { credentials: 'include' }).then(r => safeJsonParse(r, '/api/execution-history'))
             ])
             .then(([currentJobsData, historyData]) => {
                 console.log(`✅ Current jobs loaded:`, currentJobsData);
@@ -10173,11 +10213,11 @@
                     
                     // FIX: Apply date filter to current jobs if a date is selected
                     // This prevents old jobs from appearing when filtering by specific date
-                    if (selectedDate) {
-                        console.log(`🔍 Filtering current jobs by date: ${selectedDate}`);
+                    if (fromDate) {
+                        console.log(`🔍 Filtering current jobs by date range: ${fromDate} to ${toDate}`);
                         currentJobs = currentJobs.filter(job => {
                             const jobDate = job.start_time ? job.start_time.split('T')[0] : '';
-                            return jobDate === selectedDate;
+                            return jobDate >= fromDate && jobDate <= toDate;
                         });
                         console.log(`✅ Current jobs after date filter: ${currentJobs.length}`);
                     }
@@ -10202,12 +10242,12 @@
                 
                 console.log(`📋 Found ${jobs.length} total records (${currentJobs.length} current + ${historyJobs.length} historical)`);
                     
-                    if (jobs.length === 0 && selectedDate) {
+                    if (jobs.length === 0 && fromDate) {
                         const emptyState = `
                             <div style="text-align: center; padding: 2rem 0; color: #6b7280;">
                                 <i class="bi bi-inbox" style="font-size: 2rem; display: block; margin-bottom: 1rem; opacity: 0.5;"></i>
-                                <p style="margin: 0;">No executions on ${selectedDate}</p>
-                                <small style="color: #9ca3af;">Select a different date to view executions</small>
+                                <p style="margin: 0;">No executions in the selected date range</p>
+                                <small style="color: #9ca3af;">Try another date range or select Team</small>
                             </div>
                         `;
                         container.innerHTML = emptyState;
@@ -10605,6 +10645,9 @@
             }[status] || '❓';
             const statusText = status.charAt(0).toUpperCase() + status.slice(1);
             const statusDisplay = `${statusEmoji} ${statusText}`;
+            const pendingPreparationMessage = status === 'pending'
+                ? `<small style="color: #c4b5fd; display: block; font-size: 0.85rem; margin-top: 0.2rem;">Preparing background checks. This job will move to Running shortly.</small>`
+                : '';
             
             console.log('📋 Job Card Data:', { jobId, deviceName, deviceIp, iterations, completedIterations, failedIterations, status, sequenceName, userId });
             
@@ -10634,6 +10677,7 @@
                             <small style="color: #9ca3af; display: block; font-size: 0.85rem; margin-top: 0.1rem;">
                                 ${statusDisplay}
                             </small>
+                            ${pendingPreparationMessage}
                         </div>
                         <div style="display: flex; gap: 0.3rem; flex-wrap: wrap; flex-shrink: 0; margin-left: 0.5rem;">
                             <button onclick="viewJobDetails('${jobId}'); event.stopPropagation();" class="btn btn-sm btn-info" style="padding: 0.35rem 0.6rem; font-size: 0.8rem; white-space: nowrap; font-weight: 600;" title="View job details with logs and images">
@@ -10794,10 +10838,18 @@
             // Reset pagination when applying filter
             loadCurrentExecutions(false);
         }
+
+        function setExecutionScope(scope) {
+            window.executionScope = scope === 'team' ? 'team' : 'user';
+            document.getElementById('execution-user-scope').className = window.executionScope === 'user' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-secondary';
+            document.getElementById('execution-team-scope').className = window.executionScope === 'team' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-outline-secondary';
+            loadCurrentExecutions(false);
+        }
         
         function resetExecutionDateFilter() {
             console.log('🔄 Resetting date filter...');
-            document.getElementById('execution-date-filter').value = '';
+            document.getElementById('execution-from-date').value = '';
+            document.getElementById('execution-to-date').value = '';
             // Reset pagination when clearing filter
             loadCurrentExecutions(false);
         }

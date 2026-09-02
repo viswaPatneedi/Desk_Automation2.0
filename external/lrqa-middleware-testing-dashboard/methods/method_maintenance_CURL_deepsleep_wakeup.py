@@ -29,6 +29,7 @@ import time
 import json
 import socket
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 import threading
 from paramiko.ssh_exception import SSHException as ParamikException
 from datetime import datetime, timezone
@@ -148,7 +149,7 @@ def create_ssh_connection_safe(device_ip, port, username, password, timeout_seco
         if log_callback and retry_count == 0:
             log_callback(f"🔗 Connecting to {device_ip}:{port}...")
         
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password, 
                    timeout=timeout_seconds)
@@ -246,7 +247,7 @@ def verify_deep_sleep_state(device_ip, port, username, password, log_callback=No
     Verify device is truly in deep sleep by checking if SSH is accessible.
     """
     try:
-        test_ssh = paramiko.SSHClient()
+        test_ssh = get_execution_ssh_client()
         test_ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         test_ssh.connect(device_ip, port=port, username=username, password=password, timeout=5)
         test_ssh.close()

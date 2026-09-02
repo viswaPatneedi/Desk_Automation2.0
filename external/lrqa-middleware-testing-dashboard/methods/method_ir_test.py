@@ -8,6 +8,7 @@ import time
 import socket
 import traceback
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 from datetime import datetime, timezone
 
 # Import configurations
@@ -19,7 +20,7 @@ from methods.method_utils import log_message, create_execution_log_path
 # Import IR utilities
 from config.config_ir_blaster import get_ir_config_for_device, generate_ir_code, send_ir_command
 
-def execute_ir_test_process(device_ip, port, username, password, iteration=1, device_name="Device", selected_keys=None, combined_method_name=None, remote_type_override=None, device_type=None, key_delay=0.5, is_rack_device=False, device_mac_address=None, rpi_config=None):
+def execute_ir_test_process(device_ip, port, username, password, iteration=1, device_name="Device", selected_keys=None, combined_method_name=None, remote_type_override=None, device_type=None, key_delay=0.5, is_rack_device=False, device_mac_address=None, rpi_config=None, tunnel_service=None):
     """
     Execute IR Command Test Process:
     Step 1: Route to appropriate handler based on device type (DESK vs GDF_RACK)
@@ -59,7 +60,6 @@ def execute_ir_test_process(device_ip, port, username, password, iteration=1, de
         except Exception as e:
             log_message(f"❌ ERROR in GDF IR handler: {e}")
             log_message(f"   Falling back to DESK IR handler")
-            import traceback
             log_message(f"   Traceback: {traceback.format_exc()}")
     
     # DESK device logic (or fallback for rack devices if GDF routing failed)
@@ -135,7 +135,8 @@ def execute_ir_test_process(device_ip, port, username, password, iteration=1, de
             ir_code = generate_ir_code(key, ir_config['ir_port'], remote_type=remote_type)
             if ir_code:
                 log_message(f"[IR CODE] Generated {key} code: {ir_code[:50]}...")
-                if send_ir_command(ir_code, ir_config['itach_ip'], ir_config['itach_port'], log_message):
+                if send_ir_command(ir_code, ir_config['itach_ip'], ir_config['itach_port'], log_message,
+                                   rpi_service=tunnel_service):
                     log_message(f"✓ IR {key} command sent successfully (blind)")
                 else:
                     log_message(f"❌ Failed to send IR {key} command")
@@ -156,7 +157,7 @@ def execute_ir_test_process(device_ip, port, username, password, iteration=1, de
             log_message(f"\n[VERIFY LOGS] Verifying {key} command in device logs (if SSH available)...")
             # Log validation per key
             try:
-                ssh = paramiko.SSHClient()
+                ssh = get_execution_ssh_client()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
                 if key == 'POWER':
@@ -191,7 +192,7 @@ def execute_ir_test_process(device_ip, port, username, password, iteration=1, de
         home_screen_status = "Unknown"
         
         try:
-            ssh = paramiko.SSHClient()
+            ssh = get_execution_ssh_client()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
             log_message("✓ SSH connection established - device is accessible")

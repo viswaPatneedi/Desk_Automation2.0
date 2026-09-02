@@ -9,6 +9,7 @@ import sys
 import time
 import re
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 from datetime import datetime, timezone
 
 # Import configurations
@@ -425,7 +426,7 @@ def execute_reboot_performance_v2_process(device_ip, port, username, password, i
     try:
         # STEP 1: DEVICE CONNECTION & PRE-REBOOT SETUP
         log_message("[STEP 1] Connecting to device and initial setup...")
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password, timeout=15)
         log_message("✓ Connected to device successfully")

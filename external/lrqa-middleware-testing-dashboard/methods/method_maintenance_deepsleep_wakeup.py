@@ -21,6 +21,7 @@ import time
 import json
 import socket
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 import threading
 from paramiko.ssh_exception import SSHException as ParamikException
 from datetime import datetime, timezone
@@ -292,7 +293,7 @@ def verify_deep_sleep_state(device_ip, port, username, password, log_callback=No
     """
     # Strategy: Try to connect - if device is in true deep sleep, it should be unreachable
     try:
-        test_ssh = paramiko.SSHClient()
+        test_ssh = get_execution_ssh_client()
         test_ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         test_ssh.connect(device_ip, port=port, username=username, password=password, timeout=5)
         test_ssh.close()
@@ -398,7 +399,7 @@ def execute_maintenance_deepsleep_wakeup_process(
         log_message("[STEP 1-2] Checking maintenance activity status...")
         log_message("="*80)
         
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
         
@@ -461,7 +462,7 @@ def execute_maintenance_deepsleep_wakeup_process(
             for attempt in range(max_reboot_wait // reboot_check_interval):
                 remaining = max_reboot_wait - (attempt * reboot_check_interval)
                 try:
-                    test_ssh = paramiko.SSHClient()
+                    test_ssh = get_execution_ssh_client()
                     test_ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                     test_ssh.connect(device_ip, port=port, username=username, password=password, timeout=5)
                     test_ssh.close()
@@ -512,7 +513,7 @@ def execute_maintenance_deepsleep_wakeup_process(
             log_message("\n[POST-REBOOT CHECK] Verifying device power state...")
             
             try:
-                test_ssh = paramiko.SSHClient()
+                test_ssh = get_execution_ssh_client()
                 test_ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 test_ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
                 
@@ -607,7 +608,7 @@ def execute_maintenance_deepsleep_wakeup_process(
             
             # Now reconnect for maintenance status check
             log_message("\nRe-checking maintenance activity status after reboot and stabilization...")
-            ssh = paramiko.SSHClient()
+            ssh = get_execution_ssh_client()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
             
@@ -767,7 +768,7 @@ def execute_maintenance_deepsleep_wakeup_process(
                     
                     
                     # Reconnect for proceeding to STEP 3
-                    ssh = paramiko.SSHClient()
+                    ssh = get_execution_ssh_client()
                     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                     ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
                     
@@ -783,7 +784,7 @@ def execute_maintenance_deepsleep_wakeup_process(
                         pass
                     
                     # Reconnect for recovery
-                    ssh = paramiko.SSHClient()
+                    ssh = get_execution_ssh_client()
                     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                     ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
                     log_message("✓ Reconnected after CHECK 2 error - continuing to CHECK 3")
@@ -1101,7 +1102,7 @@ def execute_maintenance_deepsleep_wakeup_process(
         log_message("-" * 80)
         
         try:
-            ssh = paramiko.SSHClient()
+            ssh = get_execution_ssh_client()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
             
@@ -1165,7 +1166,7 @@ def execute_maintenance_deepsleep_wakeup_process(
             poll_count += 1
             
             try:
-                ssh = paramiko.SSHClient()
+                ssh = get_execution_ssh_client()
                 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
                 
@@ -1252,7 +1253,7 @@ def execute_maintenance_deepsleep_wakeup_process(
         log_message("="*80)
         
         try:
-            ssh = paramiko.SSHClient()
+            ssh = get_execution_ssh_client()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
             
@@ -1304,7 +1305,7 @@ def execute_maintenance_deepsleep_wakeup_process(
         log_message("="*80)
         
         try:
-            ssh = paramiko.SSHClient()
+            ssh = get_execution_ssh_client()
             ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
             
@@ -1479,7 +1480,7 @@ def execute_maintenance_deepsleep_wakeup_process(
             probe_start = time.time()
             
             try:
-                test_ssh = paramiko.SSHClient()
+                test_ssh = get_execution_ssh_client()
                 test_ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 test_ssh.connect(device_ip, port=port, username=username, password=password, timeout=5)
                 

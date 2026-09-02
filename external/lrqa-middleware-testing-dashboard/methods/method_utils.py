@@ -68,6 +68,23 @@ def get_lexar_base_path():
 # Thread-local storage for execution session paths
 thread_local = threading.local()
 
+
+def get_execution_ssh_client():
+    """Return the job's R-Pi-routed SSH client, or Paramiko for standalone use."""
+    tunnel_service = getattr(thread_local, 'tunnel_service', None)
+    if tunnel_service:
+        from utils.ssh_wrapper import wrap_tunnel_service_as_ssh
+        return wrap_tunnel_service_as_ssh(tunnel_service)
+
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    return ssh
+
+
+def get_execution_screenshots_dir(default='screenshots'):
+    """Return the active job iteration screenshot directory when available."""
+    return getattr(thread_local, 'screenshots_dir', None) or default
+
 # Global variable to store current execution methods and sequence names (for combined method tracking)
 _current_execution_methods = {}
 _current_sequence_names = {}
@@ -420,8 +437,7 @@ def reconnect_to_device_with_retry(device_ip, port, username, password, max_retr
     
     while retry_count < max_retries:
         try:
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh = get_execution_ssh_client()
             ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
             log(f"✓ Reconnected to device after {retry_count + 1} attempt(s)")
             return ssh
@@ -448,8 +464,7 @@ def wait_for_device(device_ip, port, username, password, log_callback=None):
     while time.time() - start_time < max_wait:
         remaining = max_wait - (time.time() - start_time)
         try:
-            ssh = paramiko.SSHClient()
-            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh = get_execution_ssh_client()
             ssh.connect(device_ip, port=port, username=username, password=password, timeout=8)
             log(f"✓ Device back online after {int(time.time() - start_time)}s (attempt {attempt+1}).")
             return ssh

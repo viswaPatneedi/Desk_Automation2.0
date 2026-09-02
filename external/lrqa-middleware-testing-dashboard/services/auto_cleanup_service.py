@@ -366,6 +366,23 @@ class AutoCleanupService:
                 
                 if not os.path.isdir(folderpath):
                     continue
+
+                # New execution results are nested by team, user, date, and device.
+                # Delete complete sequence folders based on their own age.
+                if foldername == 'EXECUTION_RESULTS':
+                    for root, dirnames, _ in os.walk(folderpath, topdown=False):
+                        for dirname in dirnames:
+                            sequence_path = os.path.join(root, dirname)
+                            if 'ITERATION_' not in ''.join(os.listdir(sequence_path)):
+                                continue
+                            if count >= self.max_items:
+                                break
+                            if self.is_old_enough(sequence_path):
+                                success, size = self.delete_item(sequence_path, is_dir=True)
+                                if success:
+                                    count += 1
+                                    space_freed += size
+                    continue
                 
                 if self.is_old_enough(folderpath):
                     success, size = self.delete_item(folderpath, is_dir=True)

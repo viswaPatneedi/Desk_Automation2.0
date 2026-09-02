@@ -7,6 +7,9 @@ Fetches screenshot from device and saves to local storage
 import requests
 import os
 import json
+import time
+import base64
+import shlex
 from datetime import datetime
 from pathlib import Path
 
@@ -20,10 +23,17 @@ class ScreenshotCaptureService:
             app_root_dir: Root directory of Flask app
         """
         self.app_root = Path(app_root_dir)
-        self.screenshots_dir = self.app_root / 'screenshots'
+        try:
+            from methods.method_utils import get_execution_screenshots_dir
+            screenshot_dir = get_execution_screenshots_dir()
+        except ImportError:
+            screenshot_dir = 'screenshots'
+        self.screenshots_dir = Path(screenshot_dir)
+        if not self.screenshots_dir.is_absolute():
+            self.screenshots_dir = self.app_root / self.screenshots_dir
         self.screenshots_dir.mkdir(exist_ok=True)
         
-    def capture_screenshot(self, device_ip, screenshot_port=5800, timeout=10):
+    def capture_screenshot(self, device_ip, screenshot_port=5800, timeout=10, ssh=None):
         """Capture screenshot from device via tunnel
         
         Args:
@@ -45,6 +55,46 @@ class ScreenshotCaptureService:
         print(f"\n[SCREENSHOT] Capturing from device {device_ip}...")
         
         try:
+            if ssh:
+                filename_prefix = f"screenshot_{device_ip.replace('.', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+                # VNC is reachable from the R-Pi network, not from the dashboard
+                # host. Stream it from the persistent R-Pi session with a bounded
+                # curl timeout, encoded safely for the SSH command response.
+                command = (
+                    f"curl --fail --silent --show-error --max-time {int(timeout)} "
+                    f"http://{shlex.quote(device_ip)}:{int(screenshot_port)}/screenshot.png | base64 -w 0"
+                )
+                success, encoded_image, error = ssh.execute_rpi_command(command, timeout=timeout + 5)
+                if not success or not encoded_image:
+                    return {
+                        'success': False,
+                        'device_ip': device_ip,
+                        'timestamp': timestamp,
+                        'error': error or 'VNC screenshot capture through R-Pi failed'
+                    }
+
+                screenshot_path = self.screenshots_dir / f"{filename_prefix}.png"
+                try:
+                    with open(screenshot_path, 'wb') as screenshot_file:
+                        screenshot_file.write(base64.b64decode(encoded_image))
+                except Exception as error:
+                    return {
+                        'success': False,
+                        'device_ip': device_ip,
+                        'timestamp': timestamp,
+                        'error': f'Invalid VNC screenshot response: {error}'
+                    }
+
+                return {
+                    'success': True,
+                    'screenshot_path': str(screenshot_path),
+                    'filename': os.path.basename(screenshot_path),
+                    'device_ip': device_ip,
+                    'timestamp': timestamp,
+                    'size_bytes': os.path.getsize(screenshot_path),
+                    'content_type': 'image/png'
+                }
+
             # Screenshot URL - uses forwarded port on localhost
             # The tunnel forwards 127.0.0.1:5800 → device_ip:5800
             screenshot_url = f"http://127.0.0.1:{screenshot_port}/screenshot.png"

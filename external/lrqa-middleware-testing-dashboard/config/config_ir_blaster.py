@@ -7,6 +7,7 @@ Configuration is stored in devices.json, IR codes in ir_keycodes.json.
 import json
 import os
 import socket
+import shlex
 from config.config_paths import IR_KEYCODES_FILE
 
 def get_ir_config_for_device(device_name):
@@ -72,7 +73,8 @@ def generate_ir_code(command_type, ir_port, remote_type=None):
 
     return None
 
-def send_ir_command(ir_code, itach_ip='10.0.0.12', itach_port=4998, log_callback=None):
+def send_ir_command(ir_code, itach_ip='10.0.0.12', itach_port=4998, log_callback=None,
+                    rpi_service=None):
     """Send IR command via iTach with improved error handling and timeout management"""
     def log(message):
         if log_callback:
@@ -84,6 +86,27 @@ def send_ir_command(ir_code, itach_ip='10.0.0.12', itach_port=4998, log_callback
     try:
         log(f"[IR SEND] Connecting to iTach at {itach_ip}:{itach_port}...")
         log(f"[IR SEND] IR Code: {ir_code[:80]}..." if len(ir_code) > 80 else f"[IR SEND] IR Code: {ir_code}")
+
+        if rpi_service:
+            log('[IR SEND] Sending through the connected R-Pi network...')
+            script = (
+                'import socket; '
+                f's=socket.create_connection(({itach_ip!r}, {int(itach_port)}), 10); '
+                f's.sendall({ir_code.encode("utf-8")!r}); '
+                's.settimeout(10); '
+                'print(s.recv(1024).decode("utf-8", "ignore")); s.close()'
+            )
+            success, output, error = rpi_service.execute_rpi_command(
+                f'python3 -c {shlex.quote(script)}', timeout=25
+            )
+            if not success:
+                log(f'❌ iTach command through R-Pi failed: {error or output}')
+                return False
+            if 'ERR' in output.upper():
+                log(f'❌ iTach returned error through R-Pi: {output.strip()}')
+                return False
+            log(f'✓ IR command sent through R-Pi. iTach response: {output.strip() or "none"}')
+            return True
         
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(10)  # Increased from 5 to 10 seconds for slower networks

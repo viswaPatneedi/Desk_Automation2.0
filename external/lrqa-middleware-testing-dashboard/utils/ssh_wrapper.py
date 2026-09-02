@@ -5,12 +5,23 @@ Provides a paramiko-compatible interface to GDFRPiShellService
 Allows existing methods to work without modification
 """
 
+from typing import Dict
+
+
+class SSHShellStdin:
+    """No-op stdin compatible with Paramiko command channels."""
+
+    def close(self):
+        pass
+
 class SSHShellChannel:
     """Wrapper that mimics paramiko's SSHClient.exec_command response"""
     
-    def __init__(self, command_output, error_output=""):
-        self.stdout_data = command_output
-        self.stderr_data = error_output
+    def __init__(self, command_output, error_output="", exit_status=0):
+        self.stdout_data = command_output.encode('utf-8') if isinstance(command_output, str) else command_output
+        self.stderr_data = error_output.encode('utf-8') if isinstance(error_output, str) else error_output
+        self.exit_status = exit_status
+        self.position = 0
         self.channel = self  # Self-reference for channel operations
     
     def read(self, bufsize=-1):
@@ -22,11 +33,16 @@ class SSHShellChannel:
         Returns:
             bytes: Command output as bytes
         """
-        return self.stdout_data.encode('utf-8') if isinstance(self.stdout_data, str) else self.stdout_data
+        if bufsize is None or bufsize < 0:
+            result = self.stdout_data[self.position:]
+            self.position = len(self.stdout_data)
+            return result
+        result = self.stdout_data[self.position:self.position + bufsize]
+        self.position += len(result)
+        return result
     
     def readlines(self):
-        return [line.encode('utf-8') if isinstance(line, str) else line 
-                for line in self.stdout_data.split('\n') if line]
+        return [line for line in self.read().splitlines() if line]
     
     def settimeout(self, timeout):
         """Mock settimeout for compatibility"""
@@ -35,6 +51,12 @@ class SSHShellChannel:
     def close(self):
         """Mock close for compatibility"""
         pass
+
+    def recv_exit_status(self):
+        return self.exit_status
+
+    def is_active(self):
+        return True
 
 
 class RPiShellSSHWrapper:
@@ -79,6 +101,25 @@ class RPiShellSSHWrapper:
             self.device_port = 10022
             self.device_username = 'root'
             self.device_password = ''
+
+    def set_missing_host_key_policy(self, _policy):
+        """Compatibility no-op; host-key handling belongs to the R-Pi service."""
+        pass
+
+    def connect(self, *_connection_args, **_connection_details):
+        """Compatibility no-op; the R-Pi service already owns device routing."""
+        return None
+
+    def get_transport(self):
+        """Provide the minimal transport API used by existing methods."""
+        return self
+
+    def execute_rpi_command(self, command, timeout=30):
+        """Execute an infrastructure command on the connected R-Pi."""
+        return self.tunnel_service.execute_rpi_command(command, timeout=timeout)
+
+    def is_active(self):
+        return self.tunnel_service.is_healthy()
     
     def exec_command(self, command, timeout=30):
         """
@@ -113,9 +154,10 @@ class RPiShellSSHWrapper:
             success, stdout_data, stderr_data = self.tunnel_service.execute_command(command, timeout=timeout)
         
         # Convert response to file-like objects that methods expect
-        stdout = SSHShellChannel(stdout_data)
-        stderr = SSHShellChannel(stderr_data)
-        stdin = None  # R-Pi shell doesn't need stdin for command execution
+        exit_status = 0 if success else 1
+        stdout = SSHShellChannel(stdout_data, exit_status=exit_status)
+        stderr = SSHShellChannel(stderr_data, exit_status=exit_status)
+        stdin = SSHShellStdin()
         
         return stdin, stdout, stderr
     

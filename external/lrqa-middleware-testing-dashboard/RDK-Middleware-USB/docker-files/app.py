@@ -2013,7 +2013,10 @@ def get_jobs():
         
         historical_count = len([j for j in jobs_data if j.get('is_historical')])
         print(f"✅ [API] Returning {len(jobs_data)} total jobs ({historical_count} grouped executions from historical data)")
-        if jobs_data:
+        return jsonify({'success': True, 'jobs': jobs_data})
+    except Exception as e:
+        print(f"❌ [API] Error in get_jobs: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/jobs/<job_id>', methods=['GET'])
 @login_required

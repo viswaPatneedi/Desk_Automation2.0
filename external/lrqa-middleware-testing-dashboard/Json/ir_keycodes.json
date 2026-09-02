@@ -6,7 +6,7 @@
             "device_info": {
                 "manufacturer": "Comcast/Xumo",
                 "device_model": "Element Apache 4K",
-                "remote_model": "Xumo XR100-UQ",
+                "remote_model": "Xumo PR1-T2",
                 "remote_ic": "R34010",
                 "log_path": "/opt/logs/sky-messages.log",
                 "key_event_pattern": "keyEvent from Hamiltron"

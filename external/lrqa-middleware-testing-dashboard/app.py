@@ -3935,7 +3935,9 @@ def serve_screenshot(filename):
     local_screenshots_dir = os.path.join(base_dir, 'screenshots')
     local_screenshots_upper_dir = os.path.join(base_dir, 'SCREENSHOTS')
     local_reference_dir = os.path.join(base_dir, 'reference_screens')
-    execution_results_dir = os.path.join(base_dir, 'ExecutionResults')  # ✨ NEW: Support ExecutionResults screenshots
+    execution_results_dir = os.path.join(base_dir, 'ExecutionResults')
+    execution_results_upper_dir = os.path.join(base_dir, 'EXECUTION_RESULTS')
+    execution_results_enhancement_dir = os.path.join(base_dir, 'Enhancement_output', 'EXECUTION_RESULTS')
     home_screenshots_dir = os.path.expanduser('~/screenshots')
 
     # Normalize common prefixes so we don't double-join paths
@@ -3951,8 +3953,8 @@ def serve_screenshot(filename):
         filename = filename.split('SCREENSHOTS/', 1)[-1]
     if filename.startswith('reference_screens/'):
         filename = filename.split('reference_screens/', 1)[-1]
-    if filename.startswith('ExecutionResults/'):  # ✨ NEW: Strip prefix if present
-        filename = filename.split('ExecutionResults/', 1)[-1]
+    if filename.startswith(('ExecutionResults/', 'EXECUTION_RESULTS/')):
+        filename = filename.split('/', 1)[-1]
     
     # Try all possible paths until we find the file
     # Dynamically resolve Lexar path(s)
@@ -3966,6 +3968,8 @@ def serve_screenshot(filename):
     # Common fallback locations (HOME DIRECTORY FIRST TO FIND JOB-SPECIFIC SCREENSHOTS)
     possible_paths.extend([
         execution_results_dir,                  # ✨ NEW: ExecutionResults folder - check first for recent executions
+        execution_results_upper_dir,
+        execution_results_enhancement_dir,
         home_screenshots_dir,                   # User home directory - HIGHEST PRIORITY for job screenshots
         '/media/pi/Lexar/Enhancement_output',  # Legacy path
         '/media/lrqa/Lexar/Enhancement_output',
@@ -5017,8 +5021,21 @@ def get_jobs():
         user_id = request.args.get('user_id')
         device_ip = request.args.get('device_ip')
         status = request.args.get('status')
+        scope = request.args.get('scope', 'all')
+        from_date = request.args.get('from_date') or request.args.get('date')
+        to_date = request.args.get('to_date') or from_date
+        jobs = None
+
+        if scope == 'user':
+            user_id = current_user.ntid
+        elif scope == 'team' and not current_user.is_admin:
+            jobs = [job for job in Job.load_all() if getattr(job, 'team_name', '') == current_user.team_name]
+        else:
+            jobs = None
         
-        if user_id:
+        if jobs is not None:
+            pass
+        elif user_id:
             jobs = Job.get_user_jobs(user_id)
         elif device_ip:
             jobs = Job.get_device_jobs(device_ip)
@@ -5027,8 +5044,14 @@ def get_jobs():
         else:
             jobs = Job.load_all()
         
-        # Apply status filter if provided and not already filtered
-        if status and not device_ip and not user_id:
+        # Apply status, scope, and inclusive UTC date filters.
+        if scope == 'team' and current_user.is_admin:
+            jobs = [job for job in jobs if getattr(job, 'team_name', '') == current_user.team_name]
+        if scope == 'user':
+            jobs = [job for job in jobs if getattr(job, 'executing_user', None) == current_user.ntid or job.user_id == current_user.ntid]
+        if from_date or to_date:
+            jobs = [job for job in jobs if from_date <= (getattr(job, 'start_time', '') or getattr(job, 'created_at', ''))[:10] <= to_date]
+        if status:
             jobs = [job for job in jobs if job.status == status]
         
         # Convert Job objects to dictionaries
@@ -5094,6 +5117,9 @@ def get_execution_history():
         
         # Get optional date filter parameter
         filter_date = request.args.get('date')  # Format: YYYY-MM-DD
+        from_date = request.args.get('from_date') or filter_date
+        to_date = request.args.get('to_date') or filter_date
+        scope = request.args.get('scope', 'all')
         device_ip = request.args.get('device_ip')
         
         # Load test results history
@@ -5112,8 +5138,8 @@ def get_execution_history():
             results_data = []
         
         # Filter by date if provided
-        if filter_date:
-            results_data = [r for r in results_data if r.get('date') == filter_date or r.get('timestamp', '').startswith(filter_date)]
+        if from_date or to_date:
+            results_data = [r for r in results_data if from_date <= (r.get('date') or r.get('timestamp', '')[:10]) <= to_date]
         
         # Filter by device if provided
         if device_ip:
@@ -5131,10 +5157,21 @@ def get_execution_history():
                 job_details_map[job.job_id] = {
                     'user_id': job.user_id,
                     'sequence_name': job.sequence_name,  # Include sequence_name for completed jobs
-                    'username': job.user_id
+                    'username': job.user_id,
+                    'team_name': getattr(job, 'team_name', '')
                 }
         except Exception as e:
             print(f"⚠️  Could not load jobs for username/sequence lookup: {e}")
+
+        if scope in ('user', 'team'):
+            def belongs_to_scope(result):
+                details = job_details_map.get(result.get('job_id'), {})
+                result_user = result.get('executing_user') or result.get('username') or result.get('user_id') or details.get('user_id')
+                result_team = result.get('team_name') or details.get('team_name', '')
+                if scope == 'user':
+                    return result_user == current_user.ntid
+                return result_team == current_user.team_name
+            results_data = [result for result in results_data if belongs_to_scope(result)]
         
         # Group by job_id to create consolidated job records from test results
         try:
@@ -5296,7 +5333,7 @@ def get_job_screenshots(job_id):
                             if captured_ss.get('before'):
                                 screenshot_path = captured_ss['before']
                                 # Convert file path to URL for /screenshots/ endpoint
-                                if screenshot_path.startswith('ExecutionResults'):
+                                if screenshot_path.startswith(('ExecutionResults', 'EXECUTION_RESULTS')):
                                     screenshot_url = f'/screenshots/{screenshot_path}'
                                 else:
                                     screenshot_url = f'/screenshots/{os.path.basename(screenshot_path)}'
@@ -5356,18 +5393,19 @@ def get_job_screenshots(job_id):
         # First priority: Use stored session_folder if available
         if getattr(job, 'session_folder', None):
             session_folder_path = job.session_folder
-            screenshots_dir = os.path.join(session_folder_path, 'SCREENSHOTS')
-            
-            if os.path.isdir(screenshots_dir):
+            if os.path.isdir(session_folder_path):
                 try:
-                    files = sorted(os.listdir(screenshots_dir))
-                    for filename in files:
-                        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
-                            filepath = os.path.join(screenshots_dir, filename)
-                            if os.path.isfile(filepath):
-                                # Extract relative path from Enhancement_output for URL
-                                rel_path = os.path.relpath(screenshots_dir, os.path.join(base_dir, 'Enhancement_output'))
-                                screenshot_url = f'/screenshots/Enhancement_output/{rel_path}/{filename}'
+                    for root, _, files in os.walk(session_folder_path):
+                        if os.path.basename(root).lower() not in ('screenshot', 'screenshots', 'screen_shots'):
+                            continue
+                        for filename in sorted(files):
+                            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
+                                filepath = os.path.join(root, filename)
+                                relative_marker = 'EXECUTION_RESULTS/'
+                                if relative_marker in filepath:
+                                    screenshot_url = f'/screenshots/{relative_marker}{filepath.split(relative_marker, 1)[1]}'
+                                else:
+                                    screenshot_url = f'/screenshots/{os.path.basename(filepath)}'
                                 screenshots.append({
                                     'path': screenshot_url,
                                     'filename': filename,
@@ -5375,7 +5413,7 @@ def get_job_screenshots(job_id):
                                     'timestamp': extract_timestamp_from_filename(filename) or filename
                                 })
                 except Exception as e:
-                    print(f"⚠️  Error reading screenshots from session folder {screenshots_dir}: {e}", file=sys.stderr)
+                    print(f"⚠️  Error reading screenshots from session folder {session_folder_path}: {e}", file=sys.stderr)
             
             # Return screenshots from session folder (only current execution)
             return jsonify({
@@ -5422,41 +5460,6 @@ def get_job_screenshots(job_id):
                                 })
                 except Exception as e:
                     print(f"⚠️  Error reading screenshots from {folder}: {e}", file=sys.stderr)
-        
-        # ✨ NEW FALLBACK: Search ExecutionResults directory for recent screenshots
-        # This handles cases where test_results_history.json wasn't updated but screenshots exist
-        if not screenshots:
-            execution_results_dir = os.path.join(base_dir, 'ExecutionResults')
-            if os.path.exists(execution_results_dir):
-                # Search recursively for PNG files from today/recently
-                from datetime import datetime, timedelta
-                today = datetime.now().strftime('%Y-%m-%d')
-                
-                try:
-                    for root, dirs, files in os.walk(execution_results_dir):
-                        for filename in sorted(files, reverse=True):
-                            if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-                                filepath = os.path.join(root, filename)
-                                # Get relative path for URL
-                                rel_path = os.path.relpath(filepath, base_dir)
-                                screenshot_url = f'/screenshots/{rel_path}'
-                                
-                                screenshots.append({
-                                    'path': screenshot_url,
-                                    'filename': filename,
-                                    'step': extract_step_from_filename(filename),
-                                    'timestamp': extract_timestamp_from_filename(filename) or filename,
-                                    'source': 'ExecutionResults'
-                                })
-                        
-                        # Limit results to avoid returning too many
-                        if len(screenshots) >= 10:
-                            break
-                    
-                    if screenshots:
-                        print(f"[FALLBACK] Found {len(screenshots)} screenshots in ExecutionResults for job {job_id}", file=sys.stderr)
-                except Exception as e:
-                    print(f"⚠️  Error searching ExecutionResults for screenshots: {e}", file=sys.stderr)
         
         return jsonify({
             'success': True,
@@ -6354,8 +6357,8 @@ def get_existing_patterns():
     try:
         from controllers.log_pattern_controller import LogPatternController
 
-        approved_patterns = LogPatternController.get_approved_patterns()
-        return jsonify({'success': True, 'data': approved_patterns})
+        patterns = LogPatternController.get_existing_patterns()
+        return jsonify({'success': True, 'data': patterns})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 

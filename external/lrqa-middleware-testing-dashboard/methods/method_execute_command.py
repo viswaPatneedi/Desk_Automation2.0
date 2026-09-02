@@ -5,6 +5,7 @@ Execute system commands on device via SSH (e.g., systemctl restart ermgr)
 
 import time
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 import socket
 import re
 from datetime import datetime, timezone
@@ -94,7 +95,7 @@ def execute_system_command(device_ip, port, username, password, command_text, it
             }
         
         # Connect to device via SSH
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         
         log_message_wrapper(f"🔌 Connecting to {device_ip}:{port}...")

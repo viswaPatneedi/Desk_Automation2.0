@@ -361,6 +361,8 @@ class LogPatternController:
                 row.change_id: LogPatternController._format_submission(row, session)
                 for row in rows
             }
+        except Exception:
+            return {}
         finally:
             session.close()
     
@@ -391,8 +393,22 @@ class LogPatternController:
                     "team_name": row.team_name or "",
                 }
             return approved
+        except Exception:
+            return LogPatternController.get_existing_patterns()
         finally:
             session.close()
+
+    @staticmethod
+    def get_existing_patterns():
+        """Get the configured patterns shown in the Existing Patterns view."""
+        if not os.path.exists(LOG_PATTERNS_FILE):
+            return {}
+        try:
+            with open(LOG_PATTERNS_FILE, "r", encoding="utf-8") as handle:
+                data = json.load(handle)
+            return data.get("LOG_PATTERNS", {}) if isinstance(data, dict) else {}
+        except (OSError, json.JSONDecodeError):
+            return {}
 
     @staticmethod
     def get_rejected_submissions():
@@ -405,6 +421,8 @@ class LogPatternController:
                 .all()
             )
             return [LogPatternController._format_submission(row, session) for row in rows]
+        except Exception:
+            return []
         finally:
             session.close()
     

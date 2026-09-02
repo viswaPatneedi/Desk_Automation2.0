@@ -755,6 +755,7 @@
         let autoRefreshInterval;
         let lastKnownStatus = '{{ job.status }}';
         let lastKnownStep = {{ current_step }};
+        let lastKnownIteration = {{ current_iteration }};
         let waitStartTime = null;
         let waitDurationSeconds = null;
         let countdownInterval = null;
@@ -1046,9 +1047,11 @@
                     const currentStep = statusData.job.current_step || 0;
                     const currentIteration = statusData.job.current_iteration || 1;
                     
-                    // Update step highlighting if changed
-                    if (currentStep !== lastKnownStep) {
+                    // Refresh progress when either the current method step or
+                    // iteration changes. One-step methods keep step at zero.
+                    if (currentStep !== lastKnownStep || currentIteration !== lastKnownIteration) {
                         lastKnownStep = currentStep;
+                        lastKnownIteration = currentIteration;
                         updateStepHighlighting(currentStep, currentIteration, statusData.job.iterations);
                     }
                     

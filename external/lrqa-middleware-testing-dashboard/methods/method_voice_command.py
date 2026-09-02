@@ -5,6 +5,7 @@ Checks only the CURL command response - no screen capture or validation
 """
 
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 import json
 from methods.method_utils import log_message
 
@@ -40,7 +41,7 @@ def execute_voice_command_process(device_ip, port, username, password, iteration
         # Step 1: Establish SSH Connection
         log_msg("📡 Connecting to device via SSH...")
         
-        ssh = paramiko.SSHClient()
+        ssh = get_execution_ssh_client()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(device_ip, port=port, username=username, password=password, timeout=30)
         

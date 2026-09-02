@@ -6,6 +6,7 @@ Uses iTach IR blaster (not SSH-based local scripts)
 
 import time
 import paramiko
+from methods.method_utils import get_execution_ssh_client
 from datetime import datetime
 
 ## Import IR utilities 
@@ -69,7 +70,7 @@ def execute_standby_deep_sleep_test(device_ip, device_name, remote_type="SKY", i
         log_message(f"\n[STEP 2] Verify Device SSH Connectivity")
         sshclient = None
         try:
-            sshclient = paramiko.SSHClient()
+            sshclient = get_execution_ssh_client()
             sshclient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             sshclient.connect(device_ip, port=10022, username="root", password="", timeout=10)
             log_message(f"✅ SSH connection established")
@@ -89,7 +90,7 @@ def execute_standby_deep_sleep_test(device_ip, device_name, remote_type="SKY", i
         log_message(f"\n[STEP 3] Verify Device Responsiveness")
         sshclient = None
         try:
-            sshclient = paramiko.SSHClient()
+            sshclient = get_execution_ssh_client()
             sshclient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             sshclient.connect(device_ip, port=10022, username="root", password="", timeout=10)
             

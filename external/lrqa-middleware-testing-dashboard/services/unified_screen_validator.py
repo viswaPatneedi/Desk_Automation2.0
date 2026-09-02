@@ -61,22 +61,6 @@ class UnifiedScreenValidator:
             logger.error(f"❌ OLLAMA initialization failed: {e}")
             logger.info("Fallback to legacy pixel-based validation available")
             self.actual_provider = None
-                        providers.append("Gemini (cloud)")
-                    logger.info(f"✅ Using Hybrid mode: {', '.join(providers)}")
-                else:
-                    self.actual_provider = 'legacy'
-                    logger.warning("⚠ Neither Ollama nor Gemini available, using legacy validation")
-                    
-            else:  # legacy
-                self.actual_provider = 'legacy'
-                logger.info("ℹ Using legacy pixel-based validation")
-                
-        except Exception as e:
-            logger.error(f"Error initializing provider: {e}")
-            self.actual_provider = 'legacy'
-    
-    def validate_screen(self, screenshot_path: str, expected_screen: str,
-                       device_name: str = None) -> bool:
     
     def validate_screen(self, screenshot_path: str, expected_screen: str,
                        device_name: str = None) -> bool:
