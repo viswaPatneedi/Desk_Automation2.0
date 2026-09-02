@@ -132,7 +132,8 @@ class DeviceController:
                 'rpi_ip': rpi_config_data.get('rpi_ip'),
                 'rpi_port': rpi_config_data.get('rpi_port', 22 if not is_rack_device else 60201),
                 'rpi_username': rpi_config_data.get('rpi_username', 'pi'),
-                'rpi_password': rpi_config_data.get('rpi_password')
+                'rpi_password': rpi_config_data.get('rpi_password'),
+                'station_name': rpi_config_data.get('station_name', '')
             }
 
             # Create device object
@@ -390,7 +391,8 @@ class DeviceController:
                     'rpi_ip': rpi_config_data.get('rpi_ip', rpi_config.get('rpi_ip') if rpi_config else ''),
                     'rpi_port': rpi_config_data.get('rpi_port', rpi_config.get('rpi_port', 22 if not is_rack_device else 60201) if rpi_config else (22 if not is_rack_device else 60201)),
                     'rpi_username': rpi_config_data.get('rpi_username', rpi_config.get('rpi_username', 'pi') if rpi_config else 'pi'),
-                    'rpi_password': rpi_config_data.get('rpi_password', rpi_config.get('rpi_password') if rpi_config else '')
+                    'rpi_password': rpi_config_data.get('rpi_password', rpi_config.get('rpi_password') if rpi_config else ''),
+                    'station_name': rpi_config_data.get('station_name', rpi_config.get('station_name', '') if rpi_config else '')
                 }
 
             # Check if new IP already exists (and it's not the old IP)

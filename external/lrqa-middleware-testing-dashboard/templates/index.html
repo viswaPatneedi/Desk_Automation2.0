@@ -1405,9 +1405,13 @@
                                     </div>
                                     <div id="desk-device-selector" style="display: flex; flex-direction: column; gap: 0.5rem;">
                                     {% if devices %}
-                                        {% for device in devices %}
-                                        {% if not device.is_rack_device %}
-                                        <div class="device-row" data-device-ip="{{ device.ip }}" data-device-location="{{ device.location or 'N/A' }}" data-rpi-ip="{{ device.rpi_config.rpi_ip or '' }}" data-is-rack="false" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; border: 1px solid #475569; transition: all 0.3s ease; order: 0;">
+                                        {% set desk_devices = devices|selectattr("is_rack_device", "equalto", false)|list %}
+                                        {% for station_name, station_devices in desk_devices|groupby("rpi_config.station_name", default="Unassigned") %}
+                                        <div class="device-station-header" data-station="{{ station_name or 'Unassigned' }}" style="color: #9ca3af; font-weight: 600; font-size: 0.8rem; margin-top: 0.25rem; padding-left: 0.4rem; border-left: 3px solid #10b981;">
+                                            <i class="bi bi-router"></i> Station: {{ station_name or 'Unassigned' }}
+                                        </div>
+                                        {% for device in station_devices %}
+                                        <div class="device-row" data-device-ip="{{ device.ip }}" data-device-location="{{ device.location or 'N/A' }}" data-rpi-ip="{{ device.rpi_config.rpi_ip or '' }}" data-station="{{ station_name or 'Unassigned' }}" data-is-rack="false" style="display: flex; align-items: center; padding: 0.75rem; background: #334155; border-radius: 6px; border: 1px solid #475569; transition: all 0.3s ease; order: 0;">
                                             <input type="checkbox" class="form-check-input device-checkbox" id="device-{{ device.ip }}" value="{{ device.ip }}" data-device-name="{{ device.name }}" data-device-mac="{{ device.mac_address or 'N/A' }}" style="margin-right: 1rem; width: 18px; height: 18px; cursor: pointer;">
                                             <div style="flex: 1;">
                                                 <div style="color: #e5e7eb; font-weight: 500; font-size: 0.95rem;">{{ device.name }} • <span style="color: #9ca3af; font-size: 0.85rem;">{{ device.ip }} • {{ device.location or 'N/A' }} • <span class="device-mac-display">{{ device.mac_address or 'N/A' }}</span></span> </div>
@@ -1416,7 +1420,7 @@
                                                 <i class="bi bi-hourglass-split"></i> Checking...
                                             </span>
                                         </div>
-                                        {% endif %}
+                                        {% endfor %}
                                         {% endfor %}
                                     {% endif %}
                                     </div>
@@ -1726,9 +1730,6 @@
                                         </div>
                                         <!-- Right Side: Action Buttons -->
                                         <div class="device-item-actions">
-                                            <button class="btn btn-info btn-sm" onclick="showMethodExecutionModal('{{ device.ip }}')" title="Execute Method on Device">
-                                                <i class="bi bi-play-circle"></i>
-                                            </button>
                                             <button class="btn btn-warning btn-sm" onclick="editDevice('{{ device.ip }}')" title="Edit Device">
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
@@ -1818,6 +1819,12 @@
                             <p style="color: #9ca3af; font-size: 0.9rem; margin-bottom: 1rem;">
                                 <i class="bi bi-info-circle"></i> Application will SSH through R-Pi tunnel to reach DESK device
                             </p>
+
+                            <div class="device-form-group">
+                                <label for="desk-station-name" class="device-form-label">Station Name <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control device-form-input" id="desk-station-name" placeholder="e.g., Station-1" required>
+                                <small style="color: #9ca3af; display: block; margin-top: 0.25rem;">Unique label for this R-Pi/bench, so devices sharing an IP/MAC on different stations can be told apart</small>
+                            </div>
                             
                             <div class="device-form-group">
                                 <label for="desk-rpi-ip" class="device-form-label">R-Pi IP Address <span class="text-danger">*</span></label>
@@ -3869,6 +3876,7 @@
             const rpiPort = getElementValue('desk-rpi-port');
             const rpiUsername = getElementValue('desk-rpi-username');
             const rpiPassword = getElementValue('desk-rpi-password');
+            const stationName = getElementValue('desk-station-name');
             
             // Collect form data with correct field names
             const deviceData = {
@@ -3885,7 +3893,8 @@
                     rpi_ip: rpiIp,
                     rpi_port: rpiPort ? parseInt(rpiPort) : null,
                     rpi_username: rpiUsername || 'pi',
-                    rpi_password: rpiPassword
+                    rpi_password: rpiPassword,
+                    station_name: stationName
                 }
             };
             
@@ -3911,6 +3920,12 @@
             // Validate R-Pi configuration (REQUIRED)
             if (!rpiIp || !rpiPort || !rpiUsername || !rpiPassword) {
                 alert('❌ R-Pi tunnel configuration is REQUIRED. Please fill in all R-Pi fields (IP, Port, Username, Password)');
+                return;
+            }
+            
+            // Validate Station Name (REQUIRED to distinguish devices sharing IP/MAC across stations)
+            if (!stationName) {
+                alert('❌ Please enter a Station Name to identify this R-Pi/bench');
                 return;
             }
             
@@ -3963,6 +3978,7 @@
                     document.getElementById('device-mac').value = '';
                     document.getElementById('device-location').value = 'US:NYC';
                     document.getElementById('device-team').value = '';
+                    document.getElementById('desk-station-name').value = '';
                     document.getElementById('desk-rpi-ip').value = '';
                     document.getElementById('desk-rpi-port').value = '22';
                     document.getElementById('desk-rpi-username').value = 'pi';
@@ -4642,6 +4658,11 @@
                                     <small class="device-item-detail">
                                         <i class="bi bi-ethernet"></i> ${device.mac_address || 'N/A'}
                                     </small>
+                                    ${device.rpi_config && device.rpi_config.station_name ? `
+                                        <small class="device-item-detail">
+                                            <i class="bi bi-router"></i> Station: ${device.rpi_config.station_name}
+                                        </small>
+                                    ` : ''}
                                     ${device.rpi_config && device.rpi_config.rpi_ip ? `
                                         <small class="device-item-detail">
                                             <i class="bi bi-cpu"></i> Via R-Pi: ${device.rpi_config.rpi_ip}:${device.rpi_config.rpi_port || 22}
@@ -4651,9 +4672,6 @@
                                 ${device.team_name ? `<small class="device-item-team"><i class="bi bi-people"></i> ${device.team_name}</small>` : ''}
                             </div>
                             <div class="device-item-actions">
-                                <button class="btn btn-info btn-sm" onclick="showMethodExecutionModal('${device.ip}')" title="Execute Method on Device">
-                                    <i class="bi bi-play-circle"></i>
-                                </button>
                                 <button class="btn btn-warning btn-sm" onclick="editDevice('${device.ip}')" title="Edit Device">
                                     <i class="bi bi-pencil-square"></i>
                                 </button>
@@ -4722,9 +4740,6 @@
                             ${device.team_name ? `<small class="device-item-team"><i class="bi bi-people"></i> ${device.team_name}</small>` : ''}
                         </div>
                         <div class="device-item-actions">
-                            <button class="btn btn-info btn-sm" onclick="showMethodExecutionModal('${device.ip}')" title="Execute Method on Device">
-                                <i class="bi bi-play-circle"></i>
-                            </button>
                             <button class="btn btn-warning btn-sm" onclick="editDevice('${device.ip}')" title="Edit Device">
                                 <i class="bi bi-pencil-square"></i>
                             </button>
@@ -5151,6 +5166,39 @@
             
             // Helper function to reorganize devices within a section
             function reorganizeSection(selector, sectionName) {
+                const stationHeaders = Array.from(selector.querySelectorAll('.device-station-header'));
+
+                // Sort by status: Active > Busy > Inactive
+                const sortByStatus = (rows) => {
+                    const active = [], busy = [], inactive = [];
+                    rows.forEach(row => {
+                        const status = row.getAttribute('data-device-status') || 'unknown';
+                        if (status === 'active') active.push(row);
+                        else if (status === 'busy') busy.push(row);
+                        else inactive.push(row);
+                    });
+                    return [...active, ...busy, ...inactive];
+                };
+
+                if (stationHeaders.length > 0) {
+                    // Grouped by station (e.g. DESK devices) - keep headers fixed, reorder rows within each group
+                    const fragment = document.createDocumentFragment();
+                    stationHeaders.forEach(header => {
+                        const stationName = header.getAttribute('data-station');
+                        const rows = Array.from(selector.querySelectorAll(`.device-row[data-station="${CSS.escape(stationName)}"]`));
+                        const sortedRows = sortByStatus(rows);
+                        fragment.appendChild(header);
+                        sortedRows.forEach((row, index) => {
+                            row.style.order = index;
+                            fragment.appendChild(row);
+                        });
+                    });
+                    selector.innerHTML = '';
+                    selector.appendChild(fragment);
+                    console.log(`✅ ${sectionName}: Reorganized within station groups (Active → Busy → Inactive)`);
+                    return;
+                }
+
                 const deviceRows = Array.from(selector.querySelectorAll('.device-row'));
                 
                 if (deviceRows.length === 0) {
@@ -5158,34 +5206,16 @@
                     return;
                 }
                 
-                // Map devices by status
-                const deskActive = [];
-                const deskBusy = [];
-                const deskInactive = [];
-                
-                deviceRows.forEach(row => {
-                    const status = row.getAttribute('data-device-status') || 'unknown';
-                    const ip = row.getAttribute('data-device-ip');
-                    
-                    if (status === 'active') {
-                        deskActive.push({ row, ip });
-                    } else if (status === 'busy') {
-                        deskBusy.push({ row, ip });
-                    } else {
-                        deskInactive.push({ row, ip });
-                    }
-                });
-                
-                console.log(`  ${sectionName}: ${deskActive.length} active, ${deskBusy.length} busy, ${deskInactive.length} inactive`);
+                console.log(`  ${sectionName}: sorting ${deviceRows.length} device(s) by status`);
                 
                 // Reorder: Active > Busy > Inactive
-                const sortedDevices = [...deskActive, ...deskBusy, ...deskInactive];
+                const sortedDevices = sortByStatus(deviceRows);
                 
                 // Clear and rebuild section maintaining order
                 const fragment = document.createDocumentFragment();
-                sortedDevices.forEach((device, index) => {
-                    device.row.style.order = index;
-                    fragment.appendChild(device.row);
+                sortedDevices.forEach((row, index) => {
+                    row.style.order = index;
+                    fragment.appendChild(row);
                 });
                 
                 // Clear selector and re-append in order
@@ -9658,9 +9688,14 @@
             // First, show the modal
             const modal = document.getElementById('deviceManagementModal');
             if (modal) {
-                const bsModal = new bootstrap.Modal(modal);
+                const bsModal = bootstrap.Modal.getOrCreateInstance(modal);
                 bsModal.show();
                 console.log('✅ Device Management modal shown');
+
+                // Switch to the "Add New Device" tab, which doubles as the edit form
+                const addFormTabBtn = modal.querySelector('.device-management-tab-btn[onclick*="add-form"]');
+                switchDeviceTab('add-form', addFormTabBtn);
+                console.log('✅ Switched to Add/Edit Device tab');
                 
                 // Ensure focus and scrolling happen after modal is fully shown
                 // Bootstrap's shown.bs.modal event fires when modal is fully displayed
@@ -9782,6 +9817,7 @@
                                 
                                 // Populate R-Pi tunnel configuration (REQUIRED for DESK devices)
                                 const rpiConfig = device.rpi_config || {};
+                                setElementValue('desk-station-name', rpiConfig.station_name);
                                 setElementValue('desk-rpi-ip', rpiConfig.rpi_ip);
                                 setElementValue('desk-rpi-port', rpiConfig.rpi_port || 22);
                                 setElementValue('desk-rpi-username', rpiConfig.rpi_username || 'pi');
