@@ -48,8 +48,17 @@ class AuditLoggingService:
             
             try:
                 from flask_login import current_user
-                if current_user and hasattr(current_user, 'user_id'):
+                if current_user and getattr(current_user, 'is_authenticated', False):
                     performed_by_ntid = current_user.ntid or "unknown"
+                    # current_user.user_id is the NTID (string), not the numeric users.id
+                    # FK - resolve it here so `performed_by` is actually populated.
+                    from sqlalchemy import text
+                    user_row = session.execute(
+                        text("SELECT id FROM users WHERE username = :username LIMIT 1"),
+                        {'username': performed_by_ntid}
+                    ).fetchone()
+                    if user_row:
+                        performed_by_user_id = user_row[0]
             except Exception as e:
                 pass  # Flask context not available, use system
             

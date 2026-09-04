@@ -469,6 +469,8 @@ class Job:
     @staticmethod
     def update_job_progress(job_id, current_step, current_iteration=None):
         """Update job progress with database transaction handling."""
+        from services.audit_logging_service import TransactionRollbackHandler
+        
         # Save to PostgreSQL with transaction rollback on error
         def _update_db_progress(session):
             db_job = session.query(DBJob).filter_by(job_id=job_id).first()

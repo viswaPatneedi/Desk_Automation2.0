@@ -70,7 +70,8 @@ def take_vnc_screenshot(
     validate_image=True,
     context=None,
     app_name=None,
-    step=None
+    step=None,
+    ssh=None
 ):
     """
     Capture screenshot directly from VNC port (NO ScreenCapture plugin needed).
@@ -89,6 +90,10 @@ def take_vnc_screenshot(
         timeout: HTTP request timeout in seconds (default: 15)
         validate_image: Whether to validate the downloaded image (default: True)
         context: Context label for naming (e.g., "Before", "After-Reboot-SUCCESS", "After-Reboot-FAILED")
+        ssh: Optional R-Pi tunnel/SSH client. The device's VNC port is only reachable
+             from the R-Pi's LAN, not from the dashboard host, so when provided the
+             request is proxied through the R-Pi (curl + base64) instead of being
+             attempted directly from here.
     
     Returns:
         dict: {
@@ -126,44 +131,99 @@ def take_vnc_screenshot(
         vnc_url = get_vnc_screenshot_url(device_ip, device_name, iteration, timestamp, vnc_port)
         log(f"📸 VNC Screenshot: Generating capture from {vnc_url}")
         
-        # Step 2: Download screenshot from VNC port
-        log(f"⏳ Downloading screenshot from VNC port {vnc_port}...")
-        response = requests.get(
-            vnc_url,
-            timeout=timeout,
-            verify=False,
-            stream=True
-        )
-        
-        if response.status_code != 200:
-            error_msg = f"HTTP {response.status_code} from VNC server"
-            log(f"❌ VNC Screenshot Failed: {error_msg}")
-            return {
-                'success': False,
-                'local_path': None,
-                'url': vnc_url,
-                'file_size': 0,
-                'dimensions': None,
-                'screen_state': None,
-                'error': error_msg,
-                'capture_time': time.time() - start_time
-            }
-        
-        # Step 3: Verify content
-        file_size = int(response.headers.get('Content-Length', 0))
-        if file_size == 0:
-            error_msg = "VNC server returned 0-byte file"
-            log(f"❌ VNC Screenshot Failed: {error_msg}")
-            return {
-                'success': False,
-                'local_path': None,
-                'url': vnc_url,
-                'file_size': 0,
-                'dimensions': None,
-                'screen_state': None,
-                'error': error_msg,
-                'capture_time': time.time() - start_time
-            }
+        # Step 2: Download screenshot from VNC port. The device's VNC server is only
+        # reachable from the R-Pi's network, so route through the R-Pi tunnel when
+        # available; only fall back to a direct request if no tunnel was supplied.
+        image_bytes = None
+        if ssh is not None and hasattr(ssh, 'execute_rpi_command'):
+            import base64
+            import shlex
+            log(f"⏳ Downloading screenshot from VNC port {vnc_port} via R-Pi tunnel...")
+            command = (
+                f"curl --fail --silent --show-error --max-time {int(timeout)} "
+                f"http://{shlex.quote(device_ip)}:{int(vnc_port)}/screenshot.png | base64 -w 0"
+            )
+            success, encoded_image, error = ssh.execute_rpi_command(command, timeout=timeout + 5)
+            if not success or not encoded_image:
+                error_msg = error or 'VNC screenshot capture through R-Pi tunnel failed'
+                log(f"❌ VNC Screenshot Failed: {error_msg}")
+                return {
+                    'success': False,
+                    'local_path': None,
+                    'url': vnc_url,
+                    'file_size': 0,
+                    'dimensions': None,
+                    'screen_state': None,
+                    'error': error_msg,
+                    'capture_time': time.time() - start_time
+                }
+            try:
+                image_bytes = base64.b64decode(encoded_image)
+            except Exception as decode_err:
+                error_msg = f"Invalid VNC screenshot response: {decode_err}"
+                log(f"❌ VNC Screenshot Failed: {error_msg}")
+                return {
+                    'success': False,
+                    'local_path': None,
+                    'url': vnc_url,
+                    'file_size': 0,
+                    'dimensions': None,
+                    'screen_state': None,
+                    'error': error_msg,
+                    'capture_time': time.time() - start_time
+                }
+            if len(image_bytes) == 0:
+                error_msg = "VNC server returned 0-byte file"
+                log(f"❌ VNC Screenshot Failed: {error_msg}")
+                return {
+                    'success': False,
+                    'local_path': None,
+                    'url': vnc_url,
+                    'file_size': 0,
+                    'dimensions': None,
+                    'screen_state': None,
+                    'error': error_msg,
+                    'capture_time': time.time() - start_time
+                }
+        else:
+            log(f"⏳ Downloading screenshot from VNC port {vnc_port}...")
+            response = requests.get(
+                vnc_url,
+                timeout=timeout,
+                verify=False,
+                stream=True
+            )
+            
+            if response.status_code != 200:
+                error_msg = f"HTTP {response.status_code} from VNC server"
+                log(f"❌ VNC Screenshot Failed: {error_msg}")
+                return {
+                    'success': False,
+                    'local_path': None,
+                    'url': vnc_url,
+                    'file_size': 0,
+                    'dimensions': None,
+                    'screen_state': None,
+                    'error': error_msg,
+                    'capture_time': time.time() - start_time
+                }
+            
+            # Step 3: Verify content
+            file_size = int(response.headers.get('Content-Length', 0))
+            if file_size == 0:
+                error_msg = "VNC server returned 0-byte file"
+                log(f"❌ VNC Screenshot Failed: {error_msg}")
+                return {
+                    'success': False,
+                    'local_path': None,
+                    'url': vnc_url,
+                    'file_size': 0,
+                    'dimensions': None,
+                    'screen_state': None,
+                    'error': error_msg,
+                    'capture_time': time.time() - start_time
+                }
+            image_bytes = response.content
         
         # Step 4: Save to local storage
         os.makedirs(screenshot_folder, exist_ok=True)
@@ -184,7 +244,7 @@ def take_vnc_screenshot(
         local_path = os.path.join(screenshot_folder, filename)
         
         with open(local_path, 'wb') as f:
-            f.write(response.content)
+            f.write(image_bytes)
         
         file_size = os.path.getsize(local_path)
         log(f"✓ Screenshot downloaded: {file_size / 1024:.2f} KB")
@@ -403,7 +463,8 @@ def take_vnc_screenshot_with_fallback(
         validate_image=True,
         context=context,
         app_name=app_name,
-        step=step
+        step=step,
+        ssh=ssh
     )
     
     if result['success']:

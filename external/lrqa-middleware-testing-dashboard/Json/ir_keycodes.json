@@ -45,16 +45,24 @@
                         "log_pattern": "keycode: Ethan::Key_Up \"0x01000013 \\(Key_Up\\)\""
                     }
                 },
-                "INPUT": {
+                "_DISABLED_INPUT": {
                     "name": "INPUT",
                     "display_name": "Input Key",
                     "description": "Exit current screen (Input)",
+                    "disabled": true,
+                    "disabled_reason": "Superseded by new code from remote re-capture; kept for reference only, not loaded as an active key",
                     "command_template": "sendir,1:{ir_port},142,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,44,8,29,8,34,8,39,8,81,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,86,8,70,8,34,8,39,8,81,8,29,8,29,8,3040\r",
                     "validation": {
                         "hex_code": "0x0100011c",
                         "ethan_key": "Ethan::Key_Settings",
                         "log_pattern": "keycode: Ethan::Key_Settings \"0x0100011c \\u0028Key_Settings\\u0029\""
                     }
+                },
+                "INPUT": {
+                    "name": "INPUT",
+                    "display_name": "Input Key",
+                    "description": "Exit current screen (Input)",
+                    "command_template": "sendir,1:{ir_port},22056,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,44,8,29,8,34,8,55,8,65,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,86,8,70,8,34,8,55,8,65,8,29,8,29,8,3040\r"
                 },
                 "QAM": {
                     "name": "QAM",
@@ -78,16 +86,24 @@
                         "log_pattern": "keycode: Ethan::Key_PageDown \"0x01000017 \\u0028Key_PageDown\\u0029\""
                     }
                 },
-                "MUTE": {
+                "_DISABLED_MUTE": {
                     "name": "MUTE",
                     "display_name": "Mute Key",
                     "description": "Toggle audio mute",
+                    "disabled": true,
+                    "disabled_reason": "Superseded by new code from remote re-capture; kept for reference only, not loaded as an active key",
                     "command_template": "sendir,1:{ir_port},146,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,34,8,29,8,34,8,29,8,91,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,75,8,70,8,34,8,29,8,91,8,29,8,29,8,3040\r",
                     "validation": {
                         "hex_code": "0x02a",
                         "ethan_key": "Ethan::Key_Asterisk",
                         "log_pattern": "keycode: Ethan::Key_Asterisk \"0x02a \\u0028Key_Asterisk\\u0029\""
                     }
+                },
+                "MUTE": {
+                    "name": "MUTE",
+                    "display_name": "Mute Key",
+                    "description": "Toggle audio mute",
+                    "command_template": "sendir,1:{ir_port},22059,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,44,8,29,8,34,8,29,8,91,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,86,8,70,8,34,8,29,8,91,8,29,8,29,8,3040\r"
                 },
                 "DOWN": {
                     "name": "DOWN",
@@ -132,6 +148,126 @@
                         "ethan_key": "Ethan::Key_Select",
                         "log_pattern": "keycode: Ethan::Key_Select \"0x01000020 \\(Key_Select\\)\""
                     }
+                },
+                "LAST": {
+                    "name": "LAST",
+                    "display_name": "Last Key",
+                    "description": "Return to last channel or screen",
+                    "command_template": "sendir,1:{ir_port},22044,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,75,8,29,8,34,8,55,8,34,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,34,8,70,8,34,8,55,8,34,8,29,8,29,8,3040\r"
+                },
+                "WATCHLIST": {
+                    "name": "WATCHLIST",
+                    "display_name": "Watchlist Key",
+                    "description": "Open watchlist screen",
+                    "command_template": "sendir,1:{ir_port},22045,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,39,8,29,8,34,8,70,8,55,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,81,8,70,8,34,8,70,8,55,8,29,8,29,8,3040\r"
+                },
+                "ONE": {
+                    "name": "ONE",
+                    "display_name": "Number 1 Key",
+                    "description": "Number key 1",
+                    "command_template": "sendir,1:{ir_port},22046,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,101,8,29,8,34,8,29,8,34,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,60,8,70,8,34,8,29,8,34,8,29,8,29,8,3040\r"
+                },
+                "TWO": {
+                    "name": "TWO",
+                    "display_name": "Number 2 Key",
+                    "description": "Number key 2",
+                    "command_template": "sendir,1:{ir_port},22047,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,96,8,29,8,34,8,29,8,39,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,55,8,70,8,34,8,29,8,39,8,29,8,29,8,3040\r"
+                },
+                "THREE": {
+                    "name": "THREE",
+                    "display_name": "Number 3 Key",
+                    "description": "Number key 3",
+                    "command_template": "sendir,1:{ir_port},22048,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,91,8,29,8,34,8,29,8,44,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,49,8,70,8,34,8,29,8,44,8,29,8,29,8,3040\r"
+                },
+                "FOUR": {
+                    "name": "FOUR",
+                    "display_name": "Number 4 Key",
+                    "description": "Number key 4",
+                    "command_template": "sendir,1:{ir_port},22049,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,86,8,29,8,34,8,29,8,49,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,44,8,70,8,34,8,29,8,49,8,29,8,29,8,3040\r"
+                },
+                "FIVE": {
+                    "name": "FIVE",
+                    "display_name": "Number 5 Key",
+                    "description": "Number key 5",
+                    "command_template": "sendir,1:{ir_port},22050,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,81,8,29,8,34,8,29,8,55,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,39,8,70,8,34,8,29,8,55,8,29,8,29,8,3040\r"
+                },
+                "SIX": {
+                    "name": "SIX",
+                    "display_name": "Number 6 Key",
+                    "description": "Number key 6",
+                    "command_template": "sendir,1:{ir_port},22051,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,75,8,29,8,34,8,29,8,60,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,34,8,70,8,34,8,29,8,60,8,29,8,29,8,3040\r"
+                },
+                "SEVEN": {
+                    "name": "SEVEN",
+                    "display_name": "Number 7 Key",
+                    "description": "Number key 7",
+                    "command_template": "sendir,1:{ir_port},22052,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,70,8,29,8,34,8,29,8,65,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,29,8,70,8,34,8,29,8,65,8,29,8,29,8,3040\r"
+                },
+                "EIGHT": {
+                    "name": "EIGHT",
+                    "display_name": "Number 8 Key",
+                    "description": "Number key 8",
+                    "command_template": "sendir,1:{ir_port},22053,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,65,8,29,8,34,8,29,8,70,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,107,8,70,8,34,8,29,8,70,8,29,8,29,8,3040\r"
+                },
+                "NINE": {
+                    "name": "NINE",
+                    "display_name": "Number 9 Key",
+                    "description": "Number key 9",
+                    "command_template": "sendir,1:{ir_port},22054,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,60,8,29,8,34,8,29,8,75,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,101,8,70,8,34,8,29,8,75,8,29,8,29,8,3040\r"
+                },
+                "ZERO": {
+                    "name": "ZERO",
+                    "display_name": "Number 0 Key",
+                    "description": "Number key 0",
+                    "command_template": "sendir,1:{ir_port},22055,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,107,8,29,8,34,8,29,8,29,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,65,8,70,8,34,8,29,8,29,8,29,8,29,8,3040\r"
+                },
+                "VOLUP": {
+                    "name": "VOLUP",
+                    "display_name": "Volume Up Key",
+                    "description": "Increase volume level",
+                    "command_template": "sendir,1:{ir_port},22057,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,55,8,29,8,34,8,29,8,81,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,96,8,70,8,34,8,29,8,81,8,29,8,29,8,3040\r"
+                },
+                "VOLDN": {
+                    "name": "VOLDN",
+                    "display_name": "Volume Down Key",
+                    "description": "Decrease volume level",
+                    "command_template": "sendir,1:{ir_port},22058,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,49,8,29,8,34,8,29,8,86,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,91,8,70,8,34,8,29,8,86,8,29,8,29,8,3040\r"
+                },
+                "SETUP": {
+                    "name": "SETUP",
+                    "display_name": "Setup Key",
+                    "description": "Open settings menu",
+                    "command_template": "sendir,1:{ir_port},22060,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,96,8,29,8,34,8,39,8,29,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,55,8,70,8,34,8,39,8,29,8,29,8,29,8,3040\r"
+                },
+                "APPLIST": {
+                    "name": "APPLIST",
+                    "display_name": "App List Key",
+                    "description": "Open app list/launcher screen",
+                    "command_template": "sendir,1:{ir_port},22061,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,65,8,29,8,34,8,39,8,60,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,107,8,70,8,34,8,39,8,60,8,29,8,29,8,3040\r"
+                },
+                "NETFLIX": {
+                    "name": "NETFLIX",
+                    "display_name": "Favorite 1 Key (Netflix)",
+                    "description": "Direct-to-app quick key (Netflix)",
+                    "command_template": "sendir,1:{ir_port},22062,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,75,8,29,8,34,8,60,8,29,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,34,8,70,8,34,8,60,8,29,8,29,8,29,8,3040\r"
+                },
+                "PRIME_VIDEO": {
+                    "name": "PRIME_VIDEO",
+                    "display_name": "Favorite 2 Key (Prime Video)",
+                    "description": "Direct-to-app quick key (Prime Video)",
+                    "command_template": "sendir,1:{ir_port},22065,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,70,8,29,8,34,8,60,8,34,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,29,8,70,8,34,8,60,8,34,8,29,8,29,8,3040\r"
+                },
+                "PEACOCK": {
+                    "name": "PEACOCK",
+                    "display_name": "Favorite 3 Key (Peacock)",
+                    "description": "Direct-to-app quick key (Peacock)",
+                    "command_template": "sendir,1:{ir_port},22063,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,65,8,29,8,34,8,60,8,39,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,107,8,70,8,34,8,60,8,39,8,29,8,29,8,3040\r"
+                },
+                "DISNEY+": {
+                    "name": "DISNEY+",
+                    "display_name": "Favorite 4 Key (Disney+)",
+                    "description": "Direct-to-app quick key (Disney+)",
+                    "command_template": "sendir,1:{ir_port},22064,38000,1,37,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,60,8,29,8,34,8,60,8,44,8,29,8,29,8,3040,8,29,8,65,8,34,8,107,8,49,8,49,8,44,8,101,8,494,8,29,8,101,8,70,8,34,8,60,8,44,8,29,8,29,8,3040\r"
                 }
             }
         },

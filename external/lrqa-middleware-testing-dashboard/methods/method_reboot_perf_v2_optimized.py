@@ -1261,6 +1261,12 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                         import shutil
                         original_path = before_screenshot_result.get('screenshot_path')
                         shutil.copy2(original_path, str(before_screenshot_path))
+                        # Remove the raw capture so it doesn't also show up in the
+                        # gallery unlabeled alongside the properly-named copy above.
+                        try:
+                            os.remove(original_path)
+                        except OSError:
+                            pass
                         
                         log_message(f"✓ BEFORE screenshot captured successfully")
                         log_message(f"  File: {before_screenshot_name}")
@@ -1584,6 +1590,12 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                             import shutil
                             original_path = screenshot_result.get('screenshot_path')
                             shutil.copy2(original_path, str(after_screenshot_path))
+                            # Remove the raw capture so it doesn't also show up in the
+                            # gallery unlabeled alongside the properly-named copy above.
+                            try:
+                                os.remove(original_path)
+                            except OSError:
+                                pass
                             
                             log_message(f"✓ AFTER screenshot captured successfully")
                             log_message(f"  File: {after_screenshot_name}")

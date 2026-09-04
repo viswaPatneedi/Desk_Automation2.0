@@ -39,15 +39,16 @@ class EmailService:
         from config.config_email import SMTP_SERVER, SMTP_PORT, SENDER_EMAIL, SENDER_PASSWORD, EMAIL_ENABLED
       except Exception:
         SMTP_SERVER, SMTP_PORT, SENDER_EMAIL, SENDER_PASSWORD, EMAIL_ENABLED = (
-          'smtp.gmail.com', 587, '', '', True
+          'mailrelay.comcast.com', 25, '', '', True
         )
 
       self.smtp_server = os.environ.get('SMTP_SERVER', SMTP_SERVER)
       self.smtp_port = int(os.environ.get('SMTP_PORT', SMTP_PORT))
       self.sender_email = os.environ.get('SENDER_EMAIL', SENDER_EMAIL)
       self.sender_password = os.environ.get('SENDER_PASSWORD', SENDER_PASSWORD)
-      # Enable email only when Gmail SMTP is fully configured
-      self.enabled = bool(EMAIL_ENABLED and self.sender_email and self.sender_password)
+      # Port 25 relay needs no password; authenticated SMTP (587) does
+      self.enabled = bool(EMAIL_ENABLED and self.sender_email and
+                          (self.smtp_port != 587 or self.sender_password))
       
       # Threading lock to ensure thread-safe operations
       self._lock = threading.Lock()
@@ -401,7 +402,7 @@ This email was sent automatically after execution completed.
         if not self.enabled:
             print(f"⚠️ Email not configured. Would have sent to: {recipient}")
             print(f"   Subject: {msg['Subject']}")
-            return True, "Email not configured (dev mode)"
+            return False, "Email not configured"
         
         # Retry configuration
         max_retries = 3

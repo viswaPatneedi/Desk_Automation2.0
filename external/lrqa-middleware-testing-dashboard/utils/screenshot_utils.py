@@ -506,7 +506,9 @@ def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screensh
         if iteration_match:
             iteration = int(iteration_match.group(1))
         
-        # Attempt VNC screenshot with fallback to RPC
+        # Attempt VNC screenshot only here - RPC fallback is handled below,
+        # not by take_vnc_screenshot_with_fallback, to avoid infinite recursion
+        # (that helper's own fallback re-enters take_and_analyze_screenshot).
         vnc_result = take_vnc_screenshot_with_fallback(
             ssh=ssh,
             device_ip=device_ip,
@@ -515,7 +517,7 @@ def _take_screenshot_with_timeout(ssh, screenshot_name, device_ip, log, screensh
             screenshot_folder=screenshot_folder,
             vnc_port=5800,
             log_callback=log,
-            fallback_to_plugin=True,
+            fallback_to_plugin=False,
             context=None,
             app_name=app_name,
             step=step

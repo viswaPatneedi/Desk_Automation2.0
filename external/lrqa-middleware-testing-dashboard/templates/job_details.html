@@ -424,6 +424,9 @@
                             {% endif %}
                             {{ loop.index }}. {{ item.method }}
                         </strong>
+                        {% if item.description %}
+                        <div class="mt-1"><small class="text-muted fst-italic">📝 {{ item.description }}</small></div>
+                        {% endif %}
                         {% if item.ir_keys or item.voice_text or item.remote_keys or item.expected_screen or item.screen_name or item.wait_seconds or item.command or item.expected_output or item.home_screen_timeout or item.optional_checks or item.wait_after_reboot or item.system_command_name or item.system_command_label or item.duration_seconds or item.interval_seconds or item.log_search_patterns or item.auto_collect_logs or item.image_name or item.command_text or item.section or item.tile_to_navigate or item.archive_name or item.boot_type or item.remote_type or item.sleep_duration_minutes or item.execute_deepsleep_wakeup or item.asset_voice_command or item.playback_duration or item.execute_playback_controls or item.execute_screenshot_analysis or item.screenshot_analysis or item.username_cred or item.password_cred or item.login_url or item.playback_log_string %}
                         <div class="mt-2">
                             <small class="text-muted">Parameters:</small>
@@ -824,6 +827,42 @@
             }
         }
 
+        // Render screenshots grouped by Iteration, then by Step (execution_queue order)
+        function renderGroupedScreenshots(container, iterationGroups) {
+            let html = '';
+            iterationGroups.forEach(group => {
+                html += `
+                    <div style="grid-column: 1 / -1; margin-bottom: 1rem;">
+                        <h6 style="color: #93c5fd; font-weight: 700; border-bottom: 1px solid #374151; padding-bottom: 0.35rem; margin-bottom: 0.75rem;">
+                            ${group.iteration_label}
+                        </h6>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;">
+                            ${group.steps.map(step => {
+                                const stepLabel = step.step_index ? `Step ${step.step_index}` : 'Step';
+                                const methodName = (typeof getMethodName === 'function') ? getMethodName(step.method) : step.method;
+                                return step.screenshots.map(screenshot => {
+                                    const cardTitle = screenshot.label ? `${stepLabel}: ${methodName} (${screenshot.label})` : `${stepLabel}: ${methodName}`;
+                                    return `
+                                        <div style="background: #1a1a1a; border: 1px solid #374151; border-radius: 4px; overflow: hidden; cursor: pointer; display: flex; flex-direction: column;"
+                                             onclick="viewScreenshotFullscreen('${screenshot.path}', '${cardTitle}')">
+                                            <img src="${screenshot.path}"
+                                                 alt="${cardTitle}"
+                                                 style="width: 100%; height: 150px; object-fit: cover; display: block; flex-shrink: 0;"
+                                                 onerror="this.style.display='none'; this.parentElement.style.background='#ff6b6b';">
+                                            <div style="padding: 0.5rem; background: #111827; color: #cbd5e1; font-size: 0.8rem; flex-shrink: 0;">
+                                                <strong>${cardTitle}</strong>
+                                                <div style="color: #9ca3af; font-size: 0.75rem;">${screenshot.filename}</div>
+                                            </div>
+                                        </div>`;
+                                }).join('');
+                            }).join('')}
+                        </div>
+                    </div>`;
+            });
+            container.innerHTML = html;
+            console.log('Grouped gallery rendered successfully');
+        }
+
         // Load and display captured screenshots
         function loadScreenshots() {
             const container = document.getElementById('screenshotsContainer');
@@ -857,6 +896,15 @@
                             <p style="margin-top: 1rem;">No screenshots captured yet</p>
                         </div>
                     `;
+                    return;
+                }
+
+                // Preferred view: grouped by Iteration, then by Step (requires step_index
+                // data recorded during execution - falls back to the flat gallery for
+                // older jobs that ran before this grouping was added).
+                if (data.iteration_groups && data.iteration_groups.length > 0) {
+                    console.log(`Building grouped gallery: ${data.iteration_groups.length} iteration(s)`);
+                    renderGroupedScreenshots(container, data.iteration_groups);
                     return;
                 }
                 

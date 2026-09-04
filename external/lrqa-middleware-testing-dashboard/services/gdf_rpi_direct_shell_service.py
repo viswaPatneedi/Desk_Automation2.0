@@ -24,6 +24,14 @@ import threading
 from typing import Tuple, Dict, Optional, Any
 from io import StringIO
 
+# Concurrent device commands multiplexed as SSH channels over ONE shared R-Pi
+# transport. Most sshd builds cap concurrent sessions per connection (commonly
+# MaxSessions=10); exceeding it surfaces as paramiko.ChannelException(2, 'Connect
+# failed'). Keep comfortably under that limit and retry transient failures.
+MAX_CONCURRENT_RPI_CHANNELS = 6
+CHANNEL_OPEN_MAX_RETRIES = 3
+CHANNEL_OPEN_RETRY_DELAY_SECONDS = 2
+
 
 class DeviceScopedRPiShellService:
     """Device-bound view of a shared R-Pi connection.
@@ -107,6 +115,9 @@ class GDFRPiDirectShellService:
         self.ssh_client = None
         self.is_connected = False
         self.lock = threading.Lock()
+        # Bounds how many device commands can have an open R-Pi SSH channel at
+        # once, to stay under the R-Pi sshd's concurrent-session limit.
+        self._channel_semaphore = threading.Semaphore(MAX_CONCURRENT_RPI_CHANNELS)
         
         # Connection stats
         self.connection_established_at = None
@@ -334,10 +345,31 @@ class GDFRPiDirectShellService:
 
             # Each call opens its own R-Pi SSH channel, enabling same-R-Pi devices
             # to execute independently through the shared R-Pi connection.
-            stdin, stdout, stderr = ssh_client.exec_command(ssh_cmd, timeout=timeout)
-            out_str = stdout.read().decode('utf-8', errors='ignore')
-            err_str = stderr.read().decode('utf-8', errors='ignore')
-            exit_code = stdout.channel.recv_exit_status()
+            # Bound concurrency and retry transient channel-open failures caused
+            # by momentarily exceeding the R-Pi sshd's session limit.
+            self._channel_semaphore.acquire()
+            try:
+                last_error = None
+                stdin = stdout = stderr = None
+                for attempt in range(1, CHANNEL_OPEN_MAX_RETRIES + 1):
+                    try:
+                        stdin, stdout, stderr = ssh_client.exec_command(ssh_cmd, timeout=timeout)
+                        last_error = None
+                        break
+                    except paramiko.ChannelException as chan_err:
+                        last_error = chan_err
+                        print(f"⚠️  [R-Pi DIRECT] Channel open failed on {device_ip} (attempt {attempt}/{CHANNEL_OPEN_MAX_RETRIES}): {chan_err}")
+                        if attempt < CHANNEL_OPEN_MAX_RETRIES:
+                            time.sleep(CHANNEL_OPEN_RETRY_DELAY_SECONDS)
+
+                if last_error is not None:
+                    raise last_error
+
+                out_str = stdout.read().decode('utf-8', errors='ignore')
+                err_str = stderr.read().decode('utf-8', errors='ignore')
+                exit_code = stdout.channel.recv_exit_status()
+            finally:
+                self._channel_semaphore.release()
 
             with self.lock:
                 self.commands_executed += 1

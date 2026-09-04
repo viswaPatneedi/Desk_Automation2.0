@@ -23,7 +23,7 @@ class TestResult:
                  tiles_summary: Optional[Dict] = None, rdk_milestones_log: Optional[str] = None,
                  boot_type: Optional[str] = None, device_name: Optional[str] = None,
                  username: Optional[str] = None, sequence_name: Optional[str] = None,
-                 captured_screenshots: Optional[Dict] = None):
+                 captured_screenshots: Optional[Dict] = None, step_index: Optional[int] = None):
         self.iteration = iteration
         self.phase = phase
         self.status = status
@@ -45,6 +45,7 @@ class TestResult:
         self.rdk_milestones_log = rdk_milestones_log
         self.boot_type = boot_type
         self.captured_screenshots = captured_screenshots or {}  # Dict with 'before', 'after', 'count' keys
+        self.step_index = step_index  # 1-based position within the job's execution_queue
     
     def to_dict(self) -> Dict:
         """Convert result to dictionary"""
@@ -69,7 +70,8 @@ class TestResult:
             'tiles_summary': self.tiles_summary,
             'rdk_milestones_log': self.rdk_milestones_log,
             'boot_type': self.boot_type,
-            'captured_screenshots': self.captured_screenshots
+            'captured_screenshots': self.captured_screenshots,
+            'step_index': self.step_index
         }
     
     @classmethod
@@ -95,7 +97,8 @@ class TestResult:
             tiles_summary=data.get('tiles_summary'),
             rdk_milestones_log=data.get('rdk_milestones_log'),
             boot_type=data.get('boot_type'),
-            captured_screenshots=data.get('captured_screenshots')
+            captured_screenshots=data.get('captured_screenshots'),
+            step_index=data.get('step_index')
         )
     
     @staticmethod

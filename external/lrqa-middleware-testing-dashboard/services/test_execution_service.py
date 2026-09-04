@@ -38,6 +38,7 @@ from methods.method_fetch_archived_devicelogs import fetch_archived_device_logs
 from methods.method_check_logs import execute_check_logs
 from methods.method_maintenance_deepsleep_wakeup import execute_maintenance_deepsleep_wakeup_process
 from methods.method_maintenance_CURL_deepsleep_wakeup import execute_maintenance_CURL_deepsleep_wakeup_process
+from utils.ssh_wrapper import wrap_tunnel_service_as_ssh
 from methods.method_deepsleep_maintenance_wakeup import execute_deepsleep_maintenance_wakeup_process
 from methods.method_netflix_playback import netflix_playback
 
@@ -1819,7 +1820,6 @@ class TestExecutionService:
                     elif method == "status":
                         try:
                             log_service.log("Checking device status...")
-                            from utils.ssh_wrapper import wrap_tunnel_service_as_ssh
                             client = wrap_tunnel_service_as_ssh(tunnel_service)
                             stdin, stdout, stderr = client.exec_command('uptime', timeout=10)
                             uptime_output = stdout.read().decode().strip()
@@ -2602,7 +2602,8 @@ class TestExecutionService:
                             tiles_summary=method_result.get('tiles_summary', None),
                             rdk_milestones_log=method_result.get('rdk_milestones_log', None),
                             boot_type=method_result.get('boot_type', None),
-                            captured_screenshots=method_result.get('captured_screenshots', None)  # ← NEW: Pass captured screenshots
+                            captured_screenshots=method_result.get('captured_screenshots', None),  # ← NEW: Pass captured screenshots
+                            step_index=method_index + 1
                         )
                         log_service.log(f"[RESULT-SAVE-1-DONE] Individual result saved")
 
@@ -3038,7 +3039,8 @@ class TestExecutionService:
                   build_info: Optional[str] = None, tiles_summary: Optional[dict] = None,
                   rdk_milestones_log: Optional[str] = None, boot_type: Optional[str] = None,
                   device_name: Optional[str] = None, username: Optional[str] = None,
-                  sequence_name: Optional[str] = None, captured_screenshots: Optional[dict] = None):
+                  sequence_name: Optional[str] = None, captured_screenshots: Optional[dict] = None,
+                  step_index: Optional[int] = None):
         """Add a test result with full metadata preservation"""
         result_device_ip = device_ip or self.last_device_ip or 'N/A'
         result_method = method or self.last_method or 'unknown'
@@ -3078,7 +3080,8 @@ class TestExecutionService:
             tiles_summary=tiles_summary,
             rdk_milestones_log=rdk_milestones_log,
             boot_type=boot_type,
-            captured_screenshots=captured_screenshots  # ← NEW: Include captured screenshots
+            captured_screenshots=captured_screenshots,  # ← NEW: Include captured screenshots
+            step_index=step_index
         )
         print(f"[DEBUG] Saving result for job_id={job_id}, device_ip={result_device_ip}, device_name={result_device_name}, iteration={iteration}, phase={phase}, status={status}")
         # Add to current execution results

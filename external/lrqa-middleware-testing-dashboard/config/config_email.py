@@ -13,11 +13,13 @@ except ImportError:
     # dotenv not installed, just use os.getenv
     pass
 
-# Gmail SMTP Configuration
-SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+# SMTP Configuration - Comcast (smtp.gmail.com is blocked on this network)
+# mailrelay.comcast.com:25 rejects this host with "421 4.3.2 Service not available",
+# so authenticated submission via smtp.comcast.net:587 (STARTTLS) is used instead.
+SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.comcast.net')
 SMTP_PORT = int(os.getenv('SMTP_PORT', '587'))
-SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'cperdkemiddleware@gmail.com')
-SENDER_PASSWORD = os.getenv('SENDER_PASSWORD', 'tbbwaifvmtzovqcs')  # Replace with new app password from Google
+SENDER_EMAIL = os.getenv('SENDER_EMAIL', 'vpatne290@cable.comcast.com')
+SENDER_PASSWORD = os.getenv('SENDER_PASSWORD', '')  # Set in .env - never commit
 
 # Email Service Settings
 EMAIL_ENABLED = os.getenv('EMAIL_ENABLED', 'true').lower() == 'true'
@@ -32,8 +34,8 @@ EMAIL_SUBJECT_FAILURE = "❌ Test Execution Failed: {job_id}"
 DEFAULT_RECIPIENTS = []
 
 # SMTP Connection Settings
-SMTP_USE_TLS = True
-SMTP_TIMEOUT = 10
+SMTP_USE_TLS = SMTP_PORT == 587
+SMTP_TIMEOUT = 30
 
 # Retry Settings
 MAX_EMAIL_RETRIES = 3

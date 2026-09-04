@@ -986,7 +986,12 @@
                         <li><a class="dropdown-item" href="/admin/methods"><i class="bi bi-diagram-3"></i> Methods Access</a></li>
                         <li><a class="dropdown-item" href="/admin/sequences"><i class="bi bi-list-check"></i> Sequences Access</a></li>
                         <li><a class="dropdown-item" href="/admin/devices"><i class="bi bi-hdd-rack-fill"></i> Devices Access</a></li>
+                        <li><a class="dropdown-item" href="/admin/audit-log"><i class="bi bi-journal-text"></i> Audit Log</a></li>
                         <li><a class="dropdown-item" href="#" onclick="showAppCredentialsPanel(); return false;"><i class="bi bi-key-fill"></i> App Credentials</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        {% endif %}
+                        {% if current_user.is_team_admin and not current_user.is_super_admin %}
+                        <li><a class="dropdown-item" href="/admin/audit-log"><i class="bi bi-journal-text"></i> Audit Log</a></li>
                         <li><hr class="dropdown-divider"></li>
                         {% endif %}
                         <li><a class="dropdown-item" href="/change-password"><i class="bi bi-key"></i> Change Password</a></li>
@@ -4429,7 +4434,7 @@
         function filterSequences() {
             const searchInput = document.getElementById('sequences-search-input');
             const query = searchInput.value.toLowerCase().trim();
-            const sequenceItems = document.querySelectorAll('#saved-sequences-list > div[style*="margin: 0.75rem"]');
+            const sequenceItems = document.querySelectorAll('#saved-sequences-list div[style*="margin: 0.75rem"]');
             let visibleCount = 0;
             
             sequenceItems.forEach(item => {
@@ -4455,7 +4460,7 @@
                 const total = parts[1].trim();
                 countBadge.textContent = visibleCount + ' / ' + total;
             } else if (countBadge) {
-                const total = document.querySelectorAll('#saved-sequences-list > div[style*="margin: 0.75rem"]').length;
+                const total = document.querySelectorAll('#saved-sequences-list div[style*="margin: 0.75rem"]').length;
                 countBadge.textContent = visibleCount + ' / ' + total;
             }
         }
@@ -10619,17 +10624,9 @@
                 jobTitle = `<i class="bi bi-diagram-3"></i> Execution`;
             }
             
-            // Build step descriptions from execution_queue
-            let stepDescriptionsHtml = '';
-            const stepsWithDesc = (job.execution_queue || []).filter(s => s.description);
-            if (stepsWithDesc.length > 0) {
-                const descLines = stepsWithDesc.map((s, i) => {
-                    const stepNum = (job.execution_queue || []).indexOf(s) + 1;
-                    return `<span style="color:#94a3b8;">Step ${stepNum}:</span> ${s.description}`;
-                }).join('<br>');
-                stepDescriptionsHtml = `<small style="color: #cbd5e1; display: block; margin-top: 0.3rem; font-size: 0.8rem; font-style: italic; border-left: 2px solid #475569; padding-left: 0.5rem;">📝 ${descLines}</small>`;
-            }
-            
+            // Note: per-step descriptions are intentionally NOT shown on the job card;
+            // they are shown on the Job Details page's Execution Queue steps instead.
+
             // Parse times safely and convert from UTC to local time
             let startTime = 'Unknown';
             let endTime = 'In progress...';
@@ -10697,7 +10694,6 @@
                             <small style="color: #f0fdf4; display: block; margin-top: 0.35rem; font-size: 0.9rem; font-weight: 600;">
                                 ${jobTitle}
                             </small>
-                            ${stepDescriptionsHtml}
                             <small style="color: #e5e7eb; display: block; margin-top: 0.25rem; font-size: 0.85rem;">
                                 👤 ${userId}
                             </small>

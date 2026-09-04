@@ -3291,6 +3291,41 @@ def devices_management():
     
     return render_template('device_management.html', user=current_user)
 
+@app.route('/admin/audit-log')
+@login_required
+def audit_log_page():
+    """Sequence audit log page - Super admin (all teams) or Team admin (own team only)"""
+    is_super_admin = getattr(current_user, 'is_super_admin', False)
+    is_team_admin = getattr(current_user, 'is_team_admin', False)
+
+    if not (is_super_admin or is_team_admin):
+        return "Access Denied. Only super admins and team admins can access this page.", 403
+
+    return render_template('audit_log.html', user=current_user)
+
+@app.route('/api/admin/audit-log/sequences', methods=['GET'])
+@login_required
+def get_sequence_audit_log():
+    """API: Sequence create/update/delete audit trail, grouped by day"""
+    is_super_admin = getattr(current_user, 'is_super_admin', False)
+    is_team_admin = getattr(current_user, 'is_team_admin', False)
+
+    if not (is_super_admin or is_team_admin):
+        return jsonify({'success': False, 'error': 'Access denied. Only super admins and team admins can view the audit log.'}), 403
+
+    from controllers.audit_log_controller import AuditLogController
+    try:
+        days = int(request.args.get('days', 30))
+    except ValueError:
+        days = 30
+    days = max(1, min(days, 365))
+
+    # Team admins (non-super-admins) only see their own team's sequences
+    team_filter = None if is_super_admin else getattr(current_user, 'team_name', None)
+
+    result = AuditLogController.get_sequence_audit_log(team_name=team_filter, days=days)
+    return jsonify(result), (200 if result.get('success') else 500)
+
 @app.route('/results')
 @login_required
 def results_page():
@@ -4193,7 +4228,10 @@ def get_ir_remotes():
         remotes = data.get('remotes') or {}
         response = {}
         for remote_name, remote_data in remotes.items():
-            keys = list((remote_data.get('keycodes') or {}).keys())
+            keycodes = remote_data.get('keycodes') or {}
+            # Skip disabled/commented-out entries (e.g. "_DISABLED_INPUT") kept
+            # in the JSON for reference only - they aren't valid device keys.
+            keys = [k for k, v in keycodes.items() if not (isinstance(v, dict) and v.get('disabled'))]
             response[remote_name] = {
                 'keys': keys,
                 'device_info': remote_data.get('device_info', {})
@@ -5318,11 +5356,36 @@ def get_job_screenshots(job_id):
                 
                 # ✨ FIX: Collect screenshots from ALL iterations, not just the first one
                 iteration_screenshots = {}  # Dict mapping iteration → screenshots list
-                
+                # Grouped by iteration -> step_index, for the "Iteration N / Step N" gallery view
+                iteration_steps = {}
+
+                def _to_screenshot_url(screenshot_path):
+                    if screenshot_path.startswith(('ExecutionResults', 'EXECUTION_RESULTS')):
+                        return f'/screenshots/{screenshot_path}'
+                    return f'/screenshots/{os.path.basename(screenshot_path)}'
+
+                def _add_grouped_entry(iteration, step_index, method, screenshot_url, filename, label):
+                    if iteration not in iteration_steps:
+                        iteration_steps[iteration] = {}
+                    step_key = step_index if step_index is not None else f'unknown-{method}'
+                    if step_key not in iteration_steps[iteration]:
+                        iteration_steps[iteration][step_key] = {
+                            'step_index': step_index,
+                            'method': method,
+                            'screenshots': []
+                        }
+                    iteration_steps[iteration][step_key]['screenshots'].append({
+                        'path': screenshot_url,
+                        'filename': filename,
+                        'label': label
+                    })
+
                 # Find ALL results for this job
                 for result in all_results:
                     if result.get('job_id') == job_id:
                         iteration = result.get('iteration', 'unknown')
+                        method = result.get('method', 'unknown')
+                        step_index = result.get('step_index')
                         captured_ss = result.get('captured_screenshots', {})
                         
                         if captured_ss:
@@ -5332,40 +5395,59 @@ def get_job_screenshots(job_id):
                             # Add BEFORE screenshot with iteration info
                             if captured_ss.get('before'):
                                 screenshot_path = captured_ss['before']
-                                # Convert file path to URL for /screenshots/ endpoint
-                                if screenshot_path.startswith(('ExecutionResults', 'EXECUTION_RESULTS')):
-                                    screenshot_url = f'/screenshots/{screenshot_path}'
-                                else:
-                                    screenshot_url = f'/screenshots/{os.path.basename(screenshot_path)}'
+                                screenshot_url = _to_screenshot_url(screenshot_path)
+                                filename = os.path.basename(screenshot_path)
                                 
                                 iteration_screenshots[iteration].append({
                                     'path': screenshot_url,
-                                    'filename': os.path.basename(screenshot_path),
+                                    'filename': filename,
                                     'step': 'Before Reboot',
-                                    'timestamp': extract_timestamp_from_filename(os.path.basename(screenshot_path)) or 'Before Reboot',
+                                    'timestamp': extract_timestamp_from_filename(filename) or 'Before Reboot',
                                     'type': 'before',
                                     'iteration': iteration,
                                     'iteration_label': f'Iteration {iteration}' if isinstance(iteration, int) else str(iteration)
                                 })
+                                _add_grouped_entry(iteration, step_index, method, screenshot_url, filename, 'Before')
                             
                             # Add AFTER screenshot with iteration info
                             if captured_ss.get('after'):
                                 screenshot_path = captured_ss['after']
-                                # Convert file path to URL for /screenshots/ endpoint
-                                if screenshot_path.startswith('ExecutionResults'):
-                                    screenshot_url = f'/screenshots/{screenshot_path}'
-                                else:
-                                    screenshot_url = f'/screenshots/{os.path.basename(screenshot_path)}'
+                                screenshot_url = _to_screenshot_url(screenshot_path)
+                                filename = os.path.basename(screenshot_path)
                                 
                                 iteration_screenshots[iteration].append({
                                     'path': screenshot_url,
-                                    'filename': os.path.basename(screenshot_path),
+                                    'filename': filename,
                                     'step': 'After Reboot',
-                                    'timestamp': extract_timestamp_from_filename(os.path.basename(screenshot_path)) or 'After Reboot',
+                                    'timestamp': extract_timestamp_from_filename(filename) or 'After Reboot',
                                     'type': 'after',
                                     'iteration': iteration,
                                     'iteration_label': f'Iteration {iteration}' if isinstance(iteration, int) else str(iteration)
                                 })
+                                _add_grouped_entry(iteration, step_index, method, screenshot_url, filename, 'After')
+
+                        # Plain 'screenshots' field (e.g. capture_current_screen) - comma-separated path(s)
+                        plain_screenshots = result.get('screenshots')
+                        if plain_screenshots:
+                            for screenshot_path in str(plain_screenshots).split(','):
+                                screenshot_path = screenshot_path.strip()
+                                if not screenshot_path:
+                                    continue
+                                screenshot_url = _to_screenshot_url(screenshot_path)
+                                filename = os.path.basename(screenshot_path)
+                                
+                                if iteration not in iteration_screenshots:
+                                    iteration_screenshots[iteration] = []
+                                iteration_screenshots[iteration].append({
+                                    'path': screenshot_url,
+                                    'filename': filename,
+                                    'step': extract_step_from_filename(filename) or method,
+                                    'timestamp': extract_timestamp_from_filename(filename) or filename,
+                                    'type': 'capture',
+                                    'iteration': iteration,
+                                    'iteration_label': f'Iteration {iteration}' if isinstance(iteration, int) else str(iteration)
+                                })
+                                _add_grouped_entry(iteration, step_index, method, screenshot_url, filename, None)
                 
                 # ✨ FIX: Flatten and sort by iteration after collecting ALL iterations
                 if iteration_screenshots:
@@ -5375,6 +5457,20 @@ def get_job_screenshots(job_id):
                     
                     for iteration in sorted_iterations:
                         screenshots.extend(iteration_screenshots[iteration])
+
+                    # Build the "Iteration N / Step N" grouped view for the UI
+                    iteration_groups = []
+                    for iteration in sorted_iterations:
+                        steps_dict = iteration_steps.get(iteration, {})
+                        sorted_step_keys = sorted(
+                            steps_dict.keys(),
+                            key=lambda k: (isinstance(k, str), steps_dict[k]['step_index'] if steps_dict[k]['step_index'] is not None else 0)
+                        )
+                        iteration_groups.append({
+                            'iteration': iteration,
+                            'iteration_label': f'Iteration {iteration}' if isinstance(iteration, int) else str(iteration),
+                            'steps': [steps_dict[k] for k in sorted_step_keys]
+                        })
                     
                     # Return all screenshots from all iterations
                     return jsonify({
@@ -5383,7 +5479,8 @@ def get_job_screenshots(job_id):
                         'count': len(screenshots),
                         'source': 'test_results_history',
                         'total_iterations': len(iteration_screenshots),
-                        'iterations': list(sorted_iterations)
+                        'iterations': list(sorted_iterations),
+                        'iteration_groups': iteration_groups
                     })
         except Exception as e:
             print(f"⚠️  Error loading captured_screenshots from execution history: {e}", file=sys.stderr)

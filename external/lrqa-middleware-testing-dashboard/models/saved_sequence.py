@@ -246,6 +246,23 @@ class SavedSequence:
             print(f"Error loading sequences: {e}")
             return []
     
+    @staticmethod
+    def _resolve_user_id(created_by, session) -> Optional[int]:
+        """created_by may be a numeric user_id or a username (load_all() converts DB
+        rows to usernames for display) - resolve back to the integer id before writing."""
+        if created_by is None:
+            return None
+        if isinstance(created_by, int):
+            return created_by
+        if isinstance(created_by, str) and created_by.isdigit():
+            return int(created_by)
+        from sqlalchemy import text
+        result = session.execute(
+            text("SELECT id FROM users WHERE username = :username LIMIT 1"),
+            {'username': created_by}
+        ).fetchone()
+        return result[0] if result else None
+
     @classmethod
     def save_all(cls, sequences: List['SavedSequence']):
         """Save all sequences to the database and mirror them to JSON"""
@@ -253,6 +270,7 @@ class SavedSequence:
         try:
             for sequence in sequences:
                 queue_data = sequence.queue_data or []
+                resolved_created_by = cls._resolve_user_id(sequence.created_by, session)
                 row = session.query(DBSavedSequence).filter_by(seq_id=sequence.sequence_id).first()
                 if row is None:
                     row = DBSavedSequence(
@@ -267,7 +285,7 @@ class SavedSequence:
                         team_name=sequence.team_name or '',
                         location=sequence.location or '',
                         is_active=sequence.is_active,
-                        created_by=sequence.created_by  # FIXED: Now saving creator user_id
+                        created_by=resolved_created_by
                     )
                     session.add(row)
                 else:
@@ -281,7 +299,21 @@ class SavedSequence:
                     row.team_name = sequence.team_name or ''
                     row.location = sequence.location or ''
                     row.is_active = sequence.is_active
-                    row.created_by = sequence.created_by  # FIXED: Now updating creator user_id
+                    row.created_by = resolved_created_by
+
+            # sequences is the full desired state (every caller passes load_all() +
+            # mutations) - remove any DB rows no longer present, otherwise deletes
+            # never actually remove data from the database.
+            # Use a bulk DELETE (not session.delete()) to avoid SQLAlchemy loading
+            # the SavedSequence.jobs relationship, whose backing 'jobs' table has
+            # drifted from the ORM model (missing columns) and errors on load.
+            provided_ids = {sequence.sequence_id for sequence in sequences}
+            existing_ids = {row.seq_id for row in session.query(DBSavedSequence.seq_id).all()}
+            ids_to_delete = existing_ids - provided_ids
+            if ids_to_delete:
+                session.query(DBSavedSequence).filter(
+                    DBSavedSequence.seq_id.in_(ids_to_delete)
+                ).delete(synchronize_session=False)
 
             session.commit()
             backup_synced = cls._write_json_backup(session)
@@ -328,14 +360,45 @@ class SavedSequence:
         saved = cls.save_all(sequences)
         if not saved:
             raise RuntimeError('Failed to persist saved sequence')
+
+        from services.audit_logging_service import AuditLoggingService
+        AuditLoggingService.log_action(
+            action_type='create',
+            entity_type='sequence',
+            entity_id=new_sequence.sequence_id,
+            new_values={
+                'name': new_sequence.name,
+                'team_name': new_sequence.team_name,
+                'description': new_sequence.description,
+                'methods': new_sequence.methods,
+                'queue_data': new_sequence.queue_data
+            }
+        )
         return new_sequence
     
     @classmethod
     def delete_sequence(cls, sequence_id: str) -> bool:
         """Delete a sequence by ID"""
         sequences = cls.load_all()
+        deleted_seq = next((seq for seq in sequences if seq.sequence_id == sequence_id), None)
         sequences = [seq for seq in sequences if seq.sequence_id != sequence_id]
-        return cls.save_all(sequences)
+        result = cls.save_all(sequences)
+
+        if result and deleted_seq is not None:
+            from services.audit_logging_service import AuditLoggingService
+            AuditLoggingService.log_action(
+                action_type='delete',
+                entity_type='sequence',
+                entity_id=sequence_id,
+                old_values={
+                    'name': deleted_seq.name,
+                    'team_name': deleted_seq.team_name,
+                    'description': deleted_seq.description,
+                    'methods': deleted_seq.methods,
+                    'queue_data': deleted_seq.queue_data
+                }
+            )
+        return result
     
     @classmethod
     def find_by_id(cls, sequence_id: str) -> Optional['SavedSequence']:
@@ -354,6 +417,13 @@ class SavedSequence:
         sequences = cls.load_all()
         for seq in sequences:
             if seq.sequence_id == sequence_id:
+                before_snapshot = {
+                    'name': seq.name,
+                    'description': seq.description,
+                    'team_name': seq.team_name,
+                    'methods': list(seq.methods or []),
+                    'queue_data': [dict(item) for item in (seq.queue_data or [])]
+                }
                 # Update fields if provided
                 if name is not None and name.strip():  # Check for non-empty string
                     seq.name = name
@@ -377,6 +447,21 @@ class SavedSequence:
                         print(f"  [ITEM {idx}] method={item.get('method', 'unknown')}")
                 success = cls.save_all(sequences)
                 print(f"[UPDATE] Sequence {sequence_id} saved: {success}")
+                if success:
+                    from services.audit_logging_service import AuditLoggingService
+                    AuditLoggingService.log_action(
+                        action_type='update',
+                        entity_type='sequence',
+                        entity_id=sequence_id,
+                        old_values=before_snapshot,
+                        new_values={
+                            'name': seq.name,
+                            'description': seq.description,
+                            'team_name': seq.team_name,
+                            'methods': list(seq.methods or []),
+                            'queue_data': [dict(item) for item in (seq.queue_data or [])]
+                        }
+                    )
                 return success
         print(f"[UPDATE] Sequence {sequence_id} not found!")
         return False
