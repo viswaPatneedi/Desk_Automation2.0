@@ -390,7 +390,10 @@ class GDFRPiDirectShellService:
             return False, out_str, err_str
         
         except Exception as e:
-            msg = f"❌ [R-Pi DIRECT] Error executing command: {str(e)}"
+            # Some exceptions (e.g. socket.timeout) stringify to an empty message,
+            # which made every failure look identical ("Error executing command: ").
+            # Include the exception type so timeouts are distinguishable from other errors.
+            msg = f"❌ [R-Pi DIRECT] Error executing command: {type(e).__name__}: {str(e) or '(no message)'}"
             print(msg)
             return False, "", msg
     

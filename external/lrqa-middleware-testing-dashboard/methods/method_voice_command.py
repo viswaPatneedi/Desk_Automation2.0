@@ -54,9 +54,12 @@ def execute_voice_command_process(device_ip, port, username, password, iteration
         escaped_text = voice_text.replace("'", "'\\''")
         
         # Construct the curl command
+        # --max-time bounds curl itself so a non-responsive VoiceControl plugin
+        # fails fast with a clear curl error, instead of hanging until the outer
+        # SSH/R-Pi channel timeout kills it with an opaque, empty exception.
         voice_command = (
             f"curl --header 'Content-Type: application/json' "
-            f"--request POST --silent "
+            f"--request POST --silent --max-time 20 "
             f"-d '{{\"jsonrpc\":\"2.0\",\"id\":\"3\",\"method\":\"org.rdk.VoiceControl.1.voiceSessionByText\",\"params\":{{\"transcription\":\"{escaped_text}\"}}}}' "
             f"http://127.0.0.1:9998/jsonrpc"
         )

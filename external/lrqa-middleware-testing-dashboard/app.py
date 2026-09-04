@@ -5364,6 +5364,34 @@ def get_job_screenshots(job_id):
                         return f'/screenshots/{screenshot_path}'
                     return f'/screenshots/{os.path.basename(screenshot_path)}'
 
+                def _split_screenshot_paths(raw):
+                    """Normalize a result's 'screenshots' field into a list of real paths.
+
+                    Some methods store a list, others a comma-joined string (see
+                    method_deepsleep.py). A naive str(raw).split(',') breaks because
+                    session folder names themselves contain commas (e.g.
+                    "SEND_REMOTE_KEYS,CAPTURE_CURRENT_SCREEN,..._UTC") and because
+                    str()'ing a list leaves stray "['...']" characters. Instead, treat
+                    list items as already-complete paths, and for strings only split
+                    on a comma when the accumulated fragment doesn't yet end in a
+                    known image extension.
+                    """
+                    if isinstance(raw, list):
+                        return [p.strip() for p in raw if p and str(p).strip()]
+                    if not raw:
+                        return []
+                    image_exts = ('.png', '.jpg', '.jpeg', '.gif', '.bmp')
+                    paths = []
+                    buffer = ''
+                    for part in str(raw).split(','):
+                        buffer = f'{buffer},{part}' if buffer else part
+                        if buffer.lower().endswith(image_exts):
+                            paths.append(buffer.strip())
+                            buffer = ''
+                    if buffer.strip():
+                        paths.append(buffer.strip())
+                    return paths
+
                 def _add_grouped_entry(iteration, step_index, method, screenshot_url, filename, label):
                     if iteration not in iteration_steps:
                         iteration_steps[iteration] = {}
@@ -5426,11 +5454,15 @@ def get_job_screenshots(job_id):
                                 })
                                 _add_grouped_entry(iteration, step_index, method, screenshot_url, filename, 'After')
 
-                        # Plain 'screenshots' field (e.g. capture_current_screen) - comma-separated path(s)
+                        # Plain 'screenshots' field (e.g. capture_current_screen) - may be a
+                        # list or a comma-joined string; _split_screenshot_paths handles both
+                        # safely even when folder names contain commas.
+                        # Skip it when captured_screenshots already provided before/after for
+                        # this step (e.g. reboot_perf_v2_optimized populates both fields with
+                        # the SAME paths) - otherwise each image gets added twice.
                         plain_screenshots = result.get('screenshots')
-                        if plain_screenshots:
-                            for screenshot_path in str(plain_screenshots).split(','):
-                                screenshot_path = screenshot_path.strip()
+                        if plain_screenshots and not captured_ss:
+                            for screenshot_path in _split_screenshot_paths(plain_screenshots):
                                 if not screenshot_path:
                                     continue
                                 screenshot_url = _to_screenshot_url(screenshot_path)

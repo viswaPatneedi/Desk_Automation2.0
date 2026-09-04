@@ -1,237 +1,104 @@
 [
   {
-    "sequence_id": "seq_20260814_005129_588460",
-    "name": "Test_method_seq",
+    "sequence_id": "seq_20260904_011101_968958",
+    "name": "Trail_123",
     "description": "",
     "queue_data": [
-      {
-        "name": "Deep Sleep",
-        "method": "deepsleep",
-        "params": {
-          "remote_type": "SKY_LC103",
-          "perform_reboot": false,
-          "sleep_duration_minutes": 2
-        },
-        "description": "Dee"
-      },
-      {
-        "name": "IR Command Test",
-        "method": "ir_test",
-        "params": {
-          "ir_keys": [
-            "HOME",
-            "HOME"
-          ],
-          "remote_type": "auto-detect",
-          "ir_key_delay": 2
-        },
-        "description": "IR"
-      },
       {
         "name": "Send Remote Keys",
         "method": "send_remote_keys",
         "params": {
-          "key_delay": 2,
-          "remote_keys": "POWER"
+          "key_delay": 5,
+          "remote_keys": "HOME,HOME"
         },
-        "description": "Power"
+        "description": "Device should be on Home Screen"
       },
       {
-        "name": "\ud83d\udce6 XIONE-18759 (Sequence)",
-        "method": "sequence_reference_seq_20260526_163544_506825",
+        "name": "Capture Current Screen",
+        "method": "capture_current_screen",
         "params": {
-          "methods": [
-            "execute_command",
-            "reboot_perf_v2_optimized",
-            "voice_command",
-            "wait",
-            "execute_command",
-            "collect_device_logs"
-          ],
-          "team_name": "LRQA",
-          "queue_data": [
-            {
-              "name": "Execute System Command",
-              "method": "execute_command",
-              "params": {
-                "command": "MS:EPG Show notification id.*UHDCANTPLAY.*",
-                "command_text": "grep -i \"MS:EPG Show notification id.*UHDCANTPLAY.*\" /opt/logs/sky-messages.log",
-                "expected_output": "UHDCANTPLAY",
-                "validation_type": "not_contains"
-              },
-              "description": "Before starting the test in the current device logs please check for the UHDCANTPLAY log line"
-            },
-            {
-              "name": "Reboot Performance V2 - Optimized",
-              "method": "reboot_perf_v2_optimized",
-              "params": {
-                "optional_checks": {
-                  "custom_commands": [
-                    {
-                      "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
-                      "check_key": "process_crash",
-                      "description": "Detects when any system process crashes",
-                      "terminate_on_match": false
-                    }
-                  ]
-                },
-                "auto_collect_logs": true,
-                "home_screen_timeout": 180,
-                "log_search_patterns": [
-                  "process crashed|ERROR.*crash|FATAL|panic"
-                ],
-                "max_performance_time": null,
-                "termination_if_not_found": false
-              },
-              "condition": {
-                "logic": "AND",
-                "steps": [
-                  {
-                    "step": 0,
-                    "type": "if_passed"
-                  }
-                ],
-                "group_id": "group_1779827626909_1",
-                "grouped_steps": [
-                  1,
-                  2,
-                  3,
-                  4
-                ],
-                "is_group_leader": true
-              },
-              "description": "Reboot the device and check for any crashes"
-            },
-            {
-              "name": "Send Voice Command",
-              "method": "voice_command",
-              "params": {
-                "voice_text": "channel 101"
-              },
-              "condition": {
-                "logic": "AND",
-                "steps": [
-                  {
-                    "step": 0,
-                    "type": "if_passed"
-                  }
-                ],
-                "group_id": "group_1779827626909_1",
-                "grouped_steps": [
-                  1,
-                  2,
-                  3,
-                  4
-                ],
-                "is_group_leader": false
-              },
-              "description": "Send the voice command to launch channel 101"
-            },
-            {
-              "name": "Wait",
-              "method": "wait",
-              "params": {
-                "wait_seconds": 15
-              },
-              "condition": {
-                "logic": "AND",
-                "steps": [
-                  {
-                    "step": 0,
-                    "type": "if_passed"
-                  }
-                ],
-                "group_id": "group_1779827626909_1",
-                "grouped_steps": [
-                  1,
-                  2,
-                  3,
-                  4
-                ],
-                "is_group_leader": false
-              },
-              "description": "Nullis defined"
-            },
-            {
-              "name": "Execute System Command",
-              "method": "execute_command",
-              "params": {
-                "command": "MS:EPG Show notification id.*UHDCANTPLAY.*",
-                "command_text": "grep -i \"MS:EPG Show notification id.*UHDCANTPLAY.*\" /opt/logs/sky-messages.log",
-                "expected_output": "UHDCANTPLAY",
-                "validation_type": "not_contains"
-              },
-              "condition": {
-                "logic": "AND",
-                "steps": [
-                  {
-                    "step": 0,
-                    "type": "if_passed"
-                  }
-                ],
-                "group_id": "group_1779827626909_1",
-                "grouped_steps": [
-                  1,
-                  2,
-                  3,
-                  4
-                ],
-                "is_group_leader": false
-              },
-              "description": "check in the device sky-message.log file if the UHDCANTPLAY print is there or not"
-            },
-            {
-              "name": "Collect Device Logs",
-              "method": "collect_device_logs",
-              "params": {},
-              "condition": {
-                "logic": "AND",
-                "steps": [
-                  {
-                    "step": 4,
-                    "type": "if_failed"
-                  }
-                ],
-                "group_id": "group_1779827721732_5",
-                "grouped_steps": [
-                  5
-                ],
-                "is_group_leader": true
-              },
-              "description": "Collect the device logs if the above step is failed"
-            }
-          ],
-          "sequenceId": "seq_20260526_163544_506825",
-          "description": "",
-          "methodCount": 6,
-          "sequenceName": "XIONE-18759",
-          "execution_count": 0,
-          "sequenceCreator": "vpatne290",
-          "sequenceMethods": [
-            "execute_command",
-            "reboot_perf_v2_optimized",
-            "voice_command",
-            "wait",
-            "execute_command",
-            "collect_device_logs"
-          ],
-          "method_rationale": [],
-          "isCompositeSequence": true,
-          "total_duration_seconds": 0,
-          "average_duration_seconds": 0
+          "image_name": "Current_screen"
         },
-        "description": "Composite sequence: XIONE-18759 (6 methods by vpatne290)"
+        "description": "Capture"
+      },
+      {
+        "name": "Reboot Performance V2 - Optimized",
+        "method": "reboot_perf_v2_optimized",
+        "params": {
+          "optional_checks": {
+            "custom_commands": [
+              {
+                "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+                "check_key": "process_crash",
+                "description": "Detects when any system process crashes",
+                "terminate_on_match": false
+              }
+            ]
+          },
+          "auto_collect_logs": true,
+          "home_screen_timeout": 240,
+          "log_search_patterns": [
+            "process crash.*"
+          ],
+          "max_performance_time": 240,
+          "termination_if_not_found": false
+        },
+        "description": "Reboot"
+      },
+      {
+        "name": "Capture Current Screen",
+        "method": "capture_current_screen",
+        "params": {
+          "image_name": "Current_screen_Afterboot"
+        },
+        "description": "Capture_2"
+      },
+      {
+        "name": "Send Voice Command",
+        "method": "voice_command",
+        "params": {
+          "voice_text": "launch Youtube"
+        },
+        "description": "voice"
+      },
+      {
+        "name": "Capture Current Screen",
+        "method": "capture_current_screen",
+        "params": {
+          "image_name": "Current_screen_Youtube_launch"
+        },
+        "description": "Capture_3"
+      },
+      {
+        "name": "Send Voice Command",
+        "method": "voice_command",
+        "params": {
+          "voice_text": "Play 4k Swiss video"
+        },
+        "description": "Voice command"
+      },
+      {
+        "name": "Capture Current Screen",
+        "method": "capture_current_screen",
+        "params": {
+          "image_name": "Current_screen_Youtube_Video_asset_launch"
+        },
+        "description": "Capture_4"
       }
     ],
     "methods": [
-      "deepsleep",
-      "ir_test",
       "send_remote_keys",
-      "sequence_reference_seq_20260526_163544_506825"
+      "capture_current_screen",
+      "reboot_perf_v2_optimized",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen"
     ],
     "user_inputs": {},
-    "created_at": "2026-08-14T00:46:51.845435",
-    "created_by": null,
+    "created_at": "2026-09-04T01:16:54.665378",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -239,7 +106,32 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-08-14T00:46:51.845458",
+    "updated_at": "2026-09-04T04:07:49.120417",
+    "shared_with_teams": {}
+  },
+  {
+    "sequence_id": "seq_20260904_012800_032011",
+    "name": "AuditTest_temp_renamed",
+    "description": "",
+    "queue_data": [
+      {
+        "method": "status"
+      }
+    ],
+    "methods": [
+      "status"
+    ],
+    "user_inputs": {},
+    "created_at": "2026-09-04T01:27:59.941236",
+    "created_by": "vpatne290",
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": "2026-09-04T01:27:59.941255",
     "shared_with_teams": {}
   },
   {
