@@ -562,5 +562,1297 @@
     "triggered_at": "2026-09-02T00:53:23.725473",
     "queue_position": null,
     "team_name": "LRQA"
+  },
+  {
+    "job_id": "b9a50b02-f394-4a61-9cf0-b3c513022bef",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "reboot_perf_v2_optimized"
+    ],
+    "execution_queue": [
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "description": "Detects when any system process crashes",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 180,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "Device reboot"
+      }
+    ],
+    "iterations": 30,
+    "status": "failed",
+    "start_time": "2026-09-02T20:27:12.568676",
+    "end_time": "2026-09-02T20:27:14.665617+00:00",
+    "log_file_path": "logs/jobs/b9a50b02-f394-4a61-9cf0-b3c513022bef/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-02/ELEMENT_A4K_10-0-0-250/REBOOT_PERF_V2_OPTIMIZED_30_202712_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 0,
+    "current_iteration": 0,
+    "iteration_results": {},
+    "created_at": "2026-09-02T20:27:12.568718",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 205,
+    "remaining_iterations": 31,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-02T20:27:12.568727",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "742383c2-0c8f-46d1-bf2e-9853adbf5889",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "POWER",
+          "HOME",
+          "HOME"
+        ],
+        "ir_key_delay": 3,
+        "description": "Device wakeup"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-09-03T18:01:46.043480",
+    "end_time": "2026-09-03T18:02:44.343944+00:00",
+    "log_file_path": "logs/jobs/742383c2-0c8f-46d1-bf2e-9853adbf5889/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-03/SKY-GLASS-2_10-0-0-166/IR_TEST_1_180146_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-09-03T18:01:46.043508",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 79,
+    "remaining_iterations": 1,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-03T18:01:46.043516",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "1fd24ee7-1621-402a-ba94-16b6c7a07128",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.250",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "execute_command",
+      "send_remote_keys",
+      "capture_current_screen",
+      "send_remote_keys",
+      "capture_current_screen"
+    ],
+    "execution_queue": [
+      {
+        "method": "execute_command",
+        "command": "cat /version.txt",
+        "command_text": "cat /version.txt",
+        "expected_output": "imagename",
+        "validation_type": "contains"
+      },
+      {
+        "method": "send_remote_keys",
+        "remote_keys": "HOME,DOWN",
+        "key_delay": 3
+      },
+      {
+        "method": "capture_current_screen"
+      },
+      {
+        "method": "send_remote_keys",
+        "remote_keys": "HOME",
+        "key_delay": 3
+      },
+      {
+        "method": "capture_current_screen"
+      }
+    ],
+    "iterations": 5,
+    "status": "failed",
+    "start_time": "2026-09-03T18:05:13.518435",
+    "end_time": "2026-09-03T18:20:34.999148+00:00",
+    "log_file_path": "logs/jobs/1fd24ee7-1621-402a-ba94-16b6c7a07128/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-03/ELEMENT_A4K_10-0-0-250/EXECUTE_COMMAND,SEND_REMOTE_KEYS,CAPTURE_CURRENT_SCREEN+2MORE_5_180515_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 2,
+    "current_iteration": 1,
+    "iteration_results": {},
+    "created_at": "2026-09-03T18:05:13.518464",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 109,
+    "remaining_iterations": 5,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-03T18:05:13.518471",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "f5f2d1c4-13ca-4cb9-9b3d-3f7f7d4fc1d8",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "execute_command",
+      "send_remote_keys",
+      "capture_current_screen",
+      "send_remote_keys",
+      "capture_current_screen"
+    ],
+    "execution_queue": [
+      {
+        "method": "execute_command",
+        "command": "cat /version.txt",
+        "command_text": "cat /version.txt",
+        "expected_output": "imagename",
+        "validation_type": "contains"
+      },
+      {
+        "method": "send_remote_keys",
+        "remote_keys": "HOME,DOWN",
+        "key_delay": 3
+      },
+      {
+        "method": "capture_current_screen"
+      },
+      {
+        "method": "send_remote_keys",
+        "remote_keys": "HOME",
+        "key_delay": 3
+      },
+      {
+        "method": "capture_current_screen"
+      }
+    ],
+    "iterations": 5,
+    "status": "failed",
+    "start_time": "2026-09-03T18:05:13.525636",
+    "end_time": "2026-09-03T18:20:45.024515+00:00",
+    "log_file_path": "logs/jobs/f5f2d1c4-13ca-4cb9-9b3d-3f7f7d4fc1d8/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-03/SKY-GLASS-2_10-0-0-166/EXECUTE_COMMAND,SEND_REMOTE_KEYS,CAPTURE_CURRENT_SCREEN+2MORE_5_180515_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 2,
+    "current_iteration": 1,
+    "iteration_results": {},
+    "created_at": "2026-09-03T18:05:13.525641",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 109,
+    "remaining_iterations": 5,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-03T18:05:13.525643",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "7b834c90-4dff-43b8-8f1c-7ec938386eb7",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.28",
+    "device_name": "DT-XIONE_UK-17-97",
+    "methods": [
+      "execute_command",
+      "send_remote_keys",
+      "capture_current_screen",
+      "send_remote_keys",
+      "capture_current_screen"
+    ],
+    "execution_queue": [
+      {
+        "method": "execute_command",
+        "command": "cat /version.txt",
+        "command_text": "cat /version.txt",
+        "expected_output": "imagename",
+        "validation_type": "contains"
+      },
+      {
+        "method": "send_remote_keys",
+        "remote_keys": "HOME,DOWN",
+        "key_delay": 3
+      },
+      {
+        "method": "capture_current_screen"
+      },
+      {
+        "method": "send_remote_keys",
+        "remote_keys": "HOME",
+        "key_delay": 3
+      },
+      {
+        "method": "capture_current_screen"
+      }
+    ],
+    "iterations": 5,
+    "status": "failed",
+    "start_time": "2026-09-03T18:05:13.529603",
+    "end_time": "2026-09-03T18:20:55.046703+00:00",
+    "log_file_path": "logs/jobs/7b834c90-4dff-43b8-8f1c-7ec938386eb7/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-03/DT-XIONE_UK-17-97_10-0-0-28/EXECUTE_COMMAND,SEND_REMOTE_KEYS,CAPTURE_CURRENT_SCREEN+2MORE_5_180515_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 2,
+    "current_iteration": 1,
+    "iteration_results": {},
+    "created_at": "2026-09-03T18:05:13.529608",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 109,
+    "remaining_iterations": 5,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-03T18:05:13.529611",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "e889f87c-ae6d-4a4f-bc0e-9b47a8b81dcc",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.199",
+    "device_name": "DT-XIONE_UK-5D-54",
+    "methods": [
+      "execute_command",
+      "send_remote_keys",
+      "capture_current_screen",
+      "send_remote_keys",
+      "capture_current_screen"
+    ],
+    "execution_queue": [
+      {
+        "method": "execute_command",
+        "command": "cat /version.txt",
+        "command_text": "cat /version.txt",
+        "expected_output": "imagename",
+        "validation_type": "contains"
+      },
+      {
+        "method": "send_remote_keys",
+        "remote_keys": "HOME,DOWN",
+        "key_delay": 3
+      },
+      {
+        "method": "capture_current_screen"
+      },
+      {
+        "method": "send_remote_keys",
+        "remote_keys": "HOME",
+        "key_delay": 3
+      },
+      {
+        "method": "capture_current_screen"
+      }
+    ],
+    "iterations": 5,
+    "status": "failed",
+    "start_time": "2026-09-03T18:05:13.533633",
+    "end_time": "2026-09-03T18:21:05.081455+00:00",
+    "log_file_path": "logs/jobs/e889f87c-ae6d-4a4f-bc0e-9b47a8b81dcc/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-03/DT-XIONE_UK-5D-54_10-0-0-199/EXECUTE_COMMAND,SEND_REMOTE_KEYS,CAPTURE_CURRENT_SCREEN+2MORE_5_180515_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 2,
+    "current_iteration": 1,
+    "iteration_results": {},
+    "created_at": "2026-09-03T18:05:13.533639",
+    "eta_seconds": 0,
+    "eta_formatted": "Done",
+    "time_per_iteration": 109,
+    "remaining_iterations": 5,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-03T18:05:13.533641",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "a8d5ee2d-8bcb-4944-ac29-62ea288dcaae",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "POWER",
+          "HOME"
+        ],
+        "ir_key_delay": 5
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-09-03T20:39:37.870950",
+    "end_time": "2026-09-03T20:40:39.084449+00:00",
+    "log_file_path": "logs/jobs/a8d5ee2d-8bcb-4944-ac29-62ea288dcaae/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-03/SKY-GLASS-2_10-0-0-166/IR_TEST_1_203937_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-09-03T20:39:37.870982",
+    "eta_seconds": 61,
+    "eta_formatted": "1m 1s",
+    "time_per_iteration": 61,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-03T20:39:37.870990",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "650fe4b5-a95d-44e1-871e-264d622a26d4",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.172",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "ir_test",
+      "capture_current_screen",
+      "reboot_perf_v2_optimized",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "POWER",
+          "HOME"
+        ],
+        "ir_key_delay": 4,
+        "description": "Wakeup the device"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture"
+      },
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "description": "Detects when any system process crashes",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 240,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "Reboot"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_2"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "launch Youtube",
+        "description": "voice"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_3"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "Play 4k Swiss video",
+        "description": "Voice command"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_3"
+      }
+    ],
+    "iterations": 5,
+    "status": "failed",
+    "start_time": "2026-09-03T20:45:14.872840",
+    "end_time": "2026-09-03T21:00:45.943094+00:00",
+    "log_file_path": "logs/jobs/650fe4b5-a95d-44e1-871e-264d622a26d4/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-03/ELEMENT_A4K_10-0-0-172/IR_TEST,CAPTURE_CURRENT_SCREEN,REBOOT_PERF_V2_OPTIMIZED+5MORE_5_204516_UTC",
+    "sequence_name": "Trail_123",
+    "execution_type": "saved_sequence",
+    "current_step": 0,
+    "current_iteration": 3,
+    "iteration_results": {
+      "1": "failed",
+      "2": "failed"
+    },
+    "created_at": "2026-09-03T20:45:14.872873",
+    "eta_seconds": 1895,
+    "eta_formatted": "31m 35s",
+    "time_per_iteration": 391,
+    "remaining_iterations": 6,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-03T20:45:14.872881",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "08a9fd5f-4a28-4c49-afb7-9f4c3e81f84a",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "ir_test",
+      "capture_current_screen",
+      "reboot_perf_v2_optimized",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "POWER",
+          "HOME"
+        ],
+        "ir_key_delay": 4,
+        "description": "Wakeup the device"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture"
+      },
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "description": "Detects when any system process crashes",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 240,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "Reboot"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_2"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "launch Youtube",
+        "description": "voice"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_3"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "Play 4k Swiss video",
+        "description": "Voice command"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_3"
+      }
+    ],
+    "iterations": 5,
+    "status": "failed",
+    "start_time": "2026-09-03T20:45:14.898788",
+    "end_time": "2026-09-03T21:00:33.401748+00:00",
+    "log_file_path": "logs/jobs/08a9fd5f-4a28-4c49-afb7-9f4c3e81f84a/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-03/SKY-GLASS-2_10-0-0-166/IR_TEST,CAPTURE_CURRENT_SCREEN,REBOOT_PERF_V2_OPTIMIZED+5MORE_5_204516_UTC",
+    "sequence_name": "Trail_123",
+    "execution_type": "saved_sequence",
+    "current_step": 0,
+    "current_iteration": 3,
+    "iteration_results": {
+      "1": "failed",
+      "2": "failed"
+    },
+    "created_at": "2026-09-03T20:45:14.898794",
+    "eta_seconds": 1895,
+    "eta_formatted": "31m 35s",
+    "time_per_iteration": 391,
+    "remaining_iterations": 6,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-03T20:45:14.898796",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "2e4df01a-662a-4980-896f-dfdc84676639",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.140",
+    "device_name": "DT-XIONE_UK-0D-AB",
+    "methods": [
+      "ir_test",
+      "capture_current_screen",
+      "reboot_perf_v2_optimized",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "POWER",
+          "HOME"
+        ],
+        "ir_key_delay": 4,
+        "description": "Wakeup the device"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture"
+      },
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "description": "Detects when any system process crashes",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 240,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "Reboot"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_2"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "launch Youtube",
+        "description": "voice"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_3"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "Play 4k Swiss video",
+        "description": "Voice command"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_3"
+      }
+    ],
+    "iterations": 5,
+    "status": "failed",
+    "start_time": "2026-09-03T20:45:14.909487",
+    "end_time": "2026-09-03T21:01:13.599466+00:00",
+    "log_file_path": "logs/jobs/2e4df01a-662a-4980-896f-dfdc84676639/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-03/DT-XIONE_UK-0D-AB_10-0-0-140/IR_TEST,CAPTURE_CURRENT_SCREEN,REBOOT_PERF_V2_OPTIMIZED+5MORE_5_204516_UTC",
+    "sequence_name": "Trail_123",
+    "execution_type": "saved_sequence",
+    "current_step": 0,
+    "current_iteration": 3,
+    "iteration_results": {
+      "1": "failed",
+      "2": "failed"
+    },
+    "created_at": "2026-09-03T20:45:14.909493",
+    "eta_seconds": 1895,
+    "eta_formatted": "31m 35s",
+    "time_per_iteration": 391,
+    "remaining_iterations": 6,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-03T20:45:14.909496",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "bfb9c714-5f51-481c-bb59-38d3cf621dc1",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME",
+          "HOME",
+          "HOME"
+        ],
+        "ir_key_delay": 5,
+        "description": "Wakeup the device"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-09-03T22:40:02.176417",
+    "end_time": "2026-09-03T22:41:13.452153+00:00",
+    "log_file_path": "logs/jobs/bfb9c714-5f51-481c-bb59-38d3cf621dc1/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-03/SKY-GLASS-2_10-0-0-166/IR_TEST_1_224002_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-09-03T22:40:02.176427",
+    "eta_seconds": 79,
+    "eta_formatted": "1m 19s",
+    "time_per_iteration": 79,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-03T22:40:02.176430",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "5c00b8c8-d31c-4e0a-afd4-a2742834672c",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.172",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "send_remote_keys",
+      "capture_current_screen",
+      "reboot_perf_v2_optimized",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen"
+    ],
+    "execution_queue": [
+      {
+        "method": "send_remote_keys",
+        "remote_keys": "HOME,HOME",
+        "key_delay": 5,
+        "description": "Device should be on Home Screen"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture"
+      },
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "description": "Detects when any system process crashes",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 240,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "Reboot"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_2"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "launch Youtube",
+        "description": "voice"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_3"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "Play 4k Swiss video",
+        "description": "Voice command"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_4"
+      }
+    ],
+    "iterations": 3,
+    "status": "failed",
+    "start_time": "2026-09-03T22:43:40.039581",
+    "end_time": "2026-09-03T23:09:33.826945+00:00",
+    "log_file_path": "logs/jobs/5c00b8c8-d31c-4e0a-afd4-a2742834672c/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-03/ELEMENT_A4K_10-0-0-172/SEND_REMOTE_KEYS,CAPTURE_CURRENT_SCREEN,REBOOT_PERF_V2_OPTIMIZED+5MORE_3_224342_UTC",
+    "sequence_name": "Trail_123",
+    "execution_type": "saved_sequence",
+    "current_step": 8,
+    "current_iteration": 3,
+    "iteration_results": {
+      "1": "failed",
+      "2": "failed",
+      "3": "failed"
+    },
+    "created_at": "2026-09-03T22:43:40.039613",
+    "eta_seconds": 1083,
+    "eta_formatted": "18m 3s",
+    "time_per_iteration": 371,
+    "remaining_iterations": 4,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-03T22:43:40.039621",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "12b3b828-52cc-4022-8f05-2f16c9541db5",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "send_remote_keys",
+      "capture_current_screen",
+      "reboot_perf_v2_optimized",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen"
+    ],
+    "execution_queue": [
+      {
+        "method": "send_remote_keys",
+        "remote_keys": "HOME,HOME",
+        "key_delay": 5,
+        "description": "Device should be on Home Screen"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture"
+      },
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "description": "Detects when any system process crashes",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 240,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "Reboot"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_2"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "launch Youtube",
+        "description": "voice"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_3"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "Play 4k Swiss video",
+        "description": "Voice command"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_4"
+      }
+    ],
+    "iterations": 3,
+    "status": "failed",
+    "start_time": "2026-09-03T22:43:40.062073",
+    "end_time": "2026-09-03T23:09:37.904251+00:00",
+    "log_file_path": "logs/jobs/12b3b828-52cc-4022-8f05-2f16c9541db5/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-03/SKY-GLASS-2_10-0-0-166/SEND_REMOTE_KEYS,CAPTURE_CURRENT_SCREEN,REBOOT_PERF_V2_OPTIMIZED+5MORE_3_224342_UTC",
+    "sequence_name": "Trail_123",
+    "execution_type": "saved_sequence",
+    "current_step": 8,
+    "current_iteration": 3,
+    "iteration_results": {
+      "1": "failed",
+      "2": "failed",
+      "3": "failed"
+    },
+    "created_at": "2026-09-03T22:43:40.062079",
+    "eta_seconds": 1083,
+    "eta_formatted": "18m 3s",
+    "time_per_iteration": 371,
+    "remaining_iterations": 4,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-03T22:43:40.062081",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "8953baaf-1083-4178-8de8-bf7e4dadbf52",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.140",
+    "device_name": "DT-XIONE_UK-0D-AB",
+    "methods": [
+      "send_remote_keys",
+      "capture_current_screen",
+      "reboot_perf_v2_optimized",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen"
+    ],
+    "execution_queue": [
+      {
+        "method": "send_remote_keys",
+        "remote_keys": "HOME,HOME",
+        "key_delay": 5,
+        "description": "Device should be on Home Screen"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture"
+      },
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "description": "Detects when any system process crashes",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 240,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "Reboot"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_2"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "launch Youtube",
+        "description": "voice"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_3"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "Play 4k Swiss video",
+        "description": "Voice command"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_4"
+      }
+    ],
+    "iterations": 3,
+    "status": "failed",
+    "start_time": "2026-09-03T22:43:40.077183",
+    "end_time": "2026-09-03T23:10:45.453309+00:00",
+    "log_file_path": "logs/jobs/8953baaf-1083-4178-8de8-bf7e4dadbf52/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-03/DT-XIONE_UK-0D-AB_10-0-0-140/SEND_REMOTE_KEYS,CAPTURE_CURRENT_SCREEN,REBOOT_PERF_V2_OPTIMIZED+5MORE_3_224341_UTC",
+    "sequence_name": "Trail_123",
+    "execution_type": "saved_sequence",
+    "current_step": 8,
+    "current_iteration": 3,
+    "iteration_results": {
+      "1": "failed",
+      "2": "failed",
+      "3": "failed"
+    },
+    "created_at": "2026-09-03T22:43:40.077189",
+    "eta_seconds": 1083,
+    "eta_formatted": "18m 3s",
+    "time_per_iteration": 371,
+    "remaining_iterations": 4,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-03T22:43:40.077191",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "e3e65c88-6bf0-4678-9b47-d92fa9e13277",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "ir_test"
+    ],
+    "execution_queue": [
+      {
+        "method": "ir_test",
+        "ir_keys": [
+          "HOME",
+          "HOME"
+        ],
+        "ir_key_delay": 4,
+        "description": "home"
+      }
+    ],
+    "iterations": 1,
+    "status": "completed",
+    "start_time": "2026-09-04T00:30:52.501972",
+    "end_time": "2026-09-04T00:31:47.614142+00:00",
+    "log_file_path": "logs/jobs/e3e65c88-6bf0-4678-9b47-d92fa9e13277/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-04/SKY-GLASS-2_10-0-0-166/IR_TEST_1_003052_UTC",
+    "sequence_name": null,
+    "execution_type": "direct_method",
+    "current_step": 1,
+    "current_iteration": 1,
+    "iteration_results": {
+      "1": "passed"
+    },
+    "created_at": "2026-09-04T00:30:52.501982",
+    "eta_seconds": 61,
+    "eta_formatted": "1m 1s",
+    "time_per_iteration": 61,
+    "remaining_iterations": 2,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-04T00:30:52.501984",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "e3729dd8-12c3-48a8-a290-bc5b1815c213",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.172",
+    "device_name": "ELEMENT_A4K",
+    "methods": [
+      "send_remote_keys",
+      "capture_current_screen",
+      "reboot_perf_v2_optimized",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen"
+    ],
+    "execution_queue": [
+      {
+        "method": "send_remote_keys",
+        "remote_keys": "HOME,HOME",
+        "key_delay": 5,
+        "description": "Device should be on Home Screen"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture"
+      },
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "description": "Detects when any system process crashes",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 240,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "Reboot"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_2"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "launch Youtube",
+        "description": "voice"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_3"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "Play 4k Swiss video",
+        "description": "Voice command"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_4"
+      }
+    ],
+    "iterations": 3,
+    "status": "failed",
+    "start_time": "2026-09-04T00:37:10.623433",
+    "end_time": "2026-09-04T00:59:42.159339+00:00",
+    "log_file_path": "logs/jobs/e3729dd8-12c3-48a8-a290-bc5b1815c213/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-04/ELEMENT_A4K_10-0-0-172/SEND_REMOTE_KEYS,CAPTURE_CURRENT_SCREEN,REBOOT_PERF_V2_OPTIMIZED+5MORE_3_003712_UTC",
+    "sequence_name": "Trail_123",
+    "execution_type": "saved_sequence",
+    "current_step": 8,
+    "current_iteration": 3,
+    "iteration_results": {
+      "1": "failed",
+      "2": "failed",
+      "3": "failed"
+    },
+    "created_at": "2026-09-04T00:37:10.623468",
+    "eta_seconds": 1083,
+    "eta_formatted": "18m 3s",
+    "time_per_iteration": 371,
+    "remaining_iterations": 4,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-04T00:37:10.623476",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "789da014-11c4-4484-adc2-84964d57b34a",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.166",
+    "device_name": "SKY-GLASS-2",
+    "methods": [
+      "send_remote_keys",
+      "capture_current_screen",
+      "reboot_perf_v2_optimized",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen"
+    ],
+    "execution_queue": [
+      {
+        "method": "send_remote_keys",
+        "remote_keys": "HOME,HOME",
+        "key_delay": 5,
+        "description": "Device should be on Home Screen"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture"
+      },
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "description": "Detects when any system process crashes",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 240,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "Reboot"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_2"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "launch Youtube",
+        "description": "voice"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_3"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "Play 4k Swiss video",
+        "description": "Voice command"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_4"
+      }
+    ],
+    "iterations": 3,
+    "status": "failed",
+    "start_time": "2026-09-04T00:37:10.639184",
+    "end_time": "2026-09-04T00:48:30.013064+00:00",
+    "log_file_path": "logs/jobs/789da014-11c4-4484-adc2-84964d57b34a/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-04/SKY-GLASS-2_10-0-0-166/SEND_REMOTE_KEYS,CAPTURE_CURRENT_SCREEN,REBOOT_PERF_V2_OPTIMIZED+5MORE_3_003712_UTC",
+    "sequence_name": "Trail_123",
+    "execution_type": "saved_sequence",
+    "current_step": 0,
+    "current_iteration": 3,
+    "iteration_results": {
+      "1": "failed",
+      "2": "passed"
+    },
+    "created_at": "2026-09-04T00:37:10.639194",
+    "eta_seconds": 1083,
+    "eta_formatted": "18m 3s",
+    "time_per_iteration": 371,
+    "remaining_iterations": 4,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-04T00:37:10.639200",
+    "queue_position": null,
+    "team_name": "LRQA"
+  },
+  {
+    "job_id": "00dbba80-1a2d-4b8b-893a-dfb060269fdf",
+    "user_id": "vpatne290",
+    "device_ip": "10.0.0.140",
+    "device_name": "DT-XIONE_UK-0D-AB",
+    "methods": [
+      "send_remote_keys",
+      "capture_current_screen",
+      "reboot_perf_v2_optimized",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen"
+    ],
+    "execution_queue": [
+      {
+        "method": "send_remote_keys",
+        "remote_keys": "HOME,HOME",
+        "key_delay": 5,
+        "description": "Device should be on Home Screen"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture"
+      },
+      {
+        "method": "reboot_perf_v2_optimized",
+        "optional_checks": {
+          "custom_commands": [
+            {
+              "check_key": "process_crash",
+              "command": "grep -E \".*process crash.*\" /opt/logs/core_log.txt",
+              "description": "Detects when any system process crashes",
+              "terminate_on_match": false
+            }
+          ]
+        },
+        "home_screen_timeout": 240,
+        "log_search_patterns": [
+          "process crash.*"
+        ],
+        "auto_collect_logs": true,
+        "description": "Reboot"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_2"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "launch Youtube",
+        "description": "voice"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_3"
+      },
+      {
+        "method": "voice_command",
+        "voice_text": "Play 4k Swiss video",
+        "description": "Voice command"
+      },
+      {
+        "method": "capture_current_screen",
+        "description": "Capture_4"
+      }
+    ],
+    "iterations": 3,
+    "status": "failed",
+    "start_time": "2026-09-04T00:37:10.656240",
+    "end_time": "2026-09-04T00:48:24.325615+00:00",
+    "log_file_path": "logs/jobs/00dbba80-1a2d-4b8b-893a-dfb060269fdf/execution.log",
+    "session_folder": "Enhancement_output/EXECUTION_RESULTS/DESK_AUTOMATION-V2/LRQA/vpatne290/2026-09-04/DT-XIONE_UK-0D-AB_10-0-0-140/SEND_REMOTE_KEYS,CAPTURE_CURRENT_SCREEN,REBOOT_PERF_V2_OPTIMIZED+5MORE_3_003712_UTC",
+    "sequence_name": "Trail_123",
+    "execution_type": "saved_sequence",
+    "current_step": 0,
+    "current_iteration": 3,
+    "iteration_results": {
+      "1": "failed",
+      "2": "failed"
+    },
+    "created_at": "2026-09-04T00:37:10.656246",
+    "eta_seconds": 1083,
+    "eta_formatted": "18m 3s",
+    "time_per_iteration": 371,
+    "remaining_iterations": 4,
+    "executing_user": "vpatne290",
+    "triggered_at": "2026-09-04T00:37:10.656248",
+    "queue_position": null,
+    "team_name": "LRQA"
   }
 ]

@@ -8104,7 +8104,7 @@
                     };
                     
                     // 🔗 COMPOSITE SEQUENCE HANDLER - NEW
-                    if (queueItem.isCompositeSequence) {
+                    if (isCompositeSequenceStep(queueItem)) {
                         const methodCount = queueItem.methodCount || 0;
                         const creator = queueItem.sequenceCreator || 'Unknown';
                         const sequenceName = queueItem.sequenceName || queueItem.name;
@@ -8371,11 +8371,11 @@
                         }
                     }
                     
-                    const methodInfo = getMethodInfo(queueItem.method);
+                    const methodInfo = getMethodInfo(queueItem.method, queueItem);
                     const description = queueItem.description || '';
                     
                     // Determine styling for composite sequences vs regular methods
-                    const isComposite = queueItem.isCompositeSequence;
+                    const isComposite = isCompositeSequenceStep(queueItem);
                     const borderColor = isComposite ? '#8b5cf6' : '#0d6efd';  // Purple for composite, blue for regular
                     const backgroundColor = isComposite ? '#312e81' : '#334155';  // Darker purple background for composite
                     const headerColor = isComposite ? '#e879f9' : '#e5e7eb';  // Purple text for composite
@@ -8490,7 +8490,7 @@
             if (index < 0 || index >= executionQueue.length) return;
             
             const queueItem = executionQueue[index];
-            const methodInfo = getMethodInfo(queueItem.method);
+            const methodInfo = getMethodInfo(queueItem.method, queueItem);
             
             // Special handling for ir_test: use modal to select keys
             if (queueItem.method === 'ir_test') {
@@ -9361,7 +9361,7 @@
             let options = '<option value="">No Condition (Always Execute)</option>';
             for (let i = 0; i < index; i++) {
                 const prevItem = executionQueue[i];
-                const prevMethodInfo = getMethodInfo(prevItem.method);
+                const prevMethodInfo = getMethodInfo(prevItem.method, prevItem);
                 options += `<option value="${i}">Step ${i + 1}: ${prevMethodInfo.name}</option>`;
             }
             
@@ -9369,7 +9369,7 @@
             let stepGroupOptions = '';
             for (let i = index; i < executionQueue.length; i++) {
                 const item = executionQueue[i];
-                let methodInfo = getMethodInfo(item.method);
+                let methodInfo = getMethodInfo(item.method, item);
                 const checked = queueItem.condition && queueItem.condition.grouped_steps && 
                                queueItem.condition.grouped_steps.includes(i) ? 'checked' : '';
                 stepGroupOptions += `
@@ -9489,7 +9489,7 @@
             
             for (let i = 0; i < executionQueue.length; i++) {
                 if (i !== stepIndex_int) {
-                    let methodInfo = getMethodInfo(executionQueue[i].method);
+                    let methodInfo = getMethodInfo(executionQueue[i].method, executionQueue[i]);
                     stepOptionsHtml += `<option value="${i}">Step ${i + 1}: ${methodInfo.name}</option>`;
                 }
             }
@@ -10001,7 +10001,7 @@
             });
         }
         
-        function getMethodInfo(method) {
+        function getMethodInfo(method, item) {
             const methods = {
                 'reboot': { name: 'Reboot Device', description: 'System reboot test', icon: 'arrow-clockwise' },
                 'reboot_performance': { name: 'Reboot Device_Performance', description: 'Reboot with timing & home screen monitoring', icon: 'speedometer2' },
@@ -10030,9 +10030,11 @@
             
             // Handle composite sequence references
             if (method && method.startsWith('sequence_reference_')) {
+                const seqName = item && (item.sequenceName || item.name);
+                const count = item && item.methodCount;
                 return { 
-                    name: 'Composite Sequence (Reusable)', 
-                    description: 'Execute a saved sequence as a single step', 
+                    name: seqName ? String(seqName).replace(/^\uD83D\uDCE6\s*/, '').replace(/\s*\(Sequence\)$/, '') : 'Reusable Sequence', 
+                    description: count ? ('Reusable sequence \u2022 ' + count + ' methods') : 'Reusable saved sequence', 
                     icon: 'diagram-2-fill' 
                 };
             }
@@ -10040,8 +10042,8 @@
             return methods[method] || { name: method, description: '', icon: 'gear-fill' };
         }
         
-        function getMethodName(method) {
-            return getMethodInfo(method).name;
+        function getMethodName(method, item) {
+            return getMethodInfo(method, item).name;
         }
         
         // Global cache for sequence access info (from list view)
@@ -11005,7 +11007,7 @@
                     const queueItem = {
                         id: Date.now().toString() + Math.random() + seqIndex + itemIndex,
                         method: item.method || '',
-                        name: item.name || getMethodName(item.method),
+                        name: item.name || getMethodName(item.method, item),
                         description: item.description || '',  // Include description when merging sequences
                         params: { ...item.params } || {}
                     };
@@ -11064,7 +11066,7 @@
                 const queueItem = {
                     id: Date.now().toString() + Math.random() + itemIndex,
                     method: item.method || '',
-                    name: item.name || getMethodName(item.method),
+                    name: item.name || getMethodName(item.method, item),
                     description: item.description || '',  // Include description when executing sequences separately
                     params: { ...item.params } || {}
                 };
@@ -11174,6 +11176,56 @@
             }
         }
         
+        const SEQUENCE_STEP_SKIP_FIELDS = ['method', 'device_id', 'id', 'description', 'name', 'isCompositeSequence', 'sequenceId', 'sequenceName', 'sequenceCreator', 'sequenceMethods', 'methodCount'];
+
+        // The isCompositeSequence flag is not always persisted, so fall back to the method prefix
+        function isCompositeSequenceStep(item) {
+            return !!(item && (item.isCompositeSequence || (typeof item.method === 'string' && item.method.startsWith('sequence_reference_'))));
+        }
+
+        // Composite steps store their children under different keys depending on how they were saved
+        function getCompositeChildSteps(item) {
+            const candidates = [
+                item.params && item.params.queue_data,
+                item.queue_data,
+                item.sequenceMethods,
+                item.params && item.params.methods,
+                item.methods
+            ].filter(c => Array.isArray(c) && c.length > 0);
+
+            // Prefer full step objects over plain method-name lists
+            const detailed = candidates.find(c => typeof c[0] === 'object');
+            const chosen = detailed || candidates[0];
+            if (!chosen) return [];
+            return chosen.map(step => (typeof step === 'string' ? { method: step } : step));
+        }
+
+        function renderStepParams(step) {
+            let out = '<div style="margin-top: 0.75rem; margin-left: 1.5rem; padding: 0.5rem; background-color: #111827; border-radius: 4px; border-left: 2px solid #6366f1; font-size: 0.8rem;">';
+            let hasParams = false;
+
+            const entries = Object.entries(step);
+            if (step.params && typeof step.params === 'object' && !Array.isArray(step.params)) {
+                entries.push(...Object.entries(step.params));
+            }
+
+            for (const [key, value] of entries) {
+                if (key === 'params') continue;
+                if (!SEQUENCE_STEP_SKIP_FIELDS.includes(key) && value !== null && value !== undefined && value !== '') {
+                    hasParams = true;
+                    const displayValue = (typeof value === 'object') ? JSON.stringify(value) : String(value);
+                    const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    out += '<div style="color: #d1d5db; margin-bottom: 0.25rem; word-break: break-all;"><span style="color: #a1a5fb;">' + displayKey + ':</span> <span style="color: #61f3f3;">' + displayValue + '</span></div>';
+                }
+            }
+
+            if (!hasParams) {
+                out += '<span style="color: #9ca3af; font-size: 0.75rem;">No additional parameters</span>';
+            }
+            out += '</div>';
+            return out;
+        }
+
         function openSequenceDetailsModal(sequenceId) {
             fetch(`/api/sequences/${sequenceId}`)
                 .then(response => response.json())
@@ -11203,7 +11255,8 @@
                     
                     // Body
                     html += '<div class="modal-body" style="background-color: #1f2937;">';
-                    
+
+                    // Reusable sequence references are expanded into their individual methods
                     // Info section
                     html += '<div style="background-color: #111827; padding: 1rem; border-radius: 6px; margin-bottom: 1.5rem; border-left: 3px solid #10b981;">';
                     html += '<strong>Created by:</strong> ' + (sequence.created_by || 'Unknown') + '<br>';
@@ -11215,42 +11268,40 @@
                     if (queueData.length > 0) {
                         html += '<div style="max-height: 500px; overflow-y: auto; border: 1px solid #374151; border-radius: 6px; background-color: #111827;">';
                         queueData.forEach((item, idx) => {
-                            const methodName = getMethodName ? getMethodName(item.method) : (item.sequenceName || item.name || item.method || 'Unknown');
-                            
-                            // Skip composite sequences (feature disabled for testing)
-                            if (item.isCompositeSequence) {
-                                return; // Skip rendering
-                            }
-                            
+                            const methodName = getMethodName ? getMethodName(item.method, item) : (item.name || item.method || 'Unknown');
+
                             html += '<div style="padding: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid #374151; background-color: #1f2937;">';
                             html += '<span style="background-color: #10b981; color: #000; padding: 0.25rem 0.5rem; border-radius: 3px; font-size: 0.75rem; margin-right: 0.5rem;">' + (idx + 1) + '</span>';
+
+                            if (isCompositeSequenceStep(item)) {
+                                const childItems = getCompositeChildSteps(item);
+                                html += '<strong style="color: #e5e7eb;">' + methodName + '</strong>';
+                                html += ' <span style="color: #9ca3af; font-size: 0.8rem;">(Reusable)</span>';
+
+                                if (childItems.length > 0) {
+                                    html += '<div style="margin-top: 0.75rem; margin-left: 0.75rem; border: 1px solid #374151; border-radius: 6px; background-color: #111827; overflow: hidden;">';
+                                    childItems.forEach((child, childIdx) => {
+                                        const childName = getMethodName ? getMethodName(child.method, child) : (child.name || child.method || 'Unknown');
+                                        html += '<div style="padding: 0.75rem 1rem; border-bottom: 1px solid #374151;">';
+                                        html += '<span style="background-color: #10b981; color: #000; padding: 0.2rem 0.45rem; border-radius: 3px; font-size: 0.7rem; margin-right: 0.5rem;">' + (childIdx + 1) + '</span>';
+                                        html += '<strong style="color: #10b981;">' + childName + '</strong>';
+                                        if (child.device_id) html += ' <span style="color: #9ca3af;">(' + child.device_id + ')</span>';
+                                        html += renderStepParams(child);
+                                        html += '</div>';
+                                    });
+                                    html += '</div>';
+                                } else {
+                                    html += '<div style="margin-top: 0.5rem; margin-left: 1.5rem; color: #9ca3af; font-size: 0.8rem;">No methods found inside this reusable sequence</div>';
+                                }
+                                html += '</div>';
+                                return;
+                            }
+
                             html += '<strong style="color: #10b981;">' + methodName + '</strong>';
                             if (item.device_id) html += ' <span style="color: #9ca3af;">(' + item.device_id + ')</span>';
                             html += '<br>';
-                            
-                            // Show all user-provided parameters
-                            const skipFields = ['method', 'device_id', 'id', 'description', 'name', 'isCompositeSequence', 'sequenceId', 'sequenceName', 'sequenceCreator', 'sequenceMethods', 'methodCount'];
-                            let hasParams = false;
-                            html += '<div style="margin-top: 0.75rem; margin-left: 1.5rem; padding: 0.5rem; background-color: #111827; border-radius: 4px; border-left: 2px solid #6366f1; font-size: 0.8rem;">';
-                            
-                            for (const [key, value] of Object.entries(item)) {
-                                if (!skipFields.includes(key) && value !== null && value !== undefined && value !== '') {
-                                    hasParams = true;
-                                    let displayValue;
-                                    if (typeof value === 'object') {
-                                        displayValue = JSON.stringify(value);
-                                    } else {
-                                        displayValue = String(value);
-                                    }
-                                    const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                                    html += '<div style="color: #d1d5db; margin-bottom: 0.25rem; word-break: break-all;"><span style="color: #a1a5fb;">' + displayKey + ':</span> <span style="color: #61f3f3;">' + displayValue + '</span></div>';
-                                }
-                            }
-                            
-                            if (!hasParams) {
-                                html += '<span style="color: #9ca3af; font-size: 0.75rem;">No additional parameters</span>';
-                            }
-                            html += '</div></div>';
+                            html += renderStepParams(item);
+                            html += '</div>';
                         });
                         html += '</div>';
                     } else {
