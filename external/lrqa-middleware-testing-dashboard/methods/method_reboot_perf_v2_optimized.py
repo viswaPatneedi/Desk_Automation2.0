@@ -42,6 +42,7 @@ from methods.method_utils import (
     activate_screencapture_service,
     create_execution_log_path,
     wait_for_device,
+    reconnect_to_device_with_retry,
     check_network_and_realtek_errors,
     capture_device_logs_sftp,
     capture_minimal_logs_fallback,
@@ -1467,6 +1468,20 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                     "message": "Execution stopped: HOME log not found during monitoring phase (termination condition)"
                 }
         
+        # SSH can silently drop during the HOME monitoring wait (device still settling after
+        # boot). Reconnect now so the mandatory diagnostics/log-collection below don't all
+        # fail with "SSH session not active" and skip log collection entirely.
+        if not ssh or not ssh.get_transport() or not ssh.get_transport().is_active():
+            log_message("\n⚠ SSH session dropped during HOME monitoring - reconnecting before diagnostics/log collection...")
+            reconnected_ssh = reconnect_to_device_with_retry(
+                device_ip, port, username, password, max_retries=3, retry_interval=5, log_callback=log_message
+            )
+            if reconnected_ssh:
+                ssh = reconnected_ssh
+                log_message("✓ SSH reconnected - diagnostics and log collection will proceed normally")
+            else:
+                log_message("❌ SSH reconnection failed - diagnostics/log collection may still fail")
+
         # STEP 5.6: QUERY DEVICE POWER STATE FOR VALIDATION (MANDATORY - regardless of HOME screen detection)
         log_message("\n[STEP 5.6] Querying device state for validation (MANDATORY CHECK)...")
         try:
