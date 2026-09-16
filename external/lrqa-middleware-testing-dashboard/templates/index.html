@@ -3131,8 +3131,11 @@
             // Store interval ID globally so it can be cleared if session expires
             window.dashboardRefreshInterval = setInterval(loadCurrentExecutions, 15000);
             
-            // ✅ MANUAL DEVICE STATUS REFRESH: Click "Refresh Status" button to check all devices
-            // (Removed auto-refresh - users can now click the button to check device status on-demand)
+            // ✅ AUTOMATIC DEVICE BUSY-STATE REFRESH: no manual click needed anymore.
+            // Polls only for running-job changes and masks/unmasks just the affected
+            // device row in place - "Check Status" still does a full SSH sweep on demand.
+            window.deviceBusyPollInterval = setInterval(pollDeviceExecutionStatus, 5000);
+            pollDeviceExecutionStatus();
         }
 
         function openAiBuilderModal() {
@@ -5130,6 +5133,140 @@
                         });
                     });
                 });
+        }
+
+        // ============================================================
+        // AUTOMATIC DEVICE BUSY-STATE POLLING
+        // ============================================================
+        // Runs on an interval so a device row masks itself the moment a job
+        // starts, and unmasks back to "Available" the moment it completes/is
+        // cancelled - without a manual "Check Status" click and without a
+        // full SSH sweep of every device.
+
+        function applyBusyMask(row, runningJob) {
+            const statusBadge = row.querySelector('.device-status-badge');
+            const progressText = runningJob.current_iteration !== undefined ?
+                ` (${runningJob.current_iteration + 1}/${runningJob.iterations})` : '';
+
+            if (statusBadge) {
+                statusBadge.innerHTML = `
+                    <div style="text-align: left;">
+                        <div><i class="bi bi-hourglass-split"></i> Busy${progressText}</div>
+                        <small style="font-size: 0.7rem; font-weight: 600;">👤 ${runningJob.executing_user}</small><br>
+                        <small style="font-size: 0.7rem; font-weight: 600;">⏱️  ETA: ${runningJob.eta}</small>
+                    </div>
+                `;
+                statusBadge.style.background = '#dc2626';
+                statusBadge.style.color = '#fee2e2';
+                statusBadge.style.whiteSpace = 'normal';
+                statusBadge.style.lineHeight = '1.3';
+                statusBadge.style.padding = '0.5rem';
+                statusBadge.style.minWidth = '120px';
+            }
+
+            row.setAttribute('data-device-status', 'busy');
+            const checkbox = row.querySelector('.device-checkbox');
+            if (checkbox) {
+                checkbox.disabled = true;
+                checkbox.style.opacity = '0.5';
+                checkbox.style.cursor = 'not-allowed';
+                checkbox.title = `Device is busy - being used by ${runningJob.executing_user}`;
+            }
+            row.style.opacity = '0.7';
+            row.style.pointerEvents = 'none';
+            row.style.backgroundColor = '#1e293b';
+        }
+
+        function clearBusyMask(row) {
+            row.style.opacity = '1';
+            row.style.pointerEvents = 'auto';
+            row.style.backgroundColor = '';
+            const checkbox = row.querySelector('.device-checkbox');
+            if (checkbox) {
+                checkbox.disabled = false;
+                checkbox.style.opacity = '1';
+                checkbox.style.cursor = 'pointer';
+                checkbox.title = 'Device is available - you can queue jobs for it';
+            }
+        }
+
+        // Re-verify reachability for a single device once its job finishes, instead of
+        // blindly assuming "Available" (the device could genuinely have gone offline).
+        function refreshSingleDeviceAvailability(row) {
+            const deviceIp = row.getAttribute('data-device-ip');
+            const rpiIp = row.getAttribute('data-rpi-ip');
+            const isRack = row.getAttribute('data-is-rack') === 'true';
+            const statusBadge = row.querySelector('.device-status-badge');
+            if (statusBadge) {
+                statusBadge.innerHTML = '<i class="bi bi-hourglass-split"></i> Checking...';
+                statusBadge.style.background = '#6b7280';
+                statusBadge.style.color = '';
+            }
+
+            fetch('/api/test_connection', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ device_ip: deviceIp, rpi_ip: rpiIp, is_rack_device: isRack })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (!statusBadge) return;
+                    if (data.success) {
+                        statusBadge.innerHTML = '<i class="bi bi-check-circle-fill"></i> Available';
+                        statusBadge.style.background = '#10b981';
+                        row.setAttribute('data-device-status', 'active');
+                    } else {
+                        statusBadge.innerHTML = '<i class="bi bi-x-circle-fill"></i> Inactive';
+                        statusBadge.style.background = '#ef4444';
+                        row.setAttribute('data-device-status', 'inactive');
+                    }
+                })
+                .catch(() => {
+                    if (!statusBadge) return;
+                    statusBadge.innerHTML = '<i class="bi bi-x-circle-fill"></i> Inactive';
+                    statusBadge.style.background = '#ef4444';
+                    row.setAttribute('data-device-status', 'inactive');
+                });
+        }
+
+        // Lightweight poll - only touches the rows whose busy state actually changed.
+        // Does NOT call reorganizeDeviceList(), so DESK/GDF_RACK sections are never
+        // fully rebuilt just because a job started or finished.
+        function pollDeviceExecutionStatus() {
+            fetch('/api/jobs?status=running', { credentials: 'include' })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success || !data.jobs) return;
+
+                    const runningByIp = new Map();
+                    data.jobs.forEach(job => {
+                        if (job.status === 'running') {
+                            runningByIp.set(job.device_ip, {
+                                job_id: job.job_id,
+                                eta: job.eta_formatted || `${Math.round((job.eta_seconds || 0) / 60)}m`,
+                                current_iteration: job.current_iteration,
+                                iterations: job.iterations,
+                                executing_user: job.executing_user || job.user_id || 'Unknown'
+                            });
+                        }
+                    });
+
+                    document.querySelectorAll('.device-row[data-device-ip]').forEach(row => {
+                        const deviceIp = row.getAttribute('data-device-ip');
+                        const runningJob = runningByIp.get(deviceIp);
+                        const wasBusy = row.getAttribute('data-device-status') === 'busy';
+
+                        if (runningJob) {
+                            applyBusyMask(row, runningJob);
+                        } else if (wasBusy) {
+                            // Job just completed/cancelled - unmask and re-verify reachability
+                            clearBusyMask(row);
+                            refreshSingleDeviceAvailability(row);
+                        }
+                    });
+                })
+                .catch(error => console.warn('⚠️ Device busy-status poll failed:', error));
         }
         
         // ✅ MANUAL DEVICE STATUS CHECK - Wrapper function with user feedback
