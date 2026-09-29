@@ -85,6 +85,18 @@ class DataMigration:
             'errors': [],
             'warnings': []
         }
+        self._user_id_cache = {}
+    
+    def _resolve_user_id(self, username):
+        """Look up a User's integer id by username (JSON files store the username, not the id)."""
+        if not username:
+            return None
+        if username in self._user_id_cache:
+            return self._user_id_cache[username]
+        user = self.session.query(User).filter_by(username=username).first()
+        user_id = user.id if user else None
+        self._user_id_cache[username] = user_id
+        return user_id
     
     def migrate_users(self) -> int:
         """Migrate users from JSON to PostgreSQL"""
@@ -93,16 +105,20 @@ class DataMigration:
             users_data = JSONDataLoader.load_json(USERS_FILE)
             count = 0
             
-            for user_dict in (users_data.values() if isinstance(users_data, dict) else users_data):
+            # users.json is a dict keyed by username/ntid - the value dict itself has no
+            # 'username' field, so it must be taken from the key, not user_dict.get('username').
+            items = users_data.items() if isinstance(users_data, dict) else enumerate(users_data)
+            for username_key, user_dict in items:
+                username = user_dict.get('username') or username_key
                 try:
                     # Check if user already exists
-                    existing = self.session.query(User).filter_by(username=user_dict.get('username')).first()
+                    existing = self.session.query(User).filter_by(username=username).first()
                     if existing:
-                        logger.debug(f"User {user_dict.get('username')} already exists, skipping")
+                        logger.debug(f"User {username} already exists, skipping")
                         continue
                     
                     user = User(
-                        username=user_dict.get('username'),
+                        username=username,
                         password_hash=user_dict.get('password_hash', 'PLACEHOLDER'),
                         email=user_dict.get('email'),
                         team_name=user_dict.get('team_name', ''),
@@ -132,7 +148,9 @@ class DataMigration:
             devices_data = JSONDataLoader.load_json(DEVICES_FILE)
             count = 0
             
-            for ip, device_dict in devices_data.items():
+            # devices.json is a list of device dicts (each carries its own 'ip'), not a dict keyed by ip.
+            for device_dict in devices_data:
+                ip = device_dict.get('ip')
                 try:
                     # Check if device already exists
                     existing = self.session.query(Device).filter_by(ip=ip).first()
@@ -154,7 +172,13 @@ class DataMigration:
                         use_jump_host=device_dict.get('use_jump_host', False),
                         jump_host_config=device_dict.get('jump_host_config'),
                         ir_config=device_dict.get('ir_config'),
-                        is_active=True
+                        is_rack_device=device_dict.get('is_rack_device', False),
+                        rpi_config=device_dict.get('rpi_config'),
+                        ir_blaster_config=device_dict.get('ir_blaster_config'),
+                        power_control_config=device_dict.get('power_control_config'),
+                        shared_with_teams=device_dict.get('shared_with_teams') or {},
+                        created_by=self._resolve_user_id(device_dict.get('created_by')),
+                        is_active=device_dict.get('is_active', True)
                     )
                     self.session.add(device)
                     count += 1
@@ -179,7 +203,12 @@ class DataMigration:
             patterns_data = JSONDataLoader.load_json(LOG_PATTERNS_FILE)
             count = 0
             
-            for pattern_id, pattern_dict in patterns_data.items():
+            # log_patterns.json is {'LOG_PATTERNS': {name: {id, pattern_name, log_pattern, ...}}, 'PENDING_PATTERNS': ...,
+            # 'REJECTED_PATTERNS': ...}. Only the approved/active 'LOG_PATTERNS' bucket represents live patterns -
+            # PENDING/REJECTED are approval-workflow state (belongs in StagingChange, not this table).
+            active_patterns = patterns_data.get('LOG_PATTERNS', {}) if isinstance(patterns_data, dict) else {}
+            for name, pattern_dict in active_patterns.items():
+                pattern_id = pattern_dict.get('id') or name
                 try:
                     existing = self.session.query(LogPattern).filter_by(pattern_id=pattern_id).first()
                     if existing:
@@ -187,12 +216,13 @@ class DataMigration:
                     
                     pattern = LogPattern(
                         pattern_id=pattern_id,
-                        name=pattern_dict.get('name'),
-                        regex=pattern_dict.get('regex'),
+                        name=pattern_dict.get('pattern_name', name),
+                        regex=pattern_dict.get('log_pattern') or pattern_dict.get('regex') or '',
                         description=pattern_dict.get('description'),
                         team_name=pattern_dict.get('team_name', ''),
                         location=pattern_dict.get('location', ''),
-                        is_custom=pattern_dict.get('is_custom', False),
+                        is_custom=not pattern_dict.get('is_builtin', False),
+                        created_by=self._resolve_user_id(pattern_dict.get('submitted_by')),
                         is_active=True
                     )
                     self.session.add(pattern)
@@ -218,28 +248,36 @@ class DataMigration:
             commands_data = JSONDataLoader.load_json(SYSTEM_COMMANDS_FILE)
             count = 0
             
-            for cmd_id, cmd_dict in commands_data.items():
-                try:
-                    existing = self.session.query(SystemCommand).filter_by(cmd_id=cmd_id).first()
-                    if existing:
-                        continue
-                    
-                    command = SystemCommand(
-                        cmd_id=cmd_id,
-                        name=cmd_dict.get('name'),
-                        command=cmd_dict.get('command'),
-                        description=cmd_dict.get('description'),
-                        category=cmd_dict.get('category', ''),
-                        team_name=cmd_dict.get('team_name', ''),
-                        location=cmd_dict.get('location', ''),
-                        is_custom=cmd_dict.get('is_custom', False),
-                        is_active=True
-                    )
-                    self.session.add(command)
-                    count += 1
-                except Exception as e:
-                    self.migration_report['errors'].append(f"SystemCommand {cmd_id} error: {str(e)}")
-                    logger.error(f"Error migrating system command {cmd_id}: {e}")
+            # system_commands.json is {category: {cmd_name: {name, command, description, submitted_by, ...}}},
+            # not a flat dict of command records.
+            categories = commands_data.items() if isinstance(commands_data, dict) else []
+            for category, commands_in_category in categories:
+                if not isinstance(commands_in_category, dict):
+                    continue
+                for cmd_name, cmd_dict in commands_in_category.items():
+                    cmd_id = f"{category}:{cmd_name}"
+                    try:
+                        existing = self.session.query(SystemCommand).filter_by(cmd_id=cmd_id).first()
+                        if existing:
+                            continue
+                        
+                        command = SystemCommand(
+                            cmd_id=cmd_id,
+                            name=cmd_dict.get('name', cmd_name),
+                            command=cmd_dict.get('command') or '',
+                            description=cmd_dict.get('description'),
+                            category=category,
+                            team_name=cmd_dict.get('team_name', ''),
+                            location=cmd_dict.get('location', ''),
+                            is_custom=not cmd_dict.get('is_builtin', False),
+                            created_by=self._resolve_user_id(cmd_dict.get('submitted_by')),
+                            is_active=True
+                        )
+                        self.session.add(command)
+                        count += 1
+                    except Exception as e:
+                        self.migration_report['errors'].append(f"SystemCommand {cmd_id} error: {str(e)}")
+                        logger.error(f"Error migrating system command {cmd_id}: {e}")
             
             self.session.commit()
             self.migration_report['totals']['system_commands'] = count
@@ -258,7 +296,9 @@ class DataMigration:
             sequences_data = JSONDataLoader.load_json(SAVED_SEQUENCES_FILE)
             count = 0
             
-            for seq_id, seq_dict in sequences_data.items():
+            # saved_sequences.json is a list of sequence dicts keyed by 'sequence_id', not a dict.
+            for seq_dict in sequences_data:
+                seq_id = seq_dict.get('sequence_id')
                 try:
                     existing = self.session.query(SavedSequence).filter_by(seq_id=seq_id).first()
                     if existing:
@@ -268,14 +308,15 @@ class DataMigration:
                         seq_id=seq_id,
                         name=seq_dict.get('name', 'Unknown'),
                         description=seq_dict.get('description'),
-                        methods=seq_dict.get('methods', []),
+                        methods=seq_dict.get('methods') or seq_dict.get('queue_data') or [],
                         method_rationale=seq_dict.get('method_rationale'),
                         execution_count=seq_dict.get('execution_count', 0),
                         total_duration_seconds=seq_dict.get('total_duration_seconds'),
                         average_duration_seconds=seq_dict.get('average_duration_seconds'),
                         team_name=seq_dict.get('team_name', 'DEFAULT'),
                         location=seq_dict.get('location', ''),
-                        is_active=True
+                        created_by=self._resolve_user_id(seq_dict.get('created_by')),
+                        is_active=seq_dict.get('is_active', True)
                     )
                     self.session.add(sequence)
                     count += 1
@@ -319,7 +360,7 @@ class DataMigration:
                     methods = job_dict.get('methods')
                     job = Job(
                         job_id=job_id,
-                        user_id=job_dict.get('user_id'),
+                        user_id=self._resolve_user_id(job_dict.get('user_id')),
                         device_ip=job_dict.get('device_ip'),
                         device_name=job_dict.get('device_name'),
                         execution_queue=job_dict.get('execution_queue') or [],
@@ -380,7 +421,7 @@ class DataMigration:
                     lock = DeviceLock(
                         device_id=device.id if device else None,
                         device_ip=device_ip,
-                        user_id=lock_dict.get('user_id'),
+                        user_id=self._resolve_user_id(lock_dict.get('user_id')),
                         job_id=lock_dict.get('job_id'),
                         lock_time=_parse_dt(lock_dict.get('locked_at')) or datetime.now(timezone.utc),
                         estimated_completion=_parse_dt(lock_dict.get('estimated_completion')),
@@ -408,29 +449,60 @@ class DataMigration:
         try:
             results_data = JSONDataLoader.load_json(TEST_RESULTS_FILE)
             count = 0
-            
+            orphaned_job_refs = 0
+
+            def _as_text(value):
+                """screenshots/logs/build_info/rdk_milestones_log are Text columns - JSON sometimes stores these as list/dict."""
+                if value is None or isinstance(value, str):
+                    return value
+                return json.dumps(value)
+
+            def _parse_dt(value):
+                if not value:
+                    return None
+                try:
+                    return datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+                except ValueError:
+                    return None
+
+            def _safe_device_ip(value):
+                """device_ip is varchar(15) (IPv4-sized) - some historical records have a MAC
+                address in this field instead of an IP; truncate rather than fail the whole batch."""
+                if value and len(value) > 15:
+                    return value[:15]
+                return value
+
+            known_job_ids = {row[0] for row in self.session.query(Job.job_id).all()}
+
             for result_dict in results_data:
                 try:
+                    job_id = result_dict.get('job_id')
+                    if job_id and job_id not in known_job_ids:
+                        # Referenced job was pruned from jobs.json (or hasn't been migrated) -
+                        # keep the result, just drop the now-dangling FK reference.
+                        job_id = None
+                        orphaned_job_refs += 1
+
                     result = TestResult(
-                        job_id=result_dict.get('job_id'),
+                        job_id=job_id,
                         iteration=result_dict.get('iteration'),
                         phase=result_dict.get('phase'),
                         status=result_dict.get('status'),
-                        details=result_dict.get('details'),
-                        device_ip=result_dict.get('device_ip'),
+                        details=_as_text(result_dict.get('details')),
+                        device_ip=_safe_device_ip(result_dict.get('device_ip')),
                         device_name=result_dict.get('device_name'),
                         method=result_dict.get('method'),
                         username=result_dict.get('username'),
                         sequence_name=result_dict.get('sequence_name'),
-                        screenshots=result_dict.get('screenshots'),
-                        logs=result_dict.get('logs'),
+                        screenshots=_as_text(result_dict.get('screenshots')),
+                        logs=_as_text(result_dict.get('logs')),
                         performance_seconds=result_dict.get('performance_seconds'),
                         optional_checks=result_dict.get('optional_checks'),
-                        build_info=result_dict.get('build_info'),
+                        build_info=_as_text(result_dict.get('build_info')),
                         tiles_summary=result_dict.get('tiles_summary'),
-                        rdk_milestones_log=result_dict.get('rdk_milestones_log'),
+                        rdk_milestones_log=_as_text(result_dict.get('rdk_milestones_log')),
                         boot_type=result_dict.get('boot_type'),
-                        timestamp=result_dict.get('timestamp')
+                        timestamp=_parse_dt(result_dict.get('timestamp')) or datetime.now(timezone.utc)
                     )
                     self.session.add(result)
                     count += 1
@@ -440,6 +512,10 @@ class DataMigration:
             
             self.session.commit()
             self.migration_report['totals']['test_results'] = count
+            if orphaned_job_refs:
+                self.migration_report['warnings'].append(
+                    f"{orphaned_job_refs} test result(s) referenced a job_id not present in jobs.json - migrated with job_id=NULL"
+                )
             logger.info(f"✅ Migrated {count} test results")
             return count
         except Exception as e:
