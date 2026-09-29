@@ -13,7 +13,7 @@ import logging
 
 from models.database import (
     Session, User, Device, LogPattern, SystemCommand, Method,
-    SavedSequence, Job, TestResult, AuditLog, ExecutionContext
+    SavedSequence, Job, TestResult, AuditLog, ExecutionContext, DeviceLock
 )
 
 logger = logging.getLogger(__name__)
@@ -27,6 +27,7 @@ SAVED_SEQUENCES_FILE = f'{JSON_FILES_DIR}/saved_sequences.json'
 LOG_PATTERNS_FILE = f'{JSON_FILES_DIR}/log_patterns.json'
 SYSTEM_COMMANDS_FILE = f'{JSON_FILES_DIR}/system_commands.json'
 USERS_FILE = f'{JSON_FILES_DIR}/users.json'
+DEVICE_LOCKS_FILE = f'{JSON_FILES_DIR}/device_locks.json'
 
 
 class JSONDataLoader:
@@ -58,7 +59,7 @@ class JSONDataLoader:
             json_files = [
                 DEVICES_FILE, JOBS_FILE, TEST_RESULTS_FILE,
                 SAVED_SEQUENCES_FILE, LOG_PATTERNS_FILE,
-                SYSTEM_COMMANDS_FILE, USERS_FILE
+                SYSTEM_COMMANDS_FILE, USERS_FILE, DEVICE_LOCKS_FILE
             ]
             
             for json_file in json_files:
@@ -292,6 +293,115 @@ class DataMigration:
             logger.error(f"❌ Error migrating saved sequences: {e}")
             return 0
     
+    def migrate_jobs(self) -> int:
+        """Migrate jobs from JSON to PostgreSQL"""
+        logger.info("🔄 Migrating jobs...")
+        try:
+            jobs_data = JSONDataLoader.load_json(JOBS_FILE)
+            count = 0
+
+            for job_dict in jobs_data:
+                job_id = job_dict.get('job_id')
+                try:
+                    existing = self.session.query(Job).filter_by(job_id=job_id).first()
+                    if existing:
+                        logger.debug(f"Job {job_id} already exists, skipping")
+                        continue
+
+                    def _parse_dt(value):
+                        if not value:
+                            return None
+                        try:
+                            return datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+                        except ValueError:
+                            return None
+
+                    methods = job_dict.get('methods')
+                    job = Job(
+                        job_id=job_id,
+                        user_id=job_dict.get('user_id'),
+                        device_ip=job_dict.get('device_ip'),
+                        device_name=job_dict.get('device_name'),
+                        execution_queue=job_dict.get('execution_queue') or [],
+                        methods=json.dumps(methods) if methods is not None else None,
+                        iterations=job_dict.get('iterations'),
+                        sequence_name=job_dict.get('sequence_name'),
+                        execution_type=job_dict.get('execution_type'),
+                        status=job_dict.get('status'),
+                        current_step=job_dict.get('current_step', 0),
+                        current_iteration=job_dict.get('current_iteration', 0),
+                        iteration_results=job_dict.get('iteration_results') or {},
+                        start_time=_parse_dt(job_dict.get('start_time')),
+                        end_time=_parse_dt(job_dict.get('end_time')),
+                        log_file_path=job_dict.get('log_file_path'),
+                        session_folder=job_dict.get('session_folder'),
+                        team_name=job_dict.get('team_name', ''),
+                        created_at=_parse_dt(job_dict.get('created_at')) or datetime.now(timezone.utc)
+                    )
+                    self.session.add(job)
+                    count += 1
+                except Exception as e:
+                    self.migration_report['errors'].append(f"Job {job_id} error: {str(e)}")
+                    logger.error(f"Error migrating job {job_id}: {e}")
+
+            self.session.commit()
+            self.migration_report['totals']['jobs'] = count
+            logger.info(f"✅ Migrated {count} jobs")
+            return count
+        except Exception as e:
+            self.session.rollback()
+            self.migration_report['errors'].append(f"Jobs migration failed: {str(e)}")
+            logger.error(f"❌ Error migrating jobs: {e}")
+            return 0
+
+    def migrate_device_locks(self) -> int:
+        """Migrate device locks from JSON to PostgreSQL"""
+        logger.info("🔄 Migrating device locks...")
+        try:
+            locks_data = JSONDataLoader.load_json(DEVICE_LOCKS_FILE)
+            count = 0
+
+            for device_ip, lock_dict in (locks_data.items() if isinstance(locks_data, dict) else []):
+                try:
+                    existing = self.session.query(DeviceLock).filter_by(device_ip=device_ip, is_active=True).first()
+                    if existing:
+                        logger.debug(f"Active lock for {device_ip} already exists, skipping")
+                        continue
+
+                    def _parse_dt(value):
+                        if not value:
+                            return None
+                        try:
+                            return datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+                        except ValueError:
+                            return None
+
+                    device = self.session.query(Device).filter_by(ip=device_ip).first()
+                    lock = DeviceLock(
+                        device_id=device.id if device else None,
+                        device_ip=device_ip,
+                        user_id=lock_dict.get('user_id'),
+                        job_id=lock_dict.get('job_id'),
+                        lock_time=_parse_dt(lock_dict.get('locked_at')) or datetime.now(timezone.utc),
+                        estimated_completion=_parse_dt(lock_dict.get('estimated_completion')),
+                        is_active=True
+                    )
+                    self.session.add(lock)
+                    count += 1
+                except Exception as e:
+                    self.migration_report['errors'].append(f"DeviceLock {device_ip} error: {str(e)}")
+                    logger.error(f"Error migrating device lock {device_ip}: {e}")
+
+            self.session.commit()
+            self.migration_report['totals']['device_locks'] = count
+            logger.info(f"✅ Migrated {count} device locks")
+            return count
+        except Exception as e:
+            self.session.rollback()
+            self.migration_report['errors'].append(f"Device locks migration failed: {str(e)}")
+            logger.error(f"❌ Error migrating device locks: {e}")
+            return 0
+
     def migrate_test_results(self) -> int:
         """Migrate test results from JSON to PostgreSQL"""
         logger.info("🔄 Migrating test results...")
@@ -349,12 +459,14 @@ class DataMigration:
         if backup_dir:
             self.migration_report['backup_directory'] = backup_dir
         
-        # Run migrations in order
+        # Run migrations in order (parents before children that reference them)
         self.migrate_users()
         self.migrate_devices()
         self.migrate_log_patterns()
         self.migrate_system_commands()
         self.migrate_saved_sequences()
+        self.migrate_jobs()
+        self.migrate_device_locks()
         self.migrate_test_results()
         
         # Close session
@@ -403,6 +515,8 @@ def main():
     print(f"  Total log patterns: {report['totals'].get('log_patterns', 0)}")
     print(f"  Total system commands: {report['totals'].get('system_commands', 0)}")
     print(f"  Total saved sequences: {report['totals'].get('saved_sequences', 0)}")
+    print(f"  Total jobs: {report['totals'].get('jobs', 0)}")
+    print(f"  Total device locks: {report['totals'].get('device_locks', 0)}")
     print(f"  Total test results: {report['totals'].get('test_results', 0)}")
 
 
