@@ -6,7 +6,9 @@ Orchestrates test method execution and result management
 from __future__ import annotations
 import threading
 import os
+import threading
 import time as time_module
+import paramiko
 from datetime import datetime, timezone
 from typing import List, Optional, Tuple, Dict
 from models.device import Device
@@ -854,6 +856,288 @@ class TestExecutionService:
                 'username': device.username,
                 'password': device.password
             }
+
+    # Marker method ids used for LOOP / IF / ELSE IF / ELSE control-flow steps. These are
+    # never real test actions - they never produce a step_results/step_extracted_text entry -
+    # they only redirect method_index within the flat execution_queue.
+    _CONTROL_FLOW_METHODS = {
+        'loop_start', 'loop_end', 'exit_loop',
+        'if_start', 'elseif_start', 'else_start', 'endif_block'
+    }
+
+    @staticmethod
+    def _build_control_flow_maps(execution_queue):
+        """Pre-scan the flat execution_queue once to find, for every LOOP/IF block, the
+        absolute index of its start/end (LOOP) or each branch + endif (IF/ELSEIF/ELSE)
+        marker steps, so control-flow jumps don't need to re-scan the queue at runtime.
+        """
+        loop_marker_map = {}
+        if_marker_map = {}
+        for idx, item in enumerate(execution_queue):
+            m = item.get('method')
+            if m == 'loop_start':
+                loop_marker_map.setdefault(item.get('loop_id'), {})['start'] = idx
+            elif m == 'loop_end':
+                loop_marker_map.setdefault(item.get('loop_id'), {})['end'] = idx
+            elif m in ('if_start', 'elseif_start', 'else_start'):
+                entry = if_marker_map.setdefault(item.get('block_id'), {'branches': []})
+                entry['branches'].append(idx)
+            elif m == 'endif_block':
+                if_marker_map.setdefault(item.get('block_id'), {'branches': []})['endif'] = idx
+        return loop_marker_map, if_marker_map
+
+    @staticmethod
+    def _compute_log_gated_condition_steps(execution_queue, if_marker_map):
+        """Return the set of step indices whose pass/fail feeds an IF/ELSE IF condition that
+        gates a branch containing collect_device_logs/fetch_apps_archives. These steps get
+        their repeat-failure deduped across LOOP iterations (see step_output_seen_lines) so
+        the SAME still-present crash/log line doesn't re-trigger log collection every
+        iteration - only a genuinely NEW line does.
+        """
+        gated = set()
+        for entry in if_marker_map.values():
+            branches = sorted(entry.get('branches') or [])
+            endif_idx = entry.get('endif')
+            for pos, branch_idx in enumerate(branches):
+                body_end = branches[pos + 1] if pos + 1 < len(branches) else endif_idx
+                if body_end is None:
+                    body_end = len(execution_queue)
+                body_methods = {execution_queue[j].get('method') for j in range(branch_idx + 1, body_end)}
+                if 'collect_device_logs' in body_methods or 'fetch_apps_archives' in body_methods:
+                    condition = execution_queue[branch_idx].get('condition') or {}
+                    for cond in (condition.get('steps') or []):
+                        step_idx = cond.get('step')
+                        if isinstance(step_idx, int):
+                            gated.add(step_idx)
+        return gated
+
+    @staticmethod
+    def _evaluate_control_condition(condition, step_results, step_extracted_text):
+        """Evaluate an IF / ELSE IF / EXIT LOOP condition against prior step results.
+
+        Schema (same as the existing per-step `condition`): either
+        {'steps': [{'step': idx, 'type': 'if_passed'|'if_failed'|'if_text_contains'|
+        'if_text_not_contains', 'value': str}], 'logic': 'AND'|'OR'} or the legacy
+        single-step {'step': idx, 'type': ...}. A falsy/empty condition always evaluates True
+        (used for an unconditional "Exit Loop").
+        """
+        if not condition:
+            return True
+        cond_steps = condition.get('steps') or []
+        if not cond_steps and condition.get('step') is not None:
+            cond_steps = [{
+                'step': condition['step'],
+                'type': condition.get('type', 'if_passed'),
+                'value': condition.get('value')
+            }]
+        if not cond_steps:
+            return True
+        logic = condition.get('logic', 'AND')
+        results = []
+        for cond in cond_steps:
+            dep_step = cond.get('step')
+            cond_type = cond.get('type', 'if_passed')
+            if cond_type in ('if_text_contains', 'if_text_not_contains'):
+                match_value = (cond.get('value') or '').strip()
+                captured_text = step_extracted_text.get(dep_step, '')
+                contains = bool(match_value) and (match_value.lower() in captured_text.lower())
+                results.append(contains if cond_type == 'if_text_contains' else not contains)
+            elif dep_step in step_results:
+                dep_passed = step_results[dep_step]
+                results.append(
+                    (cond_type == 'if_passed' and dep_passed) or
+                    (cond_type == 'if_failed' and not dep_passed)
+                )
+            else:
+                results.append(False)
+        return any(results) if logic == 'OR' else all(results)
+
+    @staticmethod
+    def _describe_condition_reason(condition, execution_queue, step_results, step_extracted_text):
+        """Human-readable description of which condition step(s) actually caused an IF/ELSE IF
+        branch to be entered, e.g. "Step 9 (Execute System Command) failed". Used to label any
+        device log collection triggered inside that branch, instead of 'Reason not recorded'.
+        For OR logic only the step(s) that actually matched are named (the others may have
+        been false); for AND logic every step contributed, so all are named.
+        """
+        if not condition:
+            return None
+        cond_steps = condition.get('steps') or []
+        if not cond_steps and condition.get('step') is not None:
+            cond_steps = [{
+                'step': condition['step'],
+                'type': condition.get('type', 'if_passed'),
+                'value': condition.get('value')
+            }]
+        if not cond_steps:
+            return None
+
+        def describe(cond):
+            dep_step = cond.get('step')
+            cond_type = cond.get('type', 'if_passed')
+            if isinstance(dep_step, int) and 0 <= dep_step < len(execution_queue):
+                step_name = execution_queue[dep_step].get('name') or execution_queue[dep_step].get('method') or 'Step'
+                label = f"Step {dep_step + 1} ({step_name})"
+            else:
+                label = f"Step {dep_step + 1}" if isinstance(dep_step, int) else "a step"
+            if cond_type == 'if_passed':
+                return f"{label} passed"
+            if cond_type == 'if_failed':
+                return f"{label} failed"
+            if cond_type == 'if_text_contains':
+                return f"{label} text contained \"{cond.get('value', '')}\""
+            if cond_type == 'if_text_not_contains':
+                return f"{label} text did not contain \"{cond.get('value', '')}\""
+            return label
+
+        def is_true(cond):
+            dep_step = cond.get('step')
+            cond_type = cond.get('type', 'if_passed')
+            if cond_type in ('if_text_contains', 'if_text_not_contains'):
+                match_value = (cond.get('value') or '').strip()
+                captured_text = step_extracted_text.get(dep_step, '')
+                contains = bool(match_value) and (match_value.lower() in captured_text.lower())
+                return contains if cond_type == 'if_text_contains' else not contains
+            if dep_step in step_results:
+                dep_passed = step_results[dep_step]
+                return (cond_type == 'if_passed' and dep_passed) or (cond_type == 'if_failed' and not dep_passed)
+            return False
+
+        if condition.get('logic', 'AND') == 'OR':
+            matched = [describe(c) for c in cond_steps if is_true(c)]
+            return ' or '.join(matched or [describe(c) for c in cond_steps])
+        return ' and '.join(describe(c) for c in cond_steps)
+
+    def _handle_control_flow_step(self, queue_item, method_index, execution_queue,
+                                   loop_marker_map, if_marker_map, loop_state, if_block_taken,
+                                   step_results, step_extracted_text, log_service,
+                                   pending_log_collection_reason=None):
+        """Process one LOOP/IF/ELSEIF/ELSE marker step and return the next method_index to
+        jump to. Never touches step_results (markers aren't real executed steps).
+        """
+        method = queue_item.get('method')
+
+        if method == 'loop_start':
+            loop_id = queue_item.get('loop_id')
+            loop_state[loop_id] = {'iter': 0, 'start_time': datetime.now(timezone.utc)}
+            mode = queue_item.get('loop_mode', 'iterations')
+            if mode == 'days':
+                log_service.log(f"\n🔁 LOOP START (id={loop_id}): running for {queue_item.get('loop_days')} day(s)")
+            else:
+                log_service.log(f"\n🔁 LOOP START (id={loop_id}): running for {queue_item.get('loop_iterations')} iteration(s)")
+            return method_index + 1
+
+        if method == 'exit_loop':
+            loop_id = queue_item.get('loop_id')
+            should_exit = self._evaluate_control_condition(queue_item.get('condition'), step_results, step_extracted_text)
+            end_idx = loop_marker_map.get(loop_id, {}).get('end')
+            if should_exit and end_idx is not None:
+                log_service.log(f"\n⏹️  EXIT LOOP (id={loop_id}) - condition met, breaking out of loop")
+                loop_state.pop(loop_id, None)
+                return end_idx + 1
+            return method_index + 1
+
+        if method == 'loop_end':
+            loop_id = queue_item.get('loop_id')
+            start_idx = loop_marker_map.get(loop_id, {}).get('start')
+            state = loop_state.get(loop_id)
+            if start_idx is None or state is None:
+                return method_index + 1
+            start_item = execution_queue[start_idx]
+            mode = start_item.get('loop_mode', 'iterations')
+            if mode == 'days':
+                try:
+                    max_days = float(start_item.get('loop_days') or 0)
+                except (TypeError, ValueError):
+                    max_days = 0
+                elapsed_days = (datetime.now(timezone.utc) - state['start_time']).total_seconds() / 86400.0
+                repeat = elapsed_days < max_days
+            else:
+                try:
+                    max_iterations = int(start_item.get('loop_iterations') or 1)
+                except (TypeError, ValueError):
+                    max_iterations = 1
+                repeat = (state['iter'] + 1) < max_iterations
+            if repeat:
+                state['iter'] += 1
+                log_service.log(f"\n🔁 LOOP (id={loop_id}) repeating - now on iteration {state['iter'] + 1}")
+                return start_idx + 1
+            log_service.log(f"\n🔁 LOOP (id={loop_id}) finished after {state['iter'] + 1} iteration(s)")
+            loop_state.pop(loop_id, None)
+            return method_index + 1
+
+        if method in ('if_start', 'elseif_start'):
+            block_id = queue_item.get('block_id')
+            if method == 'if_start':
+                if_block_taken[block_id] = False
+            entry = if_marker_map.get(block_id, {'branches': []})
+            endif_idx = entry.get('endif')
+            if if_block_taken.get(block_id):
+                return (endif_idx + 1) if endif_idx is not None else method_index + 1
+            cond_true = self._evaluate_control_condition(queue_item.get('condition'), step_results, step_extracted_text)
+            branch_label = 'IF' if method == 'if_start' else 'ELSE IF'
+            if cond_true:
+                if_block_taken[block_id] = True
+                reason_text = self._describe_condition_reason(
+                    queue_item.get('condition'), execution_queue, step_results, step_extracted_text
+                )
+                if pending_log_collection_reason is not None and reason_text:
+                    pending_log_collection_reason['text'] = f"{branch_label} branch entered: {reason_text}"
+                log_service.log(
+                    f"\n✓ {branch_label} (block={block_id}) condition met - entering branch"
+                    + (f" [{reason_text}]" if reason_text else "")
+                )
+                return method_index + 1
+            log_service.log(f"\n⏭️  {branch_label} (block={block_id}) condition not met - skipping branch")
+            branches = entry.get('branches', [])
+            try:
+                pos = branches.index(method_index)
+            except ValueError:
+                pos = -1
+            if pos != -1 and pos + 1 < len(branches):
+                return branches[pos + 1]
+            return (endif_idx + 1) if endif_idx is not None else method_index + 1
+
+        if method == 'else_start':
+            block_id = queue_item.get('block_id')
+            entry = if_marker_map.get(block_id, {'branches': []})
+            endif_idx = entry.get('endif')
+            if if_block_taken.get(block_id):
+                log_service.log(f"\n⏭️  ELSE (block={block_id}) skipped - earlier branch already taken")
+                return (endif_idx + 1) if endif_idx is not None else method_index + 1
+            if_block_taken[block_id] = True
+            if pending_log_collection_reason is not None:
+                pending_log_collection_reason['text'] = "ELSE branch entered (no earlier IF/ELSE IF condition matched)"
+            log_service.log(f"\n✓ ELSE (block={block_id}) - entering branch")
+            return method_index + 1
+
+        # endif_block (or unknown marker): just move on
+        return method_index + 1
+
+    @staticmethod
+    def _check_ssh_connectivity(device, log_service):
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        try:
+            ssh.connect(
+                device.ip,
+                port=int(device.port),
+                username=device.username,
+                password=device.password,
+                timeout=10,
+                banner_timeout=10,
+                auth_timeout=10
+            )
+            ssh.close()
+            log_service.log(f"✓ SSH connectivity check passed for {device.ip}:{device.port}")
+            return True
+        except Exception as ssh_error:
+            try:
+                ssh.close()
+            except Exception:
+                pass
+            log_service.log(f"❌ SSH connectivity check failed for {device.ip}:{device.port}: {ssh_error}")
+            return False
     
     def execute_test(self, device_ip: str, methods: str | List[str], iterations: int,
                     selected_ir_keys: Optional[List[str]] = None, voice_text: Optional[str] = None) -> bool:
@@ -917,9 +1201,13 @@ class TestExecutionService:
             bool: True if execution started successfully
         """
         # Get device from model
+        print(f"\n[EXECUTION] 🔍 Looking up device: {device_ip}")
         device = Device.find_by_ip(device_ip)
         if not device:
+            print(f"[EXECUTION] ❌ Device not found: {device_ip}")
             return False
+        
+        print(f"[EXECUTION] ✅ Device found: {device.name} ({device.ip})")
         
         # Reset execution context
         self.current_html_results = []
@@ -929,14 +1217,16 @@ class TestExecutionService:
         self.last_iterations = iterations
         
         # Execute in background thread
-        print(f"🔧 [DEBUG] Creating thread for job {job_id}, device {device_ip}")
+        print(f"[EXECUTION] 🧵 Creating thread for job {job_id}")
+        print(f"[EXECUTION]    Methods: {method_names}")
+        print(f"[EXECUTION]    Iterations: {iterations}")
         thread = threading.Thread(
             target=self._execute_queue_sequence,
             args=(device, execution_queue, iterations, job_id, sequence_name)
         )
         thread.daemon = True
         thread.start()
-        print(f"🔧 [DEBUG] Thread started for job {job_id}")
+        print(f"[EXECUTION] ✅ Thread started (TID: {thread.ident}) for job {job_id}")
         
         return True
     
@@ -958,13 +1248,21 @@ class TestExecutionService:
         self.current_job_id = job_id or 'unknown'
         
         print(f"🔧 [DEBUG] _execute_queue_sequence started for job {job_id}")
+        print(f"\n[EXECUTION-THREAD] 🚀 STARTED - Job: {job_id}")
+        print(f"[EXECUTION-THREAD]    Device: {device.name} ({device.ip})")
+        print(f"[EXECUTION-THREAD]    Methods: {[m['method'] for m in execution_queue]}")
+        print(f"[EXECUTION-THREAD]    Iterations: {iterations}")
+        
+        # CRITICAL: Import Job early to avoid UnboundLocalError from later usages
+        from models.job import Job
         from services.log_service import LogService
         import threading
         
         log_service = LogService()
         method_names = [item['method'] for item in execution_queue]
         log_file_handle = None
-        print(f"🔧 [DEBUG] Executing methods: {method_names} on device {device.ip}")
+        lock_heartbeat_stop = threading.Event()
+        lock_heartbeat_thread = None
         
         # Store combined methods and sequence name for this thread (for screenshot folder naming)
         import sys, os
@@ -987,11 +1285,18 @@ class TestExecutionService:
                 folder_method_name = sequence_name.replace(' ', '_').replace(',', '_')
             else:
                 # Use first 3 methods for folder name
+                # NOTE: use '-' (not ',') as separator - commas in the folder name end up embedded
+                # in saved screenshot paths, which breaks the comma-split parsing used to support
+                # methods (e.g. deepsleep) that store multiple screenshots as a comma-joined string.
                 method_list = method_names[:3]
                 if len(method_names) > 3:
-                    folder_method_name = ','.join(method_list) + f'+{len(method_names)-3}more'
+                    folder_method_name = '-'.join(method_list) + f'+{len(method_names)-3}more'
                 else:
-                    folder_method_name = ','.join(method_list)
+                    folder_method_name = '-'.join(method_list)
+            
+            job_for_folder = Job.get_job(job_id)
+            username_for_folder = job_for_folder.user_id if job_for_folder else 'unknown_user'
+            team_for_folder = getattr(job_for_folder, 'team_name', None) if job_for_folder else None
             
             # CRITICAL: Pass job_id to create UNIQUE session folder per job
             # This prevents screenshot and log mixing for same device running multiple jobs
@@ -1035,6 +1340,38 @@ class TestExecutionService:
                 print(f"✅ [EXECUTION] Job {job_id} session_folder: {getattr(updated_job, 'session_folder', None)}")
             else:
                 print(f"❌ [EXECUTION] Failed to retrieve job {job_id} after status update")
+
+            def refresh_job_lock():
+                while not lock_heartbeat_stop.wait(30):
+                    current_job = Job.get_job(job_id)
+                    if not current_job or current_job.status == 'cancelled':
+                        return
+
+                    current_iteration = max(1, current_job.current_iteration or 1)
+                    remaining_iterations = max(1, iterations - current_iteration + 1)
+                    if not DeviceLockManager.refresh_lock(
+                        device.ip, job_id, execution_queue, remaining_iterations
+                    ):
+                        current_lock = DeviceLock.get_device_lock(device.ip)
+                        reacquired = False
+                        if not current_lock or current_lock.job_id == job_id:
+                            duration = DeviceLockManager.calculate_job_duration(
+                                execution_queue, remaining_iterations
+                            )
+                            reacquired = DeviceLock.lock_device(
+                                device.ip, device.name, current_job.user_id, job_id, duration
+                            )
+                        if reacquired:
+                            log_service.log(f"✓ [LOCK-HEARTBEAT] Reacquired lock for active job {job_id}")
+                        else:
+                            log_service.log(f"⚠️ [LOCK-HEARTBEAT] Lock renewal failed for active job {job_id}")
+
+            lock_heartbeat_thread = threading.Thread(
+                target=refresh_job_lock,
+                name=f"job-lock-heartbeat-{job_id[:8]}",
+                daemon=True
+            )
+            lock_heartbeat_thread.start()
         
         try:
             # Determine starting iteration (for job resumption)
@@ -1157,6 +1494,15 @@ class TestExecutionService:
                 })
             method_utils.thread_local.tunnel_service = tunnel_service
             
+            # Pre-scan the flat execution_queue once for LOOP/IF/ELSEIF/ELSE marker positions -
+            # queue structure is fixed across iterations so this doesn't need to be redone per-iteration.
+            loop_marker_map, if_marker_map = self._build_control_flow_maps(execution_queue)
+            log_gated_step_indices = self._compute_log_gated_condition_steps(execution_queue, if_marker_map)
+            # step_index -> set of output lines already seen for that step, persisted across ALL
+            # iterations of this job (not reset per-iteration) so a repeated LOOP only re-triggers
+            # device log collection once a genuinely NEW line appears, not the same old crash.
+            step_output_seen_lines = {}
+
             for i in range(start_iteration, iterations):
                 # Check if job has been cancelled
                 if job_id:
@@ -1195,17 +1541,11 @@ class TestExecutionService:
                 if job_id and i >= start_iteration:
                     remaining_iterations = iterations - i
                     if not DeviceLockManager.refresh_lock(device.ip, job_id, execution_queue, remaining_iterations):
-                        log_service.log(f"\n❌ CRITICAL: Device lock lost or expired!")
-                        log_service.log(f"⚠️  Device {device.ip} is no longer reserved for job {job_id}")
-                        log_service.log(f"   Current iteration: {i+1}/{iterations}")
-                        log_service.log(f"   Remaining iterations: {remaining_iterations}")
-                        if job_id:
-                            Job.update_job_status(job_id, 'failed', 
-                                end_time=datetime.now(timezone.utc).isoformat(),
-                                log_file_path=log_file_path
-                            )
-                            DeviceLock.unlock_device(device.ip)
-                        raise RuntimeError(f"Device lock lost or expired: {device.ip}")
+                        current_job = Job.get_job(job_id)
+                        if current_job and current_job.status == 'cancelled':
+                            log_service.log(f"\n⛔ JOB CANCELLED - Lock refresh stopped at iteration {i + 1}")
+                            break
+                        log_service.log(f"\n⚠️ Device lock refresh failed; continuing active job {job_id}")
                     
                     time_remaining = DeviceLock.get_time_until_expiration(device.ip)
                     hours = time_remaining // 3600
@@ -1234,11 +1574,19 @@ class TestExecutionService:
                 
                 # Track step results for conditional execution
                 step_results = {}
-                
+
+                # Text OCR'd from the most recent "capture_current_screen" step (extract_text
+                # enabled), made available to later steps via the {{EXTRACTED_TEXT}} placeholder
+                last_extracted_text = ''
+                # Per-step OCR text, keyed by step index, so IF conditions can check whether a
+                # specific earlier capture_current_screen step's captured text contains a value
+                step_extracted_text = {}
+
                 # Collect method results for sequence consolidation
                 iteration_method_results = []
                 is_multi_method_sequence = len(execution_queue) > 1 and sequence_name
                 skipped_groups = set()  # Track which condition groups have been skipped
+                stop_iterations_triggered = False  # Set when a termination-condition check matches
                 
                 # Debug logging for sequence consolidation
                 if sequence_name:
@@ -1253,23 +1601,42 @@ class TestExecutionService:
                         for idx, item in enumerate(execution_queue):
                             if item.get('condition'):
                                 cond = item['condition']
-                                log_service.log(f"  ✓ Step {idx + 1} ({item.get('method')}): HAS condition - steps={cond.get('steps')}, logic={cond.get('logic')}")
+                                # Display steps 1-indexed (as shown in the UI) instead of the raw
+                                # 0-indexed 'step' values, to avoid the "depends on step N-1" confusion
+                                readable_steps = [
+                                    f"{{'step': {s.get('step', -1) + 1}, 'type': {s.get('type')!r}" +
+                                    (f", 'value': {s.get('value')!r}" if 'value' in s else '') + "}"
+                                    for s in cond.get('steps', [])
+                                ]
+                                log_service.log(f"  ✓ Step {idx + 1} ({item.get('method')}): HAS condition - depends on [{', '.join(readable_steps)}], logic={cond.get('logic')}")
                             else:
                                 log_service.log(f"  ✗ Step {idx + 1} ({item.get('method')}): NO condition found")
                     else:
                         log_service.log(f"[WARNING] ⚠️  NO conditions found in execution_queue! Conditions may not have been passed from frontend.")
                 
                 method_start_index = resume_step if i == start_iteration else 0
-                for method_index, queue_item in enumerate(execution_queue[method_start_index:], start=method_start_index):
-                    # Check if job has been cancelled before processing this method
-                    if job_id:
-                        current_job = Job.get_job(job_id)
-                        if current_job and current_job.status == 'cancelled':
-                            log_service.log(f"\n⛔ JOB CANCELLED - Stopping method execution at Step {method_index + 1}")
-                            print(f"✓ Job {job_id} was cancelled during method execution, breaking out")
-                            break
+                method_index = method_start_index
+                loop_state = {}       # loop_id -> {'iter': int, 'start_time': datetime} (reset each iteration)
+                if_block_taken = {}   # block_id -> bool, tracks whether a branch was already taken
+                pending_log_collection_reason = {'text': None}  # set on IF/ELSEIF/ELSE branch entry, consumed by
+                                                                 # the next collect_device_logs/fetch_apps_archives step
+                while method_index < len(execution_queue):
+                    queue_item = execution_queue[method_index]
+                    # Cancellation is handled at iteration boundaries. This lets a running
+                    # iteration finish instead of stopping immediately after a long wait.
                     
                     method = queue_item['method']
+
+                    # --- LOOP / IF / ELSEIF / ELSE control-flow marker steps ---
+                    # These never execute a real action - they only redirect method_index.
+                    if method in self._CONTROL_FLOW_METHODS:
+                        method_index = self._handle_control_flow_step(
+                            queue_item, method_index, execution_queue,
+                            loop_marker_map, if_marker_map, loop_state, if_block_taken,
+                            step_results, step_extracted_text, log_service,
+                            pending_log_collection_reason
+                        )
+                        continue
                     
                     # Check if this step has a condition
                     condition = queue_item.get('condition')
@@ -1290,6 +1657,7 @@ class TestExecutionService:
                         if group_id and group_id in skipped_groups:
                             log_service.log(f"\n⏭️  Skipping Step {method_index + 1}: {method.upper()} - Part of skipped condition block")
                             step_results[method_index] = None  # Mark as skipped (not executed)
+                            method_index += 1
                             continue
                         
                         # Support both new format (multiple steps) and old format (single step)
@@ -1308,7 +1676,17 @@ class TestExecutionService:
                                 dep_step = cond['step']
                                 cond_type = cond.get('type', 'if_passed')
                                 
-                                if dep_step in step_results:
+                                if cond_type in ('if_text_contains', 'if_text_not_contains'):
+                                    # Evaluate against OCR text captured by an earlier
+                                    # "capture_current_screen" step (extract_text enabled)
+                                    match_value = (cond.get('value') or '').strip()
+                                    captured_text = step_extracted_text.get(dep_step, '')
+                                    contains = bool(match_value) and (match_value.lower() in captured_text.lower())
+                                    cond_result = contains if cond_type == 'if_text_contains' else not contains
+                                    results.append(cond_result)
+                                    verb = 'CONTAINS' if cond_type == 'if_text_contains' else 'DOES NOT CONTAIN'
+                                    summary_parts.append(f"Step {dep_step + 1} OCR text {verb} '{match_value}'")
+                                elif dep_step in step_results:
                                     dep_passed = step_results[dep_step]
                                     # Evaluate individual condition
                                     cond_result = (cond_type == 'if_passed' and dep_passed) or \
@@ -1327,8 +1705,12 @@ class TestExecutionService:
                                 for cond in condition_steps:
                                     step_num = cond['step'] + 1
                                     cond_type = cond.get('type', 'if_passed')
-                                    type_str = 'PASS' if cond_type == 'if_passed' else 'FAIL'
-                                    cond_parts.append(f'Step {step_num} {type_str}')
+                                    if cond_type in ('if_text_contains', 'if_text_not_contains'):
+                                        verb = 'OCR CONTAINS' if cond_type == 'if_text_contains' else 'OCR NOT CONTAINS'
+                                        cond_parts.append(f"Step {step_num} {verb} '{(cond.get('value') or '').strip()}'")
+                                    else:
+                                        type_str = 'PASS' if cond_type == 'if_passed' else 'FAIL'
+                                        cond_parts.append(f'Step {step_num} {type_str}')
                                 condition_summary = f" ({f' {logic} '.join(cond_parts)})"
                         else:
                             # Old format: single step (backward compatibility)
@@ -1353,6 +1735,7 @@ class TestExecutionService:
                             else:
                                 log_service.log(f"\n⏭️  Skipping Step {method_index + 1}: {method.upper()} - Condition not met{condition_summary}")
                             step_results[method_index] = None  # Mark as skipped (not executed)
+                            method_index += 1
                             continue
                         elif should_execute and (condition.get('steps') or condition.get('step') is not None):
                             if is_group_leader:
@@ -1404,6 +1787,8 @@ class TestExecutionService:
                     elif method == "screen_validation":
                         filtered["expected_screen"] = queue_item.get("expected_screen", "")
                         filtered["screen_name"] = queue_item.get("screen_name", "")
+                    elif method == "channel_change_capture":
+                        filtered["channel_key"] = queue_item.get("channel_key", "DOWN")
                     elif method in {"reboot_performance_v2", "reboot_perf_v2_optimized", "soft_hard_boot", "trail_method"}:
                         filtered["home_screen_timeout"] = queue_item.get("home_screen_timeout", 180)
                         if "optional_checks" in queue_item:
@@ -1429,6 +1814,12 @@ class TestExecutionService:
                         filtered["remote_type"] = queue_item.get("remote_type", "")
                     elif method == "standby_deep_sleep_ir_control":
                         filtered["remote_type"] = queue_item.get("remote_type", "")
+                    elif method == "netflix_playback":
+                        filtered["asset_voice_command"] = queue_item.get("asset_voice_command", "")
+                        filtered["playback_duration"] = queue_item.get("playback_duration", 300)
+                        filtered["execute_playback_controls"] = queue_item.get("execute_playback_controls", False)
+                        filtered["username_cred"] = queue_item.get("username_cred", "")
+                        filtered["playback_log_string"] = queue_item.get("playback_log_string", "Playerstate.playing")
                     log_service.log(f"DEBUG: queue_item keys = {list(filtered.keys())}")
                     log_service.log(f"DEBUG: queue_item = {filtered}")
                     log_service.log(f"DEBUG: actual queue_item (unfiltered) = {queue_item}")
@@ -1544,7 +1935,8 @@ class TestExecutionService:
                                     custom_commands_resolved.append({
                                         'command': check_config['command'],
                                         'description': check_config['description'],
-                                        'check_key': check_key
+                                        'check_key': check_key,
+                                        'terminate_on_match': custom_check.get('terminate_on_match', False)
                                     })
                             
                             # Build final optional_checks structure
@@ -1595,12 +1987,15 @@ class TestExecutionService:
                                     custom_commands_resolved.append({
                                         'command': check_config['command'],
                                         'description': check_config['description'],
-                                        'check_key': check_key
+                                        'check_key': check_key,
+                                        'terminate_on_match': custom_check.get('terminate_on_match', False)
                                     })
                             
-                            # Build final optional_checks structure
+                            # Build final optional_checks structure - preserve the optional crash-wait
+                            # (minutes to pause before collecting logs when a termination check matches)
                             optional_checks_resolved = {
-                                'custom_commands': custom_commands_resolved
+                                'custom_commands': custom_commands_resolved,
+                                'crash_wait_minutes': optional_checks.get('crash_wait_minutes', 0)
                             }
                             
                             # Log which checks will be executed
@@ -1664,12 +2059,15 @@ class TestExecutionService:
                                     custom_commands_resolved.append({
                                         'command': check_config['command'],
                                         'description': check_config['description'],
-                                        'check_key': check_key
+                                        'check_key': check_key,
+                                        'terminate_on_match': custom_check.get('terminate_on_match', False)
                                     })
                             
-                            # Build final optional_checks structure
+                            # Build final optional_checks structure - preserve the optional crash-wait
+                            # (minutes to pause before collecting logs when a termination check matches)
                             optional_checks_resolved = {
-                                'custom_commands': custom_commands_resolved
+                                'custom_commands': custom_commands_resolved,
+                                'crash_wait_minutes': optional_checks.get('crash_wait_minutes', 0)
                             }
                             
                             # Log which checks will be executed
@@ -1702,17 +2100,22 @@ class TestExecutionService:
                     elif method == "soft_hard_boot":
                         # Soft Boot / Hard Boot Performance Monitoring
                         boot_type = queue_item.get('boot_type', 'HARD')  # Default: HARD boot
+                        language = str(queue_item.get('language', 'en')).strip().lower()
+                        if language not in ('en', 'de'):
+                            language = 'en'
                         home_screen_timeout = queue_item.get('home_screen_timeout', 180)  #Default 180 seconds
                         optional_checks = queue_item.get('optional_checks', {})
+                        navigation_keys = queue_item.get('navigation_keys') or optional_checks.get('navigation_keys')
                         
                         log_service.log(f"Boot Type: {boot_type}")
                         if boot_type == 'HARD':
                             log_service.log(f"  Command: systemctl reboot")
                             log_service.log(f"  Performance: From command sent to HOME screen detection")
                         else:
+                            log_service.log(f"  Device language: {'German (DE)' if language == 'de' else 'English (ENG)'}")
                             log_service.log(f"  Method: Settings GUI navigation")
                             log_service.log(f"  Path: Settings > System Management > Reset & Updates > Restart device")
-                            log_service.log(f"  Navigation keys: DOWN(2x), ENTER, DOWN(2x), ENTER, ENTER (5s per key)")
+                            log_service.log(f"  Navigation keys: {', '.join(navigation_keys) if navigation_keys else 'DOWN, DOWN, ENTER, DOWN, DOWN, ENTER, ENTER (default)'}")
                             log_service.log(f"  Performance: From last key press to HOME screen detection")
                         
                         log_service.log(f"HOME Screen Timeout: {home_screen_timeout}s")
@@ -1723,7 +2126,7 @@ class TestExecutionService:
                             i + 1, device.name,
                             combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
                             boot_type=boot_type,
-                            optional_checks=optional_checks_resolved if optional_checks else None,
+                            optional_checks=optional_checks or None,
                             home_screen_timeout=home_screen_timeout,
                             job_id=job_id,
                             tunnel_service=tunnel_service
@@ -1862,6 +2265,7 @@ class TestExecutionService:
                     elif method == "voice_command":
                         if not voice_text:
                             log_service.log("⚠️  No voice command text provided for this instance, skipping...")
+                            method_index += 1
                             continue
                         log_service.log(f"Voice command for this instance: \"{voice_text}\"")
                         method_result = execute_voice_command_process(
@@ -2012,6 +2416,7 @@ class TestExecutionService:
                     elif method == "capture_current_screen":
                         # Get image name from queue_item
                         image_name = queue_item.get('image_name', f"current_screen_{i+1}")
+                        extract_text = bool(queue_item.get('extract_text', False))
                         log_service.log(f"Capture Current Screen for device: {device.ip}, Image Name: {image_name}")
                         try:
                             import sys, os as os_mod
@@ -2028,11 +2433,19 @@ class TestExecutionService:
                                 screenshots_dir=screenshots_dir,
                                 iteration=i+1,
                                 device_name=device.name,
-                                log_callback=log_service.log
+                                log_callback=log_service.log,
+                                extract_text=extract_text
                             )
                             # Convert screenshot path to comma-separated string for storage
                             screenshot_path = result.get("screenshot_path", "")
                             screenshots_str = screenshot_path if screenshot_path else ""
+                            extracted_text = result.get("extracted_text", "") or ""
+                            if extract_text:
+                                # Make the OCR'd text available to a later execute_command step
+                                # via the {{EXTRACTED_TEXT}} placeholder in its command_text, and
+                                # to later IF conditions via step_extracted_text[method_index].
+                                last_extracted_text = extracted_text
+                                step_extracted_text[method_index] = extracted_text
                             
                             method_result = {
                                 "iteration": i + 1,
@@ -2041,7 +2454,8 @@ class TestExecutionService:
                                 "success": result.get("success", False),
                                 "details": result.get("details", ""),
                                 "image_name": image_name,
-                                "usb_folder": result.get("usb_folder", "")
+                                "usb_folder": result.get("usb_folder", ""),
+                                "extracted_text": extracted_text
                             }
                             log_service.log(f"{'✓' if result.get('success') else '✗'} {result.get('details', '')}")
                             if screenshot_path:
@@ -2049,6 +2463,40 @@ class TestExecutionService:
                         except Exception as e:
                             log_service.log(f"❌ Capture Current Screen failed: {str(e)}")
                             method_result = {"iteration": i + 1, "screenshots": "", "logs": [], "success": False, "details": str(e)}
+                    
+                    elif method == "channel_change_capture":
+                        channel_key = queue_item.get('channel_key', 'DOWN')
+                        log_service.log(f"Channel Change Log Capture for device: {device.ip}, Key: {channel_key}")
+                        try:
+                            import sys, os as os_mod
+                            if os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))) not in sys.path:
+                                sys.path.insert(0, os_mod.path.dirname(os_mod.path.dirname(os_mod.path.abspath(__file__))))
+                            from method_channel_change_capture import execute_channel_change_capture
+                            result = execute_channel_change_capture(
+                                device_ip=device.ip,
+                                port=device.port,
+                                username=device.username,
+                                password=device.password,
+                                iteration=i + 1,
+                                device_name=device.name,
+                                channel_key=channel_key,
+                                log_callback=log_service.log
+                            )
+                            method_result = {
+                                "iteration": i + 1,
+                                "screenshots": [],
+                                "logs": [],
+                                "success": result.get("success", False),
+                                "details": result.get("details", ""),
+                                "channel_key": channel_key,
+                                "ip_aamp_tunetime": result.get("ip_aamp_tunetime", ""),
+                                "channel_number": result.get("channel_number", ""),
+                                "xumo_content_name": result.get("xumo_content_name", "")
+                            }
+                            log_service.log(f"{'✓' if result.get('success') else '✗'} {result.get('details', '')}")
+                        except Exception as e:
+                            log_service.log(f"❌ Channel Change Log Capture failed: {str(e)}")
+                            method_result = {"iteration": i + 1, "screenshots": [], "logs": [], "success": False, "details": str(e)}
                     
                     elif method == "navigate_inputs_xumo":
                         # Navigate to Inputs on XUMO-TV and validate available input tiles
@@ -2333,6 +2781,13 @@ class TestExecutionService:
                             command_text = queue_item.get('command', '').strip()
                         expected_output = queue_item.get('expected_output', '').strip()
                         validation_type = queue_item.get('validation_type', 'contains')
+
+                        # Substitute text OCR'd from a prior "capture_current_screen" step so
+                        # this command can check device logs for whatever was on screen
+                        if command_text and '{{EXTRACTED_TEXT}}' in command_text:
+                            if last_extracted_text:
+                                log_service.log(f"🔎 Using captured screen text in command: {last_extracted_text[:200]}")
+                            command_text = command_text.replace('{{EXTRACTED_TEXT}}', last_extracted_text)
                         
                         if not command_text:
                             log_service.log("❌ No command provided")
@@ -2390,7 +2845,12 @@ class TestExecutionService:
                     
                     elif method == "collect_device_logs":
                         # Collect Device Logs - Gather all logs from /opt/logs/ and store as archive in /media/apps/
+                        collection_reason = pending_log_collection_reason.get('text') if pending_log_collection_reason else None
+                        if collection_reason:
+                            log_service.log(f"\n[LOG COLLECTION] {collection_reason} - collecting device logs")
+                            pending_log_collection_reason['text'] = None
                         log_service.log(f"Collecting device logs...")
+                        log_service.log(f"📋 Collecting device logs for iteration {i + 1}...")
                         try:
                             result = collect_device_logs(
                                 device_ip=device.ip,
@@ -2455,6 +2915,55 @@ class TestExecutionService:
                                 "logs": [],
                                 "success": False,
                                 "details": f"Archived log fetch failed: {str(e)}"
+                            }
+                    
+                    elif method == "fetch_apps_archives":
+                        # Fetch & Clear Apps Archives - Pull *.tar.gz/*.tgz from /media/apps to this
+                        # iteration's Captured_device_log folder, then delete verified copies
+                        remote_source_dir = queue_item.get('remote_source_dir', '/media/apps').strip() or '/media/apps'
+                        local_dest_dir = (queue_item.get('local_dest_dir') or '').strip() or (device_logs_dir if job_id else None)
+                        collection_reason = pending_log_collection_reason.get('text') if pending_log_collection_reason else None
+                        if collection_reason:
+                            log_service.log(f"\n[LOG COLLECTION] {collection_reason} - collecting device logs")
+                            log_service.log(f"📋 Collecting device logs for iteration {i + 1}...")
+                            pending_log_collection_reason['text'] = None
+                        log_service.log(f"Fetching archives from {remote_source_dir}...")
+                        try:
+                            # v2.0 package-style import; if the module is unavailable the
+                            # ImportError is caught below and logged as a failed step.
+                            from methods.method_fetch_apps_archives import fetch_apps_archives
+                            result = fetch_apps_archives(
+                                device_ip=device.ip,
+                                port=device.port,
+                                username=device.username,
+                                password=device.password,
+                                iteration=i + 1,
+                                device_name=device.name,
+                                combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
+                                log_callback=log_service.log,
+                                remote_source_dir=remote_source_dir,
+                                local_dest_dir=local_dest_dir
+                            )
+                            
+                            method_result = {
+                                "iteration": i + 1,
+                                "screenshots": [],
+                                "logs": result.get('logs', []),
+                                "success": result.get('success', False),
+                                "details": result.get('details', ''),
+                                "files": result.get('files', [])
+                            }
+                            
+                            log_service.log(f"{'✓' if result.get('success') else '✗'} {result.get('details', '')}")
+                        
+                        except Exception as e:
+                            log_service.log(f"❌ Archive fetch failed: {str(e)}")
+                            method_result = {
+                                "iteration": i + 1,
+                                "screenshots": [],
+                                "logs": [],
+                                "success": False,
+                                "details": f"Archive fetch failed: {str(e)}"
                             }
                     
                     elif method == "check_logs":
@@ -2570,16 +3079,110 @@ class TestExecutionService:
                             log_service.log("   3. Validation type (contains/exact/not_contains/regex)")
                             log_service.log("📝 Please edit this step in the queue or remove it and re-add with proper values.")
                             method_result = {"iteration": i + 1, "screenshots": [], "logs": [], "success": False, "details": "Missing command or expected output"}
-
-
+                    
+                    elif method == "netflix_playback":
+                        # Netflix App Launch and Playback Test
+                        log_service.log(f"🎬 Executing Netflix playback test...")
+                        try:
+                            # Extract Netflix-specific parameters from queue_item
+                            asset_voice_command = queue_item.get('asset_voice_command', '')
+                            playback_duration = queue_item.get('playback_duration', 300)
+                            execute_playback_controls = queue_item.get('execute_playback_controls', False)
+                            username_cred = queue_item.get('username_cred', '')
+                            password_cred = queue_item.get('password_cred', '')
+                            login_url = queue_item.get('login_url', 'http://netflix.com/tv2')
+                            playback_log_string = queue_item.get('playback_log_string', 'Playerstate.playing')
+                            
+                            log_service.log(f"Device: {device.ip}")
+                            log_service.log(f"Asset Command: {asset_voice_command}")
+                            log_service.log(f"Playback Duration: {playback_duration}s")
+                            log_service.log(f"Trickplay Enabled: {execute_playback_controls}")
+                            
+                            # Execute Netflix playback method
+                            netflix_result = netflix_playback(
+                                device_ip=device.ip,
+                                port=device.port,
+                                username=device.username,
+                                password=device.password,
+                                asset_voice_command=asset_voice_command,
+                                playback_duration=playback_duration,
+                                execute_playback_controls=execute_playback_controls,
+                                username_cred=username_cred,
+                                password_cred=password_cred,
+                                login_url=login_url,
+                                playback_log_string=playback_log_string,
+                                device_name=device.name,
+                                iteration=i + 1,
+                                combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
+                                log_callback=log_service.log,
+                                job_id=job_id
+                            )
+                            
+                            # Format method result
+                            method_result = {
+                                "iteration": i + 1,
+                                "screenshots": netflix_result.get('screenshots', []),
+                                "logs": netflix_result.get('logs', []),
+                                "success": netflix_result.get('success', False),
+                                "details": netflix_result.get('details', ''),
+                                "asset_launched": netflix_result.get('asset_launched', ''),
+                                "playback_duration": netflix_result.get('playback_duration', 0),
+                                "trickplay_executed": netflix_result.get('trickplay_executed', False),
+                                "step_results": netflix_result.get('step_results', {}),
+                                "device": netflix_result.get('device', device.name),
+                                "device_ip": netflix_result.get('device_ip', device.ip),
+                                "execution_status": netflix_result.get('execution_status', 'FAILED')
+                            }
+                            
+                            status = "✓" if netflix_result.get('success') else "✗"
+                            log_service.log(f"{status} Netflix playback test: {netflix_result.get('details', '')}")
+                            
+                        except Exception as e:
+                            log_service.log(f"❌ Netflix playback test failed: {str(e)}")
+                            method_result = {
+                                "iteration": i + 1,
+                                "screenshots": [],
+                                "logs": [],
+                                "success": False,
+                                "details": f"Netflix playback test failed: {str(e)}"
+                            }
 
                     # Track step result for conditional execution
                     if method_result and isinstance(method_result, dict):
                         step_success = method_result.get('success', False)
+
+                        # Dedup: if this step gates a log-collection IF/ELSEIF branch and it
+                        # "failed" only because of output already seen on a prior check (e.g. the
+                        # same crash line still sitting in the log file), don't let it re-trigger
+                        # log collection - only a genuinely NEW line should count as a new failure.
+                        if (not step_success) and method_index in log_gated_step_indices:
+                            raw_output = method_result.get('command_output')
+                            if raw_output is not None:
+                                current_lines = {line.strip() for line in raw_output.splitlines() if line.strip()}
+                                seen_lines = step_output_seen_lines.setdefault(method_index, set())
+                                new_lines = current_lines - seen_lines
+                                if current_lines and not new_lines:
+                                    log_service.log(
+                                        f"ℹ️ Step {method_index + 1}: same output already seen on a prior "
+                                        f"check (no NEW line) - not re-triggering log collection"
+                                    )
+                                    step_success = True
+                                seen_lines.update(current_lines)
+
                         step_results[method_index] = step_success
                         # Store result for passing between methods (e.g., activate_flux → navigate_to_tiles)
                         self.last_method_result = method_result
                         log_service.log(f"📊 Step {method_index + 1} result: {'PASSED' if step_success else 'FAILED'}")
+
+                        if not step_success:
+                            log_service.log(
+                                f"⚠️ Step {method_index + 1} failed: "
+                                f"{method_result.get('details', 'No failure details returned')}"
+                            )
+                            self._check_ssh_connectivity(device, log_service)
+                            log_service.log(
+                                f"➡️ Continuing with Step {method_index + 2} after failed Step {method_index + 1}"
+                            )
 
                         # ATOMIC STEP-WISE RESULT SAVE: Save after every step
                         log_service.log(f"[RESULT-SAVE-1] Saving individual step result for job_id={job_id}, method={method}, iteration={i+1}")
@@ -2606,19 +3209,36 @@ class TestExecutionService:
                             step_index=method_index + 1
                         )
                         log_service.log(f"[RESULT-SAVE-1-DONE] Individual result saved")
+                        
+                        # For Netflix method, also update Job's execution_results with step data
+                        if method and method.lower() == 'netflix_playback' and job_id and method_result.get('step_results'):
+                            try:
+                                from models.job import Job
+                                Job.update_execution_results(job_id, method_result.get('step_results', {}))
+                                log_service.log(f"✅ [NETFLIX] Persisted step_results to Job.execution_results: {list(method_result.get('step_results', {}).keys())}")
+                            except Exception as persist_error:
+                                log_service.log(f"⚠️  [NETFLIX] Failed to persist step_results: {persist_error}")
 
                         # Check if method returned stop_iterations flag (e.g., from reboot_performance /lib/teetz/ validation)
                         if method_result.get('stop_iterations', False):
                             log_service.log(f"\n🛑 CRITICAL: Method {method} signaled to STOP iterations")
                             log_service.log(f"⚠️  Reason: {method_result.get('details', 'Pre-reboot validation failed')}")
-                            log_service.log(f"⚠️  Halting execution - Developer intervention required!")
+                            log_service.log(f"⚠️  Halting execution - Job will be CANCELLED for manual device inspection")
                             # Mark remaining iterations as skipped in job
                             if job_id:
                                 for remaining_iter in range(i + 2, iterations + 1):
                                     Job.update_iteration_result(job_id, remaining_iter, 'skipped')
-                            # Break out of iteration loop
-                            iterations = i + 1  # Set iterations to current iteration to exit loop
+                                # Reassigning `iterations` alone does nothing - `for i in range(...)` already
+                                # captured the original bound, so the loop kept running. Cancel the job and
+                                # release the lock now so execution actually stops and the device is free
+                                # for manual inspection immediately.
+                                Job.cancel_job(job_id, cancelled_by='system_termination_check', reason='stop_on_check_match')
+                                try:
+                                    DeviceLock.unlock_device(device.ip)
+                                except Exception as unlock_error:
+                                    log_service.log(f"⚠️ Failed to release device lock after termination: {unlock_error}")
                             log_service.log(f"⏹️  Stopping at iteration {i + 1} of originally planned {iterations}")
+                            stop_iterations_triggered = True
                     else:
                         # If no explicit result, assume success
                         if method_result is None:
@@ -2658,6 +3278,12 @@ class TestExecutionService:
                             })
                         else:
                             pass
+
+                    if stop_iterations_triggered:
+                        # Termination condition matched on this step - do not run any further steps in this iteration
+                        break
+
+                    method_index += 1
 
                 
                 # After all steps in iteration complete, determine if iteration passed or failed
@@ -2793,12 +3419,22 @@ class TestExecutionService:
                             Job.update_job_progress(job_id, 0, i + 2)
                         except Exception as progress_error:
                             print(f"⚠️ Warning: Could not update job progress for next iteration: {progress_error}")
+
+                if stop_iterations_triggered:
+                    # Job was already cancelled above; exit the iteration loop now instead of
+                    # continuing to the next iteration (range() bounds can't shrink mid-loop).
+                    log_service.log(f"\n⛔ Iteration loop stopped - termination condition matched during iteration {i + 1}")
+                    break
             
             # Mark job as completed or failed based on iteration results
             if job_id:
                 # datetime and timezone are already imported at module level
                 # Reload job to get latest iteration_results
                 job = Job.get_job(job_id)
+                if job and job.status == 'cancelled':
+                    log_service.log(f"\n⛔ Job {job_id} was explicitly cancelled; preserving cancelled status")
+                    return
+
                 final_status = 'completed'
                 
                 # Check if any iteration failed
@@ -2848,7 +3484,7 @@ class TestExecutionService:
                     pass
             
             # Mark job as failed on error
-            if job_id:
+            if job_id and (not Job.get_job(job_id) or Job.get_job(job_id).status != 'cancelled'):
                 # datetime and timezone are already imported at module level
                 Job.update_job_status(
                     job_id, 
@@ -2888,6 +3524,10 @@ class TestExecutionService:
                 # Send email notification about failure
                 self._send_completion_email(job_id, 'failed', log_file_path)
         finally:
+            lock_heartbeat_stop.set()
+            if lock_heartbeat_thread and lock_heartbeat_thread is not threading.current_thread():
+                lock_heartbeat_thread.join(timeout=5)
+
             if hasattr(method_utils.thread_local, 'tunnel_service'):
                 del method_utils.thread_local.tunnel_service
             # FINAL flush before closing logs
@@ -3040,16 +3680,23 @@ class TestExecutionService:
                   rdk_milestones_log: Optional[str] = None, boot_type: Optional[str] = None,
                   device_name: Optional[str] = None, username: Optional[str] = None,
                   sequence_name: Optional[str] = None, captured_screenshots: Optional[dict] = None,
-                  step_index: Optional[int] = None):
+                  step_index: Optional[int] = None, step_results: Optional[dict] = None,
+                  team_name: Optional[str] = None):
         """Add a test result with full metadata preservation"""
         result_device_ip = device_ip or self.last_device_ip or 'N/A'
         result_method = method or self.last_method or 'unknown'
         result_device_name = device_name
         result_username = username
         result_sequence_name = sequence_name
+        result_team_name = team_name
         
-        # If job_id provided and metadata not explicitly passed, try to get from Job
-        if job_id and not (device_name or username or sequence_name):
+        # Log step_results if provided
+        if step_results:
+            print(f"[DEBUG] Received step_results for method '{method}': {list(step_results.keys())}")
+        
+        # If job_id provided, fill in any missing fields from the Job record
+        # (checked independently so an already-set device_name doesn't block username/team_name lookup)
+        if job_id and not (result_device_name and result_username and result_sequence_name and result_team_name):
             try:
                 from models.job import Job
                 job = Job.get_job(job_id)  # ← Use get_job() to look up by ID
@@ -3057,6 +3704,7 @@ class TestExecutionService:
                     result_device_name = result_device_name or job.device_name
                     result_sequence_name = result_sequence_name or job.sequence_name
                     result_username = result_username or job.user_id
+                    result_team_name = result_team_name or getattr(job, 'team_name', None)
             except:
                 pass  # Job not found - continue with what we have
         
@@ -3073,6 +3721,7 @@ class TestExecutionService:
             method=result_method,
             job_id=job_id,
             username=result_username,  # ← NEW: Include username
+            team_name=result_team_name,  # Include team name
             sequence_name=result_sequence_name,  # ← NEW: Include sequence name
             performance_seconds=performance_seconds,
             optional_checks=optional_checks,
