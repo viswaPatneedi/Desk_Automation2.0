@@ -7,6 +7,9 @@ import os
 import logging
 from pathlib import Path
 from typing import Optional, Dict, Any
+from datetime import datetime, timezone
+
+from sqlalchemy import text
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +140,7 @@ def register_database_routes(app):
         """Check database health"""
         try:
             session = get_session()
-            result = session.execute('SELECT 1')
+            session.execute(text('SELECT 1'))
             close_session()
             
             return jsonify({

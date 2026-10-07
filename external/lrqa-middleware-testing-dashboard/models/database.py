@@ -4,7 +4,7 @@ Desk-Automation v2.0 - PostgreSQL + SQLAlchemy
 """
 
 import os
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Float, Text, JSON, ForeignKey, Index
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Float, Text, JSON, ForeignKey, Index, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, scoped_session
 from sqlalchemy.pool import NullPool, QueuePool
@@ -487,7 +487,7 @@ def health_check():
     """Check database connection health"""
     try:
         session = get_session()
-        session.execute('SELECT 1')
+        session.execute(text('SELECT 1'))
         session.close()
         logger.info("✅ Database health check passed")
         return True
