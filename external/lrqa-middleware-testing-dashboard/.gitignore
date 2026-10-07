@@ -74,3 +74,6 @@ Json/*.json
 app.pid
 *.pid
 ExecutionResults/
+
+# Host-local per-deployment inventory overrides (never commit real paths)
+.device-data.env
