@@ -15,6 +15,129 @@ class DeviceLockManager:
     """Enhanced device lock management with refresh and validation"""
     
     @staticmethod
+    def _estimate_leaf_seconds(queue_item):
+        """Estimate execution time (seconds) for a single leaf (non-control-flow) step."""
+        method = queue_item.get('method', '')
+
+        if method == 'deepsleep':
+            sleep_duration_minutes = queue_item.get('sleep_duration_minutes', 60)
+            # deepsleep: 60s pre-check + (duration * 60) + 300s post-processing + 600s PRE_IR_WAIT (10 min wait before IR wakeup)
+            return 60 + (sleep_duration_minutes * 60) + 300 + 600
+
+        if method == 'maintenance_deepsleep_wakeup':
+            sleep_duration_minutes = queue_item.get('sleep_duration_minutes', 13)
+            # Conservative estimate: 180s (pre/setup) + (sleep_mins * 60) + 600s (post/verification/buffer)
+            return 180 + (sleep_duration_minutes * 60) + 600
+
+        if method == 'maintenance_CURL_deepsleep_wakeup':
+            # Conservative estimate of 3000s (50 min) to ensure sufficient lock time
+            return 3000
+
+        if method == 'wait':
+            wait_seconds = queue_item.get('wait_seconds', 0) or 0
+            return wait_seconds + 10  # 10s overhead
+
+        if method == 'reboot' or 'reboot' in method:
+            return 300  # Reboot methods typically take 3-5 minutes
+
+        if method == 'ir_test':
+            return 120  # 1-2 minutes
+
+        if method == 'voice_command':
+            return 90  # 30-60 seconds
+
+        if method == 'screenshot' or 'screen' in method:
+            return 60  # 20-30 seconds
+
+        return 60  # Default: 60 seconds per method
+
+    @staticmethod
+    def _estimate_queue_span_seconds(execution_queue, start, end):
+        """
+        Estimate total seconds for execution_queue[start:end] (an absolute-index sub-range
+        of the flat marker-based queue - see services/test_execution_service.py's control-
+        flow engine), correctly handling nested LOOP and IF/ELSEIF/ELSE control-flow markers:
+        - LOOP: multiplies its body's cost by `loop_iterations`, or - for a day-based loop -
+          uses `loop_days * 86400` directly (the loop re-runs its body for that whole
+          duration regardless of how fast the body itself completes).
+        - IF/ELSEIF/ELSE: takes the MAX cost across all branches, since we can't know at
+          lock-acquisition time which branch will actually run - this is a deliberately
+          conservative (longer) estimate so the lock doesn't expire mid-job.
+        """
+        total = 0.0
+        i = start
+        while i < end:
+            item = execution_queue[i]
+            method = item.get('method', '')
+
+            if method == 'loop_start':
+                depth = 1
+                j = i + 1
+                while j < end and depth > 0:
+                    m = execution_queue[j].get('method')
+                    if m == 'loop_start':
+                        depth += 1
+                    elif m == 'loop_end':
+                        depth -= 1
+                        if depth == 0:
+                            break
+                    j += 1
+                loop_end_idx = j
+                body_seconds = DeviceLockManager._estimate_queue_span_seconds(execution_queue, i + 1, loop_end_idx)
+
+                if item.get('loop_mode') == 'days':
+                    try:
+                        loop_days = float(item.get('loop_days') or 0)
+                    except (TypeError, ValueError):
+                        loop_days = 0
+                    total += loop_days * 86400
+                else:
+                    try:
+                        loop_iterations = int(item.get('loop_iterations') or 1)
+                    except (TypeError, ValueError):
+                        loop_iterations = 1
+                    total += body_seconds * max(1, loop_iterations)
+
+                i = loop_end_idx + 1
+                continue
+
+            if method == 'if_start':
+                depth = 1
+                j = i + 1
+                branch_starts = [i]
+                endif_idx = end
+                while j < end:
+                    m = execution_queue[j].get('method')
+                    if m == 'if_start':
+                        depth += 1
+                    elif m == 'endif_block':
+                        depth -= 1
+                        if depth == 0:
+                            endif_idx = j
+                            break
+                    elif depth == 1 and m in ('elseif_start', 'else_start'):
+                        branch_starts.append(j)
+                    j += 1
+                branch_starts.append(endif_idx)
+                branch_costs = [
+                    DeviceLockManager._estimate_queue_span_seconds(execution_queue, branch_starts[bi] + 1, branch_starts[bi + 1])
+                    for bi in range(len(branch_starts) - 1)
+                ]
+                total += max(branch_costs) if branch_costs else 0
+                i = endif_idx + 1
+                continue
+
+            if method in ('loop_end', 'elseif_start', 'else_start', 'endif_block', 'exit_loop'):
+                # Only reached for malformed/unbalanced markers - skip safely
+                i += 1
+                continue
+
+            total += DeviceLockManager._estimate_leaf_seconds(item)
+            i += 1
+
+        return total
+
+    @staticmethod
     def calculate_job_duration(execution_queue, iterations):
         """
         Calculate realistic lock duration based on job parameters.
@@ -26,65 +149,17 @@ class DeviceLockManager:
         Returns:
             int: Estimated duration in seconds with 50% safety buffer
         """
-        total_seconds = 0
-        
-        for queue_item in execution_queue:
-            method = queue_item.get('method', '')
-            
-            if method == 'deepsleep':
-                sleep_duration_minutes = queue_item.get('sleep_duration_minutes', 60)
-                # deepsleep: 60s pre-check + (duration * 60) + 300s post-processing + 600s PRE_IR_WAIT (10 min wait before IR wakeup)
-                # Total: accounts for full deepsleep+wakeup cycle including pre-sleep IR scheduling
-                total_seconds += 60 + (sleep_duration_minutes * 60) + 300 + 600
-            
-            elif method == 'maintenance_deepsleep_wakeup':
-                # maintenance_deepsleep_wakeup: Long-running method with built-in sleep
-                # Includes: maintenance start, reboot, 13-minute deepsleep, wakeup, verification
-                sleep_duration_minutes = queue_item.get('sleep_duration_minutes', 13)
-                # Time breakdown: ~2-3 min setup + device reboot (2 min) + sleep + ~5-6 min wakeup & verification
-                # INCREASED from (60 + sleep*60 + 360) to (180 + sleep*60 + 600) for better margin
-                # Conservative estimate: 180s (pre/setup) + (sleep_mins * 60) + 600s (post/verification/buffer)
-                total_seconds += 180 + (sleep_duration_minutes * 60) + 600
-            
-            elif method == 'maintenance_CURL_deepsleep_wakeup':
-                # maintenance_CURL_deepsleep_wakeup: Optimized maintenance with CURL-based deepsleep injection
-                # ACTUAL OBSERVED: This method takes approximately 43-45 minutes per iteration (2616-2700 seconds)
-                # Using conservative estimate of 3000 seconds (50 minutes) to ensure sufficient lock time
-                # Time breakdown: ~2-3 min setup + 38-40 min maintenance polling + 2-3 min deepsleep + 1-2 min wakeup/verification
-                # Note: Uses slightly higher estimate than raw average to accommodate device variations
-                total_seconds += 3000
-            
-            elif method == 'wait':
-                wait_seconds = queue_item.get('wait_seconds', 0)
-                total_seconds += wait_seconds + 10  # 10s overhead
-            
-            elif method == 'reboot' or 'reboot' in method:
-                # Reboot methods typically take 3-5 minutes
-                total_seconds += 300
-            
-            elif method == 'ir_test':
-                # IR test: 1-2 minutes
-                total_seconds += 120
-            
-            elif method == 'voice_command':
-                # Voice command: 30-60 seconds
-                total_seconds += 90
-            
-            elif method == 'screenshot' or 'screen' in method:
-                # Screenshot operations: 20-30 seconds
-                total_seconds += 60
-            
-            else:
-                # Default: 60 seconds per method
-                total_seconds += 60
+        total_seconds = DeviceLockManager._estimate_queue_span_seconds(execution_queue, 0, len(execution_queue))
         
         # Multiply by iterations and add 75% buffer for safety (increased from 50% for long-running methods)
         # 75% buffer accommodates lock refresh overhead and timing variations
         total_with_buffer = int((total_seconds * iterations) * 1.75)
         
-        # Minimum duration: 10 minutes; Maximum: 72 hours (supports 50-iteration multi-device runs)
+        # Minimum duration: 10 minutes; Maximum: 30 days (a day-based LOOP step can
+        # legitimately need to hold the lock for several days - previously this was
+        # capped at 72h, silently truncating the lock for any multi-day loop)
         min_duration = 600
-        max_duration = 259200  # 72 hours = 259200 seconds
+        max_duration = 30 * 86400  # 30 days
         
         final_duration = max(min_duration, min(max_duration, total_with_buffer))
         

@@ -27,7 +27,19 @@ METHOD_EXECUTION_TIMES = {
     'xumo_activation': 180,  # 3 minutes for XUMO activation (fetch code + enter + validation)
     'capture_base_image': 25,  # 25 seconds to capture and save base image with full verification (fast success)
     'validate_results': 20,  # 20 seconds for command execution and output validation
+    'channel_change_capture': 30,  # 30 seconds: send key + wait + poll for tune/channel/content log lines
     'wait': 0,  # Wait time is dynamic based on user input
+    # LOOP / IF / ELSEIF / ELSE control-flow marker steps - these never run a real action, so
+    # they cost 0s themselves. The real cost comes from their child steps, which are already
+    # counted individually as they appear (once) in the flat execution_queue; ETA does not
+    # currently multiply children by the configured loop iteration/day count.
+    'loop_start': 0,
+    'loop_end': 0,
+    'exit_loop': 0,
+    'if_start': 0,
+    'elseif_start': 0,
+    'else_start': 0,
+    'endif_block': 0,
 }
 
 # Explicit waits for maintenance and IR key sending
@@ -41,6 +53,183 @@ SETUP_TEARDOWN_TIME = 15  # 15 seconds for setup and teardown
 # Wait times between operations
 WAIT_AFTER_REBOOT = 0  # Already included in reboot method time
 WAIT_BETWEEN_COMMANDS = 3  # 3 seconds between IR/voice commands
+
+
+def _estimate_leaf_time(queue_item, has_deepsleep):
+    """Estimate execution time (seconds) for a single leaf (non-control-flow) step."""
+    method = queue_item.get('method', '')
+    method_time = METHOD_EXECUTION_TIMES.get(method, 20)
+
+    # Adjust for IR keys count (handle both ir_keys and irKeys for backward compatibility)
+    ir_keys = queue_item.get('ir_keys') or queue_item.get('irKeys') or []
+    if method == 'ir_test' and ir_keys:
+        ir_keys_count = len(ir_keys)
+        method_time = method_time * ir_keys_count + (WAIT_BETWEEN_COMMANDS * ir_keys_count)
+
+    # Adjust for remote keys (count comma-separated keys)
+    remote_keys = queue_item.get('remote_keys') or queue_item.get('remoteKeys') or ''
+    if method == 'send_remote_keys' and remote_keys:
+        keys_count = len(remote_keys.split(','))
+        method_time = 5 * keys_count + (WAIT_BETWEEN_COMMANDS * keys_count)  # 5s per key
+
+    # Dynamic wait time
+    wait_seconds = queue_item.get('wait_seconds') or queue_item.get('waitSeconds')
+    if method == 'wait' and wait_seconds:
+        method_time = int(wait_seconds)
+
+    # System command duration (TOP sampling or long-running commands)
+    if method == 'system_command':
+        duration_seconds = queue_item.get('duration_seconds') or queue_item.get('durationSeconds') or 0
+        try:
+            duration_seconds = int(duration_seconds)
+        except Exception:
+            duration_seconds = 0
+        if duration_seconds > 0:
+            method_time = duration_seconds
+
+    # Handle maintenance_deepsleep_wakeup with parameter-based ETA calculation
+    if method == 'maintenance_deepsleep_wakeup':
+        params = queue_item.get('params') or {}
+        execute_deepsleep_wakeup = params.get('execute_deepsleep_wakeup') if params else queue_item.get('execute_deepsleep_wakeup')
+        if execute_deepsleep_wakeup is None:
+            execute_deepsleep_wakeup = True  # Default is True
+
+        sleep_duration_minutes = params.get('sleep_duration_minutes') if params else queue_item.get('sleep_duration_minutes')
+        if sleep_duration_minutes is None:
+            sleep_duration_minutes = 13  # Default 13 minutes for maintenance_deepsleep_wakeup
+
+        try:
+            sleep_duration_minutes = int(sleep_duration_minutes)
+        except (ValueError, TypeError):
+            sleep_duration_minutes = 13
+
+        if not execute_deepsleep_wakeup:
+            method_time = 3000  # Maintenance only (steps 1-7): ~50 minutes
+        else:
+            maintenance_work = 180  # 3 min for setup
+            reboot_time = 120    # 2 min for reboot
+            sleep_time = sleep_duration_minutes * 60  # User-provided sleep duration in seconds
+            wakeup_time = 180    # 3 min for wakeup detection
+            buffer = 300         # 5 min safety buffer
+            method_time = maintenance_work + reboot_time + sleep_time + wakeup_time + buffer
+
+    # Handle maintenance_CURL_deepsleep_wakeup with parameter-based ETA calculation
+    if method == 'maintenance_CURL_deepsleep_wakeup':
+        params = queue_item.get('params') or {}
+        execute_deepsleep_wakeup = params.get('execute_deepsleep_wakeup') if params else queue_item.get('execute_deepsleep_wakeup')
+        if execute_deepsleep_wakeup is None:
+            execute_deepsleep_wakeup = True  # Default is True
+
+        sleep_duration_minutes = params.get('sleep_duration_minutes') if params else queue_item.get('sleep_duration_minutes')
+        if sleep_duration_minutes is None:
+            sleep_duration_minutes = 1  # Default 1 minute (much faster than standard 13 min)
+
+        try:
+            sleep_duration_minutes = int(sleep_duration_minutes)
+        except (ValueError, TypeError):
+            sleep_duration_minutes = 1
+
+        if not execute_deepsleep_wakeup:
+            method_time = 3000  # Maintenance only (steps 1-7): ~50 minutes
+        else:
+            maintenance_work = 180  # 3 min for setup
+            reboot_time = 120    # 2 min for reboot
+            curl_wait = sleep_duration_minutes * 60 + 60  # Curl wait + padding
+            verification_time = 180  # 3 min for DeepSleep verification via SSH
+            wakeup_time = 60     # 1 min for wakeup
+            buffer = 120         # 2 min safety buffer
+            method_time = maintenance_work + reboot_time + curl_wait + verification_time + wakeup_time + buffer
+
+    # Add maintenance wait only if deepsleep is in the execution queue
+    if method == 'reboot' and has_deepsleep:
+        method_time += MAINTENANCE_WAIT_AFTER_REBOOT
+
+    # Add pre-IR wait for deepsleep
+    if method == 'deepsleep':
+        method_time += PRE_IR_WAIT_DEEPSLEEP
+
+    return method_time
+
+
+def _estimate_span_time(execution_queue, start, end, has_deepsleep):
+    """
+    Estimate total seconds for execution_queue[start:end] (an absolute-index sub-range of
+    the flat marker-based queue), correctly handling nested LOOP and IF/ELSEIF/ELSE
+    control-flow markers - see utils/device_lock_manager.py's
+    DeviceLockManager._estimate_queue_span_seconds for the identical algorithm (kept in
+    sync manually since these two modules use different per-method time tables).
+    """
+    total = 0
+    i = start
+    while i < end:
+        item = execution_queue[i]
+        method = item.get('method', '')
+
+        if method == 'loop_start':
+            depth = 1
+            j = i + 1
+            while j < end and depth > 0:
+                m = execution_queue[j].get('method')
+                if m == 'loop_start':
+                    depth += 1
+                elif m == 'loop_end':
+                    depth -= 1
+                    if depth == 0:
+                        break
+                j += 1
+            loop_end_idx = j
+            body_seconds = _estimate_span_time(execution_queue, i + 1, loop_end_idx, has_deepsleep)
+
+            if item.get('loop_mode') == 'days':
+                try:
+                    loop_days = float(item.get('loop_days') or 0)
+                except (TypeError, ValueError):
+                    loop_days = 0
+                total += loop_days * 86400
+            else:
+                try:
+                    loop_iterations = int(item.get('loop_iterations') or 1)
+                except (TypeError, ValueError):
+                    loop_iterations = 1
+                total += body_seconds * max(1, loop_iterations)
+
+            i = loop_end_idx + 1
+            continue
+
+        if method == 'if_start':
+            depth = 1
+            j = i + 1
+            branch_starts = [i]
+            endif_idx = end
+            while j < end:
+                m = execution_queue[j].get('method')
+                if m == 'if_start':
+                    depth += 1
+                elif m == 'endif_block':
+                    depth -= 1
+                    if depth == 0:
+                        endif_idx = j
+                        break
+                elif depth == 1 and m in ('elseif_start', 'else_start'):
+                    branch_starts.append(j)
+                j += 1
+            branch_starts.append(endif_idx)
+            branch_costs = [
+                _estimate_span_time(execution_queue, branch_starts[bi] + 1, branch_starts[bi + 1], has_deepsleep)
+                for bi in range(len(branch_starts) - 1)
+            ]
+            total += max(branch_costs) if branch_costs else 0
+            i = endif_idx + 1
+            continue
+
+        if method in ('loop_end', 'elseif_start', 'else_start', 'endif_block', 'exit_loop'):
+            i += 1
+            continue
+
+        total += _estimate_leaf_time(item, has_deepsleep)
+        i += 1
+
+    return total
 
 
 def calculate_eta(execution_queue, iterations=1):
@@ -63,119 +252,7 @@ def calculate_eta(execution_queue, iterations=1):
     has_deepsleep = any(item.get('method') == 'deepsleep' for item in execution_queue)
 
     for i in range(iterations):
-        for queue_item in execution_queue:
-            method = queue_item.get('method', '')
-            method_time = METHOD_EXECUTION_TIMES.get(method, 20)
-
-            # Adjust for IR keys count (handle both ir_keys and irKeys for backward compatibility)
-            ir_keys = queue_item.get('ir_keys') or queue_item.get('irKeys') or []
-            if method == 'ir_test' and ir_keys:
-                ir_keys_count = len(ir_keys)
-                method_time = method_time * ir_keys_count + (WAIT_BETWEEN_COMMANDS * ir_keys_count)
-            
-            # Adjust for remote keys (count comma-separated keys)
-            remote_keys = queue_item.get('remote_keys') or queue_item.get('remoteKeys') or ''
-            if method == 'send_remote_keys' and remote_keys:
-                keys_count = len(remote_keys.split(','))
-                method_time = 5 * keys_count + (WAIT_BETWEEN_COMMANDS * keys_count)  # 5s per key
-            
-            # Dynamic wait time
-            wait_seconds = queue_item.get('wait_seconds') or queue_item.get('waitSeconds')
-            if method == 'wait' and wait_seconds:
-                method_time = int(wait_seconds)
-
-            # System command duration (TOP sampling or long-running commands)
-            if method == 'system_command':
-                duration_seconds = queue_item.get('duration_seconds') or queue_item.get('durationSeconds') or 0
-                try:
-                    duration_seconds = int(duration_seconds)
-                except Exception:
-                    duration_seconds = 0
-                if duration_seconds > 0:
-                    method_time = duration_seconds
-
-            # Handle maintenance_deepsleep_wakeup with parameter-based ETA calculation
-            if method == 'maintenance_deepsleep_wakeup':
-                # Extract parameters from queue_item
-                params = queue_item.get('params') or {}
-                execute_deepsleep_wakeup = params.get('execute_deepsleep_wakeup') if params else queue_item.get('execute_deepsleep_wakeup')
-                if execute_deepsleep_wakeup is None:
-                    execute_deepsleep_wakeup = True  # Default is True
-                
-                sleep_duration_minutes = params.get('sleep_duration_minutes') if params else queue_item.get('sleep_duration_minutes')
-                if sleep_duration_minutes is None:
-                    sleep_duration_minutes = 13  # Default 13 minutes for maintenance_deepsleep_wakeup
-                
-                try:
-                    sleep_duration_minutes = int(sleep_duration_minutes)
-                except (ValueError, TypeError):
-                    sleep_duration_minutes = 13
-                
-                # Calculate ETA based on configuration
-                if not execute_deepsleep_wakeup:
-                    # Maintenance only (steps 1-7): ~50 minutes
-                    method_time = 3000
-                else:
-                    # Full workflow (steps 1-12):
-                    # Calculate based on ACTUAL observed execution times from job runs:
-                    # - Maintenance setup & checks: 180s (3 min)
-                    # - Device reboot after maintenance: 120s (2 min)
-                    # - Sleep duration: user-provided (from parameter)
-                    # - Wakeup detection & verification: 180s (3 min)
-                    # - Safety buffer: 300s (5 min)
-                    maintenance_work = 180  # 3 min for setup
-                    reboot_time = 120    # 2 min for reboot
-                    sleep_time = sleep_duration_minutes * 60  # User-provided sleep duration in seconds
-                    wakeup_time = 180    # 3 min for wakeup detection
-                    buffer = 300         # 5 min safety buffer
-                    method_time = maintenance_work + reboot_time + sleep_time + wakeup_time + buffer
-            
-            # Handle maintenance_CURL_deepsleep_wakeup with parameter-based ETA calculation
-            if method == 'maintenance_CURL_deepsleep_wakeup':
-                # Extract parameters from queue_item
-                params = queue_item.get('params') or {}
-                execute_deepsleep_wakeup = params.get('execute_deepsleep_wakeup') if params else queue_item.get('execute_deepsleep_wakeup')
-                if execute_deepsleep_wakeup is None:
-                    execute_deepsleep_wakeup = True  # Default is True
-                
-                sleep_duration_minutes = params.get('sleep_duration_minutes') if params else queue_item.get('sleep_duration_minutes')
-                if sleep_duration_minutes is None:
-                    sleep_duration_minutes = 1  # Default 1 minute for maintenance_CURL_deepsleep_wakeup (much faster than standard 13 min)
-                
-                try:
-                    sleep_duration_minutes = int(sleep_duration_minutes)
-                except (ValueError, TypeError):
-                    sleep_duration_minutes = 1
-                
-                # Calculate ETA based on configuration
-                if not execute_deepsleep_wakeup:
-                    # Maintenance only (steps 1-7): ~50 minutes
-                    method_time = 3000
-                else:
-                    # Full workflow (steps 1-12): OPTIMIZED with immediate curl deepsleep_command
-                    # - Maintenance setup & checks: 180s (3 min)
-                    # - Device reboot after maintenance: 120s (2 min)
-                    # - Curl deepsleep_command execution & initial wait: user-provided + 60s (1-2 min nominal)
-                    # - SSH polling for DeepSleep verification: 180s (3 min max)
-                    # - IR wakeup & measurement: 60s (1 min)
-                    # - Safety buffer: 120s (2 min)
-                    maintenance_work = 180  # 3 min for setup
-                    reboot_time = 120    # 2 min for reboot
-                    curl_wait = sleep_duration_minutes * 60 + 60  # Curl wait + padding
-                    verification_time = 180  # 3 min for DeepSleep verification via SSH
-                    wakeup_time = 60     # 1 min for wakeup
-                    buffer = 120         # 2 min safety buffer
-                    method_time = maintenance_work + reboot_time + curl_wait + verification_time + wakeup_time + buffer
-            
-            # Add maintenance wait only if deepsleep is in the execution queue
-            if method == 'reboot' and has_deepsleep:
-                method_time += MAINTENANCE_WAIT_AFTER_REBOOT
-            
-            # Add pre-IR wait for deepsleep
-            if method == 'deepsleep':
-                method_time += PRE_IR_WAIT_DEEPSLEEP
-
-            total_time += method_time
+        total_time += _estimate_span_time(execution_queue, 0, len(execution_queue), has_deepsleep)
         total_time += OVERHEAD_PER_ITERATION
 
     return int(total_time)

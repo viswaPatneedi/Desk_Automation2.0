@@ -335,11 +335,11 @@ def check_for_home_log_continuously(ssh, timeout_seconds, log_message_func, base
                 # Join all patterns with | (pipe) for single grep command
                 combined_pattern = '|'.join(home_patterns)
                 # ✨ FIXED: Use tail -1 to get LATEST matching line, not first match
-                grep_cmd = f'grep -E "{combined_pattern}" /opt/logs/sky-messages.log | tail -1'
+                grep_cmd = f'grep -i -E "{combined_pattern}" /opt/logs/sky-messages.log | tail -1'
             else:
                 # Fallback pattern if config is empty
                 log_message_func("⚠ No HOME patterns found in config - using fallback pattern")
-                grep_cmd = 'grep -E "QMS.*HOME.*complete|App focus.*monarch_ui" /opt/logs/sky-messages.log | tail -1'
+                grep_cmd = 'grep -i -E "QMS.*HOME.*complete|App focus.*monarch_ui" /opt/logs/sky-messages.log | tail -1'
             
             log_message_func(f"  📋 DEBUG: Executing grep command...")
             log_message_func(f"     Command length: {len(grep_cmd)} chars")
@@ -429,7 +429,7 @@ def check_for_home_log_continuously(ssh, timeout_seconds, log_message_func, base
                     try:
                         # ✨ Use tail -1 to get LATEST match, not first match
                         # Added: | tail -1 to fetch the most recent log line
-                        simple_grep = f"grep -E '{pattern}' /opt/logs/sky-messages.log | tail -1"
+                        simple_grep = f"grep -i '{pattern}' /opt/logs/sky-messages.log | tail -1"
                         log_message_func(f"    [FALLBACK {idx}] Trying: {simple_grep[:100]}")
                         
                         stdin, stdout, stderr = ssh.exec_command(simple_grep, timeout=10)

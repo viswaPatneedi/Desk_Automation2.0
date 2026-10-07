@@ -5856,6 +5856,263 @@ def get_job_logs(job_id):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+# Device-log archive discovery supports both folder conventions:
+#   legacy/standalone: <session_folder>/ITR_<n>/Captured_device_log
+#   v2.0 service:      <session_folder>/ITERATION_<total>/ITR_<n>/captured_device_logs
+_DEVICE_LOG_DIR_NAMES = ('Captured_device_log', 'captured_device_logs')
+
+
+def _iteration_scan_roots(session_folder):
+    """Return candidate parent folders that may contain per-iteration ITR_<n> dirs."""
+    roots = [session_folder]
+    try:
+        for entry in sorted(os.listdir(session_folder)):
+            full_path = os.path.join(session_folder, entry)
+            if entry.startswith('ITERATION_') and os.path.isdir(full_path):
+                roots.append(full_path)
+    except OSError:
+        pass
+    return roots
+
+
+def _find_iteration_device_logs_dir(session_folder, iteration):
+    """Locate the captured device-log folder for one iteration across both layouts."""
+    itr_name = f'ITR_{iteration}'
+    for root in _iteration_scan_roots(session_folder):
+        for dir_name in _DEVICE_LOG_DIR_NAMES:
+            device_logs_dir = os.path.join(root, itr_name, dir_name)
+            if os.path.isdir(device_logs_dir):
+                return device_logs_dir
+    return None
+
+
+def _build_synthetic_job_from_results(job_id):
+    """Reconstruct a Job object from test_results_history.json when the job record
+    was pruned from jobs.json but its results are still on record (e.g. completed
+    jobs older than the in-memory retention window)."""
+    try:
+        results = [r.to_dict() for r in TestResult.load_all()]
+        results = [r for r in results if r.get('job_id') == job_id]
+    except Exception:
+        results = []
+
+    if not results:
+        return None
+
+    results.sort(key=lambda x: x.get('timestamp') or '')
+    first, last = results[0], results[-1]
+
+    methods = []
+    for r in results:
+        method = r.get('method')
+        if method and method not in methods:
+            methods.append(method)
+
+    iterations = max((r.get('iteration') or 1) for r in results)
+    has_failure = any(str(r.get('status', '')).upper() == 'FAILED' for r in results)
+
+    return Job(
+        job_id=job_id,
+        user_id=first.get('username') or first.get('user_id') or 'Unknown',
+        device_ip=first.get('device_ip', 'N/A'),
+        device_name=first.get('device_name') or first.get('device_ip') or 'Unknown Device',
+        methods=methods,
+        iterations=iterations,
+        status='failed' if has_failure else 'completed',
+        start_time=first.get('timestamp'),
+        end_time=last.get('timestamp'),
+        sequence_name=first.get('sequence_name'),
+        current_step=len(methods),
+        current_iteration=iterations,
+        team_name=first.get('team_name'),
+        created_at=first.get('timestamp')
+    )
+
+
+def _resolve_job_session_folder(job):
+    """Return a persisted session folder or recover it from an existing job log."""
+    session_folder = getattr(job, 'session_folder', None)
+    if session_folder and os.path.isdir(session_folder):
+        return session_folder
+
+    log_file_path = job.log_file_path or os.path.join('logs', 'jobs', job.job_id, 'execution.log')
+    if not os.path.isfile(log_file_path):
+        return session_folder
+
+    marker = 'Local destination: '
+    try:
+        with open(log_file_path, 'r', encoding='utf-8', errors='replace') as log_file:
+            for line in log_file:
+                if marker not in line:
+                    continue
+                device_logs_dir = line.partition(marker)[2].strip()
+                if os.path.basename(device_logs_dir.rstrip('/')) not in _DEVICE_LOG_DIR_NAMES:
+                    continue
+                # Legacy: <session>/ITR_<n>/<dir>; v2.0: <session>/ITERATION_<total>/ITR_<n>/<dir>
+                candidate = os.path.dirname(os.path.dirname(device_logs_dir))
+                if os.path.basename(candidate).startswith('ITERATION_'):
+                    candidate = os.path.dirname(candidate)
+                if os.path.isdir(candidate):
+                    session_folder = candidate
+                    break
+    except OSError:
+        pass
+
+    return session_folder
+
+
+def _get_device_log_collection_reasons(job):
+    """Map iteration numbers to the reason recorded when device logs were collected."""
+    log_file_path = job.log_file_path or os.path.join('logs', 'jobs', job.job_id, 'execution.log')
+    if not os.path.isfile(log_file_path):
+        return {}
+
+    reasons = {}
+    pending_reason = None
+    reason_prefix = '[LOG COLLECTION] '
+    reason_suffix = ' - collecting device logs'
+    iteration_marker = 'Collecting device logs for iteration '
+    try:
+        with open(log_file_path, 'r', encoding='utf-8', errors='replace') as log_file:
+            for line in log_file:
+                if reason_prefix in line and reason_suffix in line:
+                    reason_text = line.partition(reason_prefix)[2].partition(reason_suffix)[0].strip()
+                    pending_reason = reason_text or None
+                    continue
+                if pending_reason and iteration_marker in line:
+                    iteration_text = line.partition(iteration_marker)[2].partition('.')[0].strip()
+                    try:
+                        reasons[int(iteration_text)] = pending_reason
+                    except ValueError:
+                        pass
+                    pending_reason = None
+    except OSError:
+        pass
+
+    return reasons
+
+
+def _get_device_power_states_after_boot(job):
+    """Map iteration numbers to the QueryPowerState result captured right after boot,
+    parsed from the '[POWER STATE AFTER BOOT] Iteration <n>: <STATE>' marker logged by
+    method_soft_hard_boot.py."""
+    log_file_path = job.log_file_path or os.path.join('logs', 'jobs', job.job_id, 'execution.log')
+    if not os.path.isfile(log_file_path):
+        return {}
+
+    power_states = {}
+    marker = '[POWER STATE AFTER BOOT] Iteration '
+    try:
+        with open(log_file_path, 'r', encoding='utf-8', errors='replace') as log_file:
+            for line in log_file:
+                if marker not in line:
+                    continue
+                remainder = line.partition(marker)[2].strip()
+                iteration_text, _, state_text = remainder.partition(':')
+                try:
+                    power_states[int(iteration_text.strip())] = state_text.strip() or 'UNKNOWN'
+                except ValueError:
+                    pass
+    except OSError:
+        pass
+
+    return power_states
+
+
+@app.route('/api/jobs/<job_id>/device-log-archives', methods=['GET'])
+@login_required
+def list_device_log_archives(job_id):
+    """List which iterations of a job have captured device log archives (.tar.gz/.tgz)
+    copied into their ITR_<n> device-log folder."""
+    try:
+        job = Job.get_job(job_id) or _build_synthetic_job_from_results(job_id)
+        if not job:
+            return jsonify({'success': False, 'error': 'Job not found'}), 404
+
+        session_folder = _resolve_job_session_folder(job)
+        collection_reasons = _get_device_log_collection_reasons(job)
+        power_states_after_boot = _get_device_power_states_after_boot(job)
+        total_iterations = job.iterations or 0
+        iterations_with_logs = []
+        seen_iterations = set()
+
+        if session_folder and os.path.isdir(session_folder):
+            for root in _iteration_scan_roots(session_folder):
+                for entry in sorted(os.listdir(root)):
+                    if not entry.startswith('ITR_'):
+                        continue
+                    try:
+                        iteration_num = int(entry.replace('ITR_', ''))
+                    except ValueError:
+                        continue
+                    if iteration_num in seen_iterations:
+                        continue
+
+                    itr_dir = os.path.join(root, entry)
+                    if not os.path.isdir(itr_dir):
+                        continue
+                    device_logs_dir = None
+                    for dir_name in _DEVICE_LOG_DIR_NAMES:
+                        candidate_dir = os.path.join(itr_dir, dir_name)
+                        if os.path.isdir(candidate_dir):
+                            device_logs_dir = candidate_dir
+                            break
+                    if not device_logs_dir:
+                        continue
+
+                    archives = [
+                        fname for fname in sorted(os.listdir(device_logs_dir))
+                        if fname.endswith('.tar.gz') or fname.endswith('.tgz')
+                    ]
+                    if archives:
+                        seen_iterations.add(iteration_num)
+                        iterations_with_logs.append({
+                            'iteration': iteration_num,
+                            'archives': archives,
+                            'reason': collection_reasons.get(iteration_num, 'Reason not recorded'),
+                            'power_state_after_boot': power_states_after_boot.get(iteration_num, 'N/A'),
+                            'path': device_logs_dir
+                        })
+
+            iterations_with_logs.sort(key=lambda x: x['iteration'])
+
+        return jsonify({
+            'success': True,
+            'total_iterations': total_iterations,
+            'iterations_with_logs': iterations_with_logs,
+            'session_folder': session_folder
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/jobs/<job_id>/device-log-archives/<int:iteration>/<path:filename>', methods=['GET'])
+@login_required
+def download_device_log_archive(job_id, iteration, filename):
+    """Download one captured device log archive from a job iteration."""
+    job = Job.get_job(job_id) or _build_synthetic_job_from_results(job_id)
+    if not job:
+        return jsonify({'success': False, 'error': 'Job not found'}), 404
+    if iteration < 1 or iteration > (job.iterations or 0):
+        return jsonify({'success': False, 'error': 'Invalid iteration'}), 400
+    if os.path.basename(filename) != filename or not filename.endswith(('.tar.gz', '.tgz')):
+        return jsonify({'success': False, 'error': 'Invalid archive filename'}), 400
+
+    session_folder = _resolve_job_session_folder(job)
+    if not session_folder:
+        return jsonify({'success': False, 'error': 'Session folder not found'}), 404
+
+    device_logs_dir = _find_iteration_device_logs_dir(session_folder, iteration)
+    if not device_logs_dir:
+        return jsonify({'success': False, 'error': 'Archive not found'}), 404
+    archive_path = os.path.join(device_logs_dir, filename)
+    if not os.path.isfile(archive_path):
+        return jsonify({'success': False, 'error': 'Archive not found'}), 404
+
+    return send_from_directory(device_logs_dir, filename, as_attachment=True)
+
+
 @app.route('/api/jobs/<job_id>/download', methods=['GET'])
 @login_required
 def download_job_log(job_id):

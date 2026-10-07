@@ -1717,6 +1717,31 @@ def netflix_playback(
             step_results['step_6_asset_validation'] = 'no_screenshot'
         
         # ======================================================================
+        # STEP 6.5: PLAY FROM START - NAVIGATE THE RESUME PROMPT
+        # ======================================================================
+        # Netflix often lands on a "Resume / Play from Start" row after the asset
+        # launches - UP, UP moves off "Resume" onto "Play from Start", ENTER selects it.
+        log("\n" + "="*80)
+        log("[STEP 6.5] PLAY FROM START - UP, UP, ENTER")
+        log("="*80)
+        log("⏳ Waiting 20 seconds for asset to start playing...")
+        time.sleep(20)
+        try:
+            log("→ Sending UP keypress...")
+            ssh.exec_command("keySimulator -kup", timeout=10)[1].read()
+            time.sleep(1)
+            log("→ Sending UP keypress...")
+            ssh.exec_command("keySimulator -kup", timeout=10)[1].read()
+            time.sleep(1)
+            log("→ Sending ENTER keypress to play from start...")
+            ssh.exec_command("keySimulator -kenter", timeout=10)[1].read()
+            log("✓ Play-from-start keypress sequence sent")
+            step_results['step_6_5_play_from_start'] = 'sent'
+        except Exception as e:
+            log(f"⚠ Error sending play-from-start keypress sequence: {e}")
+            step_results['step_6_5_play_from_start'] = f'error: {e}'
+        
+        # ======================================================================
         # STEP 7: PLAYBACK INITIATION - CHECKING PLAYBACK STATE FROM LOGS
         # ======================================================================
         log("\n" + "="*80)

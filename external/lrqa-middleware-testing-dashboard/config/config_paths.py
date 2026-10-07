@@ -12,14 +12,40 @@ DATA_DIR = os.path.join(BASE_DIR, 'Json')
 LOGS_DIR = os.path.join(BASE_DIR, 'iteration_logs')
 SCREENSHOTS_DIR = os.path.join(BASE_DIR, 'screenshots')
 
+
+def _inventory_path(env_name, default_path):
+    """Resolve a per-deployment inventory file path from an env override.
+
+    Returns ``default_path`` when the override is unset; otherwise validates
+    that the override is an absolute, existing, readable+writable file.
+    """
+    configured_path = os.environ.get(env_name)
+    if not configured_path:
+        return default_path
+    configured_path = os.path.expanduser(configured_path)
+    if not os.path.isabs(configured_path):
+        raise ValueError(f'{env_name} must be an absolute path: {configured_path}')
+    configured_path = os.path.abspath(configured_path)
+    if not os.path.isfile(configured_path):
+        raise FileNotFoundError(f'{env_name} does not exist or is not a file: {configured_path}')
+    if not os.access(configured_path, os.R_OK | os.W_OK):
+        raise PermissionError(f'{env_name} must be readable and writable by the application: {configured_path}')
+    return configured_path
+
+
+_devices_override = os.environ.get('APP_DEVICES_FILE')
+_users_override = os.environ.get('APP_USERS_FILE')
+if bool(_devices_override) != bool(_users_override):
+    raise ValueError('APP_DEVICES_FILE and APP_USERS_FILE must be configured together')
+
 # Ensure directories exist
 os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(LOGS_DIR, exist_ok=True)
 os.makedirs(SCREENSHOTS_DIR, exist_ok=True)
 
 # JSON Data Files
-DEVICES_FILE = os.path.join(DATA_DIR, 'devices.json')
-USERS_FILE = os.path.join(DATA_DIR, 'users.json')
+DEVICES_FILE = _inventory_path('APP_DEVICES_FILE', os.path.join(DATA_DIR, 'devices.json'))
+USERS_FILE = _inventory_path('APP_USERS_FILE', os.path.join(DATA_DIR, 'users.json'))
 JOBS_FILE = os.path.join(DATA_DIR, 'jobs.json')
 APP_STATE_FILE = os.path.join(DATA_DIR, 'app_state.json')
 DEVICE_LOCKS_FILE = os.path.join(DATA_DIR, 'device_locks.json')

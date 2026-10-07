@@ -22,9 +22,46 @@
             overflow-y: auto;
             white-space: pre-wrap;
             word-wrap: break-word;
+            width:1025px !important;
         }
         .job-info-card {
             border-left: 4px solid #0d6efd;
+        }
+        .screenshot-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            background: #e8eef2;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            width: 100%;
+        }
+        .screenshot-item {
+            min-width: 0;
+            background: #f8fafc;
+            border: 1px solid #d7e0e7;
+            border-radius: 4px;
+            padding: 6px;
+        }
+        .screenshot-label {
+            display: block;
+            min-height: 32px;
+            margin-bottom: 5px;
+            color: #334155;
+            font-size: 0.72rem;
+            font-weight: 600;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+        }
+        .screenshot-item img {
+            display: block;
+            width: 100%;
+            height: 160px;
+            object-fit: contain;
+            border-radius: 3px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
         }
         .queue-item {
             background: #f8f9fa;
@@ -105,6 +142,21 @@
             flex-direction: column;
             gap: 1.5rem;
         }
+        .left-column > .job-info-card {
+            order: 1;
+        }
+        .left-column > .execution-queue-card {
+            order: 2;
+        }
+        .left-column > #execution-results-card {
+            order: 3;
+        }
+        .left-column > #device-log-archives-card {
+            order: 4;
+        }
+        .left-column > .alert {
+            order: 5;
+        }
         .right-column {
             display: flex;
             flex-direction: column;
@@ -116,6 +168,22 @@
         .execution-queue-card {
             max-height: 500px;
             overflow-y: auto;
+        }
+        .device-log-archives-table {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .device-log-archives-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background: #f8f9fa;
+        }
+        .device-log-archives-table td {
+            vertical-align: middle;
+        }
+        .device-log-collection-reason {
+            overflow-wrap: anywhere;
         }
         .logs-card {
             display: flex;
@@ -302,10 +370,13 @@
             </div>
         </div>
 
-        {% set ns = namespace(has_reboot_perf=false) %}
+        {% set ns = namespace(has_reboot_perf=false, has_soft_hard_boot=false) %}
         {% if job.methods %}
             {% if 'reboot_perf_v2_optimized' in job.methods %}
                 {% set ns.has_reboot_perf = true %}
+            {% endif %}
+            {% if 'soft_hard_boot' in job.methods %}
+                {% set ns.has_soft_hard_boot = true %}
             {% endif %}
         {% endif %}
         {% if job.execution_queue %}
@@ -315,6 +386,9 @@
                 {% endif %}
                 {% if item.method == 'navigate_inputs_xumo' %}
                     {% set ns.has_tiles_results = true %}
+                {% endif %}
+                {% if item.method == 'soft_hard_boot' %}
+                    {% set ns.has_soft_hard_boot = true %}
                 {% endif %}
             {% endfor %}
         {% endif %}
@@ -337,6 +411,17 @@
             Tiles Detection Results are now available on the dedicated page.
             <a class="btn btn-sm btn-primary ms-2" href="/tiles-results?job_ids={{ job.job_id }}">
                 View Tiles Detection Results
+            </a>
+        </div>
+        {% endif %}
+
+        {% if ns.has_soft_hard_boot %}
+        <!-- Soft/Hard Boot Performance Summary -->
+        <div class="alert alert-info mb-4" role="alert">
+            <i class="bi bi-arrow-repeat"></i>
+            Soft/Hard Boot Performance results are now available on the dedicated page.
+            <a class="btn btn-sm btn-primary ms-2" href="/soft-hard-boot-results?job_ids={{ job.job_id }}">
+                View Soft/Hard Boot Results
             </a>
         </div>
         {% endif %}
@@ -400,6 +485,30 @@
         </script>
         {% endif %}
 
+        <!-- Execution Results & Screenshots Card (NEW) -->
+        <div class="card mb-4" id="execution-results-card" style="display:{% if job.status != 'pending' %}block{% else %}none{% endif %};">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-camera"></i> Execution Results & Screenshots
+                </h5>
+            </div>
+            <div class="card-body" id="results-container" style="max-height: 250px; overflow-y: auto;">
+                <p class="text-muted">Loading results...</p>
+            </div>
+        </div>
+
+        <!-- Device Log Archives Card (which iterations captured .tar.gz/.tgz device logs) -->
+        <div class="card mb-4" id="device-log-archives-card" style="display:{% if job.status != 'pending' %}block{% else %}none{% endif %};">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-earmark-zip"></i> Captured Device Log Archives
+                </h5>
+            </div>
+            <div class="card-body" id="device-log-archives-container">
+                <p class="text-muted">Loading device log archive status...</p>
+            </div>
+        </div>
+
         <!-- Execution Queue -->
         <div class="card execution-queue-card mb-4">
             <div class="card-header">
@@ -427,7 +536,7 @@
                         {% if item.description %}
                         <div class="mt-1"><small class="text-muted fst-italic">📝 {{ item.description }}</small></div>
                         {% endif %}
-                        {% if item.ir_keys or item.voice_text or item.remote_keys or item.expected_screen or item.screen_name or item.wait_seconds or item.command or item.expected_output or item.home_screen_timeout or item.optional_checks or item.wait_after_reboot or item.system_command_name or item.system_command_label or item.duration_seconds or item.interval_seconds or item.log_search_patterns or item.auto_collect_logs or item.image_name or item.command_text or item.section or item.tile_to_navigate or item.archive_name or item.boot_type or item.remote_type or item.sleep_duration_minutes or item.execute_deepsleep_wakeup or item.asset_voice_command or item.playback_duration or item.execute_playback_controls or item.execute_screenshot_analysis or item.screenshot_analysis or item.username_cred or item.password_cred or item.login_url or item.playback_log_string %}
+                        {% if item.ir_keys or item.voice_text or item.remote_keys or item.expected_screen or item.screen_name or item.wait_seconds or item.command or item.expected_output or item.home_screen_timeout or item.optional_checks or item.wait_after_reboot or item.system_command_name or item.system_command_label or item.duration_seconds or item.interval_seconds or item.log_search_patterns or item.auto_collect_logs or item.image_name or item.command_text or item.section or item.tile_to_navigate or item.archive_name or item.boot_type or item.remote_type or item.sleep_duration_minutes or item.execute_deepsleep_wakeup or item.asset_voice_command or item.playback_duration or item.execute_playback_controls or item.execute_screenshot_analysis or item.screenshot_analysis or item.username_cred or item.password_cred or item.login_url or item.playback_log_string or item.extract_text %}
                         <div class="mt-2">
                             <small class="text-muted">Parameters:</small>
                             <ul class="mb-0 mt-1">
@@ -437,6 +546,9 @@
                                 {% if item.voice_text %}
                                 <li><code>Voice Text</code>: {{ item.voice_text }}</li>
                                 {% endif %}
+                                {% if item.channel_key or (item.params and item.params.channel_key) %}
+                                <li><code>Channel Key</code>: {{ item.channel_key or item.params.channel_key }}</li>
+                                {% endif %}
                                 {% if item.remote_keys %}
                                 <li><code>Remote Keys</code>: {{ item.remote_keys }}</li>
                                 {% endif %}
@@ -445,6 +557,9 @@
                                 {% endif %}
                                 {% if item.image_name %}
                                 <li><i class="bi bi-camera-fill"></i> <code>Image Name</code>: <span style="color: #10b981;">{{ item.image_name }}</span></li>
+                                {% endif %}
+                                {% if item.extract_text %}
+                                <li><i class="bi bi-file-earmark-text"></i> <code>Fetch Text from Captured Screen</code>: <span style="color: #f59e0b;">Yes (OCR)</span></li>
                                 {% endif %}
                                 {% if item.screen_name %}
                                 <li><code>Screen Name</code>: {{ item.screen_name }}</li>
@@ -534,6 +649,24 @@
                                     <li><code>HOME Timeout</code>: <span style="color: #10b981;">{{ item.home_screen_timeout }}s</span></li>
                                     {% else %}
                                     <li><code>HOME Timeout</code>: <span style="color: #10b981;">180s</span> <span style="color: #9ca3af;">(default)</span></li>
+                                    {% endif %}
+                                    {% if boot_type == 'SOFT' %}
+                                    <li><code>Navigation Keys</code>:
+                                        {% if item.navigation_keys %}
+                                        <span style="color: #f59e0b;">{{ item.navigation_keys | join(', ') }}</span>
+                                        {% else %}
+                                        <span style="color: #9ca3af;">DOWN, DOWN, ENTER, DOWN, DOWN, ENTER, ENTER (default)</span>
+                                        {% endif %}
+                                    </li>
+                                    {% endif %}
+                                    {% if item.optional_checks and item.optional_checks.custom_log_commands %}
+                                    <li><code>Log Search Commands</code>:
+                                        <ul>
+                                            {% for command in item.optional_checks.custom_log_commands %}
+                                            <li><span style="color: #06b6d4;">{{ command }}</span></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
                                     {% endif %}
                                     <li><code>Captures</code>: <span style="color: #8b5cf6;">✓ rdk_milestones.log</span></li>
                                     <li><code>Captures</code>: <span style="color: #8b5cf6;">✓ Optional Checks</span></li>
@@ -689,6 +822,39 @@
                             </ul>
                         </div>
                         {% endif %}
+                        {% if item.condition %}
+                        <div class="mt-2">
+                            <small class="text-muted">Condition:</small>
+                            <ul class="mb-0 mt-1">
+                                {% if item.condition.steps %}
+                                    {% for cond in item.condition.steps %}
+                                    <li>
+                                        {% if cond.type == 'if_text_contains' %}
+                                        <span style="color: #f59e0b;">🔎 IF Step {{ cond.step + 1 }} OCR text CONTAINS "{{ cond.value }}"</span>
+                                        {% elif cond.type == 'if_text_not_contains' %}
+                                        <span style="color: #ef4444;">🚫 IF Step {{ cond.step + 1 }} OCR text DOES NOT CONTAIN "{{ cond.value }}"</span>
+                                        {% elif cond.type == 'if_failed' %}
+                                        <span style="color: #ef4444;">✗ IF Step {{ cond.step + 1 }} FAILS</span>
+                                        {% else %}
+                                        <span style="color: #10b981;">✓ IF Step {{ cond.step + 1 }} PASSES</span>
+                                        {% endif %}
+                                    </li>
+                                    {% endfor %}
+                                    {% if item.condition.steps|length > 1 %}
+                                    <li><code>Logic</code>: {{ item.condition.logic or 'AND' }}</li>
+                                    {% endif %}
+                                {% elif item.condition.step is not none %}
+                                    <li>
+                                        {% if item.condition.type == 'if_failed' %}
+                                        <span style="color: #ef4444;">✗ IF Step {{ item.condition.step + 1 }} FAILS</span>
+                                        {% else %}
+                                        <span style="color: #10b981;">✓ IF Step {{ item.condition.step + 1 }} PASSES</span>
+                                        {% endif %}
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        {% endif %}
                     </div>
                     {% endfor %}
                 {% else %}
@@ -696,6 +862,7 @@
                 {% endif %}
             </div>
         </div>
+        <script id="execution-queue-raw-data" type="application/json">{{ job.execution_queue | tojson }}</script>
 
         <!-- Captured Screenshots Section -->
         <div class="card mb-4 screenshots-card">
@@ -762,6 +929,19 @@
         let waitStartTime = null;
         let waitDurationSeconds = null;
         let countdownInterval = null;
+        let resultsPollInterval = null;
+        let archivesPollInterval = null;
+
+        function stopResultsAndArchivesPolling() {
+            if (resultsPollInterval) {
+                clearInterval(resultsPollInterval);
+                resultsPollInterval = null;
+            }
+            if (archivesPollInterval) {
+                clearInterval(archivesPollInterval);
+                archivesPollInterval = null;
+            }
+        }
 
         // Convert UTC ISO timestamp to local time string
         function convertUTCToLocalTime(isoString) {
@@ -778,8 +958,154 @@
             }
         }
 
+        // Regroups the flat Execution Queue list into a nested Loop/IF-ELSE-IF-ELSE display
+        // (matching how they're authored in the dashboard's queue builder) instead of a flat
+        // 1,2,3... list. Reads the raw execution_queue JSON (with loop_start/loop_end/if_start/
+        // elseif_start/else_start/endif_block/exit_loop markers) and moves the ALREADY-RENDERED
+        // .queue-item elements (server-rendered by Jinja, one per flat queue entry) into nested
+        // wrapper divs - their ids/classes are preserved so the existing step-highlighting/
+        // auto-scroll logic (which selects by id="step-N" / class="queue-item" globally) keeps
+        // working unchanged regardless of how deeply nested they end up.
+        function groupExecutionQueueDisplay() {
+            const dataEl = document.getElementById('execution-queue-raw-data');
+            const container = document.getElementById('execution-queue-container');
+            if (!dataEl || !container) return;
+
+            let queue;
+            try {
+                queue = JSON.parse(dataEl.textContent);
+            } catch (e) {
+                return;
+            }
+            if (!Array.isArray(queue) || queue.length === 0) return;
+
+            const CONTROL_FLOW = new Set(['loop_start', 'loop_end', 'exit_loop', 'if_start', 'elseif_start', 'else_start', 'endif_block']);
+            if (!queue.some(item => CONTROL_FLOW.has(item.method))) return; // nothing to regroup
+
+            const items = Array.from(container.querySelectorAll(':scope > .queue-item'));
+            if (items.length !== queue.length) return; // safety: skip if the DOM doesn't match 1:1
+
+            function describeCondition(condition) {
+                if (!condition) return '';
+                const steps = condition.steps || (condition.step !== undefined ? [{ step: condition.step, type: condition.type, value: condition.value }] : []);
+                if (!steps.length) return '';
+                const describeOne = (s) => {
+                    const stepNum = s.step !== undefined ? s.step + 1 : '?';
+                    if (s.type === 'if_text_contains') return `Step ${stepNum} text CONTAINS "${s.value || ''}"`;
+                    if (s.type === 'if_text_not_contains') return `Step ${stepNum} text does NOT contain "${s.value || ''}"`;
+                    return `Step ${stepNum} ${s.type === 'if_failed' ? 'FAILS' : 'PASSES'}`;
+                };
+                return steps.map(describeOne).join(condition.logic === 'OR' ? ' OR ' : ' AND ');
+            }
+
+            // Builds a tree of {type:'leaf', el} | {type:'exit_loop', meta} | {type:'loop', meta, children}
+            // | {type:'if', branches:[{meta, children}]} over queue[startIdx, endIdxExclusive).
+            function buildTree(startIdx, endIdxExclusive) {
+                const nodes = [];
+                let i = startIdx;
+                while (i < endIdxExclusive) {
+                    const meta = queue[i];
+                    if (meta.method === 'loop_start') {
+                        let depth = 1, j = i + 1;
+                        while (j < endIdxExclusive && depth > 0) {
+                            if (queue[j].method === 'loop_start') depth++;
+                            else if (queue[j].method === 'loop_end') { depth--; if (depth === 0) break; }
+                            j++;
+                        }
+                        nodes.push({ type: 'loop', meta, children: buildTree(i + 1, j) });
+                        i = j + 1;
+                    } else if (meta.method === 'if_start') {
+                        let depth = 1, j = i + 1;
+                        const branchStarts = [{ idx: i, meta }];
+                        while (j < endIdxExclusive && depth > 0) {
+                            if (queue[j].method === 'if_start') depth++;
+                            else if (queue[j].method === 'endif_block') { depth--; if (depth === 0) break; }
+                            else if (depth === 1 && (queue[j].method === 'elseif_start' || queue[j].method === 'else_start')) {
+                                branchStarts.push({ idx: j, meta: queue[j] });
+                            }
+                            j++;
+                        }
+                        const endifIdx = j;
+                        const branches = branchStarts.map((b, bi) => {
+                            const nextIdx = bi + 1 < branchStarts.length ? branchStarts[bi + 1].idx : endifIdx;
+                            return { meta: b.meta, children: buildTree(b.idx + 1, nextIdx) };
+                        });
+                        nodes.push({ type: 'if', branches });
+                        i = endifIdx + 1;
+                    } else if (meta.method === 'exit_loop') {
+                        nodes.push({ type: 'exit_loop', meta });
+                        i++;
+                    } else {
+                        nodes.push({ type: 'leaf', el: items[i] });
+                        i++;
+                    }
+                }
+                return nodes;
+            }
+
+            function renderNode(node) {
+                if (node.type === 'leaf') return node.el;
+
+                if (node.type === 'exit_loop') {
+                    const wrap = document.createElement('div');
+                    wrap.style.cssText = 'border-left:3px solid #dc2626;padding:0.4rem 0.6rem;margin:0.3rem 0;background:rgba(220,38,38,0.08);border-radius:4px;';
+                    const cond = describeCondition(node.meta.condition);
+                    wrap.innerHTML = `<strong><i class="bi bi-box-arrow-right text-danger"></i> Exit Loop</strong>` +
+                        `<div class="small text-muted mt-1">${cond ? 'Exits when: ' + cond : 'Always exits when reached'}</div>`;
+                    return wrap;
+                }
+
+                if (node.type === 'loop') {
+                    const wrap = document.createElement('div');
+                    wrap.style.cssText = 'border:2px solid #7c3aed;border-radius:8px;padding:0.6rem;margin:0.5rem 0;background:rgba(124,58,237,0.08);';
+                    const modeLabel = node.meta.loop_mode === 'days'
+                        ? `${node.meta.loop_days} day(s)` : `${node.meta.loop_iterations} iteration(s)`;
+                    const header = document.createElement('div');
+                    header.className = 'fw-bold mb-2';
+                    header.style.color = '#7c3aed';
+                    header.innerHTML = `<i class="bi bi-arrow-repeat"></i> LOOP — runs for ${modeLabel}`;
+                    wrap.appendChild(header);
+                    const childrenWrap = document.createElement('div');
+                    childrenWrap.style.marginLeft = '1rem';
+                    node.children.forEach(child => childrenWrap.appendChild(renderNode(child)));
+                    wrap.appendChild(childrenWrap);
+                    return wrap;
+                }
+
+                // type === 'if'
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'border:2px solid #0891b2;border-radius:8px;padding:0.6rem;margin:0.5rem 0;background:rgba(8,145,178,0.08);';
+                const title = document.createElement('div');
+                title.className = 'fw-bold mb-2';
+                title.style.color = '#0891b2';
+                title.innerHTML = `<i class="bi bi-signpost-2-fill"></i> IF / ELSE IF / ELSE`;
+                wrap.appendChild(title);
+                node.branches.forEach(branch => {
+                    const label = branch.meta.method === 'if_start' ? 'IF' : branch.meta.method === 'elseif_start' ? 'ELSE IF' : 'ELSE';
+                    const cond = describeCondition(branch.meta.condition);
+                    const branchDiv = document.createElement('div');
+                    branchDiv.style.cssText = 'border-left:3px solid #0891b2;padding-left:0.6rem;margin-bottom:0.5rem;';
+                    const condText = cond ? ' - ' + cond : (label === 'ELSE' ? ' - runs when no earlier branch matched' : '');
+                    branchDiv.innerHTML = `<div class="small"><strong>${label}</strong>${condText}</div>`;
+                    const childrenWrap = document.createElement('div');
+                    childrenWrap.style.cssText = 'margin-left:1rem;margin-top:0.4rem;';
+                    branch.children.forEach(child => childrenWrap.appendChild(renderNode(child)));
+                    branchDiv.appendChild(childrenWrap);
+                    wrap.appendChild(branchDiv);
+                });
+                return wrap;
+            }
+
+            const tree = buildTree(0, queue.length);
+            const fragment = document.createDocumentFragment();
+            tree.forEach(node => fragment.appendChild(renderNode(node)));
+            container.innerHTML = '';
+            container.appendChild(fragment);
+        }
+
         // Convert all UTC times on page load
         document.addEventListener('DOMContentLoaded', function() {
+            groupExecutionQueueDisplay();
             // Find and convert "Started:" time
             const paragraphs = document.querySelectorAll('p');
             paragraphs.forEach(p => {
@@ -1095,6 +1421,10 @@
                     const currentStep = statusData.job.current_step || 0;
                     const currentIteration = statusData.job.current_iteration || 1;
                     
+                    // ALWAYS load execution results to show screenshots as they appear
+                    loadExecutionResults();
+                    loadDeviceLogArchives();
+                    
                     // Refresh progress when either the current method step or
                     // iteration changes. One-step methods keep step at zero.
                     if (currentStep !== lastKnownStep || currentIteration !== lastKnownIteration) {
@@ -1109,7 +1439,10 @@
                         if (currentStatus === 'completed' || currentStatus === 'failed' || currentStatus === 'cancelled') {
                             clearInterval(autoRefreshInterval);
                             if (countdownInterval) clearInterval(countdownInterval);
+                            stopResultsAndArchivesPolling();
                             // Do one final refresh
+                            loadExecutionResults();
+                            loadDeviceLogArchives();
                             setTimeout(() => {
                                 window.location.reload();
                             }, 2000);
@@ -1118,6 +1451,195 @@
                 }
             } catch (error) {
                 console.error('Error refreshing logs:', error);
+            }
+        }
+
+        // Store the last rendered screenshot count to detect new ones
+        let lastScreenshotCount = 0;
+
+        function getScreenshotLabel(shotUrl, imageNumber) {
+            let fileName = String(shotUrl).split('?')[0].split('/').pop() || '';
+            try {
+                fileName = decodeURIComponent(fileName);
+            } catch (error) {
+                // Keep the original filename when URL decoding is not possible.
+            }
+
+            fileName = fileName.replace(/\.[^/.]+$/, '')
+                .replace(/^.*?_Iteration-\d+_/, '')
+                .replace(/[_-]+/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+
+            return fileName ? `Image ${imageNumber}: ${fileName}` : `Image ${imageNumber}`;
+        }
+
+        function getScreenshotGroupLabel(methodName) {
+            return String(methodName).includes(',') ? 'Captured screenshots' : methodName;
+        }
+
+        // Load and display which iterations have captured device log archives (.tar.gz/.tgz)
+        async function loadDeviceLogArchives() {
+            const container = document.getElementById('device-log-archives-container');
+            const card = document.getElementById('device-log-archives-card');
+            if (!container) return;
+
+            try {
+                const response = await fetch(`/api/jobs/${jobId}/device-log-archives`);
+                const data = await response.json();
+
+                if (card) card.style.display = 'block';
+
+                if (!data.success) {
+                    container.innerHTML = `<p class="text-muted mb-0">Unable to load device log archive status.</p>`;
+                    return;
+                }
+
+                const iterationsWithLogs = data.iterations_with_logs || [];
+                if (iterationsWithLogs.length === 0) {
+                    container.innerHTML = `<p class="text-muted mb-0">No device log archives (.tar.gz/.tgz) have been captured yet for this job's iterations.</p>`;
+                    return;
+                }
+
+                let html = `<p class="mb-2"><strong>Device logs captured for ${iterationsWithLogs.length} iteration(s)</strong> out of ${data.total_iterations || '?'} total.</p>`;
+                html += '<div class="device-log-archives-table border rounded">';
+                html += '<table class="table table-sm table-striped table-hover mb-0">';
+                html += '<thead><tr><th scope="col">Iteration No.</th><th scope="col">Reason for Log Collection</th><th scope="col">Power State AfterBoot</th></tr></thead><tbody>';
+                iterationsWithLogs.forEach(entry => {
+                    const iterationLinks = entry.archives.map((filename, index) => {
+                        const archiveUrl = `/api/jobs/${encodeURIComponent(jobId)}/device-log-archives/${entry.iteration}/${encodeURIComponent(filename)}`;
+                        const safeFilename = String(filename).replace(/[&<>"']/g, char => ({
+                            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+                        })[char]);
+                        const linkLabel = index === 0 ? entry.iteration : `${entry.iteration} (${index + 1})`;
+                        return `<a href="${archiveUrl}" download class="fw-semibold" title="Download ${safeFilename}">${linkLabel}</a>`;
+                    });
+                    const reason = String(entry.reason || 'Reason not recorded').replace(/[&<>"']/g, char => ({
+                        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+                    })[char]);
+                    const powerState = String(entry.power_state_after_boot || 'N/A').replace(/[&<>"']/g, char => ({
+                        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+                    })[char]);
+                    html += '<tr>';
+                    html += `<td>${iterationLinks.join(', ')}</td>`;
+                    html += `<td class="device-log-collection-reason">${reason}</td>`;
+                    html += `<td class="device-log-power-state">${powerState}</td>`;
+                    html += '</tr>';
+                });
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+            } catch (error) {
+                container.innerHTML = `<p class="text-danger mb-0">Failed to load device log archive status.</p>`;
+                console.error(error);
+            }
+        }
+        
+        // Load and display execution results with screenshots (SEQUENTIAL)
+        async function loadExecutionResults() {
+            const resultsContainer = document.getElementById('results-container');
+            if (!resultsContainer) return;
+            
+            try {
+                const response = await fetch(`/api/jobs/${jobId}`);
+                const data = await response.json();
+                
+                if (data.success && data.job) {
+                    const job = data.job;
+                    let resultsHtml = '';
+                    let screenshotCount = 0;
+                    
+                    // Display execution status
+                    if (job.status === 'running') {
+                        const currentStep = job.current_step || 0;
+                        const currentItem = job.execution_queue ? job.execution_queue[currentStep] : null;
+                        if (currentItem) {
+                            resultsHtml += `
+                                <div class="alert alert-info mb-3">
+                                    <small>
+                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <strong>Currently Executing:</strong> ${currentItem.method} (Step ${currentStep + 1})
+                                        <br><em>Waiting for execution results...</em>
+                                    </small>
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    // Fetch iteration-wise results (all methods, all iterations) from the results API,
+                    // which is fed by TestResult records saved for every method - not just Netflix playback.
+                    const resultsResponse = await fetch(`/api/results?job_id=${jobId}`);
+                    const resultsData = await resultsResponse.json();
+                    const iterationResults = (resultsData.success !== false && Array.isArray(resultsData.results)) ? resultsData.results : [];
+                    
+                    if (iterationResults.length > 0) {
+                        resultsHtml += '<div class="execution-timeline">';
+                        
+                        iterationResults.forEach(iterResult => {
+                            const iterationNum = iterResult.iteration;
+                            const totalIterations = iterResult.total_iterations || job.iterations;
+                            const isPassed = iterResult.status === 'PASSED';
+                            const methodScreenshots = iterResult.method_screenshots || {};
+                            const methodNames = Object.keys(methodScreenshots);
+                            
+                            resultsHtml += `
+                                <div class="iteration-result mb-3 p-2" style="border-left: 3px solid ${isPassed ? '#28a745' : '#dc3545'}; background: #f1f5f7; border-radius: 4px;">
+                                    <div class="d-flex align-items-center mb-1" style="gap: 8px;">
+                                        <span style="font-size: 1em;">${isPassed ? '✅' : '❌'}</span>
+                                        <small class="fw-600" style="flex: 1; margin: 0;">Iteration ${iterationNum}/${totalIterations} - ${iterResult.status || 'UNKNOWN'}</small>
+                                    </div>
+                            `;
+                            
+                            if (methodNames.length > 0) {
+                                methodNames.forEach(methodName => {
+                                    const shots = methodScreenshots[methodName] || [];
+                                    if (shots.length === 0) return;
+                                    screenshotCount += shots.length;
+                                    resultsHtml += `<small class="text-muted d-block" style="font-size: 0.7rem; margin: 4px 0;">📸 ${getScreenshotGroupLabel(methodName)}</small>`;
+                                    resultsHtml += `<div class="screenshot-grid">`;
+                                    shots.forEach((shotUrl, shotIndex) => {
+                                        const imageLabel = getScreenshotLabel(shotUrl, shotIndex + 1);
+                                        resultsHtml += `
+                                            <div class="screenshot-item">
+                                                <span class="screenshot-label">${imageLabel}</span>
+                                                <img src="${shotUrl}" alt="${imageLabel} - ${methodName} - Iteration ${iterationNum}"
+                                                     onclick="window.open('${shotUrl}', '_blank')"
+                                                     onerror="this.closest('.screenshot-item').style.display='none';">
+                                            </div>
+                                        `;
+                                    });
+                                    resultsHtml += `</div>`;
+                                });
+                            } else {
+                                resultsHtml += `<small class="text-muted d-block" style="font-size: 0.7rem;">No screenshots captured for this iteration.</small>`;
+                            }
+                            
+                            resultsHtml += `</div>`;
+                        });
+                        
+                        resultsHtml += '</div>';
+                        
+                        if (job.status !== 'running') {
+                            resultsHtml += `
+                                <div class="alert alert-success mt-3">
+                                    <small>
+                                        <strong>✅ Iterations Recorded:</strong> ${iterationResults.length}<br>
+                                        <strong>📸 Screenshots Captured:</strong> ${screenshotCount}
+                                    </small>
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    if (resultsHtml === '') {
+                        resultsHtml = '<div class="alert alert-info"><small>📊 No screenshots captured yet. Execution in progress...</small></div>';
+                    }
+                    
+                    resultsContainer.innerHTML = resultsHtml;
+                    lastScreenshotCount = screenshotCount;
+                }
+            } catch (error) {
+                console.error('Error loading results:', error);
+                resultsContainer.innerHTML = '<p class="text-danger"><small>❌ Error loading results</small></p>';
             }
         }
 
@@ -1269,12 +1791,21 @@
             if (countdownInterval) {
                 clearInterval(countdownInterval);
             }
+            stopResultsAndArchivesPolling();
         });
 
         // Start auto-refresh when page loads
         document.addEventListener('DOMContentLoaded', () => {
             startAutoRefresh();
             loadSystemCommandLogs();
+            // Always load once so screenshots/archives are bound to the UI immediately.
+            loadExecutionResults();
+            loadDeviceLogArchives();
+            // Only keep polling for iterations still in progress; finished jobs load once and stay put.
+            if (lastKnownStatus === 'running' || lastKnownStatus === 'pending') {
+                resultsPollInterval = setInterval(loadExecutionResults, 5000);
+                archivesPollInterval = setInterval(loadDeviceLogArchives, 5000);
+            }
         });
         
         // Device Screen Viewer Functions

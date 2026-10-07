@@ -232,6 +232,23 @@ main() {
     print_step "Starting Flask app in background..."
     cd "$APP_DIR"
 
+    # Load deployment-local device/user inventory overrides, if present.
+    DEVICE_DATA_ENV="$APP_DIR/.device-data.env"
+    if [ -f "$DEVICE_DATA_ENV" ]; then
+        set -a
+        source "$DEVICE_DATA_ENV"
+        set +a
+    fi
+    if [[ -n "${APP_DEVICES_FILE:-}" || -n "${APP_USERS_FILE:-}" ]]; then
+        if [[ -z "${APP_DEVICES_FILE:-}" || -z "${APP_USERS_FILE:-}" ]]; then
+            print_error "APP_DEVICES_FILE and APP_USERS_FILE must both be configured"
+            exit 1
+        fi
+        print_success "Using deployment-local device and user inventories"
+    else
+        print_info "No deployment-local inventory configured; using legacy Json/ files"
+    fi
+
     # Check if venv activation script exists
     if [ ! -f "$VENV_DIR/bin/activate" ]; then
         print_error "Virtual environment activation script not found"
