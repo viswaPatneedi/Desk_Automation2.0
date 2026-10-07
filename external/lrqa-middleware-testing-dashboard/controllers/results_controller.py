@@ -8,8 +8,9 @@ from models.test_result import TestResult
 from models.job import Job
 from services.test_execution_service import TestExecutionService
 from services.log_service import LogService
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from urllib.parse import quote
+import re
 
 class ResultsController:
     """Controller for test results operations"""
@@ -17,6 +18,46 @@ class ResultsController:
     def __init__(self, test_service: TestExecutionService, log_service: LogService):
         self.test_service = test_service
         self.log_service = log_service
+
+    @staticmethod
+    def _clean_image_name(raw_value):
+        """Extract just the imagename value out of raw build_info text (e.g. version.txt dump)."""
+        if not raw_value:
+            return raw_value
+        text = str(raw_value).strip()
+        match = re.search(r"imagename:([^\s]+)", text, re.IGNORECASE)
+        if match:
+            return match.group(1).strip()
+        return text.split('\n')[0].strip()
+
+    _IMAGE_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp')
+
+    @classmethod
+    def _split_screenshots_string(cls, screenshots):
+        """Split a screenshots string on commas, but only when every resulting piece looks
+        like an actual image path. A single path can legitimately contain commas (e.g. from a
+        session folder name), so blindly splitting would shred it into bogus fragments."""
+        if not screenshots:
+            return []
+        parts = [s.strip() for s in screenshots.split(',') if s.strip()]
+        if len(parts) > 1 and not all(p.lower().endswith(cls._IMAGE_EXTENSIONS) for p in parts):
+            return [screenshots.strip()]
+        return parts
+
+    @staticmethod
+    def _unique_preserve_order(items):
+        """Return unique non-empty string items while preserving original order."""
+        unique_items = []
+        seen = set()
+        for item in items or []:
+            if not isinstance(item, str):
+                continue
+            normalized = item.strip()
+            if not normalized or normalized in seen:
+                continue
+            seen.add(normalized)
+            unique_items.append(normalized)
+        return unique_items
     
     def get_results(self):
         """GET /api/results - Get test results with sequence consolidation and pagination by day"""
@@ -27,8 +68,18 @@ class ResultsController:
             offset_days = int(request.args.get('offset_days', 0))
             limit_days = int(request.args.get('limit_days', 1))
             filter_date = request.args.get('filter_date', None)  # Support date filtering
+            job_id_filter = request.args.get('job_id', None)  # Support filtering by a single job (e.g. Job Details page)
             
             all_results = self.test_service.get_all_results()
+
+            # When a single job is requested (e.g. Job Details page), filter down to that
+            # job's records immediately instead of enriching/consolidating the entire
+            # history (which keeps growing) on every 5-second poll. Jobs with many
+            # iterations (hundreds+ of records) made this endpoint slow enough under
+            # concurrent device automation load to intermittently time out client-side,
+            # showing "Error Loading results" even though the data itself was fine.
+            if job_id_filter:
+                all_results = [r for r in all_results if r.get('job_id') == job_id_filter]
 
             # Build device name map once
             devices = Device.load_all()
@@ -70,7 +121,7 @@ class ResultsController:
 
                 screenshots = r.get('screenshots', [])
                 if isinstance(screenshots, str):
-                    screenshots_list = [s.strip() for s in screenshots.split(',') if s.strip()]
+                    screenshots_list = self._split_screenshots_string(screenshots)
                 elif isinstance(screenshots, list):
                     screenshots_list = [s for s in screenshots if s]
                 else:
@@ -84,7 +135,7 @@ class ResultsController:
                         normalized_urls.append(shot)
                     elif isinstance(shot, str):
                         normalized_urls.append(f"/screenshots/{quote(shot.lstrip('/'), safe='/')}")
-                r['screenshots'] = normalized_urls
+                r['screenshots'] = self._unique_preserve_order(normalized_urls)
                 
                 enriched_results.append(r)
                 
@@ -177,14 +228,26 @@ class ResultsController:
                     all_screenshots = []
                     all_details = []
                     method_screenshots = {}  # Map method_name -> [screenshots]
+                    seen_screenshots = set()
                     performance_secs = None  # Extract from reboot/perf method if available
                     
                     for method_result in methods_in_iteration_sorted:
                         method_name = method_result.get('method') or method_result.get('method_name') or 'N/A'
                         shots = method_result.get('screenshots', [])
                         if shots:
-                            method_screenshots[method_name] = shots if isinstance(shots, list) else [shots]
-                            all_screenshots.extend(method_screenshots[method_name])
+                            raw_shots = shots if isinstance(shots, list) else [shots]
+                            normalized_shots = self._unique_preserve_order(raw_shots)
+                            normalized_shots = [
+                                shot for shot in normalized_shots
+                                if shot not in seen_screenshots
+                            ]
+                            if normalized_shots:
+                                seen_screenshots.update(normalized_shots)
+                                existing_method_shots = method_screenshots.get(method_name, [])
+                                method_screenshots[method_name] = self._unique_preserve_order(
+                                    existing_method_shots + normalized_shots
+                                )
+                                all_screenshots.extend(normalized_shots)
                         
                         # Collect details from each method
                         details = method_result.get('details', '')
@@ -198,7 +261,8 @@ class ResultsController:
                     # Determine overall status: PASSED if all methods succeeded, FAILED otherwise
                     iteration_success = all(m.get('success') for m in methods_in_iteration)
                     overall_status = "PASSED" if iteration_success else "FAILED"
-                    combined_details = '\n'.join(all_details) if all_details else f"Iteration execution {'completed successfully' if iteration_success else 'failed'}"
+                    unique_details = self._unique_preserve_order(all_details)
+                    combined_details = '\n'.join(unique_details) if unique_details else f"Iteration execution {'completed successfully' if iteration_success else 'failed'}"
                     
                     # Create consolidated card for this iteration
                     summary_card = {
@@ -218,7 +282,7 @@ class ResultsController:
                         'status': overall_status,  # Status field for results display (PASSED/FAILED)
                         'details': combined_details,  # Combined details from all methods
                         'methods': methods_list,  # Keep as array for frontend rendering
-                        'screenshots': all_screenshots,  # All screenshots from all methods
+                        'screenshots': self._unique_preserve_order(all_screenshots),  # All unique screenshots from all methods
                         'method_screenshots': method_screenshots,  # Map for carousel display
                         'performance_seconds': performance_secs
                     }
@@ -229,7 +293,7 @@ class ResultsController:
                 shots = result.get('screenshots', [])
                 if isinstance(shots, str):
                     # Convert single screenshot string to array and filter blanks
-                    result['screenshots'] = [s.strip() for s in shots.split(',') if s.strip()] if shots else []
+                    result['screenshots'] = self._split_screenshots_string(shots)
                 elif isinstance(shots, list):
                     # Filter out blank/empty strings from list
                     result['screenshots'] = [s for s in shots if s and (isinstance(s, str) and s.strip())]
@@ -302,11 +366,26 @@ class ResultsController:
                 existing['status'] = "FAILED" if not existing['success'] else "PASSED"
                 existing_details = existing.get('details', '')
                 new_details = result.get('details', '')
-                merged_details = '\n'.join([d for d in [existing_details, new_details] if d])
+                detail_parts = []
+                for detail_blob in [existing_details, new_details]:
+                    if not detail_blob:
+                        continue
+                    detail_parts.extend([line.strip() for line in str(detail_blob).split('\n') if line.strip()])
+                merged_details = '\n'.join(self._unique_preserve_order(detail_parts))
                 existing['details'] = merged_details or f"Iteration execution {'completed successfully' if existing['success'] else 'failed'}"
 
             consolidated_results = list(deduped_results.values())
             print(f"[DEDUP SUMMARY] Consolidated: {len(consolidated_results)} results, Removed: {duplicates_removed} duplicates")
+
+            # If filtering for a specific job (e.g. Job Details page live results), return every
+            # iteration for that job directly, sorted ascending by iteration - no date pagination.
+            if job_id_filter:
+                job_results = [r for r in consolidated_results if r.get('job_id') == job_id_filter]
+                job_results.sort(key=lambda x: int(x.get('iteration') or 0))
+                return jsonify({
+                    'results': job_results,
+                    'total': len(job_results)
+                })
             
             # Sort by timestamp descending
             consolidated_results.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
@@ -719,7 +798,7 @@ class ResultsController:
                 if job.job_id not in jobs_with_results:
                     continue
                 sample = results_by_job.get(job.job_id, {})
-                image_name = sample.get('build_info') or job.sequence_name
+                image_name = self._clean_image_name(sample.get('build_info')) or job.sequence_name
                 if not image_name:
                     image_name = _extract_image_name(job.job_id, job.log_file_path)
                 available_jobs.append({
@@ -737,7 +816,7 @@ class ResultsController:
             missing_jobs = jobs_with_results.difference({j['job_id'] for j in available_jobs})
             for job_id in missing_jobs:
                 sample = results_by_job.get(job_id, {})
-                image_name = sample.get('build_info')
+                image_name = self._clean_image_name(sample.get('build_info'))
                 if not image_name:
                     image_name = _extract_image_name(job_id)
                 available_jobs.append({
@@ -817,7 +896,7 @@ class ResultsController:
                     'jobs': {}
                 })
 
-                image_name = result.get('build_info') or (job.sequence_name if job else None)
+                image_name = self._clean_image_name(result.get('build_info')) or (job.sequence_name if job else None)
                 if not image_name:
                     image_name = _extract_image_name(job_id, job.log_file_path if job else None)
 
@@ -842,7 +921,25 @@ class ResultsController:
                     'screenshots': screenshots
                 })
 
+            def _parse_iso(value):
+                if not value:
+                    return None
+                try:
+                    parsed = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+                    # Normalize to naive UTC so start/end times can be safely compared/subtracted
+                    # regardless of whether the source string included a timezone offset.
+                    if parsed.tzinfo is not None:
+                        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
+                    return parsed
+                except Exception:
+                    return None
+
             for device_entry in results_by_device.values():
+                device_perf_values = []
+                device_image_name = None
+                device_start_times = []
+                device_end_times = []
+
                 for job_entry in device_entry['jobs'].values():
                     job_entry['per_iteration'].sort(key=lambda x: x.get('iteration') or 0)
                     # Calculate crash summary
@@ -853,6 +950,34 @@ class ResultsController:
                         'total_iterations': total_iterations,
                         'summary_text': f"Crashes found {crashes_found} / {total_iterations}"
                     }
+
+                    # Aggregate device-level metrics used by the Excel export (image, avg boot time, execution time)
+                    if not device_image_name and job_entry.get('image_name'):
+                        device_image_name = job_entry['image_name']
+
+                    for iteration_data in job_entry['per_iteration']:
+                        perf = iteration_data.get('performance_seconds')
+                        if isinstance(perf, (int, float)):
+                            device_perf_values.append(perf)
+
+                    start_dt = _parse_iso(job_entry.get('start_time'))
+                    end_dt = _parse_iso(job_entry.get('end_time'))
+                    if start_dt:
+                        device_start_times.append(start_dt)
+                    if end_dt:
+                        device_end_times.append(end_dt)
+
+                device_entry['image_name'] = device_image_name or 'Unknown'
+                device_entry['avg_boot_time'] = (
+                    round(sum(device_perf_values) / len(device_perf_values), 2)
+                    if device_perf_values else None
+                )
+
+                if device_start_times and device_end_times:
+                    duration_seconds = (max(device_end_times) - min(device_start_times)).total_seconds()
+                    device_entry['execution_time'] = str(timedelta(seconds=int(max(0, duration_seconds))))
+                else:
+                    device_entry['execution_time'] = '-'
 
             return jsonify({
                 'available_jobs': available_jobs,
@@ -869,16 +994,65 @@ class ResultsController:
     def get_soft_hard_boot_results(self):
         """GET /api/soft-hard-boot-results - Get soft_hard_boot results with milestones"""
         try:
+            job_ids_param = request.args.get('job_ids', '')
+            device_ips_param = request.args.get('device_ips', '')
+            selected_job_ids = [j.strip() for j in job_ids_param.split(',') if j.strip()]
+            selected_device_ips = [d.strip() for d in device_ips_param.split(',') if d.strip()]
+
             all_results = self.test_service.get_all_results()
             
             # Filter for soft_hard_boot results only
-            soft_hard_boot_results = [
+            all_soft_hard_boot_results = [
                 r for r in all_results
                 if r.get('method') == 'soft_hard_boot'
             ]
+
+            jobs_with_results = {r.get('job_id') for r in all_soft_hard_boot_results if r.get('job_id')}
+
+            # Build the list of jobs available for the filter dropdown
+            jobs = Job.load_all()
+            results_by_job = {}
+            for r in all_soft_hard_boot_results:
+                job_id = r.get('job_id')
+                if job_id:
+                    results_by_job.setdefault(job_id, r)
+
+            available_jobs = []
+            for job_id in jobs_with_results:
+                job = next((j for j in jobs if j.job_id == job_id), None)
+                sample = results_by_job.get(job_id, {})
+                build_info = sample.get('build_info', '')
+                image_name = self._clean_image_name(build_info) if build_info else None
+                if not image_name and job:
+                    image_name = job.sequence_name
+                available_jobs.append({
+                    'job_id': job_id,
+                    'device_ip': (job.device_ip if job else sample.get('device_ip')) or 'N/A',
+                    'device_name': (job.device_name if job else sample.get('device_name')) or 'Unknown Device',
+                    'iterations': job.iterations if job else None,
+                    'status': job.status if job else 'unknown',
+                    'start_time': job.start_time if job else sample.get('timestamp'),
+                    'end_time': job.end_time if job else None,
+                    'image_name': image_name or 'Unknown Build'
+                })
+            available_jobs.sort(key=lambda j: j.get('start_time') or '', reverse=True)
+
+            if selected_job_ids:
+                job_filter = set(selected_job_ids)
+            else:
+                job_filter = jobs_with_results
+
+            soft_hard_boot_results = [
+                r for r in all_soft_hard_boot_results
+                if r.get('job_id') in job_filter
+            ]
+
+            if selected_device_ips:
+                device_filter = set(selected_device_ips)
+                soft_hard_boot_results = [r for r in soft_hard_boot_results if r.get('device_ip') in device_filter]
             
             if not soft_hard_boot_results:
-                return jsonify({'results_by_device': {}})
+                return jsonify({'results_by_device': {}, 'available_jobs': available_jobs})
             
             # Group by device and job
             results_by_device = {}
@@ -897,7 +1071,7 @@ class ResultsController:
                 if job_id not in results_by_device[device_ip]['jobs']:
                     # Extract image name and timestamp from first result for this job
                     build_info = result.get('build_info', '')
-                    image_name = build_info.split('\n')[0] if build_info else 'Unknown Build'
+                    image_name = self._clean_image_name(build_info) if build_info else 'Unknown Build'
                     start_time = result.get('timestamp', '')
                     
                     results_by_device[device_ip]['jobs'][job_id] = {
@@ -912,7 +1086,7 @@ class ResultsController:
                 
                 # Extract image name from build_info (first line)
                 build_info = result.get('build_info', '')
-                image_name = build_info.split('\n')[0] if build_info else 'Unknown Build'
+                image_name = self._clean_image_name(build_info) if build_info else 'Unknown Build'
                 
                 # Add iteration data
                 iteration_data = {
@@ -943,6 +1117,9 @@ class ResultsController:
             
             return jsonify({
                 'results_by_device': results_by_device,
+                'available_jobs': available_jobs,
+                'selected_job_ids': selected_job_ids,
+                'selected_device_ips': selected_device_ips,
                 'total_results': len(soft_hard_boot_results)
             })
         except Exception as e:
@@ -1105,7 +1282,7 @@ class ResultsController:
                 if results_by_device:
                     first_device = next(iter(results_by_device.values()))
                     device_name = first_device.get('device_name', 'Device')
-                    image_name = first_device.get('image_name', '')
+                    image_name = self._clean_image_name(first_device.get('image_name', ''))
                     
                     # Extract device model (e.g., Element-A4K from "Element-A4K-DESK")
                     try:
@@ -1117,17 +1294,8 @@ class ResultsController:
                     except:
                         device_model = device_name
                     
-                    # Extract image version from image_name (e.g., XUSPTC11MWR_8.3.4.9B1 from full path)
-                    if image_name:
-                        # Extract just the image name and version parts
-                        image_parts = image_name.split('_')
-                        if len(image_parts) >= 2:
-                            # Extract XUSPTC11MWR_8.3.4.9B1 format
-                            image_short = f"{image_parts[0]}_{image_parts[-1]}"
-                        else:
-                            image_short = image_name.split('/')[-1]  # Get last part if path
-                    else:
-                        image_short = 'Unknown'
+                    # Use the plain imagename value (e.g. SKTL21MEI_DEV_rel-20035_20260818101430)
+                    image_short = image_name.split('/')[-1] if image_name else 'Unknown'
                     
                     # Count total iterations
                     total_iterations = 0

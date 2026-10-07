@@ -36,7 +36,7 @@
             border-radius: 12px;
             box-shadow: var(--card-shadow);
             margin-bottom: 1.5rem;
-            overflow: hidden;
+            overflow: visible;
             transition: transform 0.2s, box-shadow 0.2s;
             border: 1px solid #374151;
         }
@@ -169,6 +169,67 @@
             white-space: pre-wrap;
             word-break: break-word;
         }
+
+        .btn-filter {
+            background: #4b5563;
+            border: none;
+            padding: 0.625rem 1.5rem;
+            border-radius: 8px;
+            color: #f3f4f6;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-filter:hover {
+            background: #6b7280;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(75, 85, 99, 0.4);
+        }
+
+        .btn-clear {
+            background: #6b7280;
+            border: none;
+            padding: 0.625rem 1.5rem;
+            border-radius: 8px;
+            color: #f3f4f6;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-clear:hover {
+            background: #9ca3af;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4);
+        }
+
+        #jobsDropdown .dropdown-menu .form-check-label {
+            color: #e5e7eb;
+        }
+        #jobsDropdown .dropdown-menu .form-check-input {
+            background-color: #111827;
+            border-color: #4b5563;
+        }
+        #jobsDropdown .dropdown-menu .form-check-input:checked {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+        #jobsDropdown .dropdown-menu .form-check-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
+        #devicesDropdown .dropdown-menu .form-check-label {
+            color: #e5e7eb;
+        }
+        #devicesDropdown .dropdown-menu .form-check-input {
+            background-color: #111827;
+            border-color: #4b5563;
+        }
+        #devicesDropdown .dropdown-menu .form-check-input:checked {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+        #devicesDropdown .dropdown-menu .form-check-input:focus {
+            box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+        }
     </style>
 </head>
 <body>
@@ -240,6 +301,47 @@
 
     <!-- Results Container -->
     <div class="container-fluid" style="padding: 2rem;">
+        <div class="dashboard-card mb-4">
+            <div class="card-header-custom">
+                <i class="bi bi-funnel"></i>
+                <h5>Filter by Jobs</h5>
+            </div>
+            <div class="card-body-custom">
+                <div class="row g-3 align-items-center">
+                    <div class="col-12 col-lg-5">
+                        <div class="dropdown" id="jobsDropdown">
+                            <button class="btn btn-outline-light w-100 d-flex align-items-center justify-content-between" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span id="jobsDropdownLabel">Select jobs</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <div class="dropdown-menu p-3 w-100" style="max-height: 320px; overflow-y: auto; background: #111827; color: #e5e7eb; border: 1px solid #374151;">
+                                <div id="jobsFilter"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-5">
+                        <div class="dropdown" id="devicesDropdown">
+                            <button class="btn btn-outline-light w-100 d-flex align-items-center justify-content-between" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span id="devicesDropdownLabel">Select devices</span>
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
+                            <div class="dropdown-menu p-3 w-100" style="max-height: 320px; overflow-y: auto; background: #111827; color: #e5e7eb; border: 1px solid #374151;">
+                                <div id="devicesFilter"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-2 d-flex gap-2">
+                        <button class="btn btn-sm btn-filter" onclick="applyFilters()">
+                            <i class="bi bi-check2-circle"></i> Apply Filter
+                        </button>
+                        <button class="btn btn-sm btn-clear" onclick="clearFilters()">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="resultsContainer" style="min-height: 400px;">
             <div class="text-center" style="padding: 2rem; color: #9ca3af;">
                 <i class="bi bi-hourglass-split" style="font-size: 2rem;"></i>
@@ -249,12 +351,29 @@
     </div>
 
     <script>
+        const params = new URLSearchParams(window.location.search);
+        const preselected = (params.get('job_ids') || '')
+            .split(',')
+            .map(id => id.trim())
+            .filter(Boolean);
+
+        let availableJobs = [];
+        let availableDevices = [];
+
         // Load and render results
-        function loadResults() {
-            fetch('/api/soft-hard-boot-results')
+        function loadResults(selectedJobIds = [], selectedDeviceIps = []) {
+            const query = new URLSearchParams();
+            if (selectedJobIds.length) query.set('job_ids', selectedJobIds.join(','));
+            if (selectedDeviceIps.length) query.set('device_ips', selectedDeviceIps.join(','));
+            const queryString = query.toString() ? `?${query.toString()}` : '';
+            fetch(`/api/soft-hard-boot-results${queryString}`)
                 .then(response => response.json())
                 .then(data => {
                     const resultsByDevice = data.results_by_device || {};
+                    availableJobs = data.available_jobs || [];
+                    renderJobFilters(availableJobs, selectedJobIds.length ? selectedJobIds : preselected);
+                    availableDevices = getDevicesFromResults(resultsByDevice);
+                    renderDeviceFilters(availableDevices, selectedDeviceIps);
                     renderResults(resultsByDevice);
                 })
                 .catch(error => {
@@ -262,6 +381,181 @@
                     document.getElementById('resultsContainer').innerHTML = 
                         '<div class="alert alert-danger">Failed to load results</div>';
                 });
+        }
+
+        function getDevicesFromResults(resultsByDevice) {
+            return Object.keys(resultsByDevice).map(deviceIp => {
+                const device = resultsByDevice[deviceIp] || {};
+                return {
+                    device_ip: deviceIp,
+                    device_name: device.device_name || 'Unknown Device'
+                };
+            });
+        }
+
+        function renderJobFilters(jobs, selectedJobIds) {
+            const container = document.getElementById('jobsFilter');
+            container.innerHTML = '';
+
+            if (!jobs.length) {
+                container.innerHTML = '<div class="text-muted">No Soft/Hard Boot jobs available.</div>';
+                return;
+            }
+
+            const allId = 'job-select-all';
+            const allWrapper = document.createElement('div');
+            allWrapper.className = 'form-check mb-2';
+            allWrapper.innerHTML = `
+                <input class="form-check-input" type="checkbox" value="__all__" id="${allId}">
+                <label class="form-check-label" for="${allId}">
+                    <strong>All Jobs</strong>
+                </label>
+            `;
+            container.appendChild(allWrapper);
+
+            jobs.forEach(job => {
+                const isChecked = selectedJobIds.includes(job.job_id) ? 'checked' : '';
+                const item = document.createElement('div');
+                item.className = 'form-check mb-2';
+                item.innerHTML = `
+                    <input class="form-check-input job-filter-item" type="checkbox" value="${job.job_id}" id="job-${job.job_id}" ${isChecked}>
+                    <label class="form-check-label" for="job-${job.job_id}">
+                        <strong>${job.device_name}</strong> (${job.device_ip})<br>
+                            <small style="color:#9ca3af;">${job.image_name || 'Unknown Build'} • ${job.iterations || '-'} ITR • ${job.status}</small>
+                    </label>
+                `;
+                container.appendChild(item);
+            });
+
+            const allCheckbox = document.getElementById(allId);
+            const jobCheckboxes = Array.from(document.querySelectorAll('.job-filter-item'));
+            const updateAllState = () => {
+                const checkedCount = jobCheckboxes.filter(c => c.checked).length;
+                allCheckbox.indeterminate = checkedCount > 0 && checkedCount < jobCheckboxes.length;
+                allCheckbox.checked = checkedCount === jobCheckboxes.length && jobCheckboxes.length > 0;
+            };
+
+            allCheckbox.addEventListener('change', (e) => {
+                jobCheckboxes.forEach(c => { c.checked = e.target.checked; });
+                updateDropdownLabel();
+            });
+
+            jobCheckboxes.forEach(cb => {
+                cb.addEventListener('change', () => {
+                    updateAllState();
+                    updateDropdownLabel();
+                });
+            });
+
+            updateAllState();
+            updateDropdownLabel();
+        }
+
+        function updateDropdownLabel() {
+            const label = document.getElementById('jobsDropdownLabel');
+            const selected = Array.from(document.querySelectorAll('.job-filter-item:checked'));
+            if (!selected.length) {
+                label.textContent = 'Select jobs';
+                return;
+            }
+            if (selected.length === 1) {
+                const id = selected[0].value;
+                const job = availableJobs.find(j => j.job_id === id);
+                label.textContent = job ? `${job.device_name} (${job.device_ip})` : '1 job selected';
+                return;
+            }
+            label.textContent = `${selected.length} jobs selected`;
+        }
+
+        function renderDeviceFilters(devices, selectedDeviceIps) {
+            const container = document.getElementById('devicesFilter');
+            container.innerHTML = '';
+
+            if (!devices.length) {
+                container.innerHTML = '<div class="text-muted">No devices available.</div>';
+                return;
+            }
+
+            const allId = 'device-select-all';
+            const allWrapper = document.createElement('div');
+            allWrapper.className = 'form-check mb-2';
+            allWrapper.innerHTML = `
+                <input class="form-check-input" type="checkbox" value="__all__" id="${allId}">
+                <label class="form-check-label" for="${allId}">
+                    <strong>All Devices</strong>
+                </label>
+            `;
+            container.appendChild(allWrapper);
+
+            devices.forEach(device => {
+                const isChecked = selectedDeviceIps.includes(device.device_ip) ? 'checked' : '';
+                const item = document.createElement('div');
+                item.className = 'form-check mb-2';
+                item.innerHTML = `
+                    <input class="form-check-input device-filter-item" type="checkbox" value="${device.device_ip}" id="device-${device.device_ip}" ${isChecked}>
+                    <label class="form-check-label" for="device-${device.device_ip}">
+                        <strong>${device.device_name}</strong> (${device.device_ip})
+                    </label>
+                `;
+                container.appendChild(item);
+            });
+
+            const allCheckbox = document.getElementById(allId);
+            const deviceCheckboxes = Array.from(document.querySelectorAll('.device-filter-item'));
+            const updateAllState = () => {
+                const checkedCount = deviceCheckboxes.filter(c => c.checked).length;
+                allCheckbox.indeterminate = checkedCount > 0 && checkedCount < deviceCheckboxes.length;
+                allCheckbox.checked = checkedCount === deviceCheckboxes.length && deviceCheckboxes.length > 0;
+            };
+
+            allCheckbox.addEventListener('change', (e) => {
+                deviceCheckboxes.forEach(c => { c.checked = e.target.checked; });
+                updateDeviceDropdownLabel();
+            });
+
+            deviceCheckboxes.forEach(cb => {
+                cb.addEventListener('change', () => {
+                    updateAllState();
+                    updateDeviceDropdownLabel();
+                });
+            });
+
+            updateAllState();
+            updateDeviceDropdownLabel();
+        }
+
+        function updateDeviceDropdownLabel() {
+            const label = document.getElementById('devicesDropdownLabel');
+            const selected = Array.from(document.querySelectorAll('.device-filter-item:checked'));
+            if (!selected.length) {
+                label.textContent = 'Select devices';
+                return;
+            }
+            if (selected.length === 1) {
+                const id = selected[0].value;
+                const device = availableDevices.find(d => d.device_ip === id);
+                label.textContent = device ? `${device.device_name} (${device.device_ip})` : '1 device selected';
+                return;
+            }
+            label.textContent = `${selected.length} devices selected`;
+        }
+
+        function applyFilters() {
+            const selected = Array.from(document.querySelectorAll('.job-filter-item:checked'))
+                .map(input => input.value);
+            const selectedDevices = Array.from(document.querySelectorAll('.device-filter-item:checked'))
+                .map(input => input.value);
+            const query = new URLSearchParams();
+            if (selected.length) query.set('job_ids', selected.join(','));
+            if (selectedDevices.length) query.set('device_ips', selectedDevices.join(','));
+            const queryString = query.toString() ? `?${query.toString()}` : '';
+            window.history.replaceState({}, '', `${window.location.pathname}${queryString}`);
+            loadResults(selected, selectedDevices);
+        }
+
+        function clearFilters() {
+            window.history.replaceState({}, '', window.location.pathname);
+            loadResults([], []);
         }
 
         function renderResults(resultsByDevice) {
@@ -602,7 +896,10 @@
 
         // Load results on page load
         document.addEventListener('DOMContentLoaded', function() {
-            loadResults();
+            const params = new URLSearchParams(window.location.search);
+            const jobIds = (params.get('job_ids') || '').split(',').map(s => s.trim()).filter(Boolean);
+            const deviceIps = (params.get('device_ips') || '').split(',').map(s => s.trim()).filter(Boolean);
+            loadResults(jobIds.length ? jobIds : preselected, deviceIps);
         });
     </script>
 
