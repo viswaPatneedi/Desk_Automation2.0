@@ -339,6 +339,51 @@ cd /path/to/app && source venv/bin/activate && python3 app.py &
 
 ## Next Steps & Future Phases
 
+---
+
+## October 7, 2026 - Standalone → v2.0 Feature Sync
+
+### Overview
+**Effort**: 1 day
+**Source**: standalone `lrqa-middleware-testing-dashboard` repo (past 2 months of work, Aug 7 – Oct 7 2026)
+**Approach**: 3-way merges (base = June 8 import `4ffe146` / standalone `830f357`), REWRITTEN to v2.0 conventions — package imports, PostgreSQL dual-write + tunnel/RPi-sharing + AI/composite-sequence UI all preserved. Nothing flowed v2.0 → standalone.
+**Branch/Merge**: `sync-from-standalone-oct2026` → merged into `viswa-desk-v2` (`8d4c9ec`); method follow-ups `5a77319`…`e49e36d`. Pushed to both remotes.
+**Verification**: every touched `.py` `py_compile`-clean; all ported modules import in app order; 0 conflict markers.
+**Scale**: 25+ files, ~3,800+ insertions.
+
+### Features ported (with origin in standalone)
+| Feature | v2.0 file(s) | Source origin |
+|---|---|---|
+| SOFT/HARD boot hardening (crash detect, ROI HOME match, nav keys, crash-wait, SSH reconnect, Settings OCR, retry-on-OCR-fail, BEFORE-screenshot fix, black-screen recovery, DE/German locales) | `methods/method_soft_hard_boot.py` + `methods/reference_screens/*.png` (9) | commits `83ef158`…`6ef5e02` |
+| LOOP/IF-ELSEIF-ELSE execution engine + crash-log dedupe | `services/test_execution_service.py` | Sep 23 feature arc |
+| New method: Fetch Apps Archives | `methods/method_fetch_apps_archives.py` | Sep 23 session |
+| Loop-aware ETA + device-lock duration (72h→30-day ceiling) | `config/config_eta.py`, `utils/device_lock_manager.py` | Sep 23 (`e976dfb`) |
+| Netflix play-from-start (Step 6.5) | `methods/method_netflix_playback.py` | `8f86de9` |
+| Soft/Hard Boot results job/device filters + results link | `controllers/results_controller.py`, `templates/soft_hard_boot_results.html`, `templates/job_details.html` | `0e45327` |
+| Device-log-archives backend (list + download routes + 4 helpers) | `app.py` | `284e7b6`, `0e5d99b` |
+| Job Details LOOP/IF grouping | `templates/job_details.html` | Sep 23 session |
+| Per-Pi inventory paths + case-insensitive HOME grep | `config/config_paths.py`, `restart.sh`, `.device-data.env.example`, `methods/method_reboot_perf_v2_optimized.py` | `3e9f96c`, `37ef5c2` |
+| OCR extract_text + VNC-first capture | `methods/method_capture_current_screen.py` | `f7e709e`, `ca2a4ee` |
+| capture_base_image → pure-VNC (black-screen support) | `methods/method_capture_base_image.py` | `6ef5e02` |
+| reboot_perf: SSH reconnect, termination fix, crash-wait, screenshots_dir | `methods/method_reboot_perf_v2_optimized.py` | `c375c4a`, `fd628d8`, `284e7b6`, `934ca66`, `83ef158` |
+| method_utils job-cancellation + results dedup | `methods/method_utils.py` | `5811c15`, `3b72fbd` |
+| method_trail termination + crash-wait | `methods/method_trail.py` | `fd628d8` |
+| **NEW** Channel Change Log Capture method | `methods/method_channel_change_capture.py` (+ dispatch in `test_execution_service.py`, registry in `app.py`) | `e1981f1` |
+
+### v2.0-specific adaptations applied
+- Import prefix mapping: `method_*`→`methods.`, `config_*`→`config.`, `screenshot_utils*`→`utils.`/`tools.screen.`
+- Deferred import of `collect_device_logs_to_media_app` in `method_soft_hard_boot.py` to break a circular import with `services/test_execution_service`
+- `screen_validator_lightweight` imported as `tools.screen.screen_validator_lightweight`
+- Reference screens placed under `methods/reference_screens/` to match `__file__`-relative globbing
+- Device-log-archive discovery adapted to v2.0's `ITERATION_<total>/ITR_<n>/captured_device_logs` (lowercase/plural) layout, response JSON shape unchanged
+- Union merge in `test_execution_service.py` kept v2.0's Postgres dual-write + tunnel methods while adding the control-flow engine
+- `reboot_perf_v2_optimized` kept v2.0's `screenshot_capture_service`/ExecutionResults/AI pipeline + `tunnel_service`/`device_config`; added standalone's `screenshots_dir` + fixes
+
+### Deferred
+- LOOP/IF-ELSE **authoring UI** in `templates/index.html` (40-merge-conflict risk vs v2.0's AI/composite-sequence UI). Backend executes existing LOOP/IF saved queues; visual authoring pending a hand-port from standalone `templates/dashboard.html`.
+
+---
+
 ### Immediate (Next 1-2 days)
 1. Finalize Phase 24-25 planning
 2. Begin Phase 29: Advanced Reporting

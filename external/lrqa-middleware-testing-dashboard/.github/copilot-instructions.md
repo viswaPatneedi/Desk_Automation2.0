@@ -1,7 +1,40 @@
 # LRQA Middleware Testing Dashboard - v2.0 Copilot Instructions
 
 **Project Status**: Phase 1 & Phase 2 COMPLETE ✅ | Active Bug Fixes & Enhancements 🔧  
-**Last Updated**: 2026-06-28 05:46 UTC | AI Screen Validation Fixed, Log Collection Optimized, Import Errors Resolved
+**Last Updated**: 2026-10-07 | Standalone feature sync merged (SOFT/HARD boot hardening, LOOP/IF-ELSE engine, crash detection, new methods) — PostgreSQL layer preserved
+
+## Recent Updates (October 7, 2026) — Standalone → v2.0 Feature Sync
+
+Synced the past-2-months of features from the standalone `lrqa-middleware-testing-dashboard` repo into this v2.0 copy, **rewritten to v2.0 conventions** (package imports `methods.`/`config.`/`utils.`/`tools.screen.`, PostgreSQL dual-write and tunnel/RPi-sharing preserved). All work merged to `viswa-desk-v2` (merge commit `8d4c9ec`, method follow-ups through `e49e36d`), pushed to both remotes. Every touched module `py_compile`-clean and import-verified in app order (import `services.test_execution_service` first).
+
+### ✅ Features ported from standalone
+1. **SOFT/HARD boot hardening series** — `methods/method_soft_hard_boot.py`
+   - Baselined process-crash detection (`baseline_line_count`), ROI-based HOME match, user-provided `navigation_keys`, `crash_wait_minutes`, SSH reconnect before post-reboot diagnostics, Settings OCR/visual validation, retry-on-OCR-failure, BEFORE-screenshot captured before recovery reboot, black-screen recovery + localized (DE/German) SOFT boot
+   - Adapted: deferred import of `collect_device_logs_to_media_app` (breaks a circular import), `tools.screen.screen_validator_lightweight` import, new `methods/reference_screens/` holding 9 UI reference PNGs (ROGERS_IUIv1, ALPACA_DE, SKY_LOGO, Black_Screen, XUMO)
+2. **LOOP / IF-ELSEIF-ELSE execution engine + crash-log dedupe** — `services/test_execution_service.py`
+   - Control-flow markers (`loop_start`/`loop_end`/`exit_loop`/`if_start`/`elseif_start`/`else_start`/`endif_block`), jump-capable `while` loop, `_build_control_flow_maps`/`_evaluate_control_condition`/`_handle_control_flow_step`, repeat-crash dedupe via `step_output_seen_lines`, dynamic log-collection reasons
+   - Union merge kept v2.0's Postgres dual-write + tunnel methods
+3. **Loop-aware ETA + device-lock duration** — `config/config_eta.py`, `utils/device_lock_manager.py` (loop body × iterations/days; lock ceiling 72h → 30 days)
+4. **Netflix play-from-start** — `methods/method_netflix_playback.py` (Step 6.5: UP,UP,ENTER past the Resume prompt)
+5. **Results-page job/device filters + Soft/Hard Boot results link** — `controllers/results_controller.py`, `templates/soft_hard_boot_results.html`, `templates/job_details.html`
+6. **Device-log-archives backend** — `app.py` (`list_device_log_archives` + `download_device_log_archive` routes + 4 helpers; adapted to v2.0's `ITERATION_<n>/captured_device_logs` layout)
+7. **Per-Pi inventory paths + case-insensitive HOME grep** — `config/config_paths.py` (`APP_DEVICES_FILE`/`APP_USERS_FILE` env overrides), `restart.sh` loads `.device-data.env`
+8. **Job Details LOOP/IF grouping** — `templates/job_details.html` (`groupExecutionQueueDisplay()`)
+
+### 🆕 New / updated methods
+- **`method_channel_change_capture.py`** (NEW) — Channel Change Log Capture: send channel key, baseline log, extract aamp tune-time / channel number / XUMO content-name. Wired into `test_execution_service` dispatch + `app.py method_aliases` ('Channel Change Log Capture').
+- **`method_fetch_apps_archives.py`** (NEW) — Fetch Apps Archives.
+- **`method_capture_current_screen.py`** — added `extract_text_from_local_image()` OCR + `extract_text` param; VNC-first capture.
+- **`method_capture_base_image.py`** — switched to pure-VNC capture (black-screen support).
+- **`method_reboot_perf_v2_optimized.py`** — SSH reconnect, termination-check fix, crash-wait, case-insensitive grep superset, `screenshots_dir` param (v2.0 screenshot pipeline preserved).
+- **`method_utils.py`** — job-cancellation detection + results dedup.
+- **`method_trail.py`** — termination-check + crash-wait.
+
+### ⏸️ Deferred
+- **LOOP/IF-ELSE drag-and-drop authoring UI** in `templates/index.html` (auto-merge produced 40 conflicts against v2.0's AI/composite-sequence UI). Backend executes existing LOOP/IF saved queues; visual authoring not yet available. Requires a hand-port of ~20 JS functions from standalone `templates/dashboard.html`.
+
+---
+
 
 ## Recent Updates (June 28, 2026)
 
