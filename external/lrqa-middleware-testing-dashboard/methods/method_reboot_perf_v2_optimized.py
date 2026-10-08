@@ -18,6 +18,7 @@ Optimized V1:        50s wait + 30s SSH probe → immediate log check = 1-2.5 mi
 ULTRA-Optimized:     10s wait + 40s SSH probe → immediate log check = 1-2 minutes total
 """
 
+import os
 import sys
 import time
 import re
@@ -338,8 +339,9 @@ def check_for_home_log_continuously(ssh, timeout_seconds, log_message_func, base
                 grep_cmd = f'grep -i -E "{combined_pattern}" /opt/logs/sky-messages.log | tail -1'
             else:
                 # Fallback pattern if config is empty
+                # UNION: superset of standalone patterns (incl. AppsModel.*App focus and HOME_.*complete), all case-insensitive
                 log_message_func("⚠ No HOME patterns found in config - using fallback pattern")
-                grep_cmd = 'grep -i -E "QMS.*HOME.*complete|App focus.*monarch_ui" /opt/logs/sky-messages.log | tail -1'
+                grep_cmd = 'grep -i -E "QMS.*HOME.*complete|HOME_.*complete|App focus.*monarch_ui|AppsModel.*App focus.*monarch_ui" /opt/logs/sky-messages.log | tail -1'
             
             log_message_func(f"  📋 DEBUG: Executing grep command...")
             log_message_func(f"     Command length: {len(grep_cmd)} chars")
@@ -813,6 +815,14 @@ def execute_optional_post_reboot_checks(ssh, optional_checks, log_message_func, 
         'detections': []  # Track what checks detected issues (for auto log collection)
     }
     
+    # Optional: when a termination-trigger check matches, wait this many minutes before
+    # collecting logs, so the device has time to flush/sync logs to disk first.
+    crash_wait_minutes = 0
+    try:
+        crash_wait_minutes = float((optional_checks or {}).get('crash_wait_minutes', 0) or 0)
+    except (TypeError, ValueError):
+        crash_wait_minutes = 0
+    
     # Check if user explicitly requested to skip all checks with -NA-
     if optional_checks and optional_checks.get('skip_all'):
         log_message_func(f"\n[POST-REBOOT CHECKS] User selected -NA- - skipping all validation checks")
@@ -915,6 +925,13 @@ def execute_optional_post_reboot_checks(ssh, optional_checks, log_message_func, 
                             log_message_func(f"  ✓ Pattern FOUND:")
                             for line in output_lines:
                                 log_message_func(f"     {line}")
+                        
+                        # If this check is a termination trigger, give the device time to finish
+                        # writing/syncing logs to the server before we archive them.
+                        if terminate_on_match and crash_wait_minutes > 0:
+                            log_message_func(f"\n  ⏳ Crash pattern found - waiting {crash_wait_minutes:.0f} minute(s) for logs to sync before collection...")
+                            time.sleep(crash_wait_minutes * 60)
+                            log_message_func(f"  ✓ Wait complete - proceeding with log collection")
                         
                         # AUTO-COLLECT LOGS when pattern found in optional checks
                         if device_ip and device_name and iteration is not None:
@@ -1076,7 +1093,7 @@ def wait_for_device_with_early_ssh_probing(device_ip, port, username, password, 
     log(f"❌ Device did not come back online within {ssh_probe_start + total_ssh_timeout}s total")
     return None
 
-def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password, iteration=1, device_name="Device", combined_method_name=None, optional_checks=None, wait_after_reboot=80, home_screen_timeout=180, auto_collect_logs=False, log_search_patterns=None, job_id=None, termination_if_not_found=None, max_performance_time=None, tunnel_service=None, total_iterations=1, device_config=None):
+def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password, iteration=1, device_name="Device", combined_method_name=None, optional_checks=None, wait_after_reboot=80, home_screen_timeout=180, auto_collect_logs=False, log_search_patterns=None, job_id=None, termination_if_not_found=None, max_performance_time=None, tunnel_service=None, total_iterations=1, device_config=None, screenshots_dir=None):
     """
     Execute Reboot Performance Monitoring V2 - OPTIMIZED:
     
@@ -1124,6 +1141,10 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
         max_performance_time: int - Optional maximum acceptable reboot time in seconds (e.g., 120)
                              If reboot time exceeds this value and auto_collect_logs=True,
                              device logs are automatically collected for diagnostics (default: None)
+        screenshots_dir: str - Optional job iteration screenshots folder (e.g. .../ITR_<n>/screenshots).
+                              When provided, BEFORE/AFTER screenshots are saved here instead of the
+                              standalone Enhancement_output/<DATE>/.../SCREENSHOTS location, so they
+                              live alongside this job's other artifacts (execution logs, device logs).
     """
     timestamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
     screenshots_list = []
@@ -1133,6 +1154,15 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
     screen_validation = None
     build_info = None
     check_results = None
+    
+    # Honor explicit screenshots_dir param (standalone parity): redirect screenshot
+    # storage for this execution. build_execution_results_path() reads
+    # method_utils.thread_local.screenshots_dir and saves BEFORE/AFTER screenshots there.
+    if screenshots_dir:
+        from methods import method_utils
+        os.makedirs(screenshots_dir, exist_ok=True)
+        method_utils.thread_local.screenshots_dir = screenshots_dir
+        log_message(f"📁 Screenshots will be saved to job folder: {screenshots_dir}")
     
     # Initialize screenshot capture service for device native screenshots
     try:
@@ -1377,7 +1407,8 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
             initial_wait=10,
             ssh_probe_start=40,
             probe_interval=5,
-            total_ssh_timeout=100,
+            # Keep probing until the user-provided HOME timeout expires.
+            total_ssh_timeout=max(0, int(home_screen_timeout) - 40),
             log_callback=log_message,
             tunnel_service=tunnel_service,
             device_config=device_config
