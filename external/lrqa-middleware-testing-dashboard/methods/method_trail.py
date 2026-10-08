@@ -438,6 +438,14 @@ def execute_optional_post_reboot_checks(ssh, optional_checks, log_message_func, 
         'collected_logs': []  # Track logs collected from pattern matches
     }
     
+    # Optional: when a termination-trigger check matches, wait this many minutes before
+    # collecting logs, so the device has time to flush/sync logs to disk first.
+    crash_wait_minutes = 0
+    try:
+        crash_wait_minutes = float((optional_checks or {}).get('crash_wait_minutes', 0) or 0)
+    except (TypeError, ValueError):
+        crash_wait_minutes = 0
+    
     # Check if user explicitly requested to skip all checks with -NA-
     if optional_checks and optional_checks.get('skip_all'):
         log_message_func(f"\n[POST-REBOOT CHECKS] User selected -NA- - skipping all validation checks")
@@ -526,6 +534,13 @@ def execute_optional_post_reboot_checks(ssh, optional_checks, log_message_func, 
                             log_message_func(f"  ✓ Pattern FOUND:")
                             for line in output_lines:
                                 log_message_func(f"     {line}")
+                        
+                        # If this check is a termination trigger, give the device time to finish
+                        # writing/syncing logs to the server before we archive them.
+                        if terminate_on_match and crash_wait_minutes > 0:
+                            log_message_func(f"\n  ⏳ Crash pattern found - waiting {crash_wait_minutes:.0f} minute(s) for logs to sync before collection...")
+                            time.sleep(crash_wait_minutes * 60)
+                            log_message_func(f"  ✓ Wait complete - proceeding with log collection")
                         
                         # AUTO-COLLECT LOGS when pattern found in optional checks
                         if device_ip and device_name and iteration is not None:

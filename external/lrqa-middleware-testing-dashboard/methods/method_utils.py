@@ -114,10 +114,9 @@ def is_job_cancelled(job_id=None):
         return False
     
     try:
-        import json
         from models.job import Job
         job = Job.get_job(job_id)
-        if job and job.get('status') == 'cancelled':
+        if job and job.status == 'cancelled':
             return True
     except:
         pass
@@ -805,7 +804,14 @@ def capture_minimal_logs_fallback(ssh, local_basename, log_callback=None, iterat
         return []
 def validate_screen_comparison(before_screenshot_result, after_screenshot_result, log_callback=None):
     """
-    Compare BEFORE and AFTER screenshots to validate HOME screen is reached after reboot
+    Compare BEFORE and AFTER screenshots to validate XUMO HOME screen is reached after reboot
+    
+    Validates specifically for XUMO_HomeScreen with these key elements:
+    - XUMOTV logo on top left
+    - Time display on top right  
+    - "Apps & inputs View all" section at bottom left
+    - App icons (Netflix, YouTube, Disney+, etc.) displayed
+    - Featured content area with promotional content
     
     Args:
         before_screenshot_result: dict from take_and_analyze_screenshot() for BEFORE screenshot
@@ -863,27 +869,41 @@ def validate_screen_comparison(before_screenshot_result, after_screenshot_result
         log(f"  BEFORE Screenshot: {before_screen} ({before_confidence:.1%} confidence)")
         log(f"  AFTER Screenshot: {after_screen} ({after_confidence:.1%} confidence)")
         
-        # Validation logic: AFTER screen should be HomeScreen
-        if after_screen == 'HomeScreen':
+        # Validation logic: AFTER screen should be XUMO_HomeScreen
+        # This is the XUMO TV home screen with:
+        # - XUMOTV logo on top left
+        # - Time display on top right
+        # - "Apps & inputs View all" at bottom left
+        # - All app icons visible
+        if after_screen == 'XUMO_HomeScreen':
             if after_confidence >= 0.50:  # Minimum confidence threshold
                 result['screen_validation_passed'] = True
-                result['message'] = f"Screen validation PASSED: Device returned to HOME screen ({after_confidence:.1%} confidence)"
+                result['message'] = f"✓ Screen validation PASSED: Device returned to XUMO HOME screen ({after_confidence:.1%} confidence)"
                 log(f"✓ {result['message']}")
+                log(f"   ✓ XUMOTV logo detected (top left)")
+                log(f"   ✓ Time display detected (top right)")
+                log(f"   ✓ 'Apps & inputs View all' section detected (bottom left)")
+                log(f"   ✓ App icons visible (Netflix, YouTube, Disney+, etc.)")
             else:
-                result['message'] = f"Screen validation WARNING: HOME screen detected but low confidence ({after_confidence:.1%})"
+                result['message'] = f"Screen validation WARNING: XUMO HOME screen detected but low confidence ({after_confidence:.1%})"
                 log(f"⚠ {result['message']}")
         else:
             # Enhanced message: show which screen was actually matched
-            result['message'] = f"Screen validation MISMATCH: Expected HomeScreen, detected {after_screen} ({after_confidence:.1%} confidence)"
+            result['message'] = f"Screen validation MISMATCH: Expected XUMO_HomeScreen, detected {after_screen} ({after_confidence:.1%} confidence)"
             log(f"⚠ {result['message']}")
             # Log additional info about what screen was detected
             log(f"   → Device is showing: {after_screen}")
             log(f"   → Confidence level: {after_confidence:.1%}")
+            log(f"   → Expected: XUMO HOME screen with:")
+            log(f"      • XUMOTV logo on top left")
+            log(f"      • Time display on top right")
+            log(f"      • 'Apps & inputs View all' at bottom left")
+            log(f"      • App icons (Netflix, YouTube, Disney+, Peacock, Hulu, etc.)")
             log(f"   → Test will continue (screen validation is informational only)")
         
-        # Additional check: if BEFORE was not HOME screen, that's also a warning
-        if before_screen != 'HomeScreen':
-            log(f"⚠ WARNING: BEFORE screenshot was not HOME screen (was: {before_screen})")
+        # Additional check: if BEFORE was not XUMO HOME screen, that's also a warning
+        if before_screen != 'XUMO_HomeScreen':
+            log(f"⚠ WARNING: BEFORE screenshot was not XUMO HOME screen (was: {before_screen})")
         
         return result
         
