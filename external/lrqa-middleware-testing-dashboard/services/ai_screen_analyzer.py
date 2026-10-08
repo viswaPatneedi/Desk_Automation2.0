@@ -1,14 +1,14 @@
 """
 AI Screen Analyzer Service - Standalone AI Agent for Screen Validation
 
-This service uses Google Gemini Vision API to intelligently analyze device screenshots
+This service uses a local Ollama vision model to intelligently analyze device screenshots
 and provide comprehensive screen validation results including:
 - Whether device is on the desired screen
 - What is currently in focus
 - UI elements visible
 - Screen status and anomalies
 
-✅ FREE TIER: No credit card required, uses Google's free Gemini API
+✅ Local/offline: no cloud API key required
 """
 
 import os
@@ -20,60 +20,49 @@ from datetime import datetime
 from typing import Dict, Optional, List
 from pathlib import Path
 
-try:
-    import google.generativeai as genai
-except ImportError:
-    genai = None
+import base64
+import requests
 
 
 class AIScreenAnalyzer:
-    """AI-powered screen analysis agent using Google Gemini Vision API (Free Tier)"""
-    
-    def __init__(self, api_key: str = None, model: str = "gemini-2.0-flash"):
-        """
-        Initialize AI Screen Analyzer with Google Gemini (Free API)
-        
-        Args:
-            api_key (str): Google Gemini API key (or use GOOGLE_API_KEY env var)
-            model (str): Gemini model to use for vision analysis (default: gemini-2.0-flash)
-        """
-        self.api_key = api_key or os.environ.get('GOOGLE_API_KEY')
-        self.model = model
-        self.client = None
+    """AI-powered screen analysis agent backed by a local Ollama vision model."""
+
+    def __init__(self, api_key: str = None, model: str = None):
+        """api_key is accepted for backward compatibility and ignored."""
+        self.base_url = os.environ.get('OLLAMA_BASE_URL', 'http://localhost:11434').rstrip('/')
+        self.model = model or os.environ.get('OLLAMA_MODEL', 'qwen3.5:9b')
+        self.timeout = int(os.environ.get('OLLAMA_TIMEOUT', '180'))
         self.analysis_cache = {}
         self.lock = threading.Lock()
-        
-        # Check if genai module is available
-        if genai is None:
-            print("⚠️  Warning: google-generativeai module not installed")
-            print("   Install with: pip install google-generativeai")
-            print("   Or use Ollama instead: export SCREEN_VALIDATION_PROVIDER='ollama'")
-            return
-        
-        # Debug: Show API key status
-        if self.api_key:
-            key_preview = self.api_key[:10] + "..." + self.api_key[-10:] if len(self.api_key) > 20 else "***"
-            print(f"📍 [DEBUG] GOOGLE_API_KEY found: {key_preview}")
-        else:
-            print(f"📍 [DEBUG] GOOGLE_API_KEY status: {os.environ.get('GOOGLE_API_KEY', 'NOT SET')}")
-            print(f"📍 [DEBUG] Available env vars containing 'GOOGLE': {[k for k in os.environ if 'GOOGLE' in k]}")
-        
-        if not self.api_key:
-            print("⚠️  Warning: GOOGLE_API_KEY not configured")
-            print("   Get free API key from: https://makersuite.google.com/app/apikey")
-            print("   Set environment variable: export GOOGLE_API_KEY='your-key-here'")
-            print("   AI Screen Analyzer will be disabled")
-            return
-        
+        self.client = None
         try:
-            genai.configure(api_key=self.api_key)
-            self.client = genai.GenerativeModel(self.model)
-            print(f"✅ AI Screen Analyzer initialized with Google Gemini (Free Tier)")
-            print(f"   Model: {self.model}")
+            r = requests.get(f"{self.base_url}/api/tags", timeout=5)
+            r.raise_for_status()
+            self.client = self
+            print(f"✅ AI Screen Analyzer initialized with Ollama ({self.model})")
         except Exception as e:
-            print(f"❌ Error initializing Gemini client: {e}")
-            self.client = None
-    
+            print(f"⚠️  AI Screen Analyzer: Ollama unreachable at {self.base_url}: {e}")
+
+    def _ollama_generate(self, prompt: str, image_paths: List[str]) -> str:
+        images = []
+        for path in image_paths:
+            with open(path, 'rb') as f:
+                images.append(base64.b64encode(f.read()).decode('utf-8'))
+        resp = requests.post(
+            f"{self.base_url}/api/generate",
+            json={
+                'model': self.model,
+                'prompt': prompt,
+                'images': images,
+                'stream': False,
+                'think': False,
+                'options': {'temperature': 0.1, 'num_predict': 2000},
+            },
+            timeout=self.timeout,
+        )
+        resp.raise_for_status()
+        return resp.json().get('response', '')
+
     def analyze_screenshot(self, screenshot_path: str, expected_screen: str = None,
                           device_name: str = None, detailed: bool = True) -> Dict:
         """
@@ -104,7 +93,7 @@ class AIScreenAnalyzer:
         if not self.client:
             return {
                 'success': False,
-                'error': 'AI Screen Analyzer not initialized - API key not configured',
+                'error': 'AI Screen Analyzer not initialized - Ollama not reachable',
                 'device_matched': False,
                 'timestamp': datetime.now().isoformat()
             }
@@ -133,21 +122,9 @@ class AIScreenAnalyzer:
             # Build analysis prompt
             prompt = self._build_analysis_prompt(expected_screen, device_name, detailed)
             
-            # Call Gemini Vision API
-            with open(screenshot_path, 'rb') as f:
-                image_data = f.read()
-            
-            # Upload to Gemini (it handles the image encoding)
-            response = self.client.generate_content([
-                prompt,
-                {
-                    'mime_type': self._get_media_type(image_file.suffix),
-                    'data': image_data
-                }
-            ])
+            analysis_text = self._ollama_generate(prompt, [screenshot_path])
             
             # Parse AI response
-            analysis_text = response.text
             result = self._parse_analysis_response(analysis_text, expected_screen, screenshot_path)
             result['timestamp'] = datetime.now().isoformat()
             result['analysis_text'] = analysis_text
@@ -372,17 +349,6 @@ DETAILED ANALYSIS REQUIREMENTS:
             }
         
         try:
-            # Read both images
-            with open(before_path, 'rb') as f:
-                before_data = base64.standard_b64encode(f.read()).decode('utf-8')
-            
-            with open(after_path, 'rb') as f:
-                after_data = base64.standard_b64encode(f.read()).decode('utf-8')
-            
-            # Get media types
-            before_type = self._get_media_type(Path(before_path).suffix)
-            after_type = self._get_media_type(Path(after_path).suffix)
-            
             # Build comparison prompt
             prompt = """Compare these two screenshots (BEFORE and AFTER) and identify:
 1. Major layout changes
@@ -407,47 +373,9 @@ Respond in JSON format:
 }
 """
             
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=2000,
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": "BEFORE:"
-                            },
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": before_type,
-                                    "data": before_data
-                                }
-                            },
-                            {
-                                "type": "text",
-                                "text": "AFTER:"
-                            },
-                            {
-                                "type": "image",
-                                "source": {
-                                    "type": "base64",
-                                    "media_type": after_type,
-                                    "data": after_data
-                                }
-                            },
-                            {
-                                "type": "text",
-                                "text": prompt
-                            }
-                        ]
-                    }
-                ]
-            )
-            
-            response_text = response.content[0].text
+            response_text = self._ollama_generate(
+                "The first image is BEFORE and the second image is AFTER.\n" + prompt,
+                [before_path, after_path])
             
             # Parse response
             try:

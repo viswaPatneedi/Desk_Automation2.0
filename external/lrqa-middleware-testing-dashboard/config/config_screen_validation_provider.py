@@ -24,7 +24,7 @@ SCREEN_VALIDATION_PROVIDER = 'ollama'  # HARDCODED - DO NOT CHANGE
 # Ollama Configuration (100% INDEPENDENT - No external services)
 OLLAMA_SCREEN_VALIDATOR_ENABLED = True  # Always enabled
 OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llava')  # Vision model
+OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'qwen3.5:9b')
 OLLAMA_TIMEOUT = int(os.getenv('OLLAMA_TIMEOUT', '60'))
 
 # Cloud providers DISABLED
@@ -68,9 +68,8 @@ OLLAMA-EXCLUSIVE MODE (No alternatives)
 2. Verify OLLAMA is accessible:
    curl http://localhost:11434/api/tags
    
-3. Models should include:
-   - mistral:latest (for text generation)
-   - llava:latest (for vision/screen analysis)
+3. The configured model must be installed locally and support vision.
+   The default qwen3.5:9b supports both text generation and screen analysis.
    
 4. No configuration needed:
    - System auto-detects OLLAMA

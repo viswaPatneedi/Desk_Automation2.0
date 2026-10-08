@@ -11,7 +11,7 @@ AI_VISION_PROVIDER = os.getenv('AI_VISION_PROVIDER', 'ollama')  # Default to OLL
 
 # Ollama Configuration (FREE - runs locally)
 OLLAMA_BASE_URL = os.getenv('OLLAMA_BASE_URL', 'http://localhost:11434')
-OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llava')  # llava, bakllava, or llava-phi3
+OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'qwen3.5:9b')
 
 # OpenAI Configuration
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')  # Set via environment variable

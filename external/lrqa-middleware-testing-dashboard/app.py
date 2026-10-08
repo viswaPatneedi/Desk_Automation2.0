@@ -136,14 +136,15 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # Disable static file caching
 # • No cloud dependencies
 # • No API keys required
 # • 100% local execution
-# • Mistral 7B for text + LLaVA for vision
+# • One local vision-capable model for both text and screen analysis
 
 screen_validation_provider = 'ollama'  # FORCED TO OLLAMA - NO FALLBACKS
+ollama_model = os.getenv('OLLAMA_MODEL', 'qwen3.5:9b')
 print("\n" + "="*70)
 print("AI CONFIGURATION: OLLAMA EXCLUSIVE MODE (No Cloud)")
 print("="*70)
-print("✅ Screen Validation:    OLLAMA (LLaVA vision model)")
-print("✅ Sequence Generation:  OLLAMA (Mistral 7B text model)")
+print(f"✅ Screen Validation:    OLLAMA ({ollama_model})")
+print(f"✅ Sequence Generation:  OLLAMA ({ollama_model})")
 print("✅ Local AI Service:     http://localhost:11434")
 print("✅ Cloud Dependencies:   DISABLED")
 print("✅ API Key Required:     NO")
@@ -864,7 +865,7 @@ def _verify_and_expand_steps_with_google_ai(model, workflow_text, regenerated_st
 def _regenerate_steps_with_ollama(workflow_text, parsed_steps, rule_memory, learning_entries):
     """
     Generate test steps using LOCAL OLLAMA (no cloud dependency)
-    Uses Mistral 7B model for intelligent step generation
+    Uses the configured local OLLAMA model for intelligent step generation
     """
     try:
         from services.ollama_integration import get_ollama_service
@@ -900,8 +901,7 @@ def _regenerate_steps_with_ollama(workflow_text, parsed_steps, rule_memory, lear
             'Return ONLY valid JSON, no markdown or prose.'
         )
 
-        # Query OLLAMA Mistral 7B for text generation
-        raw = service.generate_text(prompt, model="mistral", temperature=0.7)
+        raw = service.generate_text(prompt, temperature=0.7)
         
         if not raw:
             return []

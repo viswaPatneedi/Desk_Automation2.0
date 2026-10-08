@@ -107,10 +107,10 @@ try:
     validator = UnifiedScreenValidator()
     provider_info = validator.get_provider_info()
     print(f"✅ Unified Validator initialized")
-    print(f"   Configured Provider: {validator.provider}")
+    print(f"   Configured Provider: {provider_info.get('provider', 'unknown')}")
     print(f"   Actual Provider: {provider_info.get('actual', 'unknown')}")
     
-    if provider_info.get('actual') == 'ollama':
+    if provider_info.get('actual') == 'ollama' and provider_info.get('available'):
         print("✅ Using OLLAMA as primary provider")
     else:
         print(f"⚠ Using {provider_info.get('actual')} (might be fallback)")
@@ -122,7 +122,7 @@ print("✅ OLLAMA INTEGRATION TEST COMPLETE")
 print("="*80)
 print("\n📝 Summary:")
 print("   1. OLLAMA service: Available ✅")
-print("   2. llava model: Installed ✅")
+print("   2. Configured vision model: Installed ✅")
 print("   3. Text extraction: OLLAMA ✅")
 print("   4. Screen validation: OLLAMA ✅")
 print("\n🎯 Next Step: Run Netflix playback execution")

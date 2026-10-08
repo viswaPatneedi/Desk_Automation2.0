@@ -63,7 +63,8 @@ class UnifiedScreenValidator:
             self.actual_provider = None
     
     def validate_screen(self, screenshot_path: str, expected_screen: str,
-                       device_name: str = None) -> bool:
+                       device_name: str = None,
+                       reference_path: Optional[str] = None) -> bool:
         """
         Validate if device is on expected screen using OLLAMA
         
@@ -77,7 +78,7 @@ class UnifiedScreenValidator:
         """
         try:
             if self.actual_provider == 'ollama':
-                return self.validator.validate_screen(screenshot_path, expected_screen, device_name)
+                return self.validator.validate_screen(screenshot_path, expected_screen, device_name, reference_path)
             else:
                 logger.warning("OLLAMA not available - validation cannot proceed")
                 return False
@@ -87,7 +88,8 @@ class UnifiedScreenValidator:
             return False
     
     def validate_screen_detailed(self, screenshot_path: str, expected_screen: str,
-                                device_name: str = None) -> Dict:
+                                device_name: str = None,
+                                reference_path: Optional[str] = None) -> Dict:
         """
         Validate screen and return detailed analysis from OLLAMA
         
@@ -96,7 +98,7 @@ class UnifiedScreenValidator:
         """
         try:
             if self.actual_provider == 'ollama':
-                result = self.validator.validate_screen_detailed(screenshot_path, expected_screen, device_name)
+                result = self.validator.validate_screen_detailed(screenshot_path, expected_screen, device_name, reference_path)
                 result['provider'] = 'ollama'
                 return result
             else:
@@ -125,7 +127,7 @@ def get_validator(provider: str = None) -> UnifiedScreenValidator:
     """Get or create a validator instance"""
     global _validator_instance
     if _validator_instance is None:
-        _validator_instance = UnifiedScreenValidator(provider=provider)
+        _validator_instance = UnifiedScreenValidator()
     return _validator_instance
 
 

@@ -2,7 +2,7 @@
 INDEPENDENT AI SCREEN VALIDATOR - OLLAMA VERSION
 ================================================
 
-This module provides a truly independent screen validation using Ollama LLaVA model.
+This module provides independent screen validation using a local Ollama vision model.
 NO external API keys needed. NO cloud services. Runs 100% locally and free.
 
 Usage:
@@ -26,7 +26,7 @@ Usage:
 Features:
     ✓ 100% Local - No cloud dependencies
     ✓ Free - No API keys needed
-    ✓ Fast - LLaVA model optimized for speed
+    ✓ Uses an installed Ollama vision model
     ✓ Accurate - Uses Ollama vision intelligence
     ✓ Independent - Requires only Ollama service running locally
     ✓ Fallback support - Can degrade to lightweight validation
@@ -59,12 +59,12 @@ class OllamaScreenValidator:
         
         Args:
             ollama_url: Ollama API base URL (default: http://localhost:11434)
-            model: Model to use (default: llava)
+            model: Model to use (default: configured OLLAMA_MODEL)
             timeout: Request timeout in seconds (default: 45)
             debug: Enable debug logging (default: False)
         """
         self.ollama_url = ollama_url or os.environ.get('OLLAMA_BASE_URL', 'http://localhost:11434')
-        self.model = model or os.environ.get('OLLAMA_MODEL', 'llava')
+        self.model = model or os.environ.get('OLLAMA_MODEL', 'qwen3.5:9b')
         self.timeout = timeout
         self.debug = debug
         self.available = False
@@ -85,9 +85,10 @@ class OllamaScreenValidator:
             
             if response.status_code == 200:
                 models = response.json().get('models', [])
-                model_names = [m['name'].split(':')[0] for m in models]
-                
-                if self.model in model_names:
+                model_names = [m['name'] for m in models]
+                available_model_families = {name.split(':')[0] for name in model_names}
+
+                if self.model in model_names or self.model.split(':')[0] in available_model_families:
                     self.available = True
                     logger.info(f"✅ Ollama available with model: {self.model}")
                 else:
@@ -109,9 +110,10 @@ class OllamaScreenValidator:
             return None
     
     def _analyze_with_ollama(self, screenshot_path: str, 
-                           expected_screen: str) -> Dict:
+                           expected_screen: str,
+                           reference_path: Optional[str] = None) -> Dict:
         """
-        Analyze screenshot using Ollama LLaVA vision model
+        Analyze screenshot using the configured Ollama vision model
         
         Returns:
             dict: Analysis result with screen info and confidence
@@ -127,15 +129,22 @@ class OllamaScreenValidator:
             if not img_base64:
                 return {'error': 'Failed to encode image'}
             
-            # Prepare analysis prompt - simplified for faster response
-            prompt = f"""Screen: {expected_screen}
-
-Analyze this screenshot BRIEFLY:
-1. Current screen/app name?
-2. Match? (Yes/No + confidence 0-100)
-3. Main UI elements?
-
-Be VERY CONCISE."""
+            images = [img_base64]
+            if reference_path:
+                ref_base64 = self._encode_image(reference_path)
+                if not ref_base64:
+                    return {'error': f'Failed to encode reference image: {reference_path}'}
+                images = [ref_base64, img_base64]
+                task = (f'The FIRST image is the REFERENCE screen "{expected_screen}". '
+                        'The SECOND image is the CAPTURED screen. Decide whether the captured '
+                        'screen shows the same screen as the reference (same page/app, same main '
+                        'layout and content; ignore minor differences such as focus highlight, '
+                        'clock or small animated content).')
+            else:
+                task = f'Decide whether this screenshot shows the screen: "{expected_screen}".'
+            prompt = (task + ' Be strict: if it is a different screen, match must be false. '
+                      'Reply with ONLY a JSON object: {"match": true|false, "confidence": 0-100, '
+                      '"detected_screen": "short name of what is shown", "reason": "one short sentence"}')
             
             # Call Ollama API
             response = requests.post(
@@ -143,9 +152,10 @@ Be VERY CONCISE."""
                 json={
                     "model": self.model,
                     "prompt": prompt,
-                    "images": [img_base64],
+                    "images": images,
                     "stream": False,
-                    "temperature": 0.3,  # Lower temperature for more consistent results
+                    "think": False,
+                    "options": {"temperature": 0.3},  # Lower temperature for more consistent results
                 },
                 timeout=self.timeout
             )
@@ -158,12 +168,15 @@ Be VERY CONCISE."""
                     logger.warning(f"Empty or invalid OLLAMA response")
                     return {'error': 'Empty OLLAMA response'}
                 
-                # Parse response for confidence
-                confidence = self._extract_confidence(analysis_text, expected_screen)
-                is_match = confidence >= 60  # 60% threshold
-                
-                # Extract detected screen name from analysis
-                detected_screen = self._extract_screen_name(analysis_text, expected_screen)
+                parsed = self._parse_json_verdict(analysis_text)
+                if parsed is not None:
+                    confidence = parsed['confidence']
+                    is_match = parsed['match'] and confidence >= 60
+                    detected_screen = parsed['detected_screen']
+                else:
+                    confidence = self._extract_confidence(analysis_text, expected_screen)
+                    is_match = confidence >= 60  # 60% threshold
+                    detected_screen = self._extract_screen_name(analysis_text, expected_screen)
                 
                 return {
                     'success': True,
@@ -185,6 +198,20 @@ Be VERY CONCISE."""
             logger.error(f"Ollama analysis error: {e}")
             return {'error': str(e)}
     
+    @staticmethod
+    def _parse_json_verdict(text: str) -> Optional[Dict]:
+        """Parse the structured JSON verdict; return None if the reply is not valid JSON."""
+        try:
+            data = json.loads(text[text.index('{'):text.rindex('}') + 1])
+            match = data['match']
+            if isinstance(match, str):
+                match = match.strip().lower() == 'true'
+            confidence = int(float(data.get('confidence', 100 if match else 0)))
+            return {'match': bool(match), 'confidence': min(100, max(0, confidence)),
+                    'detected_screen': data.get('detected_screen')}
+        except (ValueError, KeyError, TypeError):
+            return None
+
     def _extract_confidence(self, analysis_text: str, expected_screen: str) -> int:
         """
         Extract confidence score from Ollama analysis
@@ -239,7 +266,8 @@ Be VERY CONCISE."""
         return confidence
     
     def validate_screen(self, screenshot_path: str, expected_screen: str,
-                       device_name: str = None) -> bool:
+                       device_name: str = None,
+                       reference_path: Optional[str] = None) -> bool:
         """
         Validate if device is on expected screen
         
@@ -255,7 +283,7 @@ Be VERY CONCISE."""
             logger.error("Ollama not available for validation")
             return False
         
-        result = self._analyze_with_ollama(screenshot_path, expected_screen)
+        result = self._analyze_with_ollama(screenshot_path, expected_screen, reference_path)
         
         if 'error' in result:
             logger.error(f"Validation error: {result['error']}")
@@ -270,7 +298,8 @@ Be VERY CONCISE."""
     
     def validate_screen_detailed(self, screenshot_path: str, 
                                 expected_screen: str,
-                                device_name: str = None) -> Dict:
+                                device_name: str = None,
+                                reference_path: Optional[str] = None) -> Dict:
         """
         Validate screen and return detailed analysis
         
@@ -280,7 +309,7 @@ Be VERY CONCISE."""
         if not self.available:
             return {'error': 'Ollama not available', 'match': False}
         
-        result = self._analyze_with_ollama(screenshot_path, expected_screen)
+        result = self._analyze_with_ollama(screenshot_path, expected_screen, reference_path)
         
         if self.debug:
             logger.debug(f"Detailed validation result: {json.dumps(result, indent=2)}")

@@ -13,8 +13,9 @@ from __future__ import annotations
 import requests
 import json
 import logging
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Optional, Tuple
 import base64
+from datetime import datetime
 import os
 
 # Configure logging
@@ -23,17 +24,19 @@ logger = logging.getLogger(__name__)
 class OLLAMAService:
     """Service for interacting with local OLLAMA instance"""
     
-    def __init__(self, base_url: str = "http://localhost:11434"):
+    def __init__(self, base_url: Optional[str] = None):
         """
         Initialize OLLAMA service
         
         Args:
             base_url: OLLAMA server URL (default: http://localhost:11434)
         """
-        self.base_url = base_url
-        self.model = "mistral"
-        self.api_endpoint = f"{base_url}/api/generate"
-        self.tags_endpoint = f"{base_url}/api/tags"
+        self.base_url = (base_url or os.getenv(
+            "OLLAMA_BASE_URL", "http://localhost:11434"
+        )).rstrip("/")
+        self.model = os.getenv("OLLAMA_MODEL", "qwen3.5:9b")
+        self.api_endpoint = f"{self.base_url}/api/generate"
+        self.tags_endpoint = f"{self.base_url}/api/tags"
         
     def is_available(self) -> bool:
         """
@@ -67,11 +70,11 @@ class OLLAMAService:
     
     def generate_text(self, prompt: str, model: str = None, temperature: float = 0.7) -> str:
         """
-        Generate text using OLLAMA model (Mistral 7B)
+        Generate text using the configured local OLLAMA model
         
         Args:
             prompt: Input prompt for text generation
-            model: Model name (default: mistral)
+            model: Model name (default: configured OLLAMA model)
             temperature: Creativity level (0.0-1.0, default: 0.7)
             
         Returns:
@@ -82,7 +85,7 @@ class OLLAMAService:
             return ""
         
         try:
-            model = model or "mistral"
+            model = model or self.model
             
             response = requests.post(
                 self.api_endpoint,
@@ -90,7 +93,8 @@ class OLLAMAService:
                     "model": model,
                     "prompt": prompt,
                     "stream": False,
-                    "temperature": temperature
+                    "think": False,
+                    "options": {"temperature": temperature}
                 },
                 timeout=60
             )
@@ -170,6 +174,7 @@ Be precise and concise."""
                     "model": self.model,
                     "prompt": prompt,
                     "stream": False,
+                    "think": False,
                     "images": [image_data]
                 },
                 timeout=30
@@ -276,6 +281,7 @@ RESOLUTION: [suggested fix]"""
                     "model": self.model,
                     "prompt": prompt,
                     "stream": False,
+                    "think": False,
                     "images": [image_data]
                 },
                 timeout=30
@@ -389,6 +395,7 @@ ANALYSIS: Brief description of UI layout"""
                     "model": self.model,
                     "prompt": prompt,
                     "stream": False,
+                    "think": False,
                     "images": [image_data]
                 },
                 timeout=30

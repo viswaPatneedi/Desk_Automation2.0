@@ -42,7 +42,8 @@ def extract_text_with_ollama(image, log_callback=None):
                 Organize the text as it appears on screen from top to bottom.
                 Return only the extracted text without any additional commentary.""",
                 "images": [img_base64],
-                "stream": False
+                "stream": False,
+                "think": False
             },
             timeout=AI_VISION_TIMEOUT
         )
