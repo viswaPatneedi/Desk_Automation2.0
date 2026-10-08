@@ -111,9 +111,13 @@ class OllamaScreenValidator:
     
     def _analyze_with_ollama(self, screenshot_path: str, 
                            expected_screen: str,
-                           reference_path: Optional[str] = None) -> Dict:
+                           reference_path: Optional[str] = None,
+                           layout_only: bool = False) -> Dict:
         """
         Analyze screenshot using the configured Ollama vision model
+
+        layout_only: judge by page type/layout and ignore rotating content (banners,
+        posters, thumbnails, clock, focus), as needed for screen identification.
         
         Returns:
             dict: Analysis result with screen info and confidence
@@ -140,9 +144,16 @@ class OllamaScreenValidator:
                         'screen shows the same screen as the reference (same page/app, same main '
                         'layout and content; ignore minor differences such as focus highlight, '
                         'clock or small animated content).')
+                if layout_only:
+                    task += (' Judge by page type and layout only: the same persistent UI elements '
+                             '(logo, header, menu/app row, tile grid, dialog structure). The large hero '
+                             'banner, promo tiles, posters, show titles and thumbnails rotate and are '
+                             'EXPECTED to differ; do not treat that as a different screen.')
             else:
                 task = f'Decide whether this screenshot shows the screen: "{expected_screen}".'
-            prompt = (task + ' Be strict: if it is a different screen, match must be false. '
+            strict = ('If it is a different page/app/dialog, match must be false.' if layout_only
+                      else 'Be strict: if it is a different screen, match must be false.')
+            prompt = (task + ' ' + strict + ' '
                       'Reply with ONLY a JSON object: {"match": true|false, "confidence": 0-100, '
                       '"detected_screen": "short name of what is shown", "reason": "one short sentence"}')
             
@@ -369,6 +380,99 @@ class OllamaScreenValidator:
                 return screen.title()
         
         return None
+
+    REFERENCE_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+                                 'reference_screens')
+    _IMAGE_EXTS = ('.png', '.jpg', '.jpeg')
+
+    @classmethod
+    def list_reference_screens(cls, reference_dir: Optional[str] = None) -> Dict[str, str]:
+        """Map screen name (file stem) -> image path for every image under reference_screens/."""
+        base = reference_dir or cls.REFERENCE_DIR
+        screens = {}
+        for root, _dirs, files in os.walk(base):
+            for fname in sorted(files):
+                if fname.lower().endswith(cls._IMAGE_EXTS):
+                    screens.setdefault(os.path.splitext(fname)[0], os.path.join(root, fname))
+        return screens
+
+    @staticmethod
+    def _thumb(path: str, bottom_only: bool = False):
+        with Image.open(path) as img:
+            img = img.convert('RGB')
+            if bottom_only:
+                w, h = img.size
+                img = img.crop((0, int(h * 0.62), w, h))
+            return list(img.resize((24, 24)).getdata())
+
+    @classmethod
+    def _rank_references(cls, screenshot_path: str, screens: Dict[str, str]):
+        """Cheap pixel-distance pre-filter so the vision model only compares the closest few references."""
+        def distance(a, b):
+            return sum(abs(x - y) for p, q in zip(a, b) for x, y in zip(p, q)) / (len(a) * 3 * 255.0)
+
+        # Hero banners rotate, so weight the mostly-static bottom strip as much as the full frame.
+        shot, shot_bottom = cls._thumb(screenshot_path), cls._thumb(screenshot_path, True)
+        ranked = []
+        for name, path in screens.items():
+            try:
+                dist = 0.5 * distance(shot, cls._thumb(path)) + 0.5 * distance(shot_bottom, cls._thumb(path, True))
+            except Exception:
+                continue
+            ranked.append((dist, name, path))
+        ranked.sort()
+        return ranked
+
+    def identify_screen(self, screenshot_path: str, top_k: int = 3,
+                        accept_confidence: int = 85,
+                        reference_dir: Optional[str] = None) -> Dict:
+        """
+        Work out which known screen a screenshot shows by comparing it with the images in
+        reference_screens/. The closest references (by image similarity) are shown to the
+        Ollama vision model one by one; the best confirmed match wins.
+
+        Returns:
+            dict: {'success', 'detected_screen' (reference name or 'Unknown'), 'confidence' (0-1),
+                   'reference_path', 'candidates': [...], 'description'}
+        """
+        if not self.available:
+            return {'error': 'Ollama not available'}
+        if not os.path.exists(screenshot_path):
+            return {'error': f'Screenshot not found: {screenshot_path}'}
+
+        screens = self.list_reference_screens(reference_dir)
+        if not screens:
+            return {'error': 'No reference screens found'}
+
+        candidates, best, description = [], None, ''
+        for dist, name, path in self._rank_references(screenshot_path, screens)[:max(1, top_k)]:
+            result = self._analyze_with_ollama(screenshot_path, name, path, layout_only=True)
+            if 'error' in result:
+                candidates.append({'screen': name, 'error': result['error']})
+                continue
+            confidence = result.get('confidence', 0)
+            description = description or result.get('detected_screen') or ''
+            candidates.append({'screen': name, 'match': result.get('match', False),
+                               'confidence': confidence, 'similarity': round(1 - dist, 3)})
+            if result.get('match') and (best is None or confidence > best['confidence']):
+                best = {'screen': name, 'confidence': confidence, 'path': path}
+            if best and best['confidence'] >= accept_confidence:
+                break
+
+        if best:
+            return {'success': True, 'detected_screen': best['screen'],
+                    'confidence': best['confidence'] / 100.0, 'reference_path': best['path'],
+                    'candidates': candidates, 'description': description, 'provider': 'ollama'}
+        if all('error' in c for c in candidates):
+            return {'error': candidates[0]['error'] if candidates else 'Identification failed'}
+        return {'success': True, 'detected_screen': 'Unknown', 'confidence': 0.0,
+                'reference_path': None, 'candidates': candidates,
+                'description': description, 'provider': 'ollama'}
+
+
+def identify_screen_ollama(screenshot_path: str, timeout: int = 60, top_k: int = 3) -> Dict:
+    """Identify which reference screen a screenshot shows (see OllamaScreenValidator.identify_screen)."""
+    return OllamaScreenValidator(timeout=timeout).identify_screen(screenshot_path, top_k=top_k)
 
 
 # Convenience function for quick usage

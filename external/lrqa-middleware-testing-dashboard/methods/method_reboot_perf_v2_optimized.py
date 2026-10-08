@@ -56,7 +56,7 @@ from services.screenshot_capture_service import ScreenshotCaptureService
 
 # Import AI Screen Validation
 try:
-    from ai_integration_universal import validate_screen_ai, get_ai_validator
+    from services.ai_vision.ai_screen_validator_ollama import identify_screen_ollama
     AI_VALIDATION_ENABLED = True
 except ImportError:
     AI_VALIDATION_ENABLED = False
@@ -1313,9 +1313,9 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                         # Run AI analysis on BEFORE screenshot to populate screen_state
                         if AI_VALIDATION_ENABLED:
                             try:
-                                from ai_integration_universal import analyze_screen_ai
+                                from services.ai_vision.ai_screen_validator_ollama import identify_screen_ollama as analyze_screen_ai
                                 log_message(f"🤖 Running AI analysis on BEFORE screenshot...")
-                                ai_result = analyze_screen_ai(str(before_screenshot_path), device_name=device_name)
+                                ai_result = analyze_screen_ai(str(before_screenshot_path))
                                 
                                 if ai_result and not ai_result.get('error'):
                                     # Extract screen detection info from AI result
@@ -1336,7 +1336,7 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                                 before_screenshot_result['screen_state'] = {'screen_detected': 'Unknown', 'confidence': 0.0}
                         else:
                             # AI validation disabled, set default
-                            before_screenshot_result['screen_state'] = {'screen_detected': 'Direct Capture', 'confidence': 1.0}
+                            before_screenshot_result['screen_state'] = {'screen_detected': 'Not analyzed (AI unavailable)', 'confidence': 0.0}
                         
                         screenshot_result_before = before_screenshot_result
                     else:
@@ -1660,9 +1660,9 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                             # Run AI analysis on AFTER screenshot to populate screen_state
                             if AI_VALIDATION_ENABLED:
                                 try:
-                                    from ai_integration_universal import analyze_screen_ai
+                                    from services.ai_vision.ai_screen_validator_ollama import identify_screen_ollama as analyze_screen_ai
                                     log_message(f"🤖 Running AI analysis on AFTER screenshot...")
-                                    ai_result = analyze_screen_ai(str(after_screenshot_path), device_name=device_name)
+                                    ai_result = analyze_screen_ai(str(after_screenshot_path))
                                     
                                     if ai_result and not ai_result.get('error'):
                                         # Extract screen detection info from AI result
@@ -1683,7 +1683,7 @@ def execute_reboot_perf_v2_optimized_process(device_ip, port, username, password
                                     screenshot_result['screen_state'] = {'screen_detected': 'Unknown', 'confidence': 0.0}
                             else:
                                 # AI validation disabled, set default
-                                screenshot_result['screen_state'] = {'screen_detected': 'Direct Capture', 'confidence': 1.0}
+                                screenshot_result['screen_state'] = {'screen_detected': 'Not analyzed (AI unavailable)', 'confidence': 0.0}
                         else:
                             log_message("⚠ Could not create ExecutionResults directory")
                     else:
