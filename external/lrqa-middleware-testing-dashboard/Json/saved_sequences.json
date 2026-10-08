@@ -1,13 +1,14 @@
 [
   {
-    "sequence_id": "seq_20260907_230447_581083",
-    "name": "Recheck-123",
+    "sequence_id": "seq_20260904_012800_032011",
+    "name": "AuditTest_temp_renamed_123",
     "description": "",
     "queue_data": [
-      "reboot_perf_v2_optimized",
-      "sequence_reference_seq_20260424_142951_357940"
+      "status"
     ],
-    "methods": [],
+    "methods": [
+      "status"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -18,7 +19,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:54.368255",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260904_011101_968958",
@@ -34,7 +36,16 @@
       "voice_command",
       "capture_current_screen"
     ],
-    "methods": [],
+    "methods": [
+      "send_remote_keys",
+      "capture_current_screen",
+      "reboot_perf_v2_optimized",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen",
+      "voice_command",
+      "capture_current_screen"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -45,7 +56,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260526_163544_506825",
@@ -59,27 +71,14 @@
       "execute_command",
       "collect_device_logs"
     ],
-    "methods": [],
-    "user_inputs": {},
-    "created_at": "2026-10-08T15:19:35.161813",
-    "created_by": "vpatne290",
-    "team_name": "LRQA",
-    "method_rationale": [],
-    "execution_count": 0,
-    "total_duration_seconds": null,
-    "average_duration_seconds": null,
-    "location": "",
-    "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
-  },
-  {
-    "sequence_id": "seq_20260904_012800_032011",
-    "name": "AuditTest_temp_renamed",
-    "description": "",
-    "queue_data": [
-      "status"
+    "methods": [
+      "execute_command",
+      "reboot_perf_v2_optimized",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "collect_device_logs"
     ],
-    "methods": [],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -90,7 +89,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260424_142951_357940",
@@ -136,7 +136,46 @@
       "execute_command",
       "collect_device_logs"
     ],
-    "methods": [],
+    "methods": [
+      "execute_command",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "voice_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "voice_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "voice_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "voice_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "execute_command",
+      "execute_command",
+      "collect_device_logs"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -147,7 +186,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260428_112751_564356",
@@ -195,7 +235,48 @@
       "collect_device_logs",
       "deepsleep"
     ],
-    "methods": [],
+    "methods": [
+      "reboot",
+      "execute_command",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "voice_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "voice_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "voice_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "voice_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "execute_command",
+      "execute_command",
+      "collect_device_logs",
+      "deepsleep"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -206,7 +287,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260107_164346_901288",
@@ -217,7 +299,11 @@
       "deepsleep",
       "voice_command"
     ],
-    "methods": [],
+    "methods": [
+      "reboot",
+      "deepsleep",
+      "voice_command"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -228,7 +314,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260209_140545_285963",
@@ -257,7 +344,29 @@
       "send_remote_keys",
       "system_command"
     ],
-    "methods": [],
+    "methods": [
+      "reboot_perf_v2_optimized",
+      "system_command",
+      "voice_command",
+      "wait",
+      "validate_results",
+      "send_remote_keys",
+      "system_command",
+      "send_remote_keys",
+      "validate_results",
+      "voice_command",
+      "wait",
+      "send_remote_keys",
+      "system_command",
+      "send_remote_keys",
+      "voice_command",
+      "wait",
+      "send_remote_keys",
+      "validate_results",
+      "system_command",
+      "send_remote_keys",
+      "system_command"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -268,7 +377,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260219_200402_844470",
@@ -294,7 +404,26 @@
       "screen_validation",
       "collect_device_logs"
     ],
-    "methods": [],
+    "methods": [
+      "reboot_perf_v2_optimized",
+      "send_remote_keys",
+      "screen_validation",
+      "send_remote_keys",
+      "screen_validation",
+      "send_remote_keys",
+      "screen_validation",
+      "send_remote_keys",
+      "screen_validation",
+      "send_remote_keys",
+      "screen_validation",
+      "send_remote_keys",
+      "screen_validation",
+      "send_remote_keys",
+      "screen_validation",
+      "send_remote_keys",
+      "screen_validation",
+      "collect_device_logs"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -305,7 +434,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260302_171927_304925",
@@ -320,7 +450,15 @@
       "wait",
       "execute_command"
     ],
-    "methods": [],
+    "methods": [
+      "reboot_perf_v2_optimized",
+      "execute_command",
+      "execute_command",
+      "execute_command",
+      "execute_command",
+      "wait",
+      "execute_command"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -331,7 +469,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260303_100117_662507",
@@ -347,7 +486,16 @@
       "execute_command",
       "collect_device_logs"
     ],
-    "methods": [],
+    "methods": [
+      "send_remote_keys",
+      "voice_command",
+      "wait",
+      "send_remote_keys",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "collect_device_logs"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -358,7 +506,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260304_113657_227029",
@@ -384,7 +533,26 @@
       "execute_command",
       "collect_device_logs"
     ],
-    "methods": [],
+    "methods": [
+      "send_remote_keys",
+      "wait",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "collect_device_logs"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -395,7 +563,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260305_171346_667668",
@@ -406,7 +575,11 @@
       "navigate_inputs_xumo",
       "collect_device_logs"
     ],
-    "methods": [],
+    "methods": [
+      "reboot_perf_v2_optimized",
+      "navigate_inputs_xumo",
+      "collect_device_logs"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -417,7 +590,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260309_155421_355219",
@@ -439,7 +613,22 @@
       "execute_command",
       "collect_device_logs"
     ],
-    "methods": [],
+    "methods": [
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "voice_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "execute_command",
+      "collect_device_logs"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -450,7 +639,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260310_112929_147714",
@@ -472,57 +662,22 @@
       "execute_command",
       "execute_command"
     ],
-    "methods": [],
-    "user_inputs": {},
-    "created_at": "2026-10-08T15:19:35.161813",
-    "created_by": "vpatne290",
-    "team_name": "LRQA",
-    "method_rationale": [],
-    "execution_count": 0,
-    "total_duration_seconds": null,
-    "average_duration_seconds": null,
-    "location": "",
-    "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
-  },
-  {
-    "sequence_id": "seq_20260318_161403_356015",
-    "name": "XIONE-18416-tmp",
-    "description": "",
-    "queue_data": [
+    "methods": [
       "send_remote_keys",
-      "execute_command",
       "wait",
       "execute_command",
       "execute_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
       "voice_command",
       "wait",
       "execute_command",
-      "wait",
       "execute_command",
-      "send_remote_keys",
-      "wait",
+      "collect_device_logs",
       "execute_command",
-      "wait",
-      "execute_command",
-      "send_remote_keys",
-      "wait",
-      "execute_command",
-      "wait",
-      "execute_command",
-      "send_remote_keys",
-      "wait",
-      "execute_command",
-      "wait",
-      "execute_command",
-      "send_remote_keys",
-      "wait",
-      "execute_command",
-      "wait",
-      "execute_command",
-      "collect_device_logs"
+      "execute_command"
     ],
-    "methods": [],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -533,7 +688,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260107_164316_708294",
@@ -550,7 +706,17 @@
       "wait",
       "send_remote_keys"
     ],
-    "methods": [],
+    "methods": [
+      "reboot_performance",
+      "send_remote_keys",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "validate_results",
+      "wait",
+      "send_remote_keys"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -561,7 +727,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260403_163939_786549",
@@ -571,7 +738,10 @@
       "deepsleep",
       "wait"
     ],
-    "methods": [],
+    "methods": [
+      "deepsleep",
+      "wait"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -582,7 +752,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260407_223542_052600",
@@ -604,7 +775,22 @@
       "wait",
       "send_remote_keys"
     ],
-    "methods": [],
+    "methods": [
+      "send_remote_keys",
+      "voice_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "voice_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "send_remote_keys"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -615,7 +801,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260410_162417_061218",
@@ -630,7 +817,15 @@
       "execute_command",
       "execute_command"
     ],
-    "methods": [],
+    "methods": [
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "execute_command"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -641,7 +836,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_196f4ab0",
@@ -675,7 +871,34 @@
       "execute_command",
       "execute_command"
     ],
-    "methods": [],
+    "methods": [
+      "execute_command",
+      "maintenance_deepsleep_wakeup",
+      "execute_command",
+      "execute_command",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "deepsleep",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "wait",
+      "deepsleep",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "execute_command"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -686,7 +909,91 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
+  },
+  {
+    "sequence_id": "seq_20260318_161403_356015",
+    "name": "XIONE-18416",
+    "description": "",
+    "queue_data": [
+      "send_remote_keys",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "collect_device_logs"
+    ],
+    "methods": [
+      "send_remote_keys",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "collect_device_logs"
+    ],
+    "user_inputs": {},
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260519_215316_560931",
@@ -728,7 +1035,42 @@
       "execute_command",
       "execute_command"
     ],
-    "methods": [],
+    "methods": [
+      "execute_command",
+      "reboot_perf_v2_optimized",
+      "execute_command",
+      "execute_command",
+      "execute_command",
+      "execute_command",
+      "deepsleep",
+      "execute_command",
+      "execute_command",
+      "send_remote_keys",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "deepsleep",
+      "send_remote_keys",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "wait",
+      "deepsleep",
+      "send_remote_keys",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "execute_command"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -739,7 +1081,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260520_231522_836234",
@@ -773,7 +1116,34 @@
       "execute_command",
       "execute_command"
     ],
-    "methods": [],
+    "methods": [
+      "execute_command",
+      "reboot_perf_v2_optimized",
+      "execute_command",
+      "execute_command",
+      "execute_command",
+      "execute_command",
+      "deepsleep",
+      "execute_command",
+      "execute_command",
+      "execute_command",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "execute_command"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -784,7 +1154,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260615_221848_701716",
@@ -804,7 +1175,20 @@
       "execute_command",
       "voice_command"
     ],
-    "methods": [],
+    "methods": [
+      "send_remote_keys",
+      "execute_command",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "ir_test",
+      "execute_command",
+      "wait",
+      "ir_test",
+      "execute_command",
+      "execute_command",
+      "voice_command"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -867,7 +1251,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260615_224813_798297",
@@ -883,7 +1268,16 @@
       "execute_command",
       "execute_command"
     ],
-    "methods": [],
+    "methods": [
+      "ir_test",
+      "execute_command",
+      "wait",
+      "ir_test",
+      "voice_command",
+      "execute_command",
+      "execute_command",
+      "execute_command"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -934,7 +1328,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260813_191255_884717",
@@ -948,7 +1343,14 @@
       "wait",
       "voice_command"
     ],
-    "methods": [],
+    "methods": [
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "voice_command",
+      "wait",
+      "voice_command"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -993,7 +1395,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260810_020832_355398",
@@ -1045,7 +1448,52 @@
       "wait",
       "screen_validation"
     ],
-    "methods": [],
+    "methods": [
+      "send_remote_keys",
+      "voice_command",
+      "send_remote_keys",
+      "screen_validation",
+      "send_remote_keys",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "xumo_activation",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "landel334",
@@ -1056,7 +1504,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260810_024434_267877",
@@ -1067,7 +1516,11 @@
       "deepsleep",
       "voice_command"
     ],
-    "methods": [],
+    "methods": [
+      "reboot",
+      "deepsleep",
+      "voice_command"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "landel334",
@@ -1078,7 +1531,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260325_162747_826604",
@@ -1088,7 +1542,10 @@
       "deepsleep",
       "wait"
     ],
-    "methods": [],
+    "methods": [
+      "deepsleep",
+      "wait"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -1099,7 +1556,8 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260330_132433_574782",
@@ -1137,7 +1595,38 @@
       "wait",
       "execute_command"
     ],
-    "methods": [],
+    "methods": [
+      "wait",
+      "execute_command",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "ir_test",
+      "wait",
+      "send_remote_keys",
+      "wait",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "send_remote_keys",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "wait",
+      "ir_test",
+      "wait",
+      "execute_command",
+      "execute_command",
+      "send_remote_keys",
+      "wait",
+      "voice_command",
+      "send_remote_keys",
+      "send_remote_keys",
+      "wait",
+      "execute_command",
+      "wait",
+      "execute_command"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -1148,7 +1637,33 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
+  },
+  {
+    "sequence_id": "seq_20260907_230447_581083",
+    "name": "Recheck-123",
+    "description": "",
+    "queue_data": [
+      "reboot_perf_v2_optimized",
+      "sequence_reference_seq_20260424_142951_357940"
+    ],
+    "methods": [
+      "reboot_perf_v2_optimized",
+      "sequence_reference_seq_20260424_142951_357940"
+    ],
+    "user_inputs": {},
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   },
   {
     "sequence_id": "seq_20260107_164207_977993",
@@ -1200,7 +1715,52 @@
       "wait",
       "screen_validation"
     ],
-    "methods": [],
+    "methods": [
+      "send_remote_keys",
+      "voice_command",
+      "send_remote_keys",
+      "screen_validation",
+      "send_remote_keys",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "xumo_activation",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation",
+      "send_remote_keys",
+      "wait",
+      "screen_validation"
+    ],
     "user_inputs": {},
     "created_at": "2026-10-08T15:19:35.161813",
     "created_by": "vpatne290",
@@ -1211,6 +1771,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-10-08T15:20:46.376483"
+    "updated_at": "2026-10-08T15:20:46.376483",
+    "shared_with_teams": {}
   }
 ]

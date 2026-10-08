@@ -14,10 +14,15 @@ from sqlalchemy import text
 from models.database import Session
 
 
+def _as_steps(items: Optional[List[Any]]) -> List[Dict[str, Any]]:
+    """Legacy sequences store steps as plain method-name strings; normalize to dicts."""
+    return [i if isinstance(i, dict) else {'method': str(i)} for i in (items or [])]
+
+
 def _diff_queue_data(old_list: Optional[List[Dict[str, Any]]], new_list: Optional[List[Dict[str, Any]]]) -> List[Dict[str, Any]]:
     """Produce a step-by-step diff between two sequence queue_data lists."""
-    old_list = old_list or []
-    new_list = new_list or []
+    old_list = _as_steps(old_list)
+    new_list = _as_steps(new_list)
     diffs = []
     for i in range(max(len(old_list), len(new_list))):
         old_step = old_list[i] if i < len(old_list) else None
@@ -123,10 +128,10 @@ class AuditLogController:
                 }
 
                 if action_type == 'create':
-                    entry['queue_data'] = new_values.get('queue_data', [])
+                    entry['queue_data'] = _as_steps(new_values.get('queue_data'))
                     entry['methods'] = new_values.get('methods') or [s.get('method') for s in entry['queue_data'] if s.get('method')]
                 elif action_type == 'delete':
-                    entry['queue_data'] = old_values.get('queue_data', [])
+                    entry['queue_data'] = _as_steps(old_values.get('queue_data'))
                     entry['methods'] = old_values.get('methods') or [s.get('method') for s in entry['queue_data'] if s.get('method')]
                 elif action_type == 'update':
                     entry['name_changed'] = old_values.get('name') != new_values.get('name')
