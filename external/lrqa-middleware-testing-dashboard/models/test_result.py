@@ -23,7 +23,8 @@ class TestResult:
                  tiles_summary: Optional[Dict] = None, rdk_milestones_log: Optional[str] = None,
                  boot_type: Optional[str] = None, device_name: Optional[str] = None,
                  username: Optional[str] = None, sequence_name: Optional[str] = None,
-                 captured_screenshots: Optional[Dict] = None, step_index: Optional[int] = None):
+                 captured_screenshots: Optional[Dict] = None, step_index: Optional[int] = None,
+                 team_name: Optional[str] = None):
         self.iteration = iteration
         self.phase = phase
         self.status = status
@@ -37,6 +38,7 @@ class TestResult:
         self.date = datetime.fromisoformat(self.timestamp).strftime('%Y-%m-%d')
         self.job_id = job_id
         self.username = username  # ← NEW: User who triggered execution
+        self.team_name = team_name
         self.sequence_name = sequence_name  # ← NEW: Sequence name if job was from saved sequence
         self.performance_seconds = performance_seconds
         self.optional_checks = optional_checks
@@ -63,6 +65,7 @@ class TestResult:
             'date': self.date,
             'job_id': self.job_id,
             'username': self.username,  # ← NEW: User who triggered job
+            'team_name': self.team_name,
             'sequence_name': self.sequence_name,  # ← NEW: Sequence name if from saved sequence
             'performance_seconds': self.performance_seconds,
             'optional_checks': self.optional_checks,
@@ -90,6 +93,7 @@ class TestResult:
             timestamp=data.get('timestamp'),
             job_id=data.get('job_id'),
             username=data.get('username'),  # ← NEW: Username
+            team_name=data.get('team_name'),
             sequence_name=data.get('sequence_name'),  # ← NEW: Sequence name
             performance_seconds=data.get('performance_seconds'),
             optional_checks=data.get('optional_checks'),
