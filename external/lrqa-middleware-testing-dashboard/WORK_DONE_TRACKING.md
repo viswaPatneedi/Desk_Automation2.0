@@ -1,5 +1,18 @@
 # Work Done Tracking - Desk-Automation v2.0
 
+## October 8, 2026 — Json Config Sync + Branch Layout
+
+### Json config synced from standalone
+- Commit `84284ff` on `viswa-desk-v2` (pushed): "Sync Json config from standalone: devices, saved_sequences, users, log_patterns, system_commands"
+- 5 files, +356/-14,084 — `saved_sequences.json` heavily trimmed by standalone commit `37ef5c2` (case-insensitive reboot HOME-log detection + sequences/user data)
+- Runtime files deliberately excluded: `Json/app_state.json`, `app.pid`, untracked `Json_backup_*/`, `migration_report.json`
+
+### Branch layout (finalized)
+- **`viswa-desk-v2`** = active working branch (the "second main" for this project) — contains ALL standalone ports (Phase 1 merge `8d4c9ec`, Phase 2 follow-ups through `e49e36d`), docs (`46ec3f6`), and the Json config sync (`84284ff`)
+- **`legacy/sync-from-standalone-oct2026`** = frozen, local-only reference branch (renamed from `sync-from-standalone-oct2026`, sits at `8a04e97`, fully merged into `viswa-desk-v2`) — Phase 1 porting history for future reference only; do NOT commit on it
+
+---
+
 ## July 19-20, 2026 - Work Summary
 
 ### Overview

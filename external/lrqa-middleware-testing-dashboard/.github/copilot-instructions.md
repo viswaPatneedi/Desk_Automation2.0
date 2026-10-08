@@ -1,7 +1,15 @@
 # LRQA Middleware Testing Dashboard - v2.0 Copilot Instructions
 
 **Project Status**: Phase 1 & Phase 2 COMPLETE ✅ | Active Bug Fixes & Enhancements 🔧  
-**Last Updated**: 2026-10-07 | Standalone feature sync merged (SOFT/HARD boot hardening, LOOP/IF-ELSE engine, crash detection, new methods) — PostgreSQL layer preserved
+**Last Updated**: 2026-10-08 | Standalone feature sync merged (SOFT/HARD boot hardening, LOOP/IF-ELSE engine, crash detection, new methods) — PostgreSQL layer preserved
+
+## Branch Layout (as of 2026-10-08)
+- **`viswa-desk-v2`** — the ACTIVE working branch ("second main"). All development happens here; contains the full standalone sync.
+- **`legacy/sync-from-standalone-oct2026`** — frozen, local-only reference of the Phase 1 standalone porting work (at `8a04e97`, fully merged). Never commit on it; kept for future reference only.
+
+## Recent Updates (October 8, 2026) — Json Config Sync
+
+Synced runtime-independent Json configuration from standalone: commit `84284ff` on `viswa-desk-v2` (devices, saved_sequences — heavily trimmed, users, log_patterns, system_commands). Excluded per policy: `Json/app_state.json`, `app.pid`, `Json_backup_*/`, `migration_report.json`.
 
 ## Recent Updates (October 7, 2026) — Standalone → v2.0 Feature Sync
 
