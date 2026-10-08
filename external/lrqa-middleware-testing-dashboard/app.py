@@ -1735,26 +1735,53 @@ def get_ai_agents_status():
     try:
         sync_running = bool(getattr(periodic_sync_service, '_running', False)) if 'periodic_sync_service' in globals() else False
 
+        def _live_state(agent_id):
+            """Real runtime state of an orchestrator-managed agent: active (thread alive), idle (not running)."""
+            try:
+                from agents.orchestrator_agent import get_orchestrator
+                orch = get_orchestrator()
+                inst = orch.agents.get(agent_id)
+                if inst is None:
+                    return 'idle', 'not started'
+                thread = getattr(inst, 'monitor_thread', None)
+                alive = bool(getattr(inst, 'is_running', False)) and (thread is None or thread.is_alive())
+                return ('active', 'monitoring loop running') if alive else ('idle', 'stopped')
+            except Exception as exc:
+                return 'idle', f'unavailable: {exc}'
+
+        orch_state = 'idle'
+        try:
+            from agents.orchestrator_agent import get_orchestrator
+            orch_state = 'active' if get_orchestrator().is_running else 'idle'
+        except Exception:
+            pass
+        try:
+            from services.ollama_integration import get_ollama_service
+            ollama_ok = get_ollama_service().is_available()
+        except Exception:
+            ollama_ok = False
+        ai_state = 'ready' if ollama_ok else 'idle'
+
         agents = [
             {
                 'id': 'orchestrator',
                 'name': 'Parent AI Orchestrator',
                 'category': 'core',
-                'state': 'ready',
+                'state': orch_state,
                 'work': 'Coordinates worker agents and application workflows'
             },
             {
                 'id': 'ai_sequence_builder',
                 'name': 'AI Sequence Builder Agent',
                 'category': 'sequence',
-                'state': 'ready',
+                'state': ai_state,
                 'work': 'Transforms workflow text into executable queue plans'
             },
             {
                 'id': 'memory_learning',
                 'name': 'Memory Learning Agent',
                 'category': 'sequence',
-                'state': 'ready',
+                'state': ai_state,
                 'work': 'Learns from checkpoints, feedback, methods, and descriptions'
             },
             {
@@ -1765,59 +1792,66 @@ def get_ai_agents_status():
                 'work': 'Monitors DB health and periodic DB->JSON synchronization'
             },
             {
+                'id': 'memory_monitor',
+                'name': 'Memory Monitor Agent',
+                'category': 'core',
+                'state': _live_state('memory_monitor')[0],
+                'work': 'Scans memory/progress files and flags stale or blocked work'
+            },
+            {
                 'id': 'job_orchestrator',
                 'name': 'Job Orchestrator Agent',
                 'category': 'execution',
-                'state': 'ready',
+                'state': _live_state('job_orchestrator')[0],
                 'work': 'Schedules and coordinates test job execution lifecycle'
             },
             {
                 'id': 'eta_device_lock',
                 'name': 'ETA & Device Lock Agent',
                 'category': 'execution',
-                'state': 'ready',
+                'state': _live_state('eta_device_lock')[0],
                 'work': 'Manages device lock control and ETA predictions'
             },
             {
                 'id': 'screen_analyzer',
                 'name': 'Screen Analyzer Agent',
                 'category': 'validation',
-                'state': 'ready',
+                'state': _live_state('screen_analyzer')[0],
                 'work': 'Performs screen validation and analysis workflows'
             },
             {
                 'id': 'recovery',
                 'name': 'Recovery Agent',
                 'category': 'reliability',
-                'state': 'ready',
+                'state': _live_state('recovery')[0],
                 'work': 'Handles retries, recovery policies, and failure mitigation'
             },
             {
                 'id': 'distributed_sync',
                 'name': 'Distributed Sync Agent',
                 'category': 'sync',
-                'state': 'ready',
+                'state': 'idle',
                 'work': 'Supports multi-location data sync and reconciliation'
             },
             {
                 'id': 'github_sync',
                 'name': 'GitHub Sync Agent',
                 'category': 'sync',
-                'state': 'ready',
+                'state': 'idle',
                 'work': 'Coordinates repository sync operations and audit trails'
             },
             {
                 'id': 'pyarmor_encryption',
                 'name': 'PyArmor Encryption Agent',
                 'category': 'security',
-                'state': 'ready',
+                'state': 'idle',
                 'work': 'Applies code-protection and obfuscation workflows'
             },
             {
                 'id': 'docker_signing',
                 'name': 'Docker Signing Agent',
                 'category': 'security',
-                'state': 'ready',
+                'state': 'idle',
                 'work': 'Signs and verifies container artifacts for secure release'
             }
         ]
