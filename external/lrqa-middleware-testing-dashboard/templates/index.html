@@ -2379,9 +2379,37 @@
                         </select>
                     </div>
                     <div class="mb-3">
+                        <label for="softHardBootLanguageSelect" class="form-label">Device Settings Language (SOFT boot):</label>
+                        <select id="softHardBootLanguageSelect" class="form-select" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                            <option value="en">ENG - English</option>
+                            <option value="de">DE - German</option>
+                        </select>
+                        <small style="color: #9ca3af;">Select the language displayed on the device; voice navigation and screen text validation will use this choice.</small>
+                    </div>
+                    <div class="mb-3">
                         <label for="homeTimeoutBootInput" class="form-label">HOME Screen Timeout (seconds):</label>
                         <input type="number" id="homeTimeoutBootInput" class="form-control" value="180" min="1" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
                         <small style="color: #9ca3af;">Recommended: 180-205 seconds</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="softHardBootNavigationKeys" class="form-label">Navigation Keys to Restart (SOFT boot only):</label>
+                        <input type="text" id="softHardBootNavigationKeys" class="form-control" value="DOWN, DOWN, ENTER, DOWN, DOWN, ENTER, ENTER" style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                        <small style="color: #9ca3af;">Comma-separated remote keys to reach Restart device under Settings &gt; System Management &gt; Reset &amp; updates.</small>
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label mb-0">Post-Reboot Log Search Commands:</label>
+                            <button type="button" class="btn btn-sm btn-outline-info" onclick="addSoftHardBootLogPattern()" title="Add log search command" aria-label="Add log search command">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                        <div id="softHardBootLogPatterns"></div>
+                        <small style="color: #9ca3af;">Enter a complete device command, for example: grep -i "error text" /opt/logs/example.log*. Non-empty output is treated as a match.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="softHardBootCrashWaitMinutes" class="form-label">Wait time after a crash is found (minutes):</label>
+                        <input type="number" id="softHardBootCrashWaitMinutes" class="form-control" value="8" min="0" max="60" style="max-width: 150px; background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">
+                        <small style="color: #9ca3af;">Gives the device time to upload the crash to the crash portal before the next iteration starts.</small>
                     </div>
                 </div>
                 <div class="modal-footer" style="background: #0f172a; border-top: 1px solid #374151;">
@@ -6805,7 +6833,12 @@
                 pendingModalParams = {};
                 const modalEl = document.getElementById('softHardBootModal');
                 document.getElementById('bootTypeSelect').value = '';
+                document.getElementById('softHardBootLanguageSelect').value = 'en';
                 document.getElementById('homeTimeoutBootInput').value = '180';
+                document.getElementById('softHardBootNavigationKeys').value = 'DOWN, DOWN, ENTER, DOWN, DOWN, ENTER, ENTER';
+                document.getElementById('softHardBootCrashWaitMinutes').value = '8';
+                document.getElementById('softHardBootLogPatterns').innerHTML = '';
+                addSoftHardBootLogPattern();
                 
                 const modal = new bootstrap.Modal(modalEl);
                 modal.show();
@@ -6823,8 +6856,11 @@
                 }
                 
                 params.boot_type = pendingModalParams.boot_type;
+                params.language = pendingModalParams.language;
                 params.home_screen_timeout = pendingModalParams.home_screen_timeout;
-                console.log(`✅ Soft Hard Boot - Boot Type: ${params.boot_type}, Timeout: ${params.home_screen_timeout}s`);
+                params.navigation_keys = pendingModalParams.navigation_keys;
+                params.optional_checks = pendingModalParams.optional_checks;
+                console.log(`✅ Soft Hard Boot - Boot Type: ${params.boot_type}, Language: ${params.language}, Timeout: ${params.home_screen_timeout}s, NavKeys: ${(params.navigation_keys||[]).length}, LogCmds: ${(params.optional_checks?.custom_log_commands||[]).length}`);
             } else if (methodId === 'voice_command') {
                 // Show modal for voice command input
                 pendingModalParams = {};
@@ -7795,10 +7831,73 @@
             }
             
             pendingModalParams.boot_type = bootType;
+            pendingModalParams.language = document.getElementById('softHardBootLanguageSelect').value || 'en';
             pendingModalParams.home_screen_timeout = parseInt(homeTimeout) || 180;
+            pendingModalParams.navigation_keys = parseNavigationKeysInput(document.getElementById('softHardBootNavigationKeys').value);
+            const crashWaitMinutesRaw = parseFloat(document.getElementById('softHardBootCrashWaitMinutes').value);
+            pendingModalParams.optional_checks = {
+                custom_log_commands: Array.from(document.querySelectorAll('.soft-hard-boot-log-pattern'))
+                    .map(input => input.value.trim())
+                    .filter(Boolean),
+                crash_wait_minutes: (isNaN(crashWaitMinutesRaw) || crashWaitMinutesRaw < 0) ? 8 : crashWaitMinutesRaw
+            };
             
             const modal = bootstrap.Modal.getInstance(document.getElementById('softHardBootModal'));
             if (modal) modal.hide();
+        }
+
+        // ---- Soft/Hard Boot: dynamic log-search-command rows ----------------------------------
+        function addSoftHardBootLogPattern(value = '') {
+            const container = document.getElementById('softHardBootLogPatterns');
+            if (!container) return;
+            const row = document.createElement('div');
+            row.className = 'input-group mb-2 soft-hard-boot-log-row';
+
+            const input = document.createElement('textarea');
+            input.rows = 2;
+            input.className = 'form-control soft-hard-boot-log-pattern';
+            input.placeholder = 'grep -i "log text" /opt/logs/example.log*';
+            input.value = value;
+            input.style.cssText = 'background: #1f2937; color: #e5e7eb; border: 1px solid #374151;';
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.className = 'btn btn-outline-danger';
+            removeButton.title = 'Remove log search command';
+            removeButton.setAttribute('aria-label', 'Remove log search command');
+            removeButton.innerHTML = '<i class="bi bi-trash"></i>';
+            removeButton.addEventListener('click', () => row.remove());
+
+            row.append(input, removeButton);
+            container.appendChild(row);
+        }
+
+        function parseNavigationKeysInput(value) {
+            return String(value || '')
+                .split(',')
+                .map(key => key.trim().toUpperCase())
+                .filter(Boolean);
+        }
+
+        // Edit-modal variants (distinct input class + container so they don't clash with the add modal)
+        function createSoftHardBootLogRowHtml(value = '', editing = false) {
+            const escapedValue = String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('"', '&quot;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;');
+            const inputClass = editing ? 'edit-soft-hard-boot-log-pattern' : 'soft-hard-boot-log-pattern';
+            return `<div class="input-group mb-2">
+                <textarea rows="2" class="form-control ${inputClass}" placeholder='grep -i "log text" /opt/logs/example.log*' style="background: #1f2937; color: #e5e7eb; border: 1px solid #374151;">${escapedValue}</textarea>
+                <button type="button" class="btn btn-outline-danger" onclick="this.parentElement.remove()" title="Remove log search command" aria-label="Remove log search command"><i class="bi bi-trash"></i></button>
+            </div>`;
+        }
+
+        function addEditSoftHardBootLogPattern() {
+            const container = document.getElementById('edit-soft-hard-boot-log-patterns');
+            if (container) {
+                container.insertAdjacentHTML('beforeend', createSoftHardBootLogRowHtml('', true));
+            }
         }
 
         function confirmStandbyIRControl() {
@@ -9271,12 +9370,22 @@
                     } else if (queueItem.method === 'soft_hard_boot') {
                         const bootType = getParam(queueItem, 'boot_type') || 'HARD';
                         const homeTimeout = getParam(queueItem, 'home_screen_timeout') || 180;
+                        const language = (getParam(queueItem, 'language') || 'en').toUpperCase();
+                        const navKeys = getParam(queueItem, 'navigation_keys') || [];
+                        const optChecks = getParam(queueItem, 'optional_checks') || {};
+                        const logCmds = optChecks.custom_log_commands || [];
+                        const crashWait = optChecks.crash_wait_minutes !== undefined ? optChecks.crash_wait_minutes : 8;
                         const bootIcon = bootType === 'HARD' ? '⚑' : '⚙';
                         const bootColor = bootType === 'HARD' ? '#ef4444' : '#3b82f6';
+                        const navDisplay = Array.isArray(navKeys) && navKeys.length ? navKeys.join(', ') : 'default';
+                        const logDisplay = logCmds.length ? `${logCmds.length} command(s)` : 'none';
                         inputsHtml = `<div style="margin-top: 4px;">
                             <small style="color: ${bootColor};"><i class="bi bi-arrow-repeat"></i> Boot Type: ${bootIcon} ${bootType}</small><br>
                             <small style="color: #10b981;"><i class="bi bi-stopwatch-fill"></i> HOME timeout: ${homeTimeout}s</small><br>
-                            <small style="color: #8b5cf6;"><i class="bi bi-file-earmark-text"></i> Captures rdk_milestones.log</small>
+                            <small style="color: #06b6d4;"><i class="bi bi-translate"></i> Language: ${language}</small><br>
+                            <small style="color: #f59e0b;" title="${navDisplay}"><i class="bi bi-controller"></i> Nav keys: ${navDisplay.length > 30 ? navDisplay.substring(0, 30) + '…' : navDisplay}</small><br>
+                            <small style="color: #8b5cf6;"><i class="bi bi-search"></i> Log search: ${logDisplay}</small><br>
+                            <small style="color: #9ca3af;"><i class="bi bi-hourglass-split"></i> Crash wait: ${crashWait} min</small>
                         </div>`;
                     } else if (queueItem.method === 'deepsleep') {
                         const remoteType = getParam(queueItem, 'remote_type') || 'auto-detect';
@@ -9814,6 +9923,15 @@
             } else if (queueItem.method === 'soft_hard_boot') {
                 const bootType = getParam(queueItem, 'boot_type') || 'HARD';
                 const homeTimeout = getParam(queueItem, 'home_screen_timeout') || 180;
+                const language = getParam(queueItem, 'language') || 'en';
+                const navKeys = getParam(queueItem, 'navigation_keys') || [];
+                const navKeysText = Array.isArray(navKeys) ? navKeys.join(', ') : (navKeys || '');
+                const optChecks = getParam(queueItem, 'optional_checks') || {};
+                const logCmds = optChecks.custom_log_commands || [];
+                const crashWait = optChecks.crash_wait_minutes !== undefined ? optChecks.crash_wait_minutes : 8;
+                const logRowsHtml = logCmds.length
+                    ? logCmds.map(cmd => createSoftHardBootLogRowHtml(cmd, true)).join('')
+                    : createSoftHardBootLogRowHtml('', true);
                 formHtml += `
                     <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;">Boot Type:</label>
@@ -9823,9 +9941,34 @@
                         </select>
                     </div>
                     <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;">Device Settings Language (SOFT boot):</label>
+                        <select id="edit-soft-language" style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;">
+                            <option value="en" ${language === 'en' ? 'selected' : ''}>ENG - English</option>
+                            <option value="de" ${language === 'de' ? 'selected' : ''}>DE - German</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 15px;">
                         <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;">HOME Timeout (seconds):</label>
                         <input type="number" id="edit-home-timeout" value="${homeTimeout}" min="1"
                                style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;">Navigation Keys to Restart (SOFT boot only):</label>
+                        <input type="text" id="edit-soft-navigation-keys" value="${navKeysText}"
+                               style="width: 100%; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;"
+                               placeholder="DOWN, DOWN, ENTER, ...">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                            <label style="color: #e5e7eb; font-weight: 600; margin: 0;">Post-Reboot Log Search Commands:</label>
+                            <button type="button" onclick="addEditSoftHardBootLogPattern()" style="padding: 2px 8px; background: #0891b2; color: white; border: none; border-radius: 4px; cursor: pointer;" title="Add log search command"><i class="bi bi-plus-lg"></i></button>
+                        </div>
+                        <div id="edit-soft-hard-boot-log-patterns">${logRowsHtml}</div>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px; color: #e5e7eb; font-weight: 600;">Wait time after a crash is found (minutes):</label>
+                        <input type="number" id="edit-soft-crash-wait" value="${crashWait}" min="0" max="60"
+                               style="width: 150px; padding: 8px; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;">
                     </div>
                 `;
             } else if (queueItem.method === 'deepsleep') {
@@ -10358,10 +10501,25 @@
             } else if (queueItem.method === 'soft_hard_boot') {
                 const bootType = document.getElementById('edit-boot-type')?.value || 'HARD';
                 const homeTimeout = parseInt(document.getElementById('edit-home-timeout')?.value || 180);
+                const language = document.getElementById('edit-soft-language')?.value || 'en';
+                const navKeys = parseNavigationKeysInput(document.getElementById('edit-soft-navigation-keys')?.value || '');
+                const crashWaitRaw = parseFloat(document.getElementById('edit-soft-crash-wait')?.value);
+                const logCmds = Array.from(document.querySelectorAll('.edit-soft-hard-boot-log-pattern'))
+                    .map(input => input.value.trim())
+                    .filter(Boolean);
                 queueItem.boot_type = bootType;
                 queueItem.home_screen_timeout = homeTimeout;
+                queueItem.language = language;
+                queueItem.navigation_keys = navKeys;
+                queueItem.optional_checks = {
+                    custom_log_commands: logCmds,
+                    crash_wait_minutes: (isNaN(crashWaitRaw) || crashWaitRaw < 0) ? 8 : crashWaitRaw
+                };
                 queueItem.params.boot_type = bootType;
                 queueItem.params.home_screen_timeout = homeTimeout;
+                queueItem.params.language = language;
+                queueItem.params.navigation_keys = navKeys;
+                queueItem.params.optional_checks = queueItem.optional_checks;
             } else if (queueItem.method === 'deepsleep') {
                 const remoteType = document.getElementById('edit-sleep-remote')?.value || '';
                 const sleepDuration = parseInt(document.getElementById('edit-sleep-duration')?.value || 60);
@@ -13463,6 +13621,12 @@
                     apiItem.home_screen_timeout = item.params?.home_screen_timeout;
                     apiItem.log_search_patterns = item.params?.log_search_patterns;
                     apiItem.auto_collect_logs = item.params?.auto_collect_logs;
+                } else if (item.method === 'soft_hard_boot') {
+                    apiItem.boot_type = item.params?.boot_type || item.boot_type || 'HARD';
+                    apiItem.language = item.params?.language || item.language || 'en';
+                    apiItem.home_screen_timeout = item.params?.home_screen_timeout || item.home_screen_timeout;
+                    apiItem.navigation_keys = item.params?.navigation_keys || item.navigation_keys;
+                    apiItem.optional_checks = item.params?.optional_checks || item.optional_checks;
                 } else if (item.method === 'deepsleep') {
                     apiItem.remote_type = item.params?.remote_type;
                     apiItem.sleep_duration_minutes = item.params?.sleep_duration_minutes;
