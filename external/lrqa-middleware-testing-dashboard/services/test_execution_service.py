@@ -2735,6 +2735,38 @@ class TestExecutionService:
                                 "playback_status": "error"
                             }
                     
+                    elif method == "channel_change_capture":
+                        # Channel Change Log Capture - send a channel key and capture tune-time logs
+                        channel_key = queue_item.get('channel_key', 'DOWN')
+                        log_service.log(f"Channel Change Log Capture for device: {device.ip}, Key: {channel_key}")
+                        try:
+                            from methods.method_channel_change_capture import execute_channel_change_capture
+                            result = execute_channel_change_capture(
+                                device_ip=device.ip,
+                                port=device.port,
+                                username=device.username,
+                                password=device.password,
+                                iteration=i + 1,
+                                device_name=device.name,
+                                channel_key=channel_key,
+                                log_callback=log_service.log
+                            )
+                            method_result = {
+                                "iteration": i + 1,
+                                "screenshots": [],
+                                "logs": [],
+                                "success": result.get("success", False),
+                                "details": result.get("details", ""),
+                                "channel_key": channel_key,
+                                "ip_aamp_tunetime": result.get("ip_aamp_tunetime", ""),
+                                "channel_number": result.get("channel_number", ""),
+                                "xumo_content_name": result.get("xumo_content_name", "")
+                            }
+                            log_service.log(f"{'✓' if result.get('success') else '✗'} {result.get('details', '')}")
+                        except Exception as e:
+                            log_service.log(f"❌ Channel Change Log Capture failed: {str(e)}")
+                            method_result = {"iteration": i + 1, "screenshots": [], "logs": [], "success": False, "details": str(e)}
+
                     elif method == "memcapture_tool":
                         # Memcapture tool - Execute approved system commands and capture TOP metrics to Excel
                         system_command_name = queue_item.get('system_command_name', '').strip()

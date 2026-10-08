@@ -5013,6 +5013,8 @@ def generate_execution_title(methods):
         'voice_command': 'Voice Command',
         'maintenance_deepsleep_wakeup': 'Maintenance Deep Sleep',
         'maintenance_CURL_deepsleep_wakeup': 'Maintenance CURL Sleep',
+        'netflix_playback': 'Netflix Playback',
+        'channel_change_capture': 'Channel Change Log Capture',
         'deepsleep-reboot': 'Deep Sleep + Reboot'
     }
     
