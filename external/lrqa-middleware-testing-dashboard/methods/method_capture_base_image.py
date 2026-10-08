@@ -6,14 +6,10 @@ These images can be used later for screen-to-screen comparison with layout and t
 """
 
 import os
-import sys
-import time
-import paramiko
-from methods.method_utils import get_execution_ssh_client
 from datetime import datetime, timezone
 from typing import Dict, List
-from utils.screenshot_utils import take_and_analyze_screenshot
-from tools.screen.screenshot_utils_vnc import take_vnc_screenshot_with_fallback
+from PIL import Image
+from tools.screen.screenshot_utils_vnc import take_vnc_screenshot
 
 # Reference screens directory
 REFERENCE_SCREENS_DIR = os.path.join(os.path.dirname(__file__), "reference_screens")
@@ -33,12 +29,8 @@ def capture_base_image(
     """
     Capture screenshot from device and save as reference base image.
     
-    This method:
-    1. Connects to device via SSH
-    2. Activates ScreenCapture plugin
-    3. Captures current screen
-    4. Saves to reference_screens folder with provided name
-    5. Returns success/failure status with file path
+    Captures the current frame from the device's VNC HTTP screenshot endpoint
+    and saves it to reference_screens using the provided screen name.
     
     Args:
         device_ip: IP address of the device
@@ -68,11 +60,12 @@ def capture_base_image(
         if log_callback:
             log_callback(message)
     
-    ssh = None
-    
     try:
         # Sanitize screen name for filename
-        safe_screen_name = screen_name.replace(' ', '_').replace('/', '_')
+        safe_screen_name = screen_name.strip()
+        if safe_screen_name.lower().endswith('.png'):
+            safe_screen_name = safe_screen_name[:-4]
+        safe_screen_name = safe_screen_name.replace(' ', '_').replace('/', '_').replace('\\', '_')
         safe_screen_name = ''.join(c for c in safe_screen_name if c.isalnum() or c in ('_', '-'))
         
         if not safe_screen_name:
@@ -88,34 +81,27 @@ def capture_base_image(
         log(f"   Device: {device_ip}")
         log(f"   Target folder: reference_screens/")
         
-        # Step 1: Connect via SSH
-        log("\n[STEP 1/2] 🔌 Connecting to device...")
-        ssh = get_execution_ssh_client()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(device_ip, port=port, username=username, password=password, timeout=10)
-        log("   ✅ SSH connection established")
-        
-        # Step 2: Capture screenshot using the same method as reboot
-        log("\n[STEP 2/2] 📷 Capturing and downloading screenshot...")
-        
-        timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-        screenshot_name = f"{safe_screen_name}_{timestamp_str}"
-        
-        # Use take_and_analyze_screenshot which handles activation, capture, and download
-        screenshot_result = take_and_analyze_screenshot(
-            ssh=ssh,
-            screenshot_name=screenshot_name,
+        log("\n[STEP 1/1] 📷 Capturing current screen over VNC HTTP...")
+        screenshot_result = take_vnc_screenshot(
             device_ip=device_ip,
-            log_callback=log,
             screenshot_folder=REFERENCE_SCREENS_DIR,
-            after_reboot=False
+            device_name=safe_screen_name,
+            iteration=0,
+            vnc_port=5800,
+            log_callback=log,
+            validate_image=False,
+            context=None
         )
-        
-        ssh.close()
-        
+
         if screenshot_result and screenshot_result.get('success'):
-            local_path = screenshot_result.get('local_path')
-            log(f"   ✅ Screenshot captured successfully")
+            captured_path = screenshot_result.get('local_path')
+            final_path = os.path.join(REFERENCE_SCREENS_DIR, f"{safe_screen_name}.png")
+            with Image.open(captured_path) as image:
+                image.verify()
+            if os.path.abspath(captured_path) != os.path.abspath(final_path):
+                os.replace(captured_path, final_path)
+            local_path = final_path
+            log("   ✅ Screenshot captured successfully")
             log(f"   📁 Saved to: {local_path}")
             
             # Get file size
@@ -127,7 +113,7 @@ def capture_base_image(
             
             return {
                 "success": True,
-                "message": f"✅ Base image captured successfully: {screenshot_name}.png",
+                "message": f"✅ Base image captured successfully: {safe_screen_name}.png",
                 "image_path": local_path,
                 "screen_name": screen_name,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -143,28 +129,6 @@ def capture_base_image(
                 "timestamp": datetime.now(timezone.utc).isoformat()
             }
     
-    except paramiko.AuthenticationException:
-        error_msg = "SSH authentication failed - check credentials"
-        log(f"\n❌ {error_msg}")
-        return {
-            "success": False,
-            "message": error_msg,
-            "image_path": None,
-            "screen_name": screen_name,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-    
-    except paramiko.SSHException as e:
-        error_msg = f"SSH connection error: {str(e)}"
-        log(f"\n❌ {error_msg}")
-        return {
-            "success": False,
-            "message": error_msg,
-            "image_path": None,
-            "screen_name": screen_name,
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-    
     except Exception as e:
         error_msg = f"Unexpected error: {str(e)}"
         log(f"\n❌ {error_msg}")
@@ -175,13 +139,6 @@ def capture_base_image(
             "screen_name": screen_name,
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
-    
-    finally:
-        if ssh:
-            try:
-                ssh.close()
-            except:
-                pass
 
 
 def list_base_images() -> List[Dict]:
