@@ -12,7 +12,18 @@
     "jump_host_config": {},
     "device_type": "SKY STREAM",
     "location": "USA:DT-LAB-PHILLY",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "is_rack_device": true,
+    "rpi_config": {
+      "rpi_ip": "10.138.17.42",
+      "rpi_port": 60201,
+      "rpi_password": "Eastcoast-Goldfish-Progress",
+      "rpi_username": "pi"
+    },
+    "ir_blaster_config": {},
+    "power_control_config": {},
+    "created_by": "",
+    "shared_with_teams": {}
   },
   {
     "ip": "10.0.0.28",
@@ -27,7 +38,20 @@
     "jump_host_config": {},
     "device_type": "SKY STREAM",
     "location": "USA:DT-LAB-PHILLY",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "is_rack_device": true,
+    "rpi_config": {
+      "rpi_ip": "10.138.17.42",
+      "rpi_port": 60201,
+      "rpi_password": "Eastcoast-Goldfish-Progress",
+      "rpi_username": "pi"
+    },
+    "ir_blaster_config": {},
+    "power_control_config": {},
+    "created_by": "",
+    "shared_with_teams": {
+      "Dev_QA": "use"
+    }
   },
   {
     "ip": "10.0.0.199",
@@ -42,7 +66,20 @@
     "jump_host_config": {},
     "device_type": "SKY STREAM",
     "location": "USA:DT-LAB-PHILLY",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "is_rack_device": true,
+    "rpi_config": {
+      "rpi_ip": "10.138.17.42",
+      "rpi_port": 60201,
+      "rpi_password": "Eastcoast-Goldfish-Progress",
+      "rpi_username": "pi"
+    },
+    "ir_blaster_config": {},
+    "power_control_config": {},
+    "created_by": "",
+    "shared_with_teams": {
+      "Dev_QA": "use"
+    }
   },
   {
     "ip": "10.0.0.172",
@@ -61,7 +98,19 @@
     "jump_host_config": {},
     "device_type": "XUMO",
     "location": "USA:PHL",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "is_rack_device": false,
+    "rpi_config": {
+      "rpi_ip": "10.26.52.151",
+      "rpi_port": 22,
+      "rpi_password": "Viswa123!",
+      "rpi_username": "lrqa",
+      "station_name": "LRQA_R-pi_5@CTC"
+    },
+    "ir_blaster_config": {},
+    "power_control_config": {},
+    "created_by": "",
+    "shared_with_teams": {}
   },
   {
     "ip": "10.0.0.233",
@@ -80,7 +129,19 @@
     "jump_host_config": {},
     "device_type": "XUMO",
     "location": "USA:PHL",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "is_rack_device": false,
+    "rpi_config": {
+      "rpi_ip": "10.26.52.62",
+      "rpi_port": 22,
+      "rpi_username": "lrqa-rpi-4",
+      "rpi_password": "Viswa123!",
+      "station_name": "LRQA_R-pi_4@CTC"
+    },
+    "ir_blaster_config": {},
+    "power_control_config": {},
+    "created_by": "",
+    "shared_with_teams": {}
   },
   {
     "ip": "10.0.0.166",
@@ -99,6 +160,18 @@
     "jump_host_config": {},
     "device_type": "SKY STREAM",
     "location": "USA:PHL",
-    "team_name": "LRQA"
+    "team_name": "LRQA",
+    "is_rack_device": false,
+    "rpi_config": {
+      "rpi_ip": "10.26.52.151",
+      "rpi_port": 22,
+      "rpi_password": "Viswa123!",
+      "rpi_username": "lrqa",
+      "station_name": "LRQA_R-pi_5@CTC"
+    },
+    "ir_blaster_config": {},
+    "power_control_config": {},
+    "created_by": "",
+    "shared_with_teams": {}
   }
 ]
