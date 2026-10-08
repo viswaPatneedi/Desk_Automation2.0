@@ -1039,6 +1039,42 @@
                             <i class="bi bi-hand-index-thumb"></i> Drag methods to the execution queue
                         </div>
                         <div id="available-methods">
+                            <div class="method-card" draggable="true" data-method="loop"
+                                 data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true"
+                                 data-bs-title="<strong>Loop 🔁</strong><br>Repeats a group of steps for N ITERATIONS or for N DAYS.<br><br>Add steps inside the loop with '+ Add Step' on the loop card. Add an 'Exit Loop' step anywhere inside it to break out early when a condition is met.">
+                                <div class="method-icon reboot" style="background:#7c3aed;">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Loop</h6>
+                                    <p>Repeat steps for N iterations or N days</p>
+                                </div>
+                            </div>
+
+                            <div class="method-card" draggable="true" data-method="condition_block"
+                                 data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true"
+                                 data-bs-title="<strong>If / Else If / Else 🔀</strong><br>Branches execution based on whether an earlier step passed/failed (or its captured OCR text).<br><br>Add steps inside each branch with '+ Add Step'. Only ONE matching branch runs per iteration.">
+                                <div class="method-icon reboot" style="background:#0891b2;">
+                                    <i class="bi bi-signpost-2-fill"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>If / Else If / Else</h6>
+                                    <p>Branch execution based on a condition</p>
+                                </div>
+                            </div>
+
+                            <div class="method-card" draggable="true" data-method="exit_loop"
+                                 data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true"
+                                 data-bs-title="<strong>Exit Loop ⏹️</strong><br>Only valid INSIDE a Loop. When its condition is met (or always, if no condition is set), immediately stops the enclosing loop and continues with the steps after it.">
+                                <div class="method-icon reboot" style="background:#dc2626;">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Exit Loop</h6>
+                                    <p>Break out of the enclosing loop early</p>
+                                </div>
+                            </div>
+
                             <div class="method-card" draggable="true" data-method="reboot"
                                  data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true"
                                  data-bs-title="<strong>Reboot Device</strong><br>Performs a complete system reboot with BEFORE/AFTER screenshot comparison.<br><br><strong>Process:</strong><br>1. Captures HOME screen before reboot<br>2. Sends reboot command<br>3. Waits for device to come back online<br>4. Detects HOME screen log line<br>5. Captures AFTER screenshot<br>6. Screen validation (informational only)<br><br><strong>Pass Criteria:</strong> HOME screen log detected<br><strong>Screenshots:</strong> Always captured for reference<br><strong>Note:</strong> Screen validation won't fail test (log check is primary)">
@@ -5650,6 +5686,20 @@
         // Async version for handling methods with async prompts
         async function addMethodToQueueAsync(methodId, methodName) {
             console.log(`🎯 [QUEUE] Adding method (async) to queue: ${methodId} (${methodName})`);
+
+            // --- Control-flow containers (Loop / If-Else / Exit Loop) use their own flow ---
+            if (methodId === 'loop') {
+                await addLoopContainer();
+                return;
+            }
+            if (methodId === 'condition_block') {
+                addConditionBlockContainer();
+                return;
+            }
+            if (methodId === 'exit_loop') {
+                await addExitLoopStep();
+                return;
+            }
             
             try {
                 // Collect method-specific parameters if needed
@@ -5673,9 +5723,10 @@
                 };
                 
                 console.log(`✅ [QUEUE] Queueitem created:`, queueItem);
-                console.log(`✅ [QUEUE] Current queue length BEFORE push: ${executionQueue.length}`);
-                executionQueue.push(queueItem);
-                console.log(`✅ [QUEUE] Current queue length AFTER push: ${executionQueue.length}`);
+                const insertionArray = getControlFlowInsertionArray();
+                console.log(`✅ [QUEUE] Current queue length BEFORE push: ${insertionArray.length}`);
+                insertionArray.push(queueItem);
+                console.log(`✅ [QUEUE] Current queue length AFTER push: ${insertionArray.length}`);
                 console.log(`✅ [QUEUE] ExecutionQueue contents:`, executionQueue);
                 renderQueue();
                 console.log(`✅ [QUEUE] renderQueue() called successfully`);
@@ -5687,6 +5738,809 @@
                 showNotification(`❌ Error adding method: ${error.message}`, 'error');
             }
             showNotification(`✅ ${methodName} added to queue`, 'success');
+        }
+
+        // ============================================================================
+        // CONTROL FLOW: Loop / If-Else-If-Else / Exit Loop authoring support
+        // ----------------------------------------------------------------------------
+        // A control-flow "container" is a queue item that owns nested child steps instead of
+        // being a leaf method:
+        //   Loop:            { id, method:'loop', loop_mode:'iterations'|'days',
+        //                      loop_iterations, loop_days, children:[...] }
+        //   Condition block: { id, method:'condition_block',
+        //                      branches:[ { id, branch_type:'if'|'elseif'|'else',
+        //                                   condition, children:[...] } ] }
+        //   Exit Loop (child-only leaf): { id, method:'exit_loop', condition }
+        //
+        // `controlFlowInsertTarget` points at the children array new steps should be added
+        // into. When null, steps go to the top-level executionQueue (v2.0 default).
+        // The backend execution engine consumes these via flattenControlFlowForBackend()
+        // (emitted as loop_start/loop_end/if_start/elseif_start/else_start/endif_block/
+        // exit_loop markers) - see services/test_execution_service.py _handle_control_flow_step.
+        // ============================================================================
+        let controlFlowInsertTarget = null; // { kind:'loop'|'branch', containerId, branchId? }
+
+        const CONTROL_FLOW_METHODS = ['loop', 'condition_block', 'exit_loop'];
+        function isControlFlowContainer(item) {
+            return !!item && (item.method === 'loop' || item.method === 'condition_block');
+        }
+
+        function newControlFlowId(prefix) {
+            return prefix + '_' + Date.now().toString() + Math.random().toString(36).slice(2, 8);
+        }
+
+        // Recursively find a container (loop/condition_block/composite-sequence) by id.
+        function findControlFlowContainer(items, containerId) {
+            for (const item of items) {
+                if (item.id === containerId) return { item };
+                if (item.method === 'loop' || isCompositeSequenceStep(item)) {
+                    const nested = findControlFlowContainer(item.children || [], containerId);
+                    if (nested) return nested;
+                } else if (item.method === 'condition_block') {
+                    for (const branch of (item.branches || [])) {
+                        const nested = findControlFlowContainer(branch.children || [], containerId);
+                        if (nested) return nested;
+                    }
+                }
+            }
+            return null;
+        }
+
+        // Recursively locate ANY item (leaf or container) by id, returning its sibling array.
+        function findControlFlowItemLocation(items, itemId) {
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.id === itemId) return { array: items, index: i, item };
+                if (item.method === 'loop' || isCompositeSequenceStep(item)) {
+                    const nested = findControlFlowItemLocation(item.children || [], itemId);
+                    if (nested) return nested;
+                } else if (item.method === 'condition_block') {
+                    for (const branch of (item.branches || [])) {
+                        const nested = findControlFlowItemLocation(branch.children || [], itemId);
+                        if (nested) return nested;
+                    }
+                }
+            }
+            return null;
+        }
+
+        // The array new steps should be pushed into (top-level queue, or the targeted container).
+        function getControlFlowInsertionArray() {
+            if (!controlFlowInsertTarget) return executionQueue;
+            const found = findControlFlowContainer(executionQueue, controlFlowInsertTarget.containerId);
+            if (!found) { controlFlowInsertTarget = null; return executionQueue; }
+            if (controlFlowInsertTarget.kind === 'loop') {
+                found.item.children = found.item.children || [];
+                return found.item.children;
+            }
+            const branch = (found.item.branches || []).find(b => b.id === controlFlowInsertTarget.branchId);
+            if (!branch) { controlFlowInsertTarget = null; return executionQueue; }
+            branch.children = branch.children || [];
+            return branch.children;
+        }
+
+        function setControlFlowInsertTarget(kind, containerId, branchId) {
+            controlFlowInsertTarget = { kind, containerId, branchId };
+            renderQueue();
+            showNotification('📍 Now adding steps here - drag a method onto the queue, then click "Done Adding" when finished', 'success');
+        }
+        function clearControlFlowInsertTarget() {
+            controlFlowInsertTarget = null;
+            renderQueue();
+        }
+
+        // ---- Modal: Loop settings (mode + iterations/days) ----------------------------------
+        function showLoopConfigModal(initial = {}) {
+            return new Promise((resolve) => {
+                const modalId = 'loopConfigModal_' + Date.now();
+                const mode = initial.mode || 'iterations';
+                const iterations = initial.iterations || 2;
+                const days = initial.days || 1;
+                const modalHTML = `
+                    <div class="modal fade" id="${modalId}" tabindex="-1">
+                      <div class="modal-dialog">
+                        <div class="modal-content" style="background:#1f2937;color:#e5e7eb;">
+                          <div class="modal-header" style="border-color:#374151;">
+                            <h5 class="modal-title"><i class="bi bi-arrow-repeat"></i> Loop Settings</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                          </div>
+                          <div class="modal-body">
+                            <div class="mb-3">
+                              <label class="form-label">Run this loop for:</label>
+                              <div class="form-check">
+                                <input class="form-check-input" type="radio" name="${modalId}_mode" id="${modalId}_iter" value="iterations" ${mode === 'iterations' ? 'checked' : ''}>
+                                <label class="form-check-label" for="${modalId}_iter">A number of Iterations</label>
+                              </div>
+                              <div class="form-check">
+                                <input class="form-check-input" type="radio" name="${modalId}_mode" id="${modalId}_days" value="days" ${mode === 'days' ? 'checked' : ''}>
+                                <label class="form-check-label" for="${modalId}_days">A number of Days</label>
+                              </div>
+                            </div>
+                            <div class="mb-3" id="${modalId}_iterWrap" style="${mode === 'iterations' ? '' : 'display:none;'}">
+                              <label class="form-label">Iterations</label>
+                              <input type="number" min="1" class="form-control" id="${modalId}_iterInput" value="${iterations}" style="background:#374151;color:#fff;border-color:#4b5563;">
+                            </div>
+                            <div class="mb-3" id="${modalId}_daysWrap" style="${mode === 'days' ? '' : 'display:none;'}">
+                              <label class="form-label">Days</label>
+                              <input type="number" min="0.01" step="0.01" class="form-control" id="${modalId}_daysInput" value="${days}" style="background:#374151;color:#fff;border-color:#4b5563;">
+                            </div>
+                          </div>
+                          <div class="modal-footer" style="border-color:#374151;">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="${modalId}_save">Save</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>`;
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                const modalEl = document.getElementById(modalId);
+                const bsModal = new bootstrap.Modal(modalEl);
+                let saved = false;
+
+                modalEl.querySelectorAll(`input[name="${modalId}_mode"]`).forEach(radio => {
+                    radio.addEventListener('change', () => {
+                        const isDays = radio.value === 'days' && radio.checked;
+                        document.getElementById(`${modalId}_iterWrap`).style.display = isDays ? 'none' : '';
+                        document.getElementById(`${modalId}_daysWrap`).style.display = isDays ? '' : 'none';
+                    });
+                });
+
+                document.getElementById(`${modalId}_save`).addEventListener('click', () => {
+                    const selectedMode = modalEl.querySelector(`input[name="${modalId}_mode"]:checked`).value;
+                    let result;
+                    if (selectedMode === 'days') {
+                        const d = parseFloat(document.getElementById(`${modalId}_daysInput`).value);
+                        if (isNaN(d) || d <= 0) { showNotification('❌ Enter a valid number of days', 'error'); return; }
+                        result = { mode: 'days', iterations: null, days: d };
+                    } else {
+                        const n = parseInt(document.getElementById(`${modalId}_iterInput`).value);
+                        if (isNaN(n) || n <= 0) { showNotification('❌ Enter a valid number of iterations', 'error'); return; }
+                        result = { mode: 'iterations', iterations: n, days: null };
+                    }
+                    saved = true;
+                    bsModal.hide();
+                    resolve(result);
+                });
+
+                modalEl.addEventListener('hidden.bs.modal', () => {
+                    modalEl.remove();
+                    if (!saved) resolve(null);
+                }, { once: true });
+
+                bsModal.show();
+            });
+        }
+
+        // ---- Modal: condition picker (IF / ELSE-IF branch, Exit Loop, per-step condition).
+        // Supports multiple step conditions combined with AND/OR, and (unlike the flat
+        // setConditionForStep) the OCR-text condition types the backend engine supports:
+        // 'if_passed' / 'if_failed' / 'if_text_contains' / 'if_text_not_contains'.
+        // Resolves { action:'save'|'clear'|'cancel', condition:{steps:[{step_id,type,value?}],logic} }.
+        // During authoring conditions reference steps by their item id; flattenControlFlowForBackend
+        // resolves those to the absolute flat indices the backend expects.
+        function showConditionModal({ referenceableSteps, initialCondition, optional = false, title = 'Set Condition' } = {}) {
+            return new Promise((resolve) => {
+                const modalId = 'conditionModal_' + Date.now();
+                const hasSteps = referenceableSteps && referenceableSteps.length > 0;
+
+                let rowCounter = 0;
+                const initialSteps = initialCondition?.steps || [];
+                let rows = initialSteps.length > 0
+                    ? initialSteps.map(s => ({ rowId: rowCounter++, stepId: s.step_id || '', type: s.type || 'if_passed', value: s.value || '' }))
+                    : (hasSteps ? [{ rowId: rowCounter++, stepId: referenceableSteps[0].id, type: 'if_passed', value: '' }] : []);
+                let logic = initialCondition?.logic || 'AND';
+
+                const noStepsWarning = !hasSteps
+                    ? `<div class="alert" style="background:#78350f;border:1px solid #b45309;color:#fef3c7;">Add at least one step here first, then set a condition.</div>` : '';
+
+                const stepOptionsHtml = (selectedId) => (referenceableSteps || []).map(s =>
+                    `<option value="${s.id}" ${s.id === selectedId ? 'selected' : ''}>${s.name}</option>`
+                ).join('');
+
+                const renderRowHtml = (row) => {
+                    const isText = row.type === 'if_text_contains' || row.type === 'if_text_not_contains';
+                    return `
+                        <div class="condition-row" style="border:1px solid #4b5563;border-radius:6px;padding:0.5rem;margin-bottom:0.5rem;background:#111827;">
+                            <div style="display:flex;gap:0.5rem;align-items:flex-start;">
+                                <div style="flex:1;">
+                                    <select class="form-select form-select-sm cond-step-select" data-row-id="${row.rowId}" style="background:#374151;color:#fff;border-color:#4b5563;margin-bottom:4px;">
+                                        ${stepOptionsHtml(row.stepId)}
+                                    </select>
+                                    <select class="form-select form-select-sm cond-type-select" data-row-id="${row.rowId}" style="background:#374151;color:#fff;border-color:#4b5563;">
+                                        <option value="if_passed" ${row.type === 'if_passed' ? 'selected' : ''}>Step PASSED</option>
+                                        <option value="if_failed" ${row.type === 'if_failed' ? 'selected' : ''}>Step FAILED</option>
+                                        <option value="if_text_contains" ${row.type === 'if_text_contains' ? 'selected' : ''}>Captured text CONTAINS...</option>
+                                        <option value="if_text_not_contains" ${row.type === 'if_text_not_contains' ? 'selected' : ''}>Captured text does NOT contain...</option>
+                                    </select>
+                                    <input type="text" class="form-control form-control-sm cond-text-input" data-row-id="${row.rowId}" value="${(row.value || '').replace(/"/g, '&quot;')}" placeholder="Expected text" style="background:#374151;color:#fff;border-color:#4b5563;margin-top:4px;${isText ? '' : 'display:none;'}">
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger cond-remove-row" data-row-id="${row.rowId}" title="Remove this condition"><i class="bi bi-x-lg"></i></button>
+                            </div>
+                        </div>`;
+                };
+                const rowsHtml = () => rows.map(renderRowHtml).join('');
+
+                const modalHTML = `
+                    <div class="modal fade" id="${modalId}" tabindex="-1">
+                      <div class="modal-dialog">
+                        <div class="modal-content" style="background:#1f2937;color:#e5e7eb;">
+                          <div class="modal-header" style="border-color:#374151;">
+                            <h5 class="modal-title"><i class="bi bi-signpost-2-fill"></i> ${title}</h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                          </div>
+                          <div class="modal-body">
+                            ${noStepsWarning}
+                            <div id="${modalId}_rows">${rowsHtml()}</div>
+                            <button type="button" class="btn btn-sm btn-outline-info" id="${modalId}_addRow" ${hasSteps ? '' : 'disabled'}><i class="bi bi-plus-circle"></i> Add Condition</button>
+                            <div class="mb-3 mt-3" id="${modalId}_logicWrap" style="${rows.length > 1 ? '' : 'display:none;'}">
+                              <label class="form-label">Combine conditions with:</label>
+                              <select class="form-select" id="${modalId}_logic" style="background:#374151;color:#fff;border-color:#4b5563;">
+                                <option value="AND" ${logic === 'AND' ? 'selected' : ''}>AND - all conditions must be true</option>
+                                <option value="OR" ${logic === 'OR' ? 'selected' : ''}>OR - any condition can be true</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="modal-footer" style="border-color:#374151;">
+                            ${optional ? `<button type="button" class="btn btn-outline-warning" id="${modalId}_clear">No Condition (always run)</button>` : ''}
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="${modalId}_save" ${hasSteps ? '' : 'disabled'}>Save</button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>`;
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+                const modalEl = document.getElementById(modalId);
+                const bsModal = new bootstrap.Modal(modalEl);
+                let action = 'cancel';
+                let payload = null;
+
+                const syncRowFromDom = (rowId) => {
+                    const row = rows.find(r => r.rowId === rowId);
+                    if (!row) return;
+                    const stepSel = modalEl.querySelector(`.cond-step-select[data-row-id="${rowId}"]`);
+                    const typeSel = modalEl.querySelector(`.cond-type-select[data-row-id="${rowId}"]`);
+                    const textInput = modalEl.querySelector(`.cond-text-input[data-row-id="${rowId}"]`);
+                    if (stepSel) row.stepId = stepSel.value;
+                    if (typeSel) row.type = typeSel.value;
+                    if (textInput) row.value = textInput.value;
+                };
+
+                const attachRowListeners = () => {
+                    modalEl.querySelectorAll('.cond-type-select').forEach(sel => {
+                        sel.addEventListener('change', () => {
+                            const rowId = parseInt(sel.getAttribute('data-row-id'));
+                            syncRowFromDom(rowId);
+                            const isText = sel.value === 'if_text_contains' || sel.value === 'if_text_not_contains';
+                            const textInput = modalEl.querySelector(`.cond-text-input[data-row-id="${rowId}"]`);
+                            if (textInput) textInput.style.display = isText ? '' : 'none';
+                        });
+                    });
+                    modalEl.querySelectorAll('.cond-step-select').forEach(sel => {
+                        sel.addEventListener('change', () => syncRowFromDom(parseInt(sel.getAttribute('data-row-id'))));
+                    });
+                    modalEl.querySelectorAll('.cond-text-input').forEach(inp => {
+                        inp.addEventListener('input', () => syncRowFromDom(parseInt(inp.getAttribute('data-row-id'))));
+                    });
+                    modalEl.querySelectorAll('.cond-remove-row').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            if (rows.length <= 1) {
+                                showNotification('❌ At least one condition is required (use "No Condition" to clear it entirely)', 'error');
+                                return;
+                            }
+                            rows = rows.filter(r => r.rowId !== parseInt(btn.getAttribute('data-row-id')));
+                            rerenderRows();
+                        });
+                    });
+                };
+
+                const rerenderRows = () => {
+                    document.getElementById(`${modalId}_rows`).innerHTML = rowsHtml();
+                    const logicWrap = document.getElementById(`${modalId}_logicWrap`);
+                    if (logicWrap) logicWrap.style.display = rows.length > 1 ? '' : 'none';
+                    attachRowListeners();
+                };
+
+                attachRowListeners();
+
+                const addRowBtn = document.getElementById(`${modalId}_addRow`);
+                if (addRowBtn) {
+                    addRowBtn.addEventListener('click', () => {
+                        rows.push({ rowId: rowCounter++, stepId: referenceableSteps[0]?.id || '', type: 'if_passed', value: '' });
+                        rerenderRows();
+                    });
+                }
+
+                const saveBtn = document.getElementById(`${modalId}_save`);
+                if (saveBtn) {
+                    saveBtn.addEventListener('click', () => {
+                        rows.forEach(r => syncRowFromDom(r.rowId));
+                        for (const r of rows) {
+                            const isText = r.type === 'if_text_contains' || r.type === 'if_text_not_contains';
+                            if (isText && !r.value.trim()) { showNotification('❌ Enter the expected text for every text condition', 'error'); return; }
+                            if (!r.stepId) { showNotification('❌ Select a step for every condition', 'error'); return; }
+                        }
+                        const logicSel = document.getElementById(`${modalId}_logic`);
+                        const steps = rows.map(r => {
+                            const entry = { step_id: r.stepId, type: r.type };
+                            if (r.type === 'if_text_contains' || r.type === 'if_text_not_contains') entry.value = r.value.trim();
+                            return entry;
+                        });
+                        payload = { steps, logic: (logicSel ? logicSel.value : 'AND') };
+                        action = 'save';
+                        bsModal.hide();
+                    });
+                }
+                const clearBtn = document.getElementById(`${modalId}_clear`);
+                if (clearBtn) {
+                    clearBtn.addEventListener('click', () => {
+                        action = 'clear';
+                        bsModal.hide();
+                    });
+                }
+                modalEl.addEventListener('hidden.bs.modal', () => {
+                    modalEl.remove();
+                    resolve({ action, condition: payload });
+                }, { once: true });
+
+                bsModal.show();
+            });
+        }
+
+        // ---- Container / nested-step CRUD -----------------------------------------------------
+        async function addLoopContainer() {
+            const result = await showLoopConfigModal({});
+            if (!result) return;
+            const loopItem = {
+                id: newControlFlowId('loop'),
+                method: 'loop',
+                name: 'Loop',
+                loop_mode: result.mode,
+                loop_iterations: result.iterations,
+                loop_days: result.days,
+                children: []
+            };
+            getControlFlowInsertionArray().push(loopItem);
+            renderQueue();
+            showNotification('✅ Loop added - click "+ Add Step" on it to add steps inside', 'success');
+        }
+
+        async function editLoopContainer(loopId) {
+            const found = findControlFlowContainer(executionQueue, loopId);
+            if (!found) return;
+            const result = await showLoopConfigModal({
+                mode: found.item.loop_mode, iterations: found.item.loop_iterations, days: found.item.loop_days
+            });
+            if (!result) return;
+            found.item.loop_mode = result.mode;
+            found.item.loop_iterations = result.iterations;
+            found.item.loop_days = result.days;
+            renderQueue();
+            showNotification('✅ Loop updated', 'success');
+        }
+
+        function addConditionBlockContainer() {
+            const blockItem = {
+                id: newControlFlowId('ifblock'),
+                method: 'condition_block',
+                name: 'If / Else If / Else',
+                branches: [
+                    { id: newControlFlowId('branch'), branch_type: 'if', condition: null, children: [] }
+                ]
+            };
+            getControlFlowInsertionArray().push(blockItem);
+            renderQueue();
+            showNotification('✅ IF block added - set its condition, then add steps inside', 'success');
+        }
+
+        function addElseIfBranch(blockId) {
+            const found = findControlFlowContainer(executionQueue, blockId);
+            if (!found) return;
+            const branches = found.item.branches;
+            if (branches.some(b => b.branch_type === 'else')) {
+                showNotification('❌ ELSE IF must be added before the ELSE branch - remove ELSE first', 'error');
+                return;
+            }
+            branches.push({ id: newControlFlowId('branch'), branch_type: 'elseif', condition: null, children: [] });
+            renderQueue();
+        }
+
+        function addElseBranch(blockId) {
+            const found = findControlFlowContainer(executionQueue, blockId);
+            if (!found) return;
+            const branches = found.item.branches;
+            if (branches.some(b => b.branch_type === 'else')) {
+                showNotification('❌ Only one ELSE branch is allowed', 'error');
+                return;
+            }
+            branches.push({ id: newControlFlowId('branch'), branch_type: 'else', children: [] });
+            renderQueue();
+        }
+
+        function removeBranch(blockId, branchId) {
+            const found = findControlFlowContainer(executionQueue, blockId);
+            if (!found) return;
+            found.item.branches = found.item.branches.filter(b => b.id !== branchId);
+            renderQueue();
+        }
+
+        function removeControlFlowContainer(containerId) {
+            const idx = executionQueue.findIndex(i => i.id === containerId);
+            if (idx !== -1) {
+                executionQueue.splice(idx, 1);
+            } else {
+                const removeFromNested = (items) => {
+                    for (const item of items) {
+                        if ((item.method === 'loop' || isCompositeSequenceStep(item)) && item.children) {
+                            const before = item.children.length;
+                            item.children = item.children.filter(c => c.id !== containerId);
+                            if (item.children.length !== before) return true;
+                            if (removeFromNested(item.children)) return true;
+                        } else if (item.method === 'condition_block') {
+                            for (const branch of (item.branches || [])) {
+                                const before = branch.children.length;
+                                branch.children = branch.children.filter(c => c.id !== containerId);
+                                if (branch.children.length !== before) return true;
+                                if (removeFromNested(branch.children)) return true;
+                            }
+                        }
+                    }
+                    return false;
+                };
+                removeFromNested(executionQueue);
+            }
+            if (controlFlowInsertTarget && controlFlowInsertTarget.containerId === containerId) {
+                controlFlowInsertTarget = null;
+            }
+            renderQueue();
+        }
+
+        // Steps that a condition may reference: leaf steps in the SAME sibling array (steps
+        // that will have already run before this point). Labelled with their 1-based position.
+        function getControlFlowReferenceableSteps(siblingArray) {
+            return siblingArray
+                .map((item, idx) => ({ item, idx }))
+                .filter(({ item }) => !CONTROL_FLOW_METHODS.includes(item.method) && !isCompositeSequenceStep(item))
+                .map(({ item, idx }) => {
+                    const info = getMethodInfo(item.method, item);
+                    const label = item.name || info.name;
+                    const summary = getControlFlowStepPlainSummary(item);
+                    return { id: item.id, name: `Step ${idx + 1}: ${label}${summary ? ' - ' + summary : ''}` };
+                });
+        }
+
+        // Short plain-text preview of a leaf step's key user-provided value(s), for the
+        // condition step-picker dropdown (no HTML - <option> text only).
+        function getControlFlowStepPlainSummary(item) {
+            const p = item.params || {};
+            const candidates = [
+                p.voice_text, p.remote_keys, p.command_text, p.command, p.expected_screen,
+                p.expected_text, p.image_name, p.screen_name, p.section, p.tile_to_navigate,
+                p.channel_key, p.asset_voice_command,
+                (p.wait_seconds !== undefined && p.wait_seconds !== null && p.wait_seconds !== '' ? `${p.wait_seconds}s` : null),
+                (Array.isArray(p.ir_keys) && p.ir_keys.length ? p.ir_keys.join(', ') : null)
+            ];
+            const found = candidates.find(v => v !== undefined && v !== null && v !== '');
+            if (!found) return '';
+            const text = Array.isArray(found) ? found.join(', ') : String(found);
+            return text.length > 40 ? text.slice(0, 40) + '…' : text;
+        }
+
+        function getControlFlowStepDisplayLabel(stepId) {
+            const loc = findControlFlowItemLocation(executionQueue, stepId);
+            if (!loc) return 'the selected step';
+            const info = getMethodInfo(loc.item.method, loc.item);
+            return `Step ${loc.index + 1} (${loc.item.name || info.name})`;
+        }
+
+        // Human-readable summary of a (possibly multi-step AND/OR) condition, for card display.
+        function describeControlFlowCondition(condition) {
+            const steps = condition?.steps;
+            if (!steps || !steps.length) return '';
+            const describeOne = (step) => {
+                const label = getControlFlowStepDisplayLabel(step.step_id !== undefined ? step.step_id : step.step);
+                if (step.type === 'if_text_contains') return `${label} text CONTAINS "${step.value || ''}"`;
+                if (step.type === 'if_text_not_contains') return `${label} text does NOT contain "${step.value || ''}"`;
+                return `${label} ${step.type === 'if_failed' ? 'FAILS' : 'PASSES'}`;
+            };
+            if (steps.length === 1) return describeOne(steps[0]);
+            return steps.map(describeOne).join(condition.logic === 'OR' ? ' OR ' : ' AND ');
+        }
+
+        async function setBranchCondition(blockId, branchId) {
+            const found = findControlFlowContainer(executionQueue, blockId);
+            if (!found) return;
+            const branch = found.item.branches.find(b => b.id === branchId);
+            if (!branch) return;
+            // Reference steps already added BEFORE this IF/ELSE-IF block in its parent array,
+            // not the branch's own (still empty when first setting a condition) children.
+            const loc = findControlFlowItemLocation(executionQueue, blockId);
+            const referenceable = loc ? getControlFlowReferenceableSteps(loc.array).filter(s => s.id !== blockId) : [];
+            const label = branch.branch_type === 'if' ? 'IF' : 'ELSE IF';
+            const result = await showConditionModal({
+                referenceableSteps: referenceable,
+                initialCondition: branch.condition,
+                optional: false,
+                title: `${label} Condition`
+            });
+            if (result.action === 'cancel') return;
+            branch.condition = result.action === 'clear' ? null : result.condition;
+            renderQueue();
+        }
+
+        async function addExitLoopStep() {
+            if (!controlFlowInsertTarget || controlFlowInsertTarget.kind !== 'loop') {
+                showNotification('❌ Exit Loop can only be added INSIDE a loop - click "+ Add Step" on a Loop first', 'error');
+                return;
+            }
+            const found = findControlFlowContainer(executionQueue, controlFlowInsertTarget.containerId);
+            const siblingArray = found ? (found.item.children || []) : [];
+            const result = await showConditionModal({
+                referenceableSteps: getControlFlowReferenceableSteps(siblingArray),
+                initialCondition: null,
+                optional: true,
+                title: 'Exit Loop Condition'
+            });
+            if (result.action === 'cancel') return;
+            const exitItem = {
+                id: newControlFlowId('exitloop'),
+                method: 'exit_loop',
+                name: 'Exit Loop',
+                condition: result.action === 'clear' ? null : result.condition
+            };
+            getControlFlowInsertionArray().push(exitItem);
+            renderQueue();
+            showNotification('✅ Exit Loop step added', 'success');
+        }
+
+        async function editExitLoopStep(exitLoopId) {
+            const loc = findControlFlowItemLocation(executionQueue, exitLoopId);
+            if (!loc) return;
+            const referenceable = getControlFlowReferenceableSteps(loc.array).filter(s => s.id !== exitLoopId);
+            const result = await showConditionModal({
+                referenceableSteps: referenceable,
+                initialCondition: loc.item.condition,
+                optional: true,
+                title: 'Exit Loop Condition'
+            });
+            if (result.action === 'cancel') return;
+            loc.item.condition = result.action === 'clear' ? null : result.condition;
+            renderQueue();
+            showNotification('✅ Exit Loop condition updated', 'success');
+        }
+
+        // Move a nested step up (-1) / down (+1) within its own sibling array.
+        function moveControlFlowItem(itemId, direction) {
+            const loc = findControlFlowItemLocation(executionQueue, itemId);
+            if (!loc) return;
+            const newIndex = loc.index + direction;
+            if (newIndex < 0 || newIndex >= loc.array.length) return;
+            [loc.array[loc.index], loc.array[newIndex]] = [loc.array[newIndex], loc.array[loc.index]];
+            renderQueue();
+        }
+
+        // Assign fresh ids to a cloned item (and any nested children/branches) so it does not
+        // collide with the original it was copied from.
+        function regenerateControlFlowIds(item) {
+            item.id = newControlFlowId(item.method || 'step');
+            if (item.method === 'loop' || isCompositeSequenceStep(item)) {
+                item.children = (item.children || []).map(regenerateControlFlowIds);
+            } else if (item.method === 'condition_block') {
+                item.branches = (item.branches || []).map(branch => {
+                    branch.id = newControlFlowId('branch');
+                    branch.children = (branch.children || []).map(regenerateControlFlowIds);
+                    return branch;
+                });
+            }
+            return item;
+        }
+
+        function cloneControlFlowItem(itemId) {
+            const loc = findControlFlowItemLocation(executionQueue, itemId);
+            if (!loc) return;
+            const clone = regenerateControlFlowIds(JSON.parse(JSON.stringify(loc.item)));
+            loc.array.splice(loc.index + 1, 0, clone);
+            renderQueue();
+            showNotification('✅ Step cloned', 'success');
+        }
+
+        // Optional condition for a regular nested leaf step (same modal/schema as branch conditions).
+        async function setConditionForControlFlowStep(itemId) {
+            const loc = findControlFlowItemLocation(executionQueue, itemId);
+            if (!loc) return;
+            const referenceable = getControlFlowReferenceableSteps(loc.array).filter(s => s.id !== itemId);
+            const result = await showConditionModal({
+                referenceableSteps: referenceable,
+                initialCondition: loc.item.condition,
+                optional: true,
+                title: 'Step Condition'
+            });
+            if (result.action === 'cancel') return;
+            loc.item.condition = result.action === 'clear' ? null : result.condition;
+            renderQueue();
+            showNotification('✅ Condition updated', 'success');
+        }
+
+        function removeLoopChild(loopId, childId) {
+            const found = findControlFlowContainer(executionQueue, loopId);
+            if (!found) return;
+            found.item.children = (found.item.children || []).filter(c => c.id !== childId);
+            renderQueue();
+        }
+
+        function removeBranchChild(blockId, branchId, childId) {
+            const found = findControlFlowContainer(executionQueue, blockId);
+            if (!found) return;
+            const branch = found.item.branches.find(b => b.id === branchId);
+            if (!branch) return;
+            branch.children = (branch.children || []).filter(c => c.id !== childId);
+            renderQueue();
+        }
+
+        // ---- Persistence (save / load) -------------------------------------------------------
+        // Containers are persisted as their nested structure (children/branches), matching what
+        // job_details' groupExecutionQueueDisplay() and flattenControlFlowForBackend() consume.
+        function prepareControlFlowItemForSave(item) {
+            if (item.method === 'loop') {
+                return {
+                    id: item.id, method: 'loop', name: item.name || 'Loop',
+                    loop_mode: item.loop_mode, loop_iterations: item.loop_iterations, loop_days: item.loop_days,
+                    children: (item.children || []).map(prepareControlFlowItemForSave)
+                };
+            }
+            if (item.method === 'condition_block') {
+                return {
+                    id: item.id, method: 'condition_block', name: item.name || 'If / Else If / Else',
+                    branches: (item.branches || []).map(branch => ({
+                        id: branch.id, branch_type: branch.branch_type, condition: branch.condition || null,
+                        children: (branch.children || []).map(prepareControlFlowItemForSave)
+                    }))
+                };
+            }
+            if (item.method === 'exit_loop') {
+                return { id: item.id, method: 'exit_loop', name: item.name || 'Exit Loop', condition: item.condition || null };
+            }
+            // Leaf: consolidate params (same shape as the generic save path)
+            const savedItem = { id: item.id, method: item.method, name: item.name, description: item.description || '', params: {} };
+            if (item.params && typeof item.params === 'object') {
+                Object.assign(savedItem.params, item.params);
+            }
+            Object.keys(item).forEach(key => {
+                if (!['id', 'method', 'name', 'description', 'params', '_paramsBackup', 'condition'].includes(key)) {
+                    savedItem.params[key] = item[key];
+                }
+            });
+            if (item.condition) savedItem.condition = item.condition;
+            return savedItem;
+        }
+
+        // Rebuild the in-memory control-flow item from its saved (persisted) shape.
+        function restoreControlFlowItemFromSave(item) {
+            if (item.method === 'loop') {
+                return {
+                    id: item.id || newControlFlowId('loop'), method: 'loop', name: item.name || 'Loop',
+                    loop_mode: item.loop_mode || 'iterations',
+                    loop_iterations: item.loop_iterations, loop_days: item.loop_days,
+                    children: (item.children || []).map(restoreControlFlowItemFromSave)
+                };
+            }
+            if (item.method === 'condition_block') {
+                return {
+                    id: item.id || newControlFlowId('ifblock'), method: 'condition_block', name: item.name || 'If / Else If / Else',
+                    branches: (item.branches || []).map(branch => ({
+                        id: branch.id || newControlFlowId('branch'), branch_type: branch.branch_type,
+                        condition: branch.condition || null,
+                        children: (branch.children || []).map(restoreControlFlowItemFromSave)
+                    }))
+                };
+            }
+            if (item.method === 'exit_loop') {
+                return { id: item.id || newControlFlowId('exitloop'), method: 'exit_loop', name: item.name || 'Exit Loop', condition: item.condition || null };
+            }
+            // Leaf: reconstruct params (same consolidation as populateQueueFromSequence)
+            const leaf = { id: item.id || newControlFlowId('step'), method: item.method, name: item.name || item.method, description: item.description || '', params: item.params || {} };
+            Object.keys(item).forEach(key => {
+                if (!['method', 'name', 'description', 'params', 'id', 'condition'].includes(key)) {
+                    leaf[key] = item[key];
+                    if (item[key] !== null && item[key] !== '') leaf.params[key] = item[key];
+                }
+            });
+            if (item.condition) leaf.condition = item.condition;
+            return leaf;
+        }
+
+        // ---- Backend wire format ---------------------------------------------------------------
+        // Builds the API payload for one leaf (non-container) queue item. Mirrors the transform
+        // executeQueue() applies to top-level steps so nested steps send identical params.
+        function buildApiItemForControlFlowLeaf(item) {
+            const apiItem = { method: item.method };
+            if (item.condition) apiItem.condition = item.condition;
+            if (item.description) apiItem.description = item.description;
+            // Fold every non-structural property into the flat API item (params win).
+            const skip = ['id', 'method', 'name', 'description', 'condition', 'params', 'children', 'branches'];
+            if (item.params && typeof item.params === 'object') {
+                Object.keys(item.params).forEach(k => { apiItem[k] = item.params[k]; });
+            }
+            Object.keys(item).forEach(k => {
+                if (!skip.includes(k)) apiItem[k] = item[k];
+            });
+            return apiItem;
+        }
+
+        // Converts the (possibly nested) executionQueue into the flat marker list the backend's
+        // control-flow engine understands (loop_start/loop_end/if_start/elseif_start/else_start/
+        // endif_block/exit_loop). Leaf steps are transformed via buildApiItemForControlFlowLeaf.
+        function flattenControlFlowForBackend(items) {
+            const flat = [];
+            const idToIndex = {};
+            const leafApiTransform = (typeof buildApiItemForLeaf === 'function') ? buildApiItemForLeaf : buildApiItemForControlFlowLeaf;
+
+            function walk(list, currentLoopId) {
+                list.forEach(item => {
+                    if (item.method === 'loop') {
+                        const loopId = item.id;
+                        flat.push({
+                            method: 'loop_start', loop_id: loopId, loop_mode: item.loop_mode || 'iterations',
+                            loop_iterations: item.loop_iterations, loop_days: item.loop_days
+                        });
+                        walk(item.children || [], loopId);
+                        flat.push({ method: 'loop_end', loop_id: loopId });
+                    } else if (item.method === 'condition_block') {
+                        const blockId = item.id;
+                        (item.branches || []).forEach(branch => {
+                            if (branch.branch_type === 'if') {
+                                flat.push({ method: 'if_start', block_id: blockId, condition: branch.condition });
+                            } else if (branch.branch_type === 'elseif') {
+                                flat.push({ method: 'elseif_start', block_id: blockId, condition: branch.condition });
+                            } else {
+                                flat.push({ method: 'else_start', block_id: blockId });
+                            }
+                            walk(branch.children || [], currentLoopId);
+                        });
+                        flat.push({ method: 'endif_block', block_id: blockId });
+                    } else if (item.method === 'exit_loop') {
+                        flat.push({ method: 'exit_loop', loop_id: currentLoopId, condition: item.condition });
+                    } else if (isCompositeSequenceStep(item)) {
+                        // A reusable sequence added as one collapsible step: the backend just
+                        // sees its steps inlined in order, no markers needed.
+                        walk(item.children || getCompositeChildSteps(item) || [], currentLoopId);
+                    } else {
+                        const apiItem = leafApiTransform(item);
+                        idToIndex[item.id] = flat.length;
+                        flat.push(apiItem);
+                    }
+                });
+            }
+            walk(items, null);
+
+            // Resolve any {step_id} condition references (recorded by item id during authoring)
+            // into the absolute-index {step} format the backend expects.
+            function resolveConditionRefs(condition) {
+                if (!condition) return condition;
+                if (Array.isArray(condition.steps)) {
+                    return {
+                        ...condition,
+                        steps: condition.steps.map(s => ({
+                            ...s,
+                            step: s.step_id !== undefined ? idToIndex[s.step_id] : s.step
+                        }))
+                    };
+                }
+                return condition;
+            }
+            flat.forEach(entry => {
+                if (entry.condition) entry.condition = resolveConditionRefs(entry.condition);
+            });
+            return flat;
+        }
+
+        // True if any queue item (at any depth) is a control-flow container.
+        function queueHasControlFlow(items) {
+            for (const item of (items || [])) {
+                if (isControlFlowContainer(item) || item.method === 'exit_loop') return true;
+                if (item.children && queueHasControlFlow(item.children)) return true;
+                if (item.branches && item.branches.some(b => queueHasControlFlow(b.children || []))) return true;
+            }
+            return false;
         }
         
         // Async version of getMethodParameters
@@ -8228,6 +9082,12 @@
             } else {
                 let html = '';
                 executionQueue.forEach((queueItem, index) => {
+                    // --- Control-flow containers render via their own recursive renderer ---
+                    if (isControlFlowContainer(queueItem)) {
+                        html += renderControlFlowCardHtml(queueItem);
+                        return;
+                    }
+
                     // Build method-specific parameter display
                     let inputsHtml = '';
                     
@@ -8560,6 +9420,119 @@
                 
                 queue.innerHTML = html;
             }
+        }
+
+        // Renders a LOOP or IF/ELSE-IF/ELSE container card (recursively renders its children).
+        // Styled to match v2.0's queue cards (inline styles, Bootstrap icons, accent border).
+        function renderControlFlowCardHtml(item) {
+            if (item.method === 'loop') {
+                const modeLabel = item.loop_mode === 'days'
+                    ? `${item.loop_days} day(s)`
+                    : `${item.loop_iterations} iteration(s)`;
+                const isTarget = controlFlowInsertTarget && controlFlowInsertTarget.kind === 'loop' && controlFlowInsertTarget.containerId === item.id;
+                const childrenHtml = (item.children || []).map((c, i, arr) =>
+                    renderControlFlowNestedChildHtml(c, i, `removeLoopChild('${item.id}','${c.id}')`, arr.length)
+                ).join('');
+                return `
+                    <div style="margin: 0.75rem 0; padding: 0.75rem; background:#2d2440; border:2px solid #7c3aed; border-radius:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                            <div style="color:#c4b5fd;font-weight:700;"><i class="bi bi-arrow-repeat"></i> LOOP — runs for ${modeLabel}</div>
+                            <div>
+                                <button onclick="editLoopContainer('${item.id}')" style="background:#4b5563;border:none;color:white;border-radius:4px;padding:2px 8px;cursor:pointer;margin-right:4px;"><i class="bi bi-pencil-fill"></i> Edit</button>
+                                <button onclick="removeControlFlowContainer('${item.id}')" style="background:#dc2626;border:none;color:white;border-radius:4px;padding:2px 8px;cursor:pointer;"><i class="bi bi-trash-fill"></i> Remove Loop</button>
+                            </div>
+                        </div>
+                        <div style="margin-left:0.5rem;">${childrenHtml || '<div style="color:#9ca3af;font-size:0.85rem;">No steps yet</div>'}</div>
+                        <div style="margin-top:0.5rem;">
+                            ${isTarget
+                                ? `<button onclick="clearControlFlowInsertTarget()" style="background:#16a34a;border:none;color:white;border-radius:4px;padding:4px 10px;cursor:pointer;">✅ Done Adding</button>`
+                                : `<button onclick="setControlFlowInsertTarget('loop','${item.id}')" style="background:#7c3aed;border:none;color:white;border-radius:4px;padding:4px 10px;cursor:pointer;">+ Add Step</button>`}
+                        </div>
+                    </div>`;
+            }
+
+            if (item.method === 'condition_block') {
+                const branchesHtml = (item.branches || []).map(branch => {
+                    const isTarget = controlFlowInsertTarget && controlFlowInsertTarget.kind === 'branch' &&
+                        controlFlowInsertTarget.containerId === item.id && controlFlowInsertTarget.branchId === branch.id;
+                    const label = branch.branch_type === 'if' ? 'IF' : branch.branch_type === 'elseif' ? 'ELSE IF' : 'ELSE';
+                    const conditionText = branch.branch_type === 'else'
+                        ? '(runs when no earlier branch matched)'
+                        : (branch.condition
+                            ? `depends on ${describeControlFlowCondition(branch.condition)}`
+                            : '⚠️ no condition set yet');
+                    const childrenHtml = (branch.children || []).map((c, i, arr) =>
+                        renderControlFlowNestedChildHtml(c, i, `removeBranchChild('${item.id}','${branch.id}','${c.id}')`, arr.length)
+                    ).join('');
+                    return `
+                        <div style="border-left:3px solid #0891b2;padding-left:0.6rem;margin-bottom:0.5rem;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <div style="color:#67e8f9;font-weight:600;">${label} <span style="color:#9ca3af;font-weight:400;font-size:0.85rem;">${conditionText}</span></div>
+                                <div>
+                                    ${branch.branch_type !== 'else' ? `<button onclick="setBranchCondition('${item.id}','${branch.id}')" style="background:#0891b2;border:none;color:white;border-radius:4px;padding:2px 8px;cursor:pointer;margin-right:4px;">${branch.condition ? '<i class="bi bi-pencil-fill"></i> Edit Condition' : 'Set Condition'}</button>` : ''}
+                                    ${item.branches.length > 1 && branch.branch_type !== 'if' ? `<button onclick="removeBranch('${item.id}','${branch.id}')" style="background:#dc2626;border:none;color:white;border-radius:4px;padding:2px 8px;cursor:pointer;"><i class="bi bi-trash-fill"></i></button>` : ''}
+                                </div>
+                            </div>
+                            <div style="margin:0.4rem 0;">${childrenHtml || '<div style="color:#9ca3af;font-size:0.85rem;">No steps yet</div>'}</div>
+                            ${isTarget
+                                ? `<button onclick="clearControlFlowInsertTarget()" style="background:#16a34a;border:none;color:white;border-radius:4px;padding:4px 10px;cursor:pointer;">✅ Done Adding</button>`
+                                : `<button onclick="setControlFlowInsertTarget('branch','${item.id}','${branch.id}')" style="background:#0891b2;border:none;color:white;border-radius:4px;padding:4px 10px;cursor:pointer;">+ Add Step</button>`}
+                        </div>`;
+                }).join('');
+                return `
+                    <div style="margin: 0.75rem 0; padding: 0.75rem; background:#1f3540; border:2px solid #0891b2; border-radius:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                            <div style="color:#67e8f9;font-weight:700;"><i class="bi bi-signpost-2-fill"></i> IF / ELSE IF / ELSE</div>
+                            <button onclick="removeControlFlowContainer('${item.id}')" style="background:#dc2626;border:none;color:white;border-radius:4px;padding:2px 8px;cursor:pointer;"><i class="bi bi-trash-fill"></i> Remove Block</button>
+                        </div>
+                        ${branchesHtml}
+                        <div style="display:flex;gap:0.4rem;">
+                            <button onclick="addElseIfBranch('${item.id}')" style="background:#0891b2;border:none;color:white;border-radius:4px;padding:4px 10px;cursor:pointer;">+ Else If</button>
+                            <button onclick="addElseBranch('${item.id}')" style="background:#0891b2;border:none;color:white;border-radius:4px;padding:4px 10px;cursor:pointer;">+ Else</button>
+                        </div>
+                    </div>`;
+            }
+            return '';
+        }
+
+        // Renders one nested child row inside a container. Nested containers recurse via
+        // renderControlFlowCardHtml; leaf steps show a summary + edit/condition/move/clone/remove.
+        function renderControlFlowNestedChildHtml(child, index, removeFn, siblingCount) {
+            if (isControlFlowContainer(child)) {
+                return renderControlFlowCardHtml(child);
+            }
+            const info = getMethodInfo(child.method, child);
+            const isExit = child.method === 'exit_loop';
+            const summary = getControlFlowStepPlainSummary(child);
+            const isFirst = index === 0;
+            const isLast = index === (siblingCount - 1);
+
+            let conditionNote = '';
+            let actionBtns = '';
+            if (isExit) {
+                conditionNote = child.condition
+                    ? `<div style="font-size:0.8rem;color:#fbbf24;">Condition: exits when ${describeControlFlowCondition(child.condition)}</div>`
+                    : `<div style="font-size:0.8rem;color:#9ca3af;">No condition - always exits when reached</div>`;
+                actionBtns = `<button onclick="editExitLoopStep('${child.id}')" style="background:#4b5563;border:none;color:white;border-radius:4px;padding:2px 8px;cursor:pointer;margin-right:4px;" title="Edit condition"><i class="bi bi-pencil-fill"></i></button>`;
+            } else {
+                const summaryNote = summary ? `<div style="font-size:0.8rem;color:#9ca3af;">${summary}</div>` : '';
+                const condNote = child.condition
+                    ? `<div style="font-size:0.8rem;color:#fbbf24;"><i class="bi bi-diagram-2-fill"></i> IF ${describeControlFlowCondition(child.condition)}</div>` : '';
+                conditionNote = summaryNote + condNote;
+                actionBtns =
+                    `<button onclick="cloneControlFlowItem('${child.id}')" style="background:#8b5cf6;border:none;color:white;border-radius:4px;padding:2px 8px;cursor:pointer;margin-right:4px;" title="Clone this step"><i class="bi bi-files"></i></button>` +
+                    `<button onclick="setConditionForControlFlowStep('${child.id}')" style="background:${child.condition ? '#10b981' : '#6b7280'};border:none;color:white;border-radius:4px;padding:2px 8px;cursor:pointer;margin-right:4px;" title="Set condition"><i class="bi bi-${child.condition ? 'check-circle-fill' : 'shuffle'}"></i></button>`;
+            }
+            const moveUpBtn = `<button onclick="moveControlFlowItem('${child.id}', -1)" ${isFirst ? 'disabled' : ''} style="background:#3b82f6;border:none;color:white;border-radius:4px;padding:2px 8px;cursor:${isFirst ? 'not-allowed' : 'pointer'};opacity:${isFirst ? '0.5' : '1'};margin-right:4px;" title="Move up"><i class="bi bi-arrow-up"></i></button>`;
+            const moveDownBtn = `<button onclick="moveControlFlowItem('${child.id}', 1)" ${isLast ? 'disabled' : ''} style="background:#3b82f6;border:none;color:white;border-radius:4px;padding:2px 8px;cursor:${isLast ? 'not-allowed' : 'pointer'};opacity:${isLast ? '0.5' : '1'};margin-right:4px;" title="Move down"><i class="bi bi-arrow-down"></i></button>`;
+            return `
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;background:${isExit ? '#3f1d1d' : '#374151'};border-radius:6px;padding:0.5rem 0.75rem;margin-bottom:0.4rem;">
+                    <div style="flex:1;">
+                        <span style="font-weight:600;color:#e5e7eb;"><i class="bi bi-${info.icon || 'gear-fill'}"></i> ${index + 1}. ${child.name || info.name}</span>
+                        ${conditionNote}
+                    </div>
+                    <div style="white-space:nowrap;">${moveUpBtn}${moveDownBtn}${actionBtns}<button onclick="${removeFn}" style="background:#dc2626;border:none;color:white;border-radius:4px;padding:2px 8px;cursor:pointer;"><i class="bi bi-trash-fill"></i></button></div>
+                </div>`;
         }
         
         function removeFromQueue(itemId) {
@@ -11770,6 +12743,12 @@
             const performSave = (sequenceId, sequenceName, updateMode = false) => {
                 // Prepare queue data for saving - consolidate all properties into params
                 const queueData = executionQueue.map((item, idx) => {
+                    // Control-flow containers persist their nested structure verbatim
+                    if (isControlFlowContainer(item) || item.method === 'exit_loop') {
+                        const savedCf = prepareControlFlowItemForSave(item);
+                        console.log(`[SAVE DEBUG] Item ${idx} (${item.method}) [control-flow]:`, savedCf);
+                        return savedCf;
+                    }
                     const savedItem = {
                         method: item.method,
                         name: item.name,
@@ -12084,6 +13063,10 @@
             // Load methods from sequence
             if (sequence.queue_data && sequence.queue_data.length > 0) {
                 executionQueue = sequence.queue_data.map(item => {
+                    // Control-flow containers restore their nested structure
+                    if (isControlFlowContainer(item) || item.method === 'exit_loop') {
+                        return restoreControlFlowItemFromSave(item);
+                    }
                     // Consolidate all parameters from top-level fields into item
                     const consolidatedItem = {
                         id: Date.now().toString() + Math.random(),
@@ -12424,8 +13407,11 @@
                 console.log('Executing queue:', executionQueue);
                 console.log('🚀 [EXECUTE] About to transform queue for API...');
                 
-                // Transform execution queue items to API format
-                const transformedQueue = executionQueue.map(item => {
+                // If the queue contains control-flow containers (LOOP / IF-ELSE / EXIT LOOP),
+                // flatten it into the marker-based list the backend control-flow engine expects.
+                const transformedQueue = queueHasControlFlow(executionQueue)
+                    ? flattenControlFlowForBackend(executionQueue)
+                    : executionQueue.map(item => {
                 const apiItem = {
                     method: item.method
                 };
@@ -12519,8 +13505,7 @@
                 return apiItem;
             });
             
-            console.log('Transformed queue:', transformedQueue);
-            console.log('🚀 [EXECUTE] About to iterate over selected devices...');
+            console.log('Transformed queue:', transformedQueue);            console.log('🚀 [EXECUTE] About to iterate over selected devices...');
             console.log('🚀 [EXECUTE] Number of devices to execute:', selectedDevices.length);
             
             try {
