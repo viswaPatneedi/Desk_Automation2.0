@@ -49,5 +49,6 @@ AVAILABLE_METHODS = [
     'activate_flux',
     'navigate_to_tiles',
     'netflix_playback',  # Netflix app launch and playback testing with AI screen detection
+    'channel_change_capture',
     'execute_sequence'
 ]

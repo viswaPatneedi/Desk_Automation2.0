@@ -7,13 +7,12 @@ import pytest
 import json
 import os
 from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
 
 # Add parent directory to path
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from models.user import User
+from models.user import User, hash_password
 
 
 class TestUserModel:
@@ -78,7 +77,7 @@ class TestUserModel:
             ntid='test_user',
             email='test@comcast.com',
             name='Test User',
-            password_hash=generate_password_hash(test_password)
+            password_hash=hash_password(test_password)
         )
         
         # Test password verification
@@ -135,7 +134,7 @@ class TestUserModel:
             'ntid': 'test_ntid',
             'email': 'test@comcast.com',
             'name': 'Test User',
-            'password_hash': generate_password_hash('testpass'),
+            'password_hash': hash_password('testpass'),
             'created_at': datetime.utcnow().isoformat(),
             'is_admin': False,
             'team_name': 'LRQA'

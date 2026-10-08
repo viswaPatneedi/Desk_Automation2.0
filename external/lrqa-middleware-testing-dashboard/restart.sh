@@ -1,12 +1,12 @@
 #!/bin/bash
 
 ################################################################################
-# Universal App Restart Script - Works from any cloned location
-# This script restarts the Flask application in a venv in the background
+# Universal App Restart Script - Works from any cloned location on Linux/macOS
+# This script replaces the Flask application process with a venv instance in the background
 #
 # Usage: ./restart.sh [options]
 # Options:
-#   --force      Force restart without confirmation
+#   --force      Accepted for compatibility; restart is always automatic
 #   --no-cache   Don't clear cache
 #   --logs       Show logs after restart
 #   --help       Show this help message
@@ -18,7 +18,7 @@
 set -e
 
 # Get the directory where this script is located (works anywhere)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 APP_DIR="$SCRIPT_DIR"
 VENV_DIR="$APP_DIR/venv"
 VENV_PYTHON="$VENV_DIR/bin/python"
@@ -43,7 +43,6 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Default options
-FORCE_RESTART=false
 CLEAR_CACHE=true
 SHOW_LOGS=false
 
@@ -51,7 +50,6 @@ SHOW_LOGS=false
 while [[ $# -gt 0 ]]; do
     case $1 in
         --force)
-            FORCE_RESTART=true
             shift
             ;;
         --no-cache)
@@ -99,19 +97,123 @@ print_info() {
     echo -e "${BLUE}ℹ️  $1${NC}"
 }
 
-# Returns 0 if Postgres is accepting TCP connections, 1 otherwise.
+# Returns 0 if a process is listening on the configured PostgreSQL TCP port.
 check_db_connection() {
-    (exec 3<>"/dev/tcp/$DB_HOST/$DB_PORT") 2>/dev/null
-    local result=$?
-    exec 3<&- 2>/dev/null || true
-    exec 3>&- 2>/dev/null || true
-    return $result
+    "$VENV_PYTHON" -c \
+        'import socket, sys; socket.create_connection((sys.argv[1], int(sys.argv[2])), timeout=2).close()' \
+        "$DB_HOST" "$DB_PORT" >/dev/null 2>&1
 }
 
-# Tries to (re)start Postgres via non-interactive sudo. Logs outcome either way.
-# Requires a NOPASSWD sudoers rule for 'service postgresql restart' to succeed unattended
-# (see README/print_info hint below if it's not configured).
+# Returns process arguments for a PID, or an empty string if it is no longer running.
+process_args() {
+    ps -p "$1" -o args= 2>/dev/null || true
+}
+
+process_is_running() {
+    local pid="$1"
+    local state
+
+    kill -0 "$pid" 2>/dev/null || return 1
+    state="$(ps -p "$pid" -o stat= 2>/dev/null)" || return 1
+    case "$state" in
+        *Z*) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+# Get a process's current working directory using the platform's native interface.
+process_cwd() {
+    local pid="$1"
+    case "$(uname -s)" in
+        Darwin)
+            lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p'
+            ;;
+        Linux)
+            readlink "/proc/$pid/cwd" 2>/dev/null || true
+            ;;
+    esac
+}
+
+# Only manage Python app.py processes that belong to this checkout.
+is_this_app_process() {
+    local pid="$1"
+    local args cwd
+
+    args="$(process_args "$pid")"
+    case "$args" in
+        *ython*app.py*) ;;
+        *) return 1 ;;
+    esac
+
+    case "$args" in
+        *"$APP_DIR/app.py"*) return 0 ;;
+    esac
+
+    cwd="$(process_cwd "$pid")"
+    [ "$cwd" = "$APP_DIR" ]
+}
+
+# Stop a verified app process, allowing it time to shut down cleanly first.
+stop_app_process() {
+    local pid="$1"
+    local attempt
+
+    case "$pid" in
+        ''|*[!0-9]*)
+            print_error "Refusing to stop invalid process ID: $pid"
+            return 1
+            ;;
+    esac
+
+    if ! process_is_running "$pid"; then
+        return 0
+    fi
+    if ! is_this_app_process "$pid"; then
+        print_info "PID $pid is not this app; leaving it untouched"
+        return 2
+    fi
+
+    print_info "Stopping existing app process (PID $pid)..."
+    kill -TERM "$pid" 2>/dev/null || true
+    for attempt in 1 2 3 4 5 6 7 8 9 10; do
+        if ! process_is_running "$pid"; then
+            return 0
+        fi
+        sleep 1
+    done
+
+    if process_is_running "$pid"; then
+        print_info "App process did not exit after SIGTERM; sending SIGKILL"
+        kill -KILL "$pid" 2>/dev/null || true
+        sleep 1
+    fi
+    if process_is_running "$pid"; then
+        print_error "Could not stop app process PID $pid"
+        return 1
+    fi
+}
+
+# Return listener PIDs for the app port using tools available on each platform.
+port_listener_pids() {
+    if command -v lsof >/dev/null 2>&1; then
+        lsof -nP -t -iTCP:"$PORT" -sTCP:LISTEN 2>/dev/null || true
+    elif command -v ss >/dev/null 2>&1; then
+        ss -ltnp "sport = :$PORT" 2>/dev/null |
+            sed -n 's/.*pid=\([0-9][0-9]*\).*/\1/p' |
+            sort -u
+    elif command -v fuser >/dev/null 2>&1; then
+        fuser -n tcp "$PORT" 2>/dev/null | tr ' ' '\n' || true
+    fi
+}
+
+# Tries to (re)start Postgres via non-interactive sudo on Linux.
+# On macOS, PostgreSQL must be managed by the installed macOS service manager.
 heal_db_connection() {
+    if [ "$(uname -s)" = "Darwin" ]; then
+        print_info "Automatic PostgreSQL restart is not configured on macOS"
+        return 1
+    fi
+
     echo "[$(date -u '+%Y-%m-%d %H:%M:%S UTC')] Postgres unreachable on $DB_HOST:$DB_PORT - attempting restart" >> "$DB_HEALTH_LOG"
     if sudo -n service postgresql restart >> "$DB_HEALTH_LOG" 2>&1; then
         sleep 3
@@ -130,6 +232,11 @@ heal_db_connection() {
 # Background loop: rechecks DB connectivity every DB_WATCHDOG_INTERVAL seconds
 # and self-heals if it drops. Runs detached from the terminal via nohup.
 start_db_watchdog() {
+    if [ "$(uname -s)" = "Darwin" ]; then
+        print_info "PostgreSQL watchdog auto-restart is Linux-only; manage PostgreSQL with your macOS service manager"
+        return 0
+    fi
+
     if [ -f "$DB_WATCHDOG_PID_FILE" ] && kill -0 "$(cat "$DB_WATCHDOG_PID_FILE" 2>/dev/null)" 2>/dev/null; then
         print_info "DB watchdog already running (PID $(cat "$DB_WATCHDOG_PID_FILE"))"
         return 0
@@ -174,35 +281,42 @@ main() {
         print_info "Then install dependencies: ./venv/bin/pip install -r requirements.txt"
         exit 1
     fi
-    print_success "Virtual environment found"
-
-    # Confirmation (unless --force flag is used)
-    if [ "$FORCE_RESTART" = false ]; then
-        echo ""
-        echo "This will:"
-        echo "  1. Kill any existing app processes"
-        if [ "$CLEAR_CACHE" = true ]; then
-            echo "  2. Clear Python cache (__pycache__, .pyc files)"
-            echo "  3. Clear Flask template cache"
-        fi
-        echo "  4. Start app in background"
-        echo "  5. Save PID and logs"
-        echo ""
-        read -p "Continue? (y/n) " -n 1 -r
-        echo ""
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo "Cancelled."
-            exit 0
-        fi
+    if [ ! -x "$VENV_PYTHON" ]; then
+        print_error "Virtual environment Python is missing or not executable: $VENV_PYTHON"
+        print_info "Recreate the environment with: python3 -m venv venv"
+        exit 1
     fi
+    print_success "Virtual environment found"
 
     # Step 1: Kill existing processes
     print_step "Killing existing app processes..."
-    pkill -f "python.*app.py" 2>/dev/null || true
-    # Also kill by venv python path
-    pkill -f "$VENV_PYTHON" 2>/dev/null || true
-    # Remove old PID file
-    rm -f "$PID_FILE" 2>/dev/null || true
+    if [ -f "$PID_FILE" ]; then
+        OLD_PID="$(cat "$PID_FILE" 2>/dev/null || true)"
+        if [ -n "$OLD_PID" ] && kill -0 "$OLD_PID" 2>/dev/null; then
+            if stop_app_process "$OLD_PID"; then
+                STOP_STATUS=0
+            else
+                STOP_STATUS=$?
+            fi
+            if [ "$STOP_STATUS" -eq 1 ]; then
+                exit 1
+            fi
+        fi
+    fi
+
+    # The PID file may be stale (for example, from an older restart script).
+    # Find app instances by the listening port, but never kill an unrelated owner.
+    for LISTENER_PID in $(port_listener_pids | sort -u); do
+        if is_this_app_process "$LISTENER_PID"; then
+            stop_app_process "$LISTENER_PID"
+        else
+            print_error "Port $PORT is occupied by PID $LISTENER_PID, which is not this app"
+            print_info "Process: $(process_args "$LISTENER_PID")"
+            exit 1
+        fi
+    done
+    rm -f "$PID_FILE"
+
     # Stop any stale DB watchdog so we don't end up with duplicates
     if [ -f "$DB_WATCHDOG_PID_FILE" ]; then
         kill "$(cat "$DB_WATCHDOG_PID_FILE" 2>/dev/null)" 2>/dev/null || true
@@ -249,14 +363,8 @@ main() {
         print_info "No deployment-local inventory configured; using legacy Json/ files"
     fi
 
-    # Check if venv activation script exists
-    if [ ! -f "$VENV_DIR/bin/activate" ]; then
-        print_error "Virtual environment activation script not found"
-        exit 1
-    fi
-
-    # Start app using source and nohup
-    nohup bash -c "source '$VENV_DIR/bin/activate' && python app.py" > "$NOHUP_LOG" 2>&1 &
+    # Start the venv interpreter directly so the saved PID is the Flask process.
+    nohup "$VENV_PYTHON" "$APP_DIR/app.py" > "$NOHUP_LOG" 2>&1 &
     APP_PID=$!
     echo $APP_PID > "$PID_FILE"
 
@@ -282,9 +390,14 @@ main() {
         if heal_db_connection; then
             print_success "PostgreSQL restarted and is now reachable"
         else
-            print_error "Could not auto-restart PostgreSQL (see $DB_HEALTH_LOG)"
-            print_info "Passwordless sudo not set up - run manually: sudo service postgresql restart"
-            print_info "To enable auto-heal, add via 'sudo visudo': $(whoami) ALL=(root) NOPASSWD: /usr/sbin/service postgresql restart, /usr/sbin/service postgresql start, /usr/sbin/service postgresql status"
+            if [ "$(uname -s)" = "Darwin" ]; then
+                print_error "PostgreSQL is unreachable on $DB_HOST:$DB_PORT"
+                print_info "Start PostgreSQL with Postgres.app or the macOS service manager you installed"
+            else
+                print_error "Could not auto-restart PostgreSQL (see $DB_HEALTH_LOG)"
+                print_info "Passwordless sudo not set up - run manually: sudo service postgresql restart"
+                print_info "To enable auto-heal, add via 'sudo visudo': $(whoami) ALL=(root) NOPASSWD: /usr/sbin/service postgresql restart, /usr/sbin/service postgresql start, /usr/sbin/service postgresql status"
+            fi
         fi
     fi
     start_db_watchdog
@@ -317,7 +430,7 @@ main() {
     print_info "Useful commands:"
     echo "  Check status: ps aux | grep app.py"
     echo "  View logs: tail -f $NOHUP_LOG"
-    echo "  Kill app: pkill -f app.py"
+    echo "  Stop app: kill \$(cat $PID_FILE)"
     echo "  DB watchdog log: tail -f $DB_WATCHDOG_LOG"
     echo "  Stop DB watchdog: kill \$(cat $DB_WATCHDOG_PID_FILE)"
     echo ""

@@ -215,7 +215,6 @@ def set_session_cookie_headers(response):
 
 # Endpoint to get available methods for UI (moved here to ensure 'app' is defined)
 @app.route('/api/available_methods', methods=['GET'])
-@login_required
 def get_available_methods():
     try:
         from models.database import Session, Method as DBMethod
@@ -224,14 +223,32 @@ def get_available_methods():
         try:
             method_rows = (
                 session.query(DBMethod)
-                .filter_by(is_active=True)
                 .order_by(DBMethod.name.asc())
                 .all()
             )
 
-            methods = [row.method_id for row in method_rows if row.method_id]
-            if methods:
-                return jsonify({'methods': methods, 'source': 'database'})
+            database_methods = {
+                row.method_id: row
+                for row in method_rows
+                if row.method_id
+            }
+            methods = [
+                method_id
+                for method_id in AVAILABLE_METHODS
+                if method_id not in database_methods
+                or database_methods[method_id].is_active
+            ]
+            methods.extend(
+                row.method_id
+                for row in method_rows
+                if row.method_id
+                and row.is_active
+                and row.method_id not in methods
+            )
+            return jsonify({
+                'methods': methods,
+                'source': 'database+config' if database_methods else 'config',
+            })
         finally:
             session.close()
     except Exception as e:
@@ -1982,10 +1999,13 @@ def load_user(user_id):
 @login_manager.unauthorized_handler
 def unauthorized():
     """Handle unauthorized access for both API and page requests."""
-    import sys
-    print(f"\n[UNAUTHORIZED] {request.method} {request.path}", file=sys.stderr)
-    print(f"  Is API request: {request.path.startswith('/api/')}", file=sys.stderr)
-    print(f"  Accept header: {request.headers.get('Accept', '')}", file=sys.stderr)
+    app.logger.debug(
+        "Unauthorized request: %s %s (API: %s, Accept: %s)",
+        request.method,
+        request.path,
+        request.path.startswith('/api/'),
+        request.headers.get('Accept', ''),
+    )
     
     # For API requests, return JSON
     if request.path.startswith('/api/') or request.headers.get('Accept', 'text/html').endswith('json'):
@@ -7457,4 +7477,3 @@ if __name__ == '__main__':
     print(f"{'='*60}\n")
 
     app.run(debug=debug_mode, host=host, port=port, use_reloader=use_reloader, threaded=True)
-

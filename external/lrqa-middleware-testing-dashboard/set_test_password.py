@@ -5,7 +5,7 @@ Directly update JSON file since database is not accessible
 """
 import json
 import os
-from werkzeug.security import generate_password_hash
+from models.user import hash_password
 
 # Set test password for vpatne290
 test_password = "TestPassword123!"
@@ -18,7 +18,7 @@ with open(users_file, 'r') as f:
 
 if 'vpatne290' in users:
     # Update password hash
-    users['vpatne290']['password_hash'] = generate_password_hash(test_password)
+    users['vpatne290']['password_hash'] = hash_password(test_password)
     
     # Save back to JSON
     with open(users_file, 'w') as f:

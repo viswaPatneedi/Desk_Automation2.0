@@ -2,6 +2,7 @@ Flask==3.0.0
 Flask-Login==0.6.3
 Flask-Bcrypt==1.0.1
 paramiko==3.4.0
+cryptography==50.0.2
 Pillow==10.1.0
 pytesseract==0.3.10
 requests==2.31.0

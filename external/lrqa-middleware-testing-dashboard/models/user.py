@@ -1,10 +1,51 @@
 """User model for authentication and user management."""
 import json
+import hmac
 import os
+import secrets
 from datetime import datetime
-from werkzeug.security import generate_password_hash, check_password_hash
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+from werkzeug.security import check_password_hash as werkzeug_check_password_hash
 from config.config_paths import USERS_FILE
 from models.database import Session, User as DBUser
+
+
+def hash_password(password):
+    """Hash a password with scrypt without relying on OpenSSL's hashlib support."""
+    n, r, p = 2**15, 8, 1
+    salt = secrets.token_urlsafe(12)
+    digest = Scrypt(
+        salt=salt.encode('utf-8'),
+        length=64,
+        n=n,
+        r=r,
+        p=p,
+    ).derive(password.encode('utf-8'))
+    return f'scrypt:{n}:{r}:{p}${salt}${digest.hex()}'
+
+
+def verify_password_hash(password_hash, password):
+    """Verify current scrypt hashes and legacy Werkzeug hash formats."""
+    if not password_hash.startswith('scrypt:'):
+        return werkzeug_check_password_hash(password_hash, password)
+
+    try:
+        method, salt, expected_hex = password_hash.split('$')
+        algorithm, n, r, p = method.split(':')
+        if algorithm != 'scrypt':
+            return False
+        expected = bytes.fromhex(expected_hex)
+        actual = Scrypt(
+            salt=salt.encode('utf-8'),
+            length=len(expected),
+            n=int(n),
+            r=int(r),
+            p=int(p),
+        ).derive(password.encode('utf-8'))
+    except (TypeError, ValueError, OverflowError):
+        return False
+
+    return hmac.compare_digest(actual, expected)
 
 
 class User:
@@ -33,11 +74,11 @@ class User:
     
     def check_password(self, password):
         """Verify password against stored hash."""
-        return check_password_hash(self.password_hash, password)
+        return verify_password_hash(self.password_hash, password)
     
     def set_password(self, password):
         """Set a new password for the user."""
-        self.password_hash = generate_password_hash(password)
+        self.password_hash = hash_password(password)
     
     def save(self):
         """Save the current user to the users file."""
@@ -203,7 +244,7 @@ class User:
             return None, "User with this NTID or email already exists"
         
         # Create new user with team_name
-        password_hash = generate_password_hash(password)
+        password_hash = hash_password(password)
         user = User(ntid, email, name, password_hash, team_name=team_name)
         users[user.user_id] = user
         User.save_users(users)

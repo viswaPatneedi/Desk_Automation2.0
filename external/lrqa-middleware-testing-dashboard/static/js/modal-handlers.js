@@ -788,7 +788,52 @@ function getCurrentUTCTimestamp() {
 // METHOD EXECUTION MODAL HANDLERS
 // ============================================================
 
+async function loadAvailableMethods() {
+    const methodSelect = document.getElementById('methodSelect');
+    if (!methodSelect) return false;
+
+    const placeholder = new Option('Loading available methods...', '', true, true);
+    placeholder.disabled = true;
+    methodSelect.replaceChildren(placeholder);
+
+    try {
+        const result = await modalManager.api.get('/available_methods');
+        const methodIds = Array.isArray(result.methods)
+            ? [...new Set(result.methods.filter(methodId => typeof methodId === 'string' && methodId.trim()))]
+            : [];
+
+        if (!methodIds.length) {
+            throw new Error('The server returned no available methods');
+        }
+
+        const methodGroup = document.createElement('optgroup');
+        methodGroup.label = 'Available Methods';
+        methodIds.forEach(methodId => {
+            const option = document.createElement('option');
+            option.value = methodId;
+            option.textContent = methodId
+                .split('_')
+                .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+                .join(' ');
+            methodGroup.appendChild(option);
+        });
+
+        const selectPrompt = new Option('Select a method to execute...', '', true, true);
+        selectPrompt.disabled = true;
+        methodSelect.replaceChildren(selectPrompt, methodGroup);
+        return true;
+    } catch (error) {
+        console.error('Unable to load available methods:', error);
+        const failedOption = new Option('Unable to load methods. Refresh and try again.', '', true, true);
+        failedOption.disabled = true;
+        methodSelect.replaceChildren(failedOption);
+        return false;
+    }
+}
+
 async function showMethodExecutionModal(deviceId) {
+    await loadAvailableMethods();
+
     try {
         // Fetch device info using correct endpoint
         const result = await modalManager.api.get(`/device/${deviceId}`);

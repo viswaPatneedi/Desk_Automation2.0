@@ -6,7 +6,7 @@ Only super admin (vpatne290) can create and manage teams
 
 from flask import request, jsonify, current_app
 from flask_login import current_user, login_required
-from models.user import User
+from models.user import User, hash_password
 from models.device import Device
 from models.saved_sequence import SavedSequence
 from datetime import datetime
@@ -202,14 +202,13 @@ class TeamController:
                     continue
                 
                 # Create new user with team assignment
-                from werkzeug.security import generate_password_hash
                 temp_password = f"{ntid}@TempPass123"  # Temporary password
                 
                 new_user = User(
                     ntid=ntid,
                     email=email,
                     name=name,
-                    password_hash=generate_password_hash(temp_password),
+                    password_hash=hash_password(temp_password),
                     team_name=team_name,
                     is_super_admin=False,
                     is_team_admin=is_team_admin
@@ -297,14 +296,13 @@ class TeamController:
                 print(f"[ADD_TEAM_MEMBER] Updated existing user {ntid} to team {team_name}", file=sys.stderr)
             else:
                 # Create new user
-                from werkzeug.security import generate_password_hash
                 temp_password = f"{ntid}@TempPass123"
                 
                 user = User(
                     ntid=ntid,
                     email=email,
                     name=name,
-                    password_hash=generate_password_hash(temp_password),
+                    password_hash=hash_password(temp_password),
                     team_name=team_name,
                     is_super_admin=False,
                     is_team_admin=is_team_admin,
