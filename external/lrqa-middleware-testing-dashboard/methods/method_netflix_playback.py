@@ -1595,15 +1595,35 @@ def netflix_playback(
                 # Extract text using Tesseract OCR with preprocessing
                 try:
                     from PIL import Image, ImageEnhance
-                    import pytesseract
+                    try:
+                        import pytesseract
+                    except ImportError:
+                        pytesseract = None
                     
                     # Open and preprocess image for optimal OCR
                     img = Image.open(screenshot_path)
                     extracted_text = None
                     confidence = 0.0
-                    
-                    # Strategy 1: Enhanced contrast for text clarity
+
+                    # Strategy 0: AI vision (Ollama) text reading
                     try:
+                        from services.ai_vision.ai_screen_validator_ollama import ocr_ollama
+                        log(f"🤖 Extracting text via AI vision (Ollama)...")
+                        extracted_text = ocr_ollama(img)
+                        if extracted_text and len(extracted_text.strip()) > 5:
+                            confidence = 0.90
+                            step_results['step_6_validation_method'] = 'OCR_AI_Ollama'
+                            log(f"✅ AI text extraction successful")
+                            log(f"📝 Extracted text: {extracted_text[:200]}")
+                        else:
+                            extracted_text = None
+                    except Exception as e:
+                        log(f"⚠ AI text extraction failed: {e}")
+                    
+                    # Strategy 1: Enhanced contrast for text clarity (Tesseract fallback)
+                    try:
+                        if extracted_text or pytesseract is None:
+                            raise StopIteration
                         log(f"🔍 Extracting text via OCR (Strategy 1: Enhanced contrast)...")
                         enhancer = ImageEnhance.Contrast(img)
                         enhanced = enhancer.enhance(2.0)
@@ -1615,11 +1635,13 @@ def netflix_playback(
                             confidence = 0.85
                             log(f"✅ OCR extraction successful (Strategy 1)")
                             log(f"📝 Extracted text: {extracted_text[:200]}")
+                    except StopIteration:
+                        pass
                     except Exception as e:
                         log(f"⚠ Strategy 1 failed: {e}")
                     
                     # Strategy 2: Upscaled image if first strategy didn't work well
-                    if not extracted_text or len(extracted_text.strip()) < 5:
+                    if pytesseract and (not extracted_text or len(extracted_text.strip()) < 5):
                         try:
                             log(f"🔍 Trying OCR extraction (Strategy 2: 2x upscale)...")
                             width, height = img.size
@@ -1633,7 +1655,7 @@ def netflix_playback(
                             log(f"⚠ Strategy 2 failed: {e}")
                     
                     # Strategy 3: TV UI optimized (3x upscale + high contrast)
-                    if not extracted_text or len(extracted_text.strip()) < 5:
+                    if pytesseract and (not extracted_text or len(extracted_text.strip()) < 5):
                         try:
                             log(f"🔍 Trying OCR extraction (Strategy 3: TV UI optimized)...")
                             grayscale = img.convert('L')
@@ -1675,7 +1697,7 @@ def netflix_playback(
                             step_results['step_6_asset_validation'] = 'success_ocr'
                             step_results['step_6_asset_name'] = asset_name_found or 'Extracted from screen'
                             step_results['step_6_validation_confidence'] = confidence
-                            step_results['step_6_validation_method'] = 'OCR_Tesseract'
+                            step_results['step_6_validation_method'] = step_results.get('step_6_validation_method') or 'OCR_Tesseract'
                             overall_success = overall_success and True
                         elif keyword_matches > 0:
                             log(f"⚠ ASSET VALIDATION PARTIAL MATCH (OCR-Based)")
@@ -1686,7 +1708,7 @@ def netflix_playback(
                             step_results['step_6_asset_validation'] = 'partial_match_ocr'
                             step_results['step_6_asset_name'] = asset_name_found or 'Extracted from screen'
                             step_results['step_6_validation_confidence'] = confidence
-                            step_results['step_6_validation_method'] = 'OCR_Tesseract'
+                            step_results['step_6_validation_method'] = step_results.get('step_6_validation_method') or 'OCR_Tesseract'
                         else:
                             log(f"⚠ ASSET VALIDATION WARNING (OCR-Based)")
                             log(f"   Requested Keywords: {', '.join(voice_keywords)}")
@@ -1694,12 +1716,12 @@ def netflix_playback(
                             log(f"   Status: ⚠ No keyword matches in OCR text - asset may not match request")
                             step_results['step_6_asset_validation'] = 'mismatch_warning_ocr'
                             step_results['step_6_asset_analysis'] = extracted_text
-                            step_results['step_6_validation_method'] = 'OCR_Tesseract'
+                            step_results['step_6_validation_method'] = step_results.get('step_6_validation_method') or 'OCR_Tesseract'
                     else:
                         log(f"⚠ OCR extraction returned empty or insufficient text")
                         log(f"   Continuing with available information")
                         step_results['step_6_asset_validation'] = 'ocr_insufficient_text'
-                        step_results['step_6_validation_method'] = 'OCR_Tesseract'
+                        step_results['step_6_validation_method'] = step_results.get('step_6_validation_method') or 'OCR_Tesseract'
                         
                 except ImportError as e:
                     log(f"⚠ Required OCR libraries not available: {e}")

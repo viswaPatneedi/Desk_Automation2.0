@@ -18,6 +18,27 @@ from config.config_screen_validation import SCREEN_DEFINITIONS, SCREEN_VALIDATIO
 # Initialize screen validator
 validator = LightweightScreenValidator(reference_dir="reference_screens")
 
+def _validate_with_ai(screenshot_path: str, expected_screen: str, reference_path: Optional[str] = None) -> Optional[Dict]:
+    """Validate the screenshot with the Ollama vision model; None when AI is unavailable."""
+    try:
+        from services.ai_vision.ai_screen_validator_ollama import OllamaScreenValidator
+        ai = OllamaScreenValidator(timeout=90)
+        if not ai.available:
+            return None
+        result = ai._analyze_with_ollama(screenshot_path, expected_screen, reference_path,
+                                         layout_only=bool(reference_path))
+    except Exception as e:
+        print(f"⚠️ AI validation unavailable: {e}")
+        return None
+    if not result or 'error' in result:
+        print(f"⚠️ AI validation error: {(result or {}).get('error')}")
+        return None
+    print(f"🤖 AI verdict: match={result.get('match')} detected='{result.get('detected_screen')}'")
+    return {'is_match': bool(result.get('match')), 'confidence': result.get('confidence', 0) / 100.0,
+            'method': 'ollama_ai', 'details': {'detected_screen': result.get('detected_screen'),
+                                               'reason': result.get('reason', '')}}
+
+
 def capture_screenshot_ssh(device_ip: str, port: int, username: str, password: str) -> Optional[str]:
     """
     Capture screenshot from device via SSH using Thunder API ScreenCapture plugin.
@@ -275,7 +296,10 @@ def validate_screen(device_ip: str, expected_screen: str,
         print(f"🔍 Validating against expected screen: {expected_screen}...")
         
         # If using custom reference, validate directly against it
-        if custom_reference:
+        validation_result = _validate_with_ai(screenshot_path, expected_screen, custom_reference)
+        if validation_result is not None:
+            pass
+        elif custom_reference:
             print(f"📋 Using custom reference image: {custom_reference}")
             try:
                 validation_result = validator.validate_against_reference(

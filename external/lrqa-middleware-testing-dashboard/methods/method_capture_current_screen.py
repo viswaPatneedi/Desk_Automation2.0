@@ -18,6 +18,17 @@ def extract_text_from_local_image(image_path, log_callback=None):
             log_callback(message)
 
     try:
+        from services.ai_vision.ai_screen_validator_ollama import ocr_ollama
+        ai_text = ocr_ollama(image_path)
+        if ai_text:
+            log(f"🤖 Text extracted by AI vision ({len(ai_text)} characters)")
+            log(f"   Extracted text: {ai_text[:300]}{'...' if len(ai_text) > 300 else ''}")
+            return ai_text
+        log("⚠ AI text extraction unavailable/empty, falling back to Tesseract OCR")
+    except Exception as e:
+        log(f"⚠ AI text extraction error ({str(e)[:100]}), falling back to Tesseract OCR")
+
+    try:
         import pytesseract
         from PIL import Image
 

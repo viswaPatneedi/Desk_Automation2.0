@@ -260,7 +260,7 @@ def timeout_handler(seconds, error_message="Operation timed out"):
 # Try to import AI vision if available
 try:
     from services.ai_vision.ai_vision_ocr import extract_text_with_ai_vision
-    AI_VISION_AVAILABLE = False  # Disabled to prevent hangs - use Tesseract instead
+    AI_VISION_AVAILABLE = True
 except ImportError:
     AI_VISION_AVAILABLE = False
 
@@ -321,6 +321,16 @@ def extract_text_with_preprocessing(image, log_callback=None):
     def log(message):
         if log_callback:
             log_callback(message)
+
+    try:
+        from services.ai_vision.ai_screen_validator_ollama import ocr_ollama
+        ai_text = ocr_ollama(image)
+        if ai_text:
+            log(f"🤖 AI vision extracted {len(ai_text)} characters")
+            return ai_text
+        log("⚠ AI text extraction unavailable/empty, falling back to Tesseract")
+    except Exception as e:
+        log(f"⚠ AI text extraction error ({str(e)[:100]}), falling back to Tesseract")
     
     # Strategy: Try multiple Tesseract configurations and preprocessing techniques
     # to maximize text extraction quality
@@ -1058,8 +1068,15 @@ def extract_text_from_screenshot(screenshot_url, log_callback=None):
         # Open image from response
         capture_image = Image.open(io.BytesIO(response.content))
         
-        log("Extracting text from screenshot using OCR...")
-        text = pytesseract.image_to_string(capture_image)
+        log("Extracting text from screenshot using AI vision (Tesseract fallback)...")
+        text = None
+        try:
+            from services.ai_vision.ai_screen_validator_ollama import ocr_ollama
+            text = ocr_ollama(capture_image)
+        except Exception as e:
+            log(f"⚠ AI text extraction error: {str(e)[:100]}")
+        if not text:
+            text = pytesseract.image_to_string(capture_image)
         
         # Extract filename from URL for display
         screenshot_filename = screenshot_url.split('/')[-1] if screenshot_url else "unknown"

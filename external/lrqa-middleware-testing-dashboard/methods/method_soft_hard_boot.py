@@ -61,11 +61,8 @@ from methods.method_capture_current_screen import extract_text_from_local_image
 # Imported lazily at call sites to avoid a circular import with services/test_execution_service.
 
 # Import AI Screen Validation
-try:
-    from services.ai_vision.ai_screen_validator_ollama import identify_screen_ollama
-    AI_VALIDATION_ENABLED = True
-except ImportError:
-    AI_VALIDATION_ENABLED = False
+# Imported lazily at call sites (importing services.* here is circular); just check availability
+AI_VALIDATION_ENABLED = os.path.isfile(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'services', 'ai_vision', 'ai_screen_validator_ollama.py'))
 
 def parse_log_timestamp(log_line):
     """
@@ -447,8 +444,40 @@ HOME_SCREEN_KEY_REGIONS = [
     {'name': 'bottom_apps_row', 'roi': (0, 860, 1920, 1080)},
 ]
 
+def _ai_screen_check(screenshot_path, name_pattern, label, log_message_func):
+    """Identify the screen with Ollama AI; returns None when AI is unavailable so callers can fall back."""
+    if not AI_VALIDATION_ENABLED:
+        return None
+    try:
+        from services.ai_vision.ai_screen_validator_ollama import screen_matches_ollama
+        result = screen_matches_ollama(screenshot_path, name_pattern)
+    except Exception as e:
+        log_message_func(f"⚠ AI screen check failed ({str(e)[:100]}), falling back to image comparison")
+        return None
+    if result is None:
+        return None
+    icon = '✓' if result['is_match'] else '❌'
+    log_message_func(f"🤖 {icon} AI {label} check: detected '{result['detected_screen']}' ({result['confidence']:.0%})")
+    return result
+
+
+def _ai_screen_text(screenshot_path):
+    """Read the screen text with Ollama AI (None when unavailable)."""
+    if not AI_VALIDATION_ENABLED:
+        return None
+    try:
+        from services.ai_vision.ai_screen_validator_ollama import ocr_ollama
+        text = ocr_ollama(screenshot_path)
+    except Exception:
+        return None
+    return text or None
+
+
 def validate_soft_boot_home_screen(screenshot_path, log_message_func):
     """Validate a pre-SOFT-boot screenshot against available HomeScreen references."""
+    ai_result = _ai_screen_check(screenshot_path, r'HomeScreen', 'HOME screen', log_message_func)
+    if ai_result is not None:
+        return ai_result
     reference_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'reference_screens')
     references = sorted(glob.glob(os.path.join(reference_dir, '*_HomeScreen.png')))
     if not references:
@@ -486,6 +515,10 @@ def is_black_screen(screenshot_path, max_mean_intensity=8, max_stddev=12):
 
 def validate_settings_screen(screenshot_path, log_message_func, language='en'):
     """Validate the Settings screenshot against references for the detected UI language."""
+    if language != 'de':
+        ai_result = _ai_screen_check(screenshot_path, r'Setting', 'Settings screen', log_message_func)
+        if ai_result is not None:
+            return ai_result
     reference_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'reference_screens')
     if language == 'de':
         references = sorted(set(
@@ -538,6 +571,11 @@ def validate_settings_screen(screenshot_path, log_message_func, language='en'):
 
 def validate_restart_screen(screenshot_path, log_message_func, language='en'):
     """Validate the selected Restart screen when a reference exists for its language."""
+    restart_text = _ai_screen_text(screenshot_path)
+    if restart_text is not None:
+        found = 'restart' in restart_text.lower() or 'neustart' in restart_text.lower()
+        log_message_func(f"{'✓' if found else '❌'} Restart screen {'confirmed' if found else 'NOT confirmed'} by AI text reading")
+        return {'is_match': found, 'validation_method': 'ollama_ai_text'}
     reference_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'reference_screens')
     if language == 'de':
         references = sorted(set(

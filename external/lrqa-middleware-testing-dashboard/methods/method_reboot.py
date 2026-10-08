@@ -35,11 +35,8 @@ from utils.screenshot_utils import take_and_analyze_screenshot
 from tools.screen.screenshot_utils_vnc import take_vnc_screenshot_with_fallback
 
 # Import AI Screen Validation
-try:
-    from services.ai_vision.ai_screen_validator_ollama import identify_screen_ollama
-    AI_VALIDATION_ENABLED = True
-except ImportError:
-    AI_VALIDATION_ENABLED = False
+# Imported lazily at call sites (importing services.* here is circular); just check availability
+AI_VALIDATION_ENABLED = os.path.isfile(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'services', 'ai_vision', 'ai_screen_validator_ollama.py'))
 
 def execute_reboot_process(device_ip, port, username, password, iteration=1, device_name="Device", combined_method_name=None, has_deepsleep=False, job_id=None, tunnel_service=None, device_config=None):
     """

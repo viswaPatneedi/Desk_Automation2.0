@@ -55,12 +55,8 @@ from methods.method_utils import (
 from services.screenshot_capture_service import ScreenshotCaptureService
 
 # Import AI Screen Validation
-try:
-    from services.ai_vision.ai_screen_validator_ollama import identify_screen_ollama
-    AI_VALIDATION_ENABLED = True
-except ImportError:
-    AI_VALIDATION_ENABLED = False
-    log_message("⚠️  AI Screen Validation not available - using legacy validation")
+# Imported lazily at call sites (importing services.* here is circular); just check availability
+AI_VALIDATION_ENABLED = os.path.isfile(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'services', 'ai_vision', 'ai_screen_validator_ollama.py'))
 
 def build_execution_results_path(device_ip, device_name, method_name, iteration, total_iterations, execution_timestamp=None, log_callback=None):
     """

@@ -475,6 +475,60 @@ def identify_screen_ollama(screenshot_path: str, timeout: int = 60, top_k: int =
     return OllamaScreenValidator(timeout=timeout).identify_screen(screenshot_path, top_k=top_k)
 
 
+def ocr_ollama(image, timeout: int = 90) -> Optional[str]:
+    """
+    Read all visible text from a screenshot with the Ollama vision model.
+
+    image: file path or PIL image. Returns the text ('' if none) or None when Ollama
+    is unavailable / the call failed, so callers can fall back to another OCR engine.
+    """
+    import io
+    import requests
+    validator = OllamaScreenValidator(timeout=timeout)
+    if not validator.available:
+        return None
+    try:
+        if isinstance(image, (str, os.PathLike)):
+            encoded = validator._encode_image(str(image))
+        else:
+            buf = io.BytesIO()
+            image.convert('RGB').save(buf, format='PNG')
+            encoded = base64.b64encode(buf.getvalue()).decode('utf-8')
+        if not encoded:
+            return None
+        response = requests.post(
+            f"{validator.ollama_url}/api/generate",
+            json={"model": validator.model, "images": [encoded], "stream": False, "think": False,
+                  "prompt": ("Transcribe ALL text visible in this TV screen screenshot (titles, menu labels, "
+                             "dialogs, error messages, clock). Output only the text, one item per line, "
+                             "no commentary."),
+                  "options": {"temperature": 0.1}},
+            timeout=timeout)
+        if response.status_code != 200:
+            return None
+        return (response.json().get('response') or '').strip()
+    except Exception as e:
+        logger.warning(f"Ollama OCR failed: {e}")
+        return None
+
+
+def screen_matches_ollama(screenshot_path: str, name_pattern: str, timeout: int = 60,
+                          top_k: int = 4) -> Optional[Dict]:
+    """
+    Identify the screen with Ollama and test whether the matched reference name matches
+    the regex name_pattern. Returns {'is_match', 'confidence', 'detected_screen', ...} or
+    None when AI is unavailable (caller should fall back).
+    """
+    import re
+    result = identify_screen_ollama(screenshot_path, timeout=timeout, top_k=top_k)
+    if not result or result.get('error'):
+        return None
+    detected = result.get('detected_screen', 'Unknown')
+    return {'is_match': bool(re.search(name_pattern, detected, re.IGNORECASE)),
+            'confidence': result.get('confidence', 0.0), 'detected_screen': detected,
+            'validation_method': 'ollama_ai', 'description': result.get('description', '')}
+
+
 # Convenience function for quick usage
 def validate_screen_ollama(screenshot_path: str, expected_screen: str,
                           timeout: int = 60) -> Dict:
