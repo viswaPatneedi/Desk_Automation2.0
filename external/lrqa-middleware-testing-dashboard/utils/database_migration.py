@@ -2,6 +2,7 @@
 Database Migration Utilities
 Migrate from JSON-based persistence (v1.0) to PostgreSQL (v2.0)
 """
+from __future__ import annotations
 
 import json
 import os
@@ -208,7 +209,8 @@ class DataMigration:
             # PENDING/REJECTED are approval-workflow state (belongs in StagingChange, not this table).
             active_patterns = patterns_data.get('LOG_PATTERNS', {}) if isinstance(patterns_data, dict) else {}
             for name, pattern_dict in active_patterns.items():
-                pattern_id = pattern_dict.get('id') or name
+                # Controllers look patterns up by their name key (e.g. 'HOME'), not the submission id.
+                pattern_id = name
                 try:
                     existing = self.session.query(LogPattern).filter_by(pattern_id=pattern_id).first()
                     if existing:
@@ -220,7 +222,7 @@ class DataMigration:
                         regex=pattern_dict.get('log_pattern') or pattern_dict.get('regex') or '',
                         description=pattern_dict.get('description'),
                         team_name=pattern_dict.get('team_name', ''),
-                        location=pattern_dict.get('location', ''),
+                        location=pattern_dict.get('file_path') or pattern_dict.get('location', ''),
                         is_custom=not pattern_dict.get('is_builtin', False),
                         created_by=self._resolve_user_id(pattern_dict.get('submitted_by')),
                         is_active=True

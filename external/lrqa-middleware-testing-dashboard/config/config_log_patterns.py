@@ -35,12 +35,22 @@ _LOG_PATTERNS = _PATTERNS.get("LOG_PATTERNS", {})
 _SYSTEM_COMMANDS = _PATTERNS.get("SYSTEM_COMMAND_PATTERNS", {})
 
 
+def _lookup(table, name):
+    if name in table:
+        return table[name]
+    wanted = name.lower()
+    for key, value in table.items():
+        if key.lower() == wanted:
+            return value
+    return {}
+
+
 def _get_log_pattern(name):
-    return _LOG_PATTERNS.get(name, {})
+    return _lookup(_LOG_PATTERNS, name)
 
 
 def _get_system_command(name):
-    return _SYSTEM_COMMANDS.get(name, {})
+    return _lookup(_SYSTEM_COMMANDS, name)
 
 
 # Log patterns to check device status (loaded from log_patterns.json)

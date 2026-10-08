@@ -9,8 +9,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -18,7 +18,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260904_011101_968958",
@@ -36,8 +36,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -45,7 +45,32 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
+  },
+  {
+    "sequence_id": "seq_20260526_163544_506825",
+    "name": "XIONE-18759",
+    "description": "",
+    "queue_data": [
+      "execute_command",
+      "reboot_perf_v2_optimized",
+      "voice_command",
+      "wait",
+      "execute_command",
+      "collect_device_logs"
+    ],
+    "methods": [],
+    "user_inputs": {},
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
+    "team_name": "LRQA",
+    "method_rationale": [],
+    "execution_count": 0,
+    "total_duration_seconds": null,
+    "average_duration_seconds": null,
+    "location": "",
+    "is_active": true,
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260904_012800_032011",
@@ -56,8 +81,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -65,7 +90,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260424_142951_357940",
@@ -113,8 +138,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -122,7 +147,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260428_112751_564356",
@@ -172,8 +197,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -181,7 +206,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260107_164346_901288",
@@ -194,8 +219,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -203,7 +228,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260209_140545_285963",
@@ -234,8 +259,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -243,7 +268,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260219_200402_844470",
@@ -271,8 +296,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -280,7 +305,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260302_171927_304925",
@@ -297,8 +322,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -306,7 +331,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260303_100117_662507",
@@ -324,8 +349,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -333,7 +358,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260304_113657_227029",
@@ -361,8 +386,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -370,7 +395,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260305_171346_667668",
@@ -383,8 +408,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -392,7 +417,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260309_155421_355219",
@@ -416,8 +441,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -425,7 +450,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260310_112929_147714",
@@ -449,8 +474,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -458,11 +483,11 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260318_161403_356015",
-    "name": "XIONE-18416",
+    "name": "XIONE-18416-tmp",
     "description": "",
     "queue_data": [
       "send_remote_keys",
@@ -499,8 +524,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -508,7 +533,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260107_164316_708294",
@@ -527,8 +552,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -536,7 +561,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260403_163939_786549",
@@ -548,8 +573,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -557,7 +582,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260407_223542_052600",
@@ -581,8 +606,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -590,7 +615,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260410_162417_061218",
@@ -607,8 +632,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -616,7 +641,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_196f4ab0",
@@ -652,8 +677,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -661,7 +686,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260519_215316_560931",
@@ -705,8 +730,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -714,7 +739,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260520_231522_836234",
@@ -750,8 +775,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -759,32 +784,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
-  },
-  {
-    "sequence_id": "seq_20260526_163544_506825",
-    "name": "XIONE-18759",
-    "description": "",
-    "queue_data": [
-      "execute_command",
-      "reboot_perf_v2_optimized",
-      "voice_command",
-      "wait",
-      "execute_command",
-      "collect_device_logs"
-    ],
-    "methods": [],
-    "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
-    "team_name": "LRQA",
-    "method_rationale": [],
-    "execution_count": 0,
-    "total_duration_seconds": null,
-    "average_duration_seconds": null,
-    "location": "",
-    "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260615_221848_701716",
@@ -806,8 +806,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": {
       "ai_sequence_builder": {
@@ -867,7 +867,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260615_224813_798297",
@@ -885,8 +885,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": {
       "ai_sequence_builder": {
@@ -934,7 +934,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260813_191255_884717",
@@ -950,8 +950,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": {
       "ai_sequence_builder": {
@@ -993,7 +993,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260810_020832_355398",
@@ -1047,8 +1047,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "2",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "landel334",
     "team_name": "Dev_QA",
     "method_rationale": [],
     "execution_count": 0,
@@ -1056,7 +1056,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260810_024434_267877",
@@ -1069,8 +1069,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "2",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "landel334",
     "team_name": "Dev_QA",
     "method_rationale": [],
     "execution_count": 0,
@@ -1078,7 +1078,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260325_162747_826604",
@@ -1090,8 +1090,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -1099,7 +1099,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260330_132433_574782",
@@ -1139,8 +1139,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -1148,7 +1148,7 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   },
   {
     "sequence_id": "seq_20260107_164207_977993",
@@ -1202,8 +1202,8 @@
     ],
     "methods": [],
     "user_inputs": {},
-    "created_at": "2026-09-29T13:36:39.949935",
-    "created_by": "1",
+    "created_at": "2026-10-08T15:19:35.161813",
+    "created_by": "vpatne290",
     "team_name": "LRQA",
     "method_rationale": [],
     "execution_count": 0,
@@ -1211,6 +1211,6 @@
     "average_duration_seconds": null,
     "location": "",
     "is_active": true,
-    "updated_at": "2026-09-29T13:36:39.949952"
+    "updated_at": "2026-10-08T15:20:46.376483"
   }
 ]

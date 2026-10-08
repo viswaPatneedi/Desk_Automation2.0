@@ -96,6 +96,10 @@ class PeriodicDataSyncService:
 
     @staticmethod
     def _write_json(path, payload):
+        # Never replace existing JSON data with an empty snapshot (e.g. a freshly created DB).
+        if not payload and os.path.exists(path) and os.path.getsize(path) > 2:
+            print(f"[SYNC MONITOR] Skipped overwrite of {os.path.basename(path)}: database snapshot is empty")
+            return
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
         with open(path, "w", encoding="utf-8") as handle:
             json.dump(payload, handle, indent=2)
@@ -157,11 +161,17 @@ class PeriodicDataSyncService:
                 "device_type": row.device_type or "",
                 "location": row.location or "",
                 "team_name": row.team_name or "",
+                "is_rack_device": bool(getattr(row, "is_rack_device", False)),
+                "rpi_config": getattr(row, "rpi_config", None) or {},
+                "ir_blaster_config": getattr(row, "ir_blaster_config", None) or {},
+                "power_control_config": getattr(row, "power_control_config", None) or {},
+                "shared_with_teams": getattr(row, "shared_with_teams", None) or {},
             })
         self._write_json(DEVICES_FILE, devices)
 
     def _sync_sequences(self, session):
         sequences = []
+        usernames = {u.id: u.username for u in session.query(DBUser).all()}
         rows = (
             session.query(DBSavedSequence)
             .order_by(DBSavedSequence.updated_at.desc(), DBSavedSequence.created_at.desc())
@@ -181,7 +191,7 @@ class PeriodicDataSyncService:
                 ],
                 "user_inputs": {},
                 "created_at": self._serialize_dt(row.created_at),
-                "created_by": str(row.created_by) if row.created_by is not None else None,
+                "created_by": usernames.get(row.created_by, str(row.created_by)) if row.created_by is not None else None,
                 "team_name": row.team_name or "",
                 "method_rationale": row.method_rationale or [],
                 "execution_count": row.execution_count or 0,
@@ -227,7 +237,8 @@ class PeriodicDataSyncService:
                 "team_name": row.team_name or "",
             }
 
-        current["LOG_PATTERNS"] = updated_patterns
+        if updated_patterns:
+            current["LOG_PATTERNS"] = updated_patterns
         self._write_json(LOG_PATTERNS_FILE, current)
 
     def _sync_system_commands(self, session):
@@ -257,7 +268,8 @@ class PeriodicDataSyncService:
                 "is_builtin": False,
             }
 
-        current["user_defined"] = user_defined
+        if user_defined:
+            current["user_defined"] = user_defined
         self._write_json(SYSTEM_COMMANDS_FILE, current)
 
     def _sync_methods_snapshot(self, session):

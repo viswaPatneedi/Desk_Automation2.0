@@ -412,7 +412,14 @@ main() {
     echo ""
 
     # Get host IP
-    HOST_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+    HOST_IP=""
+    if [ "$(uname -s)" = "Darwin" ]; then
+        DEFAULT_IF=$(route -n get default 2>/dev/null | awk '/interface:/{print $2}')
+        [ -n "$DEFAULT_IF" ] && HOST_IP=$(ipconfig getifaddr "$DEFAULT_IF" 2>/dev/null)
+        [ -z "$HOST_IP" ] && HOST_IP=$(ipconfig getifaddr en0 2>/dev/null)
+    else
+        HOST_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+    fi
     if [ -z "$HOST_IP" ]; then
         HOST_IP="127.0.0.1"
     fi

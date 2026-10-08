@@ -422,7 +422,7 @@ class SavedSequence:
                     'description': seq.description,
                     'team_name': seq.team_name,
                     'methods': list(seq.methods or []),
-                    'queue_data': [dict(item) for item in (seq.queue_data or [])]
+                    'queue_data': [dict(item) if isinstance(item, dict) else item for item in (seq.queue_data or [])]
                 }
                 # Update fields if provided
                 if name is not None and name.strip():  # Check for non-empty string
@@ -444,7 +444,7 @@ class SavedSequence:
                     seq.queue_data = queue_data
                     print(f"[UPDATE] Sequence queue_data updated: {len(queue_data)} items")
                     for idx, item in enumerate(queue_data):
-                        print(f"  [ITEM {idx}] method={item.get('method', 'unknown')}")
+                        print(f"  [ITEM {idx}] method={item.get('method', 'unknown') if isinstance(item, dict) else item}")
                 success = cls.save_all(sequences)
                 print(f"[UPDATE] Sequence {sequence_id} saved: {success}")
                 if success:
@@ -459,7 +459,7 @@ class SavedSequence:
                             'description': seq.description,
                             'team_name': seq.team_name,
                             'methods': list(seq.methods or []),
-                            'queue_data': [dict(item) for item in (seq.queue_data or [])]
+                            'queue_data': [dict(item) if isinstance(item, dict) else item for item in (seq.queue_data or [])]
                         }
                     )
                 return success
