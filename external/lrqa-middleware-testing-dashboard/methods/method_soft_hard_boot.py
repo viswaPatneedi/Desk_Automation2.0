@@ -62,7 +62,7 @@ from methods.method_capture_current_screen import extract_text_from_local_image
 
 # Import AI Screen Validation
 try:
-    from ai_integration_universal import validate_screen_ai, get_ai_validator
+    from services.ai_vision.ai_screen_validator_ollama import identify_screen_ollama
     AI_VALIDATION_ENABLED = True
 except ImportError:
     AI_VALIDATION_ENABLED = False
