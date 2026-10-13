@@ -5876,6 +5876,15 @@ def cancel_job(job_id):
             # Unlock the device
             DeviceLock.unlock_device(job.device_ip)
             
+            # Slack: notify cancellation (by whom)
+            try:
+                from services.slack_notification_service import notify_job_ended
+                cancelled_job = Job.get_job(job_id)
+                if cancelled_job:
+                    notify_job_ended(cancelled_job, 'cancelled')
+            except Exception as slack_err:
+                app.logger.warning(f"Slack cancel notification failed: {slack_err}")
+            
             return jsonify({'success': True, 'message': 'Job cancelled successfully'})
         else:
             return jsonify({'success': False, 'error': 'Cannot cancel job'}), 400

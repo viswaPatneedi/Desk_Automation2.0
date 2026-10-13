@@ -1341,6 +1341,15 @@ class TestExecutionService:
             else:
                 print(f"❌ [EXECUTION] Failed to retrieve job {job_id} after status update")
 
+            # Slack: notify that the job has started (job-card details)
+            try:
+                from services.slack_notification_service import notify_job_started
+                started_job = Job.get_job(job_id)
+                if started_job:
+                    notify_job_started(started_job)
+            except Exception as slack_err:
+                print(f"⚠️ [SLACK] start notification failed: {slack_err}")
+
             def refresh_job_lock():
                 while not lock_heartbeat_stop.wait(30):
                     current_job = Job.get_job(job_id)
@@ -3465,6 +3474,12 @@ class TestExecutionService:
                 job = Job.get_job(job_id)
                 if job and job.status == 'cancelled':
                     log_service.log(f"\n⛔ Job {job_id} was explicitly cancelled; preserving cancelled status")
+                    # Slack: notify cancellation (by whom)
+                    try:
+                        from services.slack_notification_service import notify_job_ended
+                        notify_job_ended(job, 'cancelled')
+                    except Exception as slack_err:
+                        print(f"⚠️ [SLACK] cancel notification failed: {slack_err}")
                     return
 
                 final_status = 'completed'
@@ -3494,7 +3509,16 @@ class TestExecutionService:
                 # Send email notification to user who triggered the execution
                 self._send_completion_email(job_id, final_status, log_file_path)
 
-            
+                # Slack: notify job ended (completed / failed + analysis)
+                try:
+                    from services.slack_notification_service import notify_job_ended
+                    ended_job = Job.get_job(job_id)
+                    if ended_job:
+                        notify_job_ended(ended_job, final_status)
+                except Exception as slack_err:
+                    print(f"⚠️ [SLACK] end notification failed: {slack_err}")
+
+
         except Exception as e:
             # Log the error with explicit flushing
             import traceback
@@ -3555,6 +3579,15 @@ class TestExecutionService:
                 
                 # Send email notification about failure
                 self._send_completion_email(job_id, 'failed', log_file_path)
+
+                # Slack: notify job failed (with analysis)
+                try:
+                    from services.slack_notification_service import notify_job_ended
+                    failed_job = Job.get_job(job_id)
+                    if failed_job:
+                        notify_job_ended(failed_job, 'failed')
+                except Exception as slack_err:
+                    print(f"⚠️ [SLACK] failure notification failed: {slack_err}")
         finally:
             lock_heartbeat_stop.set()
             if lock_heartbeat_thread and lock_heartbeat_thread is not threading.current_thread():
