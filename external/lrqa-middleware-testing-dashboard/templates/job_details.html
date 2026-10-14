@@ -375,6 +375,9 @@
             {% if 'reboot_perf_v2_optimized' in job.methods %}
                 {% set ns.has_reboot_perf = true %}
             {% endif %}
+            {% if 'post_boot_plugin_validation' in job.methods %}
+                {% set ns.has_reboot_perf = true %}
+            {% endif %}
             {% if 'soft_hard_boot' in job.methods %}
                 {% set ns.has_soft_hard_boot = true %}
             {% endif %}
@@ -382,6 +385,9 @@
         {% if job.execution_queue %}
             {% for item in job.execution_queue %}
                 {% if item.method == 'reboot_perf_v2_optimized' %}
+                    {% set ns.has_reboot_perf = true %}
+                {% endif %}
+                {% if item.method == 'post_boot_plugin_validation' %}
                     {% set ns.has_reboot_perf = true %}
                 {% endif %}
                 {% if item.method == 'navigate_inputs_xumo' %}

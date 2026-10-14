@@ -163,6 +163,10 @@
                             const terminationIfNotFound = getParam('termination_if_not_found');
                             if (terminationIfNotFound) parts.push(`<small style="color: #f59e0b;"><i class="bi bi-exclamation-triangle-fill"></i> <strong>Stop if HOME NOT detected:</strong> Enabled</small>`);
                             
+                            // Post Boot Plugin Validation specific parameters
+                            const pluginLogLine = getParam('plugin_log_line');
+                            if (pluginLogLine) parts.push(`<small style="color:#34d399;"><i class="bi bi-plug-fill"></i> <strong>Plugin Log Line:</strong> ${pluginLogLine}</small>`);
+                            
                             return parts.length ? parts.join('<br>') : '<small class="text-muted">No parameters</small>';
                         };
 

@@ -490,7 +490,7 @@ class ResultsController:
             job_id = r.get('job_id', '')
             sequence_name = r.get('sequence_name', '') if 'sequence_name' in r else ''
             device_name = r.get('device_name', '')
-            is_sequence = phase.startswith('Sequence:') or (job_id and sequence_name) or (job_id and (phase.lower().startswith('reboot_perf_v2_optimized') or phase.lower().startswith('trail_method')))
+            is_sequence = phase.startswith('Sequence:') or (job_id and sequence_name) or (job_id and (phase.lower().startswith('reboot_perf_v2_optimized') or phase.lower().startswith('trail_method') or phase.lower().startswith('post_boot_plugin_validation')))
             group_id = job_id or timestamp
             # Always include device_name for grouping
             if is_sequence:
@@ -578,11 +578,11 @@ class ResultsController:
         jobs = Job.load_all()
 
         def is_reboot_perf_job(job_item):
-            if job_item.methods and ('reboot_perf_v2_optimized' in job_item.methods or 'trail_method' in job_item.methods):
+            if job_item.methods and ('reboot_perf_v2_optimized' in job_item.methods or 'trail_method' in job_item.methods or 'post_boot_plugin_validation' in job_item.methods):
                 return True
             if job_item.execution_queue:
                 for item in job_item.execution_queue:
-                    if item.get('method') in ('reboot_perf_v2_optimized', 'trail_method'):
+                    if item.get('method') in ('reboot_perf_v2_optimized', 'trail_method', 'post_boot_plugin_validation'):
                         return True
             return False
 
@@ -730,11 +730,11 @@ class ResultsController:
             jobs = Job.load_all()
 
             def is_reboot_perf_job(job_item):
-                if job_item.methods and ('reboot_perf_v2_optimized' in job_item.methods or 'trail_method' in job_item.methods):
+                if job_item.methods and ('reboot_perf_v2_optimized' in job_item.methods or 'trail_method' in job_item.methods or 'post_boot_plugin_validation' in job_item.methods):
                     return True
                 if job_item.execution_queue:
                     for item in job_item.execution_queue:
-                        if item.get('method') in ('reboot_perf_v2_optimized', 'trail_method'):
+                        if item.get('method') in ('reboot_perf_v2_optimized', 'trail_method', 'post_boot_plugin_validation'):
                             return True
                 return False
 
@@ -744,7 +744,7 @@ class ResultsController:
             all_results = self.test_service.get_all_results()
             results_for_reboot = [
                 r for r in all_results
-                if r.get('job_id') and r.get('method') in ('reboot_perf_v2_optimized', 'trail_method')
+                if r.get('job_id') and r.get('method') in ('reboot_perf_v2_optimized', 'trail_method', 'post_boot_plugin_validation')
             ]
             jobs_with_results = {r.get('job_id') for r in results_for_reboot}
 
@@ -755,7 +755,7 @@ class ResultsController:
 
             filtered_results = [
                 r for r in all_results
-                if r.get('job_id') in job_filter and r.get('method') in ('reboot_perf_v2_optimized', 'trail_method')
+                if r.get('job_id') in job_filter and r.get('method') in ('reboot_perf_v2_optimized', 'trail_method', 'post_boot_plugin_validation')
             ]
 
             if selected_device_ips:

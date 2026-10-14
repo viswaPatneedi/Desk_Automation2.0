@@ -22,7 +22,6 @@
     },
     "ir_blaster_config": {},
     "power_control_config": {},
-    "created_by": "",
     "shared_with_teams": {}
   },
   {
@@ -48,7 +47,6 @@
     },
     "ir_blaster_config": {},
     "power_control_config": {},
-    "created_by": "",
     "shared_with_teams": {
       "Dev_QA": "use"
     }
@@ -76,7 +74,6 @@
     },
     "ir_blaster_config": {},
     "power_control_config": {},
-    "created_by": "",
     "shared_with_teams": {
       "Dev_QA": "use"
     }
@@ -109,7 +106,6 @@
     },
     "ir_blaster_config": {},
     "power_control_config": {},
-    "created_by": "",
     "shared_with_teams": {}
   },
   {
@@ -140,7 +136,6 @@
     },
     "ir_blaster_config": {},
     "power_control_config": {},
-    "created_by": "",
     "shared_with_teams": {}
   },
   {
@@ -171,7 +166,6 @@
     },
     "ir_blaster_config": {},
     "power_control_config": {},
-    "created_by": "",
     "shared_with_teams": {}
   }
 ]

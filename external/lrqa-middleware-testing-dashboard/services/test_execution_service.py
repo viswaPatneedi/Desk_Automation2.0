@@ -28,6 +28,7 @@ from methods.method_reboot_performance import execute_reboot_performance_process
 from methods.method_reboot_performance_v2 import execute_reboot_performance_v2_process
 from methods.method_reboot_perf_v2_optimized import execute_reboot_perf_v2_optimized_process
 from methods.method_trail import execute_trail_method_process
+from methods.method_post_boot_plugin_validation import execute_post_boot_plugin_validation_process
 from methods.method_soft_hard_boot import execute_soft_hard_boot_process
 from methods.method_standby_deep_sleep_ir_control import execute_standby_deep_sleep_ir_control_process
 from methods.method_validate_results import validate_command_output
@@ -1798,7 +1799,7 @@ class TestExecutionService:
                         filtered["screen_name"] = queue_item.get("screen_name", "")
                     elif method == "channel_change_capture":
                         filtered["channel_key"] = queue_item.get("channel_key", "DOWN")
-                    elif method in {"reboot_performance_v2", "reboot_perf_v2_optimized", "soft_hard_boot", "trail_method"}:
+                    elif method in {"reboot_performance_v2", "reboot_perf_v2_optimized", "soft_hard_boot", "trail_method", "post_boot_plugin_validation"}:
                         filtered["home_screen_timeout"] = queue_item.get("home_screen_timeout", 180)
                         if "optional_checks" in queue_item:
                             filtered["optional_checks"] = queue_item.get("optional_checks")
@@ -1806,6 +1807,13 @@ class TestExecutionService:
                             filtered["boot_type"] = queue_item.get("boot_type")
                         # For trail_method, also include log collection parameters
                         if method == "trail_method":
+                            filtered["log_search_patterns"] = queue_item.get("log_search_patterns", [])
+                            filtered["auto_collect_logs"] = queue_item.get("auto_collect_logs", False)
+                        # For post_boot_plugin_validation, include plugin log line validation parameters
+                        if method == "post_boot_plugin_validation":
+                            filtered["plugin_log_line"] = queue_item.get("plugin_log_line", "")
+                            filtered["plugin_log_timeout"] = queue_item.get("plugin_log_timeout", 120)
+                            filtered["plugin_terminate_on_found"] = queue_item.get("plugin_terminate_on_found", False)
                             filtered["log_search_patterns"] = queue_item.get("log_search_patterns", [])
                             filtered["auto_collect_logs"] = queue_item.get("auto_collect_logs", False)
                     elif method == "deepsleep":
@@ -2105,6 +2113,95 @@ class TestExecutionService:
                             log_search_patterns=log_search_patterns,
                             job_id=job_id,
                             tunnel_service=tunnel_service
+                        )
+                    elif method == "post_boot_plugin_validation":
+                        # Post Boot Plugin Validation - Reboot Performance V2 Optimized workflow with
+                        # user-specified log line validation FIRST after SSH reconnection (before HOME check).
+                        # If the plugin log line is detected, all device logs are collected to /media/apps.
+                        optional_checks = queue_item.get('optional_checks', {})
+                        home_screen_timeout = queue_item.get('home_screen_timeout', 180)  # Default 180 seconds
+                        auto_collect_logs = queue_item.get('auto_collect_logs', False)  # Default: don't auto-collect
+                        log_search_patterns = queue_item.get('log_search_patterns', [])  # Default: no patterns
+                        plugin_log_line = queue_item.get('plugin_log_line', '')  # User-specified log line to validate post-boot
+                        plugin_log_timeout = queue_item.get('plugin_log_timeout', 120)  # Default 120 seconds
+                        plugin_terminate_on_found = queue_item.get('plugin_terminate_on_found', False)  # Stop iterations when plugin log line found
+
+                        # Handle skip_all flag (when user enters -NA-)
+                        if optional_checks.get('skip_all'):
+                            log_service.log("User selected -NA- to skip all post-reboot checks")
+                            optional_checks_resolved = {
+                                'skip_all': True,
+                                'custom_commands': []
+                            }
+                        else:
+                            # Get all available checks dynamically from config_log_patterns
+                            from config.config_log_patterns import get_all_optional_checks
+                            available_checks = get_all_optional_checks()
+
+                            # Resolve check_keys to actual commands
+                            custom_commands_resolved = []
+                            for custom_check in optional_checks.get('custom_commands', []):
+                                check_key = custom_check.get('check_key')
+                                if check_key and check_key in available_checks:
+                                    check_config = available_checks[check_key]
+                                    custom_commands_resolved.append({
+                                        'command': check_config['command'],
+                                        'description': check_config['description'],
+                                        'check_key': check_key,
+                                        'terminate_on_match': custom_check.get('terminate_on_match', False)
+                                    })
+
+                            # Build final optional_checks structure - preserve the optional crash-wait
+                            # (minutes to pause before collecting logs when a termination check matches)
+                            optional_checks_resolved = {
+                                'custom_commands': custom_commands_resolved,
+                                'crash_wait_minutes': optional_checks.get('crash_wait_minutes', 0)
+                            }
+
+                            # Log which checks will be executed
+                            if custom_commands_resolved:
+                                log_service.log(f"Will execute {len(custom_commands_resolved)} post-reboot check(s)")
+                            else:
+                                log_service.log("No valid post-reboot checks configured")
+
+                        # Log plugin log line validation configuration
+                        if plugin_log_line:
+                            log_service.log(f"Post-boot plugin log line validation: ENABLED - Will run '{plugin_log_line}' (timeout: {plugin_log_timeout}s) right after SSH reconnection")
+                            log_service.log("If detected, all device logs will be collected to /media/apps before HOME screen validation")
+                            if plugin_terminate_on_found:
+                                log_service.log("🛑 Termination condition: execution will STOP when the plugin command finds a match")
+                        else:
+                            log_service.log("Post-boot plugin log line validation: DISABLED (no log line provided)")
+
+                        # Log auto-collect-logs and pattern-search configuration
+                        if log_search_patterns and len(log_search_patterns) > 0:
+                            log_service.log(f"Pattern-based log collection: ENABLED - Will search for {len(log_search_patterns)} pattern(s)")
+                            for pattern in log_search_patterns:
+                                log_service.log(f"  - Pattern: '{pattern}'")
+                        elif auto_collect_logs:
+                            log_service.log("Auto-collect logs: ENABLED - Logs will be collected to /media/apps when HOME is found")
+                        else:
+                            log_service.log("Log collection: DISABLED")
+
+                        method_result = execute_post_boot_plugin_validation_process(
+                            conn_device_ip, conn_port, conn_username, conn_password,
+                            i + 1, device.name,
+                            combined_method_name=combined_method_name if len(execution_queue) > 1 else None,
+                            optional_checks=optional_checks_resolved,
+                            home_screen_timeout=home_screen_timeout,
+                            auto_collect_logs=auto_collect_logs,
+                            log_search_patterns=log_search_patterns,
+                            job_id=job_id,
+                            tunnel_service=tunnel_service,
+                            device_config={
+                                'lab_ip': device.ip or '10.0.0.28',
+                                'lab_port': device.port or 10022,
+                                'lab_username': device.username or 'root',
+                                'lab_password': device.password or '',
+                            },
+                            plugin_log_line=plugin_log_line,
+                            plugin_log_timeout=plugin_log_timeout,
+                            plugin_terminate_on_found=plugin_terminate_on_found
                         )
                     elif method == "soft_hard_boot":
                         # Soft Boot / Hard Boot Performance Monitoring

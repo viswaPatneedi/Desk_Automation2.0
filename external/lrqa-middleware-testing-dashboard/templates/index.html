@@ -1115,6 +1115,18 @@
                                 </div>
                             </div>
 
+                            <div class="method-card" draggable="true" data-method="post_boot_plugin_validation"
+                                 data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true"
+                                 data-bs-title="<strong>Post Boot Plugin Validation 🔌</strong><br>Same workflow as Reboot Performance V2 - OPTIMIZED, with one key change:<br>after reboot + SSH reconnect, a <strong>user-specified log line</strong> is validated FIRST, before the Home Screen check.<br><br><strong>Flow:</strong><br>1. Send reboot command<br>2. Wait for disconnect + SSH reconnect<br>3. Monitor /opt/logs/* for YOUR log line<br>4. If found → collect all logs from /opt/logs/* to /media/apps/<br>5. Continue with standard HOME screen validation<br><br><strong>Use Case:</strong> Capture logs immediately when a plugin/component log line appears after boot (e.g., plugin activation, service ready).<br><br><strong>Pass Criteria:</strong> HOME screen log detected (plugin log line detection triggers log collection)">
+                                <div class="method-icon reboot">
+                                    <i class="bi bi-plug-fill" style="color: #34D399;"></i>
+                                </div>
+                                <div class="method-info">
+                                    <h6>Post Boot Plugin Validation</h6>
+                                    <p>Validate custom log line right after boot</p>
+                                </div>
+                            </div>
+
                             <div class="method-card" draggable="true" data-method="soft_hard_boot"
                                  data-bs-toggle="tooltip" data-bs-placement="right" data-bs-html="true"
                                  data-bs-title="<strong>Soft Boot / Hard Boot 🔄</strong><br>Compare reboot performance between GUI-based soft boot and systemctl hard boot.<br><br><strong>Boot Types:</strong><br>• <strong>HARD BOOT:</strong> Uses 'systemctl reboot' command<br>• <strong>SOFT BOOT:</strong> Navigates Settings GUI > System Management > Reset & Updates > Restart device<br><br><strong>Features:</strong><br>• Selectable boot type (HARD or SOFT)<br>• Captures rdk_milestones.log for diagnostics<br>• Early SSH probing at 40s mark<br>• Performance timing from command/key sent to HOME screen detection<br>• BEFORE/AFTER screenshot comparison<br><br><strong>Navigation Keys (SOFT BOOT):</strong> DOWN(2x) → ENTER → DOWN(2x) → ENTER → ENTER<br><strong>Wait per key:</strong> 5 seconds">
@@ -2101,6 +2113,50 @@
                     <button type="button" class="btn" onclick="backToChecksSelection()" style="background: #4b5563; color: #e5e7eb; border: none; padding: 8px 16px; border-radius: 4px;">Back</button>
                     <button type="button" class="btn" data-bs-dismiss="modal" style="background: #4b5563; color: #e5e7eb; border: none; padding: 8px 16px; border-radius: 4px;">Cancel</button>
                     <button type="button" class="btn" onclick="confirmTerminationSelection()" style="background: #10b981; color: #ffffff; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 600;">Next (HOME Timeout)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Post Boot Plugin Validation - Log Line & Timeout -->
+    <div class="modal fade" id="pluginValidationModal" tabindex="-1" aria-labelledby="pluginValidationLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content" style="background: #111827; border: 1px solid #1f2937;">
+                <div class="modal-header" style="background: #0f172a; border-bottom: 1px solid #1f2937;">
+                    <h5 class="modal-title" id="pluginValidationLabel" style="color: #e5e7eb;">
+                        <i class="bi bi-plug-fill" style="color: #34D399;"></i> Post Boot Plugin Validation
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="background: #111827;">
+                    <div style="background: #14532d; border-left: 4px solid #34D399; padding: 1rem; margin-bottom: 1.25rem; border-radius: 0.5rem;">
+                        <p style="margin: 0 0 0.5rem 0; font-weight: 600; color: #34D399;"><strong>Workflow:</strong></p>
+                        <ol style="margin: 0; padding-left: 1.25rem; color: #d1d5db; font-size: 0.9rem;">
+                            <li>Reboot command is sent</li>
+                            <li>Framework waits for disconnect + SSH reconnect</li>
+                            <li><code style="background: #1f2937; padding: 0.1rem 0.4rem; border-radius: 0.25rem; color: #e5e7eb;">/opt/logs/*</code> is monitored for YOUR log line first</li>
+                            <li>If found → all logs collected from <code style="background: #1f2937; padding: 0.1rem 0.4rem; border-radius: 0.25rem; color: #e5e7eb;">/opt/logs/*</code> to <code style="background: #1f2937; padding: 0.1rem 0.4rem; border-radius: 0.25rem; color: #e5e7eb;">/media/apps/</code></li>
+                            <li>Standard HOME screen validation continues</li>
+                        </ol>
+                    </div>
+                    <div style="margin-bottom: 1.25rem;">
+                        <label for="pluginLogLineInput" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #e5e7eb;">
+                            Linux command to validate (after reboot, before HOME check): <span style="color: #ef4444;">*</span>
+                        </label>
+                        <textarea class="form-control" id="pluginLogLineInput" rows="2" placeholder='grep -i ".*IPC.*method.*timeout.*" /opt/logs/wpeframework.log*' style="font-family: monospace; font-size: 0.95rem; padding: 0.75rem; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px;"></textarea>
+                        <small style="color: #9ca3af; display: block; margin-top: 0.4rem;">Full grep command - runs on the device as-is every 5s until it returns output. On first match, all logs are collected from /opt/logs/* to /media/apps/</small>
+                    </div>
+                    <div>
+                        <label for="pluginLogTimeoutInput" style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #e5e7eb;">
+                            Plugin log line timeout (seconds):
+                        </label>
+                        <input type="number" class="form-control" id="pluginLogTimeoutInput" value="120" min="30" max="600" style="font-size: 1rem; padding: 0.75rem; background: #1f2937; color: #e5e7eb; border: 1px solid #4b5563; border-radius: 4px; max-width: 180px;">
+                        <small style="color: #9ca3af; display: block; margin-top: 0.4rem;">How long to monitor for the log line after SSH reconnection. Recommended: 120</small>
+                    </div>
+                </div>
+                <div class="modal-footer" style="background: #0f172a; border-top: 1px solid #1f2937; gap: 10px;">
+                    <button type="button" class="btn" data-bs-dismiss="modal" style="background: #4b5563; color: #e5e7eb; border: none; padding: 8px 16px; border-radius: 4px;">Cancel</button>
+                    <button type="button" class="btn" onclick="confirmPluginValidationSettings()" style="background: #10b981; color: #ffffff; border: none; padding: 8px 16px; border-radius: 4px; font-weight: 600;">Next (Post-Reboot Checks)</button>
                 </div>
             </div>
         </div>
@@ -6582,7 +6638,7 @@
             console.log(`📝 Getting parameters (async) for method: ${methodId} (${methodName})`);
             
             // Methods that require user input
-            const methodsRequiringInput = ['ir_test', 'deepsleep', 'maintenance_deepsleep_wakeup', 'maintenance_CURL_deepsleep_wakeup', 'standby_deep_sleep_ir_control', 'send_remote_keys', 'wait', 'execute_command', 'screen_validation', 'reboot_performance', 'reboot_perf_v2_optimized', 'check_logs', 'navigate_to_tiles', 'memcapture_tool', 'soft_hard_boot', 'voice_command', 'capture_current_screen', 'trail_method', 'capture_base_image', 'netflix_playback'];
+            const methodsRequiringInput = ['ir_test', 'deepsleep', 'maintenance_deepsleep_wakeup', 'maintenance_CURL_deepsleep_wakeup', 'standby_deep_sleep_ir_control', 'send_remote_keys', 'wait', 'execute_command', 'screen_validation', 'reboot_performance', 'reboot_perf_v2_optimized', 'check_logs', 'navigate_to_tiles', 'memcapture_tool', 'soft_hard_boot', 'voice_command', 'capture_current_screen', 'trail_method', 'post_boot_plugin_validation', 'capture_base_image', 'netflix_playback'];
             
             // Only prompt if method is in the list
             if (!methodsRequiringInput.includes(methodId)) {
@@ -6987,6 +7043,30 @@
                 params.auto_collect_logs = configuration.auto_collect_logs;
                 
                 console.log('✅ Trail Method Parameters:', params);
+            } else if (methodId === 'post_boot_plugin_validation') {
+                // Post Boot Plugin Validation - modal prompts for the user log line FIRST, then same config as reboot_perf_v2_optimized
+                const pluginSettings = await promptForPluginValidationSettings();
+                if (pluginSettings === null) {
+                    console.log('❌ User cancelled post_boot_plugin_validation plugin settings');
+                    return null;
+                }
+                params.plugin_log_line = pluginSettings.plugin_log_line;
+                params.plugin_log_timeout = pluginSettings.plugin_log_timeout;
+
+                const configuration = await promptForOptionalChecks();
+                if (configuration === null) {
+                    console.log('❌ User cancelled post_boot_plugin_validation configuration');
+                    return null;
+                }
+
+                params.optional_checks = configuration.optional_checks;
+                params.home_screen_timeout = configuration.home_screen_timeout;
+                params.log_search_patterns = configuration.log_search_patterns;
+                params.auto_collect_logs = configuration.auto_collect_logs;
+                params.plugin_terminate_on_found = globalPluginTerminate;
+
+                console.log('✅ Post Boot Plugin Validation Parameters:', params);
+                console.log('  └─ plugin_terminate_on_found:', globalPluginTerminate);
             } else {
                 // Use synchronous version for other methods
                 return getMethodParameters(methodId, methodName);
@@ -7056,6 +7136,52 @@
             });
             message += '\nEnter number or name (leave blank to enter command text):';
             return message;
+        }
+
+        // Post Boot Plugin Validation - modal flow for plugin log line + timeout
+        let pluginValidationResolve = null;
+        let globalPluginLogLine = null;   // User's plugin validation command (also offered as a termination option)
+        let globalPluginTerminate = false;
+
+        async function promptForPluginValidationSettings() {
+            return new Promise((resolve) => {
+                pluginValidationResolve = resolve;
+                const modalEl = document.getElementById('pluginValidationModal');
+                document.getElementById('pluginLogLineInput').value = '';
+                document.getElementById('pluginLogTimeoutInput').value = '120';
+
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+
+                // Resolve null when the modal is dismissed without confirming
+                modalEl.addEventListener('hidden.bs.modal', () => {
+                    if (pluginValidationResolve) {
+                        const r = pluginValidationResolve;
+                        pluginValidationResolve = null;
+                        r(null);
+                    }
+                }, { once: true });
+            });
+        }
+
+        function confirmPluginValidationSettings() {
+            const logLine = (document.getElementById('pluginLogLineInput').value || '').trim();
+            if (!logLine) {
+                showNotification('❌ A Linux command (e.g. grep -i "..." /opt/logs/...) is required for Post Boot Plugin Validation', 'warning');
+                return;
+            }
+            const timeoutVal = parseInt(document.getElementById('pluginLogTimeoutInput').value) || 120;
+
+            // Remember for the termination-condition step
+            globalPluginLogLine = logLine;
+            globalPluginTerminate = false;
+
+            bootstrap.Modal.getInstance(document.getElementById('pluginValidationModal')).hide();
+            if (pluginValidationResolve) {
+                const r = pluginValidationResolve;
+                pluginValidationResolve = null;
+                r({ plugin_log_line: logLine, plugin_log_timeout: timeoutVal });
+            }
         }
 
         async function promptForOptionalChecks() {
@@ -7254,6 +7380,25 @@
                 container.appendChild(triggerDiv);
             });
             
+            // Post Boot Plugin Validation: also offer the user-provided command as a termination trigger
+            if (globalPluginLogLine) {
+                const pluginTriggerDiv = document.createElement('div');
+                pluginTriggerDiv.style.cssText = 'padding: 1rem; border: 2px solid #34D399; border-radius: 0.5rem; cursor: pointer; transition: all 0.3s; background: #14261f;';
+                pluginTriggerDiv.innerHTML = `
+                    <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                        <input type="checkbox" class="form-check-input" id="trigger-plugin-log" style="cursor: pointer; margin-top: 0.25rem;">
+                        <label for="trigger-plugin-log" style="cursor: pointer; margin: 0; flex: 1;">
+                            <strong style="color: #34D399; font-size: 1rem;">[PLUGIN_LOG_LINE]</strong>
+                            <br><small style="color: #9ca3af; display: block;">Post Boot Plugin Validation command - stop when it finds a match</small>
+                            <br><small style="color: #666; font-family: monospace; word-break: break-all; display: block; margin-top: 0.5rem;">${globalPluginLogLine}</small>
+                        </label>
+                    </div>
+                `;
+                pluginTriggerDiv.addEventListener('mouseenter', () => pluginTriggerDiv.style.backgroundColor = '#1b332a');
+                pluginTriggerDiv.addEventListener('mouseleave', () => pluginTriggerDiv.style.backgroundColor = '#14261f');
+                container.appendChild(pluginTriggerDiv);
+            }
+            
             // Store selected checks for confirmation
             window.selectedChecksForTermination = selectedChecks;
             const modal = new bootstrap.Modal(document.getElementById('terminationTriggersModal'));
@@ -7268,6 +7413,10 @@
             selectedChecks.forEach((check, idx) => {
                 check.terminate_on_match = Array.from(triggersCheckboxes).some(cb => cb.id === `trigger-${idx}`);
             });
+            
+            // Post Boot Plugin Validation: plugin log line termination option
+            const pluginTriggerCheckbox = document.getElementById('trigger-plugin-log');
+            globalPluginTerminate = !!(pluginTriggerCheckbox && pluginTriggerCheckbox.checked && globalPluginLogLine);
             
             globalSelectedChecks = selectedChecks;
             closeTerminationTriggersModal();
@@ -9366,6 +9515,23 @@
                             <small style="color: #fbbf24;"><i class="bi bi-lightning-charge-fill"></i> Wait after reboot: 10s (optimized)</small><br>
                             <small style="color: #10b981;"><i class="bi bi-stopwatch-fill"></i> HOME timeout: ${homeTimeout}s</small><br>
                             <small style="color: #8b5cf6;"><i class="bi bi-check2-square"></i> Optional checks: ${checksLabel}</small>${triggerLabel}${logCollectionLabel}${terminationLabel}${performanceThresholdLabel}
+                        </div>`;
+                    } else if (queueItem.method === 'post_boot_plugin_validation') {
+                        const pluginLogLine = getParam(queueItem, 'plugin_log_line') || '';
+                        const pluginTimeout = getParam(queueItem, 'plugin_log_timeout') || 120;
+                        const pluginTerminate = getParam(queueItem, 'plugin_terminate_on_found') || false;
+                        const homeTimeout = getParam(queueItem, 'home_screen_timeout') || 180;
+                        const optionalChecks = getParam(queueItem, 'optional_checks') || {};
+                        const checksCount = optionalChecks.custom_commands?.length || 0;
+                        const checksLabel = checksCount === 0 ? 'None (skipped)' : checksCount;
+                        const pluginLineDisplay = pluginLogLine.length > 40 ? pluginLogLine.substring(0, 40) + '…' : pluginLogLine;
+                        const pluginTermLabel = pluginTerminate ? `<br><small style="color: #ef4444;"><i class="bi bi-stop-circle-fill"></i> Stop on plugin match: Enabled</small>` : '';
+                        inputsHtml = `<div style="margin-top: 4px;">
+                            <small style="color: #34d399;" title="${pluginLogLine}"><i class="bi bi-plug-fill"></i> Command: "${pluginLineDisplay}"</small><br>
+                            <small style="color: #06b6d4;"><i class="bi bi-hourglass-split"></i> Plugin timeout: ${pluginTimeout}s</small><br>
+                            <small style="color: #10b981;"><i class="bi bi-stopwatch-fill"></i> HOME timeout: ${homeTimeout}s</small><br>
+                            <small style="color: #8b5cf6;"><i class="bi bi-check2-square"></i> Optional checks: ${checksLabel}</small>${pluginTermLabel}<br>
+                            <small style="color: #9ca3af;"><i class="bi bi-cloud-download-fill"></i> Logs → /media/apps on detection</small>
                         </div>`;
                     } else if (queueItem.method === 'soft_hard_boot') {
                         const bootType = getParam(queueItem, 'boot_type') || 'HARD';
@@ -13617,6 +13783,14 @@
                 
                 // Include additional params for specific methods
                 if (item.method === 'reboot_perf_v2_optimized') {
+                    apiItem.optional_checks = item.params?.optional_checks;
+                    apiItem.home_screen_timeout = item.params?.home_screen_timeout;
+                    apiItem.log_search_patterns = item.params?.log_search_patterns;
+                    apiItem.auto_collect_logs = item.params?.auto_collect_logs;
+                } else if (item.method === 'post_boot_plugin_validation') {
+                    apiItem.plugin_log_line = item.params?.plugin_log_line;
+                    apiItem.plugin_log_timeout = item.params?.plugin_log_timeout;
+                    apiItem.plugin_terminate_on_found = item.params?.plugin_terminate_on_found;
                     apiItem.optional_checks = item.params?.optional_checks;
                     apiItem.home_screen_timeout = item.params?.home_screen_timeout;
                     apiItem.log_search_patterns = item.params?.log_search_patterns;

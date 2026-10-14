@@ -11,6 +11,7 @@ METHOD_EXECUTION_TIMES = {
     'reboot_perf_v2_optimized': 180,  # Optimized reboot (37.9% faster): 10s wait + 40s SSH probe + 110s monitoring + 20s checks
     'soft_hard_boot': 271,  # Soft/Hard boot test: ~79-82s per boot cycle + 3-5s overhead per iteration
     'trail_method': 85,  # Trail method (reboot performance optimized variant): Similar to soft_hard_boot, ~79-82s per boot
+    'post_boot_plugin_validation': 300,  # Post Boot Plugin Validation: 10s wait + 40s SSH probe + up to 120s plugin log-line validation + 110s HOME monitoring + 20s checks
     'screenshot': 25,  # Screenshot with full verification: 3s activation + 10s capture + 7s verify + 5s download (fast success)
     'ir_test': 15,  # 15 seconds per IR command test (including waits)
     'voice_command': 35,  # 35 seconds for voice command execution (20s wait + command + validation)

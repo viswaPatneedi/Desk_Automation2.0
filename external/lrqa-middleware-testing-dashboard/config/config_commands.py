@@ -25,6 +25,7 @@ AVAILABLE_METHODS = [
     'reboot',
     'reboot_perf_v2_optimized',
     'trail_method',
+    'post_boot_plugin_validation',
     'soft_hard_boot',
     'deepsleep',
     'deepsleep_maintenance_wakeup',

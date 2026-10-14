@@ -3491,7 +3491,7 @@ def job_details_page(job_id):
         reboot_perf_average = None
         try:
             all_results = [r.to_dict() for r in TestResult.load_all()]
-            job_results = [r for r in all_results if r.get('job_id') == job_id and r.get('method') in ('reboot_perf_v2_optimized', 'trail_method')]
+            job_results = [r for r in all_results if r.get('job_id') == job_id and r.get('method') in ('reboot_perf_v2_optimized', 'trail_method', 'post_boot_plugin_validation')]
             job_results.sort(key=lambda x: x.get('iteration', 0))
 
             perf_values = []
@@ -5060,6 +5060,7 @@ def generate_execution_title(methods):
         'send_remote_keys': 'Remote Keys',
         'reboot': 'Reboot Test',
         'reboot_perf_v2_optimized': 'Performance Reboot',
+        'post_boot_plugin_validation': 'Post Boot Plugin Validation',
         'screen_validation': 'Screen Validation',
         'execute_command': 'Command Execution',
         'collect_device_logs': 'Log Collection',
