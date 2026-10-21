@@ -7,7 +7,37 @@ from datetime import datetime, timezone, timedelta
 from utils.file_lock import FileLockManager
 from config.config_eta import calculate_eta, format_eta
 from config.config_paths import JOBS_FILE
-from models.database import Session, Job as DBJob
+from models.database import Session, Job as DBJob, User as DBUser
+
+
+def _resolve_user_fk(session, user_id):
+    """Resolve a user identifier to the integer users.id FK for Postgres writes.
+
+    The app layer (JSON files, API filters, templates) passes user_id as the
+    string NTID (e.g. 'vpatne290'), but jobs.user_id is an integer FK to
+    users.id. Passing the NTID straight into the insert fails with
+    psycopg2 InvalidTextRepresentation ('invalid input syntax for type integer')
+    and the job silently ends up JSON-only - invisible to load_all(), which
+    reads Postgres first.
+    """
+    if user_id is None:
+        return None
+    if isinstance(user_id, int):
+        return user_id
+    # Numeric string that IS the FK already
+    if isinstance(user_id, str) and user_id.isdigit():
+        return int(user_id)
+    row = session.query(DBUser.id).filter_by(username=str(user_id)).first()
+    return row[0] if row else None
+
+
+def _build_user_id_to_ntid_map(session):
+    """Map users.id -> username (NTID) so DB-loaded jobs expose the same string
+    user_id the app layer expects (JSON-era semantics)."""
+    try:
+        return {row.id: row.username for row in session.query(DBUser.id, DBUser.username).all()}
+    except Exception:
+        return {}
 
 
 class Job:
@@ -182,11 +212,15 @@ class Job:
             )
             
             if rows:
+                user_ntid_map = _build_user_id_to_ntid_map(session)
                 jobs = []
                 for row in rows:
                     job_data = {
                         'job_id': row.job_id,
-                        'user_id': row.user_id,
+                        # Translate integer FK back to NTID string so API
+                        # scope filters (job.user_id == current_user.ntid) and
+                        # UI display work the same as for JSON-backed jobs
+                        'user_id': user_ntid_map.get(row.user_id, row.user_id),
                         'device_ip': row.device_ip,
                         'device_name': row.device_name,
                         'methods': json.loads(row.methods) if row.methods else [],
@@ -240,7 +274,7 @@ class Job:
                     # Create new job record
                     db_job = DBJob(
                         job_id=job.job_id,
-                        user_id=job.user_id,
+                        user_id=_resolve_user_fk(session, job.user_id),
                         device_ip=job.device_ip,
                         device_name=job.device_name,
                         execution_queue=job.execution_queue,
@@ -324,7 +358,7 @@ class Job:
         def _save_to_db(session):
             db_job = DBJob(
                 job_id=job_id,
-                user_id=user_id,
+                user_id=_resolve_user_fk(session, user_id),
                 device_ip=device_ip,
                 device_name=device_name,
                 execution_queue=execution_queue or [],

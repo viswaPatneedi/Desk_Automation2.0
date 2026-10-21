@@ -546,69 +546,95 @@ def netflix_playback(
         log(f"Executing command: {voice_cmd}")
         
         voice_command_success = False
-        try:
-            stdin, stdout, stderr = ssh.exec_command(voice_cmd, timeout=30)
-            voice_output = stdout.read().decode('utf-8', errors='ignore').strip()
-            voice_error = stderr.read().decode('utf-8', errors='ignore').strip()
-            
-            log(f"Response: {voice_output}")
-            
-            if voice_error:
-                log(f"⚠ Error output: {voice_error}")
-            
-            # Check CURL response for success
-            if voice_output:
-                try:
-                    result = json.loads(voice_output)
-                    # Check if response has result with success flag
-                    if "result" in result and isinstance(result["result"], dict):
-                        if result["result"].get("success") == True:
-                            log("✓ Voice command API executed successfully")
-                            log(f"Session ID: {result['result'].get('sessionId', 'N/A')}")
-                            step_results['step_1_voice_command'] = 'success'
-                            voice_command_success = True
-                            
-                            # Give device time to process voice command
-                            log("⏳ Waiting 3 seconds for voice command to be processed...")
-                            time.sleep(3)
-                            
-                            # Send ENTER key to confirm/trigger the app launch
-                            # REASON: The voice command (transcription) is sent via RDK JSON-RPC, but depending on device state and UI responsiveness,
-                            # the device may simply queue the voice input without immediately triggering the app launch.
-                            # The ENTER key acts as an explicit "submit/execute" signal to confirm that the Netflix app launch should be initiated.
-                            # This is a fallback mechanism to ensure app launch is triggered even if device doesn't auto-launch from voice command alone.
-                            log("→ Sending ENTER key to confirm/execute app launch...")
-                            try:
-                                enter_cmd = "keySimulator -kreturn"
-                                stdin, stdout, stderr = ssh.exec_command(enter_cmd, timeout=10)
-                                stdout.channel.recv_exit_status()
-                                log("✓ ENTER key sent successfully")
-                            except Exception as e:
-                                log(f"⚠ Could not send ENTER key: {e}")
-                        else:
-                            log(f"❌ Voice command returned success=false")
-                            step_results['step_1_voice_command'] = 'voice_api_failed'
-                            overall_success = False
-                    elif "error" in result:
-                        error_msg = result.get("error", {})
-                        log(f"❌ Voice command error: {error_msg}")
-                        step_results['step_1_voice_command'] = f'api_error: {error_msg}'
-                        overall_success = False
-                    else:
-                        log(f"⚠ Unexpected JSON response: {voice_output}")
-                        step_results['step_1_voice_command'] = 'unexpected_response'
-                except json.JSONDecodeError:
-                    log(f"❌ Could not parse JSON response: {voice_output}")
-                    step_results['step_1_voice_command'] = 'json_parse_error'
+        # 🔧 FIX (job e97de711): the device-side curl to 127.0.0.1:9998 can HANG
+        # (voice service unresponsive) — exec_command then dies at the 30s
+        # timeout with empty output and 'TimeoutError' on stderr, and the
+        # command never actually executes on the device. Retry ONCE before
+        # declaring no_response (keySimulator path still worked in that job, so
+        # a single retry has a real chance of succeeding).
+        voice_output = ''
+        for voice_attempt in (1, 2):
+            try:
+                if voice_attempt > 1:
+                    log(f"🔁 Retrying voice command (attempt {voice_attempt}/2) after previous hang/timeout...")
+                stdin, stdout, stderr = ssh.exec_command(voice_cmd, timeout=30)
+                voice_output = stdout.read().decode('utf-8', errors='ignore').strip()
+                voice_error = stderr.read().decode('utf-8', errors='ignore').strip()
+                
+                log(f"Response: {voice_output}")
+                
+                if voice_error:
+                    log(f"⚠ Error output: {voice_error}")
+                
+                if voice_output:
+                    break  # got a real response - stop retrying
+                if 'TimeoutError' in voice_error and voice_attempt == 1:
+                    continue  # device curl hung - try once more
+                break  # empty output without a timeout - no point retrying
+            except Exception as e:
+                log(f"❌ Error sending voice command (attempt {voice_attempt}/2): {e}")
+                if voice_attempt == 2:
+                    step_results['step_1_voice_command'] = f'error: {e}'
                     overall_success = False
-            else:
-                log("❌ No response received from voice command")
-                step_results['step_1_voice_command'] = 'no_response'
-                overall_success = False
-        except Exception as e:
-            log(f"❌ Error sending voice command: {e}")
-            step_results['step_1_voice_command'] = f'error: {e}'
+                    voice_output = None
+                else:
+                    time.sleep(2)
+        
+        if voice_output is None:
+            # Both attempts raised (transport-level error) - already recorded
+            pass
+        elif not voice_output:
+            log("❌ No response received from voice command")
+            step_results['step_1_voice_command'] = 'no_response'
             overall_success = False
+        else:
+            # Check CURL response for success
+            try:
+                result = json.loads(voice_output)
+            except json.JSONDecodeError:
+                log(f"❌ Could not parse JSON response: {voice_output}")
+                step_results['step_1_voice_command'] = 'json_parse_error'
+                overall_success = False
+                result = None
+            
+            if result is not None:
+                # Check if response has result with success flag
+                if "result" in result and isinstance(result["result"], dict):
+                    if result["result"].get("success") == True:
+                        log("✓ Voice command API executed successfully")
+                        log(f"Session ID: {result['result'].get('sessionId', 'N/A')}")
+                        step_results['step_1_voice_command'] = 'success'
+                        voice_command_success = True
+                        
+                        # Give device time to process voice command
+                        log("⏳ Waiting 3 seconds for voice command to be processed...")
+                        time.sleep(3)
+                        
+                        # Send ENTER key to confirm/trigger the app launch
+                        # REASON: The voice command (transcription) is sent via RDK JSON-RPC, but depending on device state and UI responsiveness,
+                        # the device may simply queue the voice input without immediately triggering the app launch.
+                        # The ENTER key acts as an explicit "submit/execute" signal to confirm that the Netflix app launch should be initiated.
+                        # This is a fallback mechanism to ensure app launch is triggered even if device doesn't auto-launch from voice command alone.
+                        log("→ Sending ENTER key to confirm/execute app launch...")
+                        try:
+                            enter_cmd = "keySimulator -kreturn"
+                            stdin, stdout, stderr = ssh.exec_command(enter_cmd, timeout=10)
+                            stdout.channel.recv_exit_status()
+                            log("✓ ENTER key sent successfully")
+                        except Exception as e:
+                            log(f"⚠ Could not send ENTER key: {e}")
+                    else:
+                        log(f"❌ Voice command returned success=false")
+                        step_results['step_1_voice_command'] = 'voice_api_failed'
+                        overall_success = False
+                elif "error" in result:
+                    error_msg = result.get("error", {})
+                    log(f"❌ Voice command error: {error_msg}")
+                    step_results['step_1_voice_command'] = f'api_error: {error_msg}'
+                    overall_success = False
+                else:
+                    log(f"⚠ Unexpected JSON response: {voice_output}")
+                    step_results['step_1_voice_command'] = 'unexpected_response'
         
         log("⏳ Waiting 20 seconds for app to fully launch and stabilize...")
         time.sleep(20)
@@ -644,71 +670,82 @@ def netflix_playback(
                 fallback_attempts = 0
                 max_fallback_attempts = 2
                 
-                # Fallback Attempt 1: Navigate to Apps menu and try Netflix
+                # Fallback (per spec, verified against job e97de711 where the
+                # old OK/RIGHT×3/DOWN×5 sequence launched nothing):
+                #   HOME → DOWN → RIGHT lands on the "Apps & Inputs" row with
+                #   the FIRST app focused. OCR-check whether that app is
+                #   Netflix; ONLY then send ENTER to launch it, wait 20s, and
+                #   re-verify the foreground app.
                 while fallback_attempts < max_fallback_attempts and not netflix_found:
                     fallback_attempts += 1
-                    log(f"\n[FALLBACK ATTEMPT {fallback_attempts}] Key Navigation Method")
+                    log(f"\n[FALLBACK ATTEMPT {fallback_attempts}] Key Navigation Method (Apps row)")
                     
                     try:
-                        # Press MENU/OK to open apps menu
-                        log("  → Pressing OK to open menu...")
-                        menu_cmd = "keySimulator -kreturn"
-                        stdin, stdout, stderr = ssh.exec_command(menu_cmd, timeout=10)
+                        # 1) HOME to reset to the home screen
+                        log("  → Pressing HOME to reach home screen...")
+                        stdin, stdout, stderr = ssh.exec_command("keySimulator -khome", timeout=10)
                         stdout.channel.recv_exit_status()
-                        time.sleep(2)
+                        time.sleep(3)
                         
-                        # Navigate to Apps (usually right arrow)
-                        log("  → Navigating to Apps section (Right arrow)...")
-                        for _ in range(3):
-                            right_cmd = "keySimulator -kright"
-                            stdin, stdout, stderr = ssh.exec_command(right_cmd, timeout=10)
+                        # 2) DOWN then RIGHT: land on the Apps & Inputs row,
+                        #    first app focused
+                        log("  → Navigating to Apps row (DOWN, RIGHT) - first app...")
+                        for key in ("-kdown", "-kright"):
+                            stdin, stdout, stderr = ssh.exec_command(f"keySimulator {key}", timeout=10)
                             stdout.channel.recv_exit_status()
-                            time.sleep(0.5)
+                            time.sleep(1)
                         
-                        # Press down to find Netflix in list
-                        log("  → Searching for Netflix in apps list (Down arrow)...")
-                        for i in range(5):
-                            down_cmd = "keySimulator -kdown"
-                            stdin, stdout, stderr = ssh.exec_command(down_cmd, timeout=10)
+                        # 3) Check if the focused (first) app is Netflix via
+                        #    OCR on a fresh screenshot; only then press ENTER
+                        log("  → Checking if 1st app on Apps row is Netflix (screenshot + OCR)...")
+                        first_app_is_netflix = False
+                        try:
+                            from screenshot_utils import take_and_analyze_screenshot
+                            check_shot = take_and_analyze_screenshot(
+                                ssh,
+                                f"netflix_fallback_apps_row_{timestamp}_try{fallback_attempts}",
+                                device_ip,
+                                log_callback=log,
+                                app_name='netflix',
+                                step=2
+                            )
+                            if check_shot.get('success'):
+                                shot_text = (check_shot.get('extracted_text') or '').lower()
+                                shot_state = str(check_shot.get('screen_state', {}).get('screen_detected', '')).lower()
+                                log(f"  📸 OCR text (truncated): {shot_text[:120]!r}")
+                                if 'netflix' in shot_text or 'netflix' in shot_state:
+                                    first_app_is_netflix = True
+                            else:
+                                log(f"  ⚠ Screenshot check unavailable: {check_shot.get('error', 'unknown')}")
+                        except Exception as ocr_err:
+                            log(f"  ⚠ App-row check failed: {ocr_err}")
+                        
+                        if first_app_is_netflix:
+                            # 4) ENTER to launch the focused Netflix tile
+                            log("  ✓ First app appears to be Netflix - pressing ENTER to launch...")
+                            stdin, stdout, stderr = ssh.exec_command("keySimulator -kreturn", timeout=10)
                             stdout.channel.recv_exit_status()
-                            time.sleep(0.5)
                             
-                            # Check if Netflix is in focus (optional)
-                            if i % 2 == 1:  # Check every 2 presses
-                                log(f"    ✓ Navigated down {i+1} positions")
-                        
-                        # Press Enter/Return to launch
-                        log("  → Pressing ENTER to launch app...")
-                        enter_cmd = "keySimulator -kreturn"
-                        stdin, stdout, stderr = ssh.exec_command(enter_cmd, timeout=10)
-                        stdout.channel.recv_exit_status()
-                        
-                        # Wait for app to launch
-                        log(f"  ⏳ Waiting 8 seconds for app to launch...")
-                        time.sleep(8)
-                        
-                        # Check if Netflix is now running
-                        stdin, stdout, stderr = ssh.exec_command(verify_cmd, timeout=15)
-                        app_output = stdout.read().decode('utf-8', errors='ignore').strip()
-                        
-                        log(f"  ✓ Verification check: {app_output}")
-                        
-                        if 'NetflixApp' in app_output or 'Netflix' in app_output:
-                            log(f"✓ FALLBACK SUCCESSFUL: Netflix app now in foreground!")
-                            log(f"  Confirmed app: {app_output}")
-                            netflix_found = True
-                            step_results['step_2_app_verification'] = 'success_via_fallback'
-                            break
+                            # 5) Wait for the app to fully launch and stabilize
+                            log("  ⏳ Waiting 20 seconds for Netflix to launch...")
+                            time.sleep(20)
+                            
+                            # 6) Verify Netflix is now the FOREGROUND app
+                            stdin, stdout, stderr = ssh.exec_command(verify_cmd, timeout=15)
+                            app_output = stdout.read().decode('utf-8', errors='ignore').strip()
+                            log(f"  ✓ Verification check: {app_output}")
+                            
+                            if 'NetflixApp' in app_output or 'Netflix' in app_output:
+                                log(f"✓ FALLBACK SUCCESSFUL: Netflix app now in foreground!")
+                                log(f"  Confirmed app: {app_output}")
+                                netflix_found = True
+                                step_results['step_2_app_verification'] = 'success_via_fallback'
+                                break
+                            else:
+                                log(f"  ⚠ Still showing: {app_output}")
                         else:
-                            log(f"  ⚠ Still showing: {app_output}")
-                            
-                            # Press HOME to return and retry
-                            if fallback_attempts < max_fallback_attempts:
-                                log(f"  → Pressing HOME to reset and retry...")
-                                home_cmd = "keySimulator -khome"
-                                stdin, stdout, stderr = ssh.exec_command(home_cmd, timeout=10)
-                                stdout.channel.recv_exit_status()
-                                time.sleep(3)
+                            log("  ⚠ First app on Apps row is NOT Netflix (or check unavailable) - NOT pressing ENTER")
+                            step_results['step_2_app_verification'] = f'fallback_first_app_not_netflix_try{fallback_attempts}'
                     
                     except Exception as e:
                         log(f"  ❌ Fallback navigation error: {e}")
